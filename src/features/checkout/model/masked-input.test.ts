@@ -44,4 +44,10 @@ describe("applyMask", () => {
       caret: 14,
     });
   });
+
+  it("campos com letras (passaporte) também mantêm o cursor", () => {
+    const upper = (text: string) => text.toUpperCase();
+    expect(applyMask("fz1", 3, upper)).toEqual({ value: "FZ1", caret: 3 });
+    expect(applyMask("fxz1", 2, upper)).toEqual({ value: "FXZ1", caret: 2 });
+  });
 });
