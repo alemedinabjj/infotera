@@ -8,7 +8,7 @@ import type { ResultsView } from "../model/results-view";
 import { describeSheetAction } from "../model/results-view";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
 import { ClearFiltersButton } from "./ClearFiltersButton";
-import { FiltersFields } from "./FiltersFields";
+import { FiltersBoundary } from "./FiltersBoundary";
 
 type FiltersDrawerProps = {
   open: boolean;
@@ -67,7 +67,7 @@ export const FiltersDrawer = ({
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>
-      <FiltersFields filters={filters} onChange={onChange} />
+      <FiltersBoundary filters={filters} onChange={onChange} />
     </Dialog>
   );
 };
