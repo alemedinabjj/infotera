@@ -53,6 +53,54 @@ describe("RoomComparison: tabela (critério 25)", () => {
     expect(kitchen.querySelectorAll("svg[aria-hidden='true']")).toHaveLength(4);
   });
 
+  it("só as linhas que diferem ganham faixa; as iguais ficam sem destaque", async () => {
+    const rooms = [
+      makeRoom({ id: 1, name: "A", pricePerNight: 100, amenities: ["safe"] }),
+      makeRoom({ id: 2, name: "B", pricePerNight: 200, amenities: ["safe"] }),
+    ];
+    const { table } = await open(rooms);
+    const rowOf = (name: RegExp) =>
+      within(table).getByRole("rowheader", { name }).closest("tr") as HTMLElement;
+    expect(rowOf(/^Preço por noite/).className).toContain("bg-primary-soft");
+    expect(rowOf(/^Cofre/).className).not.toContain("bg-primary-soft");
+  });
+
+  it("quando todas as linhas diferem, só o marcador (sem faixa)", async () => {
+    const rooms = [
+      makeRoom({
+        id: 1,
+        name: "A",
+        pricePerNight: 100,
+        size: 20,
+        maxGuests: 2,
+        available: 1,
+        beds: [{ type: "king", quantity: 1 }],
+        amenities: ["safe"],
+      }),
+      makeRoom({
+        id: 2,
+        name: "B",
+        pricePerNight: 200,
+        size: 30,
+        maxGuests: 3,
+        available: 4,
+        beds: [{ type: "twin", quantity: 2 }],
+        amenities: ["aircon"],
+      }),
+    ];
+    const { table } = await open(rooms);
+    const price = within(table).getByRole("rowheader", { name: /^Preço por noite/ });
+    expect(price.className).toContain("border-primary");
+    expect(table.querySelector(".bg-primary-soft")).toBeNull();
+  });
+
+  it("'Ar-condicionado' não quebra no hífen (hífen sem quebra)", async () => {
+    const { table } = await open();
+    const header = within(table).getByRole("rowheader", { name: /^Ar.condicionado/ });
+    expect(header.textContent).toContain("Ar\u2011condicionado");
+    expect(header.className).toContain("hyphens-none");
+  });
+
   it("legenda visual e dica de rolagem", async () => {
     await open();
     expect(screen.getByText("Linhas marcadas mudam entre os quartos.")).toBeInTheDocument();

@@ -9,14 +9,11 @@ import {
   comparisonAnnouncement,
   onlyDifferences,
 } from "../model/room-comparison";
-import { ComparisonRow } from "./ComparisonRow";
+import { ComparisonTable } from "./ComparisonTable";
 
 type RoomComparisonProps = { rooms: readonly Room[] };
 
-/**
- * Comparação de todos os quartos (só com 2 ou mais; recolhida por padrão). Tabela semântica numa
- * região rolável e rotulada: no celular rola **dentro** dela, a página nunca ganha scroll lateral.
- */
+/** Comparação de todos os quartos (só com 2 ou mais; recolhida por padrão). */
 export const RoomComparison = ({ rooms }: RoomComparisonProps) => {
   const [open, setOpen] = useState(false);
   const [onlyDiff, setOnlyDiff] = useState(false);
@@ -24,7 +21,6 @@ export const RoomComparison = ({ rooms }: RoomComparisonProps) => {
   const panelId = useId();
   const { rows } = buildRoomComparison(rooms);
   const visible = onlyDiff ? onlyDifferences(rows) : rows;
-  const roomIds = rooms.map((room) => room.id);
 
   return (
     <div id="comparar-quartos" className="flex flex-col gap-2">
@@ -58,43 +54,12 @@ export const RoomComparison = ({ rooms }: RoomComparisonProps) => {
           <p className="sr-only" aria-live="polite">
             {comparisonAnnouncement(visible.length, rows.length)}
           </p>
-          <section
-            aria-labelledby={titleId}
-            // biome-ignore lint/a11y/noNoninteractiveTabindex: região rolável precisa ser focável para rolar por teclado
-            tabIndex={0}
-            className="overflow-x-auto rounded-card border border-border"
-          >
-            <table className="w-full text-sm tabular-nums">
-              <caption className="sr-only">Comparar quartos</caption>
-              <thead>
-                <tr>
-                  <th scope="col" className="sticky left-0 z-0 min-w-28 bg-surface px-3 py-3">
-                    <span className="sr-only">Característica</span>
-                  </th>
-                  {rooms.map((room) => (
-                    <th
-                      key={room.id}
-                      scope="col"
-                      className="min-w-36 px-3 py-3 text-left font-semibold text-fg"
-                    >
-                      {room.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {visible.length === 0 ? (
-                  <tr>
-                    <td colSpan={rooms.length + 1} className="px-3 py-3 text-fg-muted">
-                      Os quartos têm as mesmas características.
-                    </td>
-                  </tr>
-                ) : (
-                  visible.map((row) => <ComparisonRow key={row.key} row={row} roomIds={roomIds} />)
-                )}
-              </tbody>
-            </table>
-          </section>
+          <ComparisonTable
+            rooms={rooms}
+            rows={visible}
+            markerOnly={rows.every((row) => row.differs)}
+            labelledBy={titleId}
+          />
         </div>
       ) : null}
     </div>
