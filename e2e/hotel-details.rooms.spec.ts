@@ -64,7 +64,7 @@ test.describe("selecionar quarto", () => {
     const room = roomCard(page, "Quarto com Vista");
     await expect(room).toContainText("Só 3 disponíveis");
     await expect(room).toContainText(
-      "Sua busca pede 4 quartos. Diminua a quantidade de quartos ou escolha outro tipo.",
+      "Sua busca pede 4 quartos. Diminua a quantidade de quartos.",
     );
     await expect(room.getByRole("button", { name: /Selecionar quarto/ })).toHaveAttribute(
       "aria-disabled",
