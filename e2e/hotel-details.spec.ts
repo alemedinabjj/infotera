@@ -5,6 +5,16 @@ import { CHECK_IN, cards, criteriaQuery, searchPath } from "./helpers/hotel-sear
 // Mock-api real em :3333. Ids estáveis do seed: hotel 1 Copacabana Palace (Rio, 5 fotos, quartos
 // de R$ 1.200 e R$ 800), hotel 4 (a partir de R$ 720), hotel 59 (Jericoacoara, 1 similar: 60).
 
+// 1×1 GIF: as fotos do Unsplash não dependem da rede do ambiente (uma foto quebrada vira fallback e
+// o `<img>` some, o que torna as asserções sobre `loading` instáveis).
+const PIXEL = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64");
+
+test.beforeEach(async ({ page }) => {
+  await page.route(/images\.unsplash\.com/, (route) =>
+    route.fulfill({ contentType: "image/gif", body: PIXEL }),
+  );
+});
+
 test.describe("cabeçalho e navegação", () => {
   test("vindo da busca: h1, breadcrumb com os critérios e 'a partir de' pelos quartos", async ({
     page,
