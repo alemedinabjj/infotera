@@ -10,6 +10,7 @@ import {
   PHONE_COUNTRIES,
   PHONE_COUNTRY_CODES,
   type PhoneCountry,
+  phoneDigits,
 } from "../model/phone";
 import { useDeferBlur } from "./blur-context";
 
@@ -44,7 +45,7 @@ export const PhoneField = () => {
             const next = event.target.value;
             if (!isCountry(next)) return;
             country.field.onChange(next);
-            setValue("contact.phone", formatPhone(next, phone.field.value), {
+            setValue("contact.phone", phone.field.value, {
               shouldValidate: phone.fieldState.isTouched,
             });
           }}
@@ -66,7 +67,7 @@ export const PhoneField = () => {
           aria-describedby={describedBy}
           aria-invalid={error ? true : undefined}
           placeholder={info.example}
-          value={phone.field.value}
+          value={formatPhone(country.field.value, phone.field.value)}
           onChange={(event) => {
             const input = event.target;
             const masked = applyMask(
@@ -76,7 +77,7 @@ export const PhoneField = () => {
             );
             input.value = masked.value;
             input.setSelectionRange(masked.caret, masked.caret);
-            phone.field.onChange(masked.value);
+            phone.field.onChange(phoneDigits(masked.value));
           }}
           onBlur={() => deferBlur(phone.field.onBlur)}
         />

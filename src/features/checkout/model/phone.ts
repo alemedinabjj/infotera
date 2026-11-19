@@ -55,9 +55,15 @@ export const BR_AREA_CODES: ReadonlySet<string> = new Set([
   ...["91", "92", "93", "94", "95", "96", "97", "98", "99"],
 ]);
 
-/** Só os dígitos do país, descartando o excesso. */
-export const phoneDigits = (country: PhoneCountry, raw: string): string =>
-  raw.replace(/\D/g, "").slice(0, PHONE_COUNTRIES[country].maxDigits);
+/** Limite de digitação (E.164): acima disso o texto é cortado, nunca por país. */
+export const MAX_PHONE_DIGITS = 15;
+
+/**
+ * Só os dígitos, sem truncar por país: o valor guardado no formulário. Trocar de país só muda a
+ * máscara e a validação (o excesso vira erro de tamanho), então BR → US → BR preserva o número.
+ */
+export const phoneDigits = (raw: string): string =>
+  raw.replace(/\D/g, "").slice(0, MAX_PHONE_DIGITS);
 
 const groups = (digits: string, sizes: number[]): string => {
   const parts: string[] = [];
@@ -67,6 +73,7 @@ const groups = (digits: string, sizes: number[]): string => {
     parts.push(digits.slice(start, start + size));
     start += size;
   }
+  if (start < digits.length) parts.push(digits.slice(start));
   return parts.join(" ");
 };
 
@@ -87,9 +94,9 @@ const formatUS = (d: string): string => {
   return `(${d.slice(0, 3)}) ${local}`;
 };
 
-/** Máscara do país aplicada a qualquer texto (só os dígitos importam). */
+/** Máscara do país aplicada a qualquer texto (só os dígitos importam); o excesso vai no fim. */
 export const formatPhone = (country: PhoneCountry, raw: string): string => {
-  const digits = phoneDigits(country, raw);
+  const digits = phoneDigits(raw);
   switch (country) {
     case "BR":
       return formatBR(digits);

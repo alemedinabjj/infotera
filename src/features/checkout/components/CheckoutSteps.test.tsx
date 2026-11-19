@@ -100,8 +100,10 @@ describe("passo 1 (critérios 20–23, 25)", () => {
     await user.type(phone, "11987654321");
     expect(phone).toHaveValue("(11) 98765-4321");
     await user.selectOptions(screen.getByLabelText("País do telefone"), "US");
-    expect(phone).toHaveValue("(119) 876-5432");
+    expect(phone).toHaveValue("(119) 876-54321"); // sem truncar: o excesso é erro de validação
     expect(screen.getByText("Como (201) 555-0123.")).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("País do telefone"), "BR");
+    expect(phone).toHaveValue("(11) 98765-4321");
   });
 
   it("o erro do blur espera o clique quando um botão está pressionado (nada se move sob o ponteiro)", async () => {
