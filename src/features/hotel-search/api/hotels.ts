@@ -1,4 +1,4 @@
-import { type QueryClient, queryOptions } from "@tanstack/react-query";
+import { type InfiniteData, type QueryClient, queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiGet, apiGetPage } from "@/shared/api/http";
 import { queryKeys } from "@/shared/api/query-keys";
@@ -10,6 +10,7 @@ import {
   type HotelsFilterQuery,
   type HotelsRequest,
   hotelsRequestKey,
+  toHotelsFilterQuery,
   toHotelsRequest,
 } from "../model/to-api-query";
 
@@ -102,12 +103,43 @@ export const keepPreviousIfSameDestination =
       : undefined;
   };
 
+/** Chave da rolagem contínua: filtros + ordenação (sem página: o feed acumula os lotes). */
+export const hotelsFeedKey = (destination: string, filters: SearchFilters) =>
+  queryKeys.hotels.infinite({ ...toHotelsFilterQuery(destination, filters), sort: filters.sort });
+
+/** Chave da página N da lista (`pages`). */
+export const hotelsPageKey = (destination: string, filters: SearchFilters, page: number) =>
+  queryKeys.hotels.list(hotelsRequestKey(toHotelsRequest(destination, filters, page)));
+
+/**
+ * Página 1 vinda do 1º lote do feed em cache: trocar para "Em páginas" não mostra skeleton. O
+ * `initialDataUpdatedAt` herda a idade do cache de origem (o `staleTime` vale igual).
+ */
+const firstPageFromFeed = (
+  client: QueryClient,
+  destination: string,
+  filters: SearchFilters,
+): { data: HotelsPage | undefined; updatedAt: number | undefined } => {
+  const key = hotelsFeedKey(destination, filters);
+  const feed = client.getQueryData<InfiniteData<HotelsPage, number>>(key);
+  return { data: feed?.pages[0], updatedAt: client.getQueryState(key)?.dataUpdatedAt };
+};
+
 /** Query da página. A chave identifica o pedido (filtros equivalentes = mesma chave). */
-export const hotelsQueryOptions = (destination: string, filters: SearchFilters) => {
+export const hotelsQueryOptions = (
+  destination: string,
+  filters: SearchFilters,
+  client?: QueryClient,
+) => {
   const request = toHotelsRequest(destination, filters);
+  const seed = () =>
+    client && filters.page === 1 ? firstPageFromFeed(client, destination, filters) : undefined;
   return queryOptions<HotelsPage>({
     queryKey: queryKeys.hotels.list(hotelsRequestKey(request)),
-    queryFn: ({ client, signal }) => fetchHotelsPage(request, { client, signal }),
+    queryFn: ({ client: queryClient, signal }) =>
+      fetchHotelsPage(request, { client: queryClient, signal }),
     placeholderData: keepPreviousIfSameDestination(destination),
+    initialData: () => seed()?.data,
+    initialDataUpdatedAt: () => seed()?.updatedAt,
   });
 };
