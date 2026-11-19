@@ -1,6 +1,5 @@
 "use client";
 
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useCallback, useId, useRef, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ErrorBoundary } from "@/shared/ui";
@@ -88,37 +87,30 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
             />
           }
         />
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary
-              onReset={reset}
-              resetKeys={[resetKey]}
-              fallback={({ reset: resetBoundary }) => (
-                <ResultsError onRetry={resetBoundary} retrying={false} />
-              )}
-            >
-              <ResultsSection
-                view={view}
-                hotels={results.items}
-                total={results.total}
-                page={filters.page}
-                destination={destination}
-                criteria={criteria}
-                selectedAmenities={filters.amenities}
-                pageHref={pageHref}
-                onRetry={() => {
-                  markRetried();
-                  results.retry();
-                }}
-                retrying={results.isFetching}
-                onClearFilters={() => {
-                  update({ type: "clear" });
-                  focusResultsHeading(headingRef.current);
-                }}
-              />
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
+        <ErrorBoundary
+          resetKeys={[resetKey]}
+          fallback={({ reset }) => <ResultsError onRetry={reset} retrying={false} />}
+        >
+          <ResultsSection
+            view={view}
+            hotels={results.items}
+            total={results.total}
+            page={filters.page}
+            destination={destination}
+            criteria={criteria}
+            selectedAmenities={filters.amenities}
+            pageHref={pageHref}
+            onRetry={() => {
+              markRetried();
+              results.retry();
+            }}
+            retrying={results.isFetching}
+            onClearFilters={() => {
+              update({ type: "clear" });
+              focusResultsHeading(headingRef.current);
+            }}
+          />
+        </ErrorBoundary>
       </section>
       <FiltersDrawer
         open={drawerOpen}
