@@ -778,7 +778,7 @@ anunciador fica vazio e o sheet usa o seu (o conteúdo fora do `<dialog>` modal 
 | Card | meta `Pousada · Rio de Janeiro, RJ` · `+4` (`sr-only` ` comodidades`) · preço conforme tabela do card |
 | Nota no card | visível `4,8` ★ `Excelente · 2.847 avaliações`; `sr-only` antes: `Nota `, depois de 4,8: ` de 5,` · `1 avaliação` · `Sem avaliações` (0) |
 | Disponibilidade | `Esgotado` · `Apenas 1 quarto!` · `Apenas 2 quartos!` · `Só 2 quartos disponíveis` · `Sua busca pede 3 quartos.` · `Sem quartos disponíveis para estas datas.` · `Sem quartos disponíveis no momento.` |
-| Vazio destino | `Nenhum hotel em Bonito, MS` · `Ainda não temos hospedagens neste destino. Tente uma cidade próxima ou outra data.` · `Fazer nova busca` |
+| Vazio destino | `Nenhum hotel em Bonito, MS` · `Ainda não temos hospedagens neste destino. Tente uma cidade próxima.` · `Fazer nova busca` |
 | Vazio filtros | `Nenhum hotel com esses filtros` · `Tente aumentar a faixa de preço ou remover alguma comodidade.` · `Limpar filtros` |
 | Erro | `Não foi possível carregar os hotéis` · `Verifique sua conexão e tente de novo.` · `Tentar de novo` / `Tentando…` |
 | Offline | `Você está sem internet.` · `Os hotéis aparecem assim que a conexão voltar.` / `Os resultados podem estar desatualizados.` |

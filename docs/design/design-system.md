@@ -855,7 +855,7 @@ Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
 
 | Situação | Título | Descrição | Ações |
 |---|---|---|---|
-| Destino sem hotéis (Bonito) | `Nenhum hotel em Bonito, MS` | `Ainda não temos hospedagens neste destino. Tente uma cidade próxima ou outra data.` | `Fazer nova busca` |
+| Destino sem hotéis (Bonito) | `Nenhum hotel em Bonito, MS` | `Ainda não temos hospedagens neste destino. Tente uma cidade próxima.` | `Fazer nova busca` |
 | Filtros sem resultado | `Nenhum hotel com esses filtros` | `Tente aumentar a faixa de preço ou remover alguma comodidade.` | `Limpar filtros` (primária) |
 | Hotel sem avaliações | `Ainda sem avaliações` | `Este hotel ainda não recebeu avaliações de hóspedes.` | — |
 | Checkout sem seleção | `Nenhum quarto selecionado` | `Escolha um hotel e um quarto para fazer a reserva.` | `Buscar hotéis` |

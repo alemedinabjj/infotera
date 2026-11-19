@@ -10,7 +10,7 @@ export const ResultsEmpty = (props: ResultsEmptyProps) =>
   props.kind === "destination" ? (
     <EmptyState
       title={`Nenhum hotel em ${props.destination}`}
-      description="Ainda não temos hospedagens neste destino. Tente uma cidade próxima ou outra data."
+      description="Ainda não temos hospedagens neste destino. Tente uma cidade próxima."
       action={
         <Link href="/" className={buttonClassName({ variant: "primary" })}>
           Fazer nova busca
