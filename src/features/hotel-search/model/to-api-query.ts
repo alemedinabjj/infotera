@@ -1,4 +1,4 @@
-import { type Amenity, amenitySchema } from "@/shared/api/schemas";
+import { type Amenity, amenitySchema, propertyTypeSchema } from "@/shared/api/schemas";
 import { PAGE_SIZE, PRICE_RANGE, type SearchFilters, type SortOption } from "./search-filters";
 
 type SortParams = { _sort: string; _order: string };
@@ -45,7 +45,9 @@ export const toHotelsApiQuery = (destination: string, filters: SearchFilters): H
   ...(filters.minPrice > PRICE_RANGE.min ? { pricePerNight_gte: filters.minPrice } : {}),
   ...(filters.maxPrice < PRICE_RANGE.max ? { pricePerNight_lte: filters.maxPrice } : {}),
   ...(filters.minRating !== null ? { rating_gte: filters.minRating } : {}),
-  ...(filters.types.length > 0 ? { propertyType: [...filters.types] } : {}),
+  ...(filters.types.length > 0
+    ? { propertyType: propertyTypeSchema.options.filter((type) => filters.types.includes(type)) }
+    : {}),
   ...(filters.amenities.length > 0 ? { amenities_like: amenitiesPattern(filters.amenities) } : {}),
   ...SORT_TO_API[filters.sort],
   _page: filters.page,
