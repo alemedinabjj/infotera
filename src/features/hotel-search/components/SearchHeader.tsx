@@ -2,9 +2,8 @@
 
 import { type ReactNode, useRef, useState } from "react";
 import { cn } from "@/shared/lib/cn";
-import { Alert, Button, ChevronDownIcon, LinkIcon } from "@/shared/ui";
+import { Alert, Button, ChevronDownIcon, copyCurrentUrl, LinkIcon } from "@/shared/ui";
 import { markEditSubmitted, useFocusAfterEdit } from "../hooks/useFocusAfterEdit";
-import { copyCurrentUrl } from "./copyCurrentUrl";
 
 /** `id` do `h2` do painel: o formulário o usa como `labelledBy`. */
 export const SEARCH_EDIT_HEADING_ID = "search-edit-heading";

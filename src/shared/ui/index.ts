@@ -21,5 +21,6 @@ export { ErrorState } from "./molecules/ErrorState";
 export { Field, type FieldControlProps } from "./molecules/Field";
 export { Pagination } from "./molecules/Pagination";
 export { QuantityStepper } from "./molecules/QuantityStepper";
+export { copyCurrentUrl } from "./toast/copyCurrentUrl";
 export { Toaster } from "./toast/Toaster";
 export { toast } from "./toast/toast-store";

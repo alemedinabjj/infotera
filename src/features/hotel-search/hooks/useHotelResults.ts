@@ -3,10 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import type { Hotel } from "@/shared/api/schemas";
+import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { hotelsQueryOptions } from "../api/hotels";
 import { deriveResultsView, type ResultsView } from "../model/results-view";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
-import { useSlowLoading } from "./useSlowLoading";
 
 type UseHotelResults = {
   view: ResultsView;
