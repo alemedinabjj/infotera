@@ -34,6 +34,8 @@ shared/
 - `storage.ts`: wrapper de localStorage com try/catch e validação Zod na leitura (dado corrompido → default).
 
 ## ui/
+- Fonte da verdade visual: `docs/design/design-system.md`. Tokens viram o `@theme` do Tailwind;
+  nada de cor ou espaçamento solto (`#3b82f6`, `mt-[13px]`) nos componentes.
 - Atomic Design: atoms não importam molecules; molecules compõem atoms.
 - Todo componente aceita `className` e mescla com `cn()` (clsx + tailwind-merge).
 - Acessível por padrão: `Field` liga label/erro/descrição por `id` e `aria-describedby`; `Dialog`

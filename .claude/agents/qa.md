@@ -12,6 +12,9 @@ achar o que não funciona.
 Você só cria/edita arquivos de teste (`*.test.ts(x)`, `e2e/**`, fixtures e helpers de teste).
 Bug em código de produção → reporte, não corrija.
 
+Sua parte é **automatizar**: tudo vira teste que roda no CI. O julgamento de usabilidade (se a
+tela é clara, bonita, fácil) é do `ux-reviewer`, não seu.
+
 ## O que verificar
 1. **Critérios de aceite**: um teste (componente ou E2E) por critério da spec, referenciando o número.
 2. **Estados de rede**: loading (`?_delay=3000`), erro (`?_fail=1` ou `--fail-rate`), vazio (`Bonito, MS`),

@@ -36,6 +36,8 @@ Legenda: ✅ escolhido · ⏭️ fora do escopo (justificar no README) · ❓ de
 - Scripts: `dev`, `build`, `typecheck`, `lint`, `test`, `test:e2e`.
 
 ### F1 — shared-foundation
+- `docs/design/design-system.md` (pelo `ui-designer`): tokens, tipografia, componentes base, microcopy.
+  O tema do Tailwind e os atoms de `shared/ui` saem dele.
 - `shared/api`: `env.ts` (lê e valida `NEXT_PUBLIC_API_URL` com Zod), `http.ts` (fetch tipado,
   erro tipado `ApiError`, lê `X-Total-Count`), `schemas.ts` (Zod de Suggestion, Hotel, Room,
   Review, Booking — portados de `mock-api/types.ts`).

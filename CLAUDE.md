@@ -41,7 +41,7 @@ src/
     booking-confirmation/ /confirmation/[bookingId]   — GET /bookings/:id
   shared/               código usado por 2+ features (api client, ui, lib, stores)
 mock-api/               API mockada fornecida pelo teste (não é código nosso)
-docs/                   enunciado, mapa do teste, specs por feature
+docs/                   enunciado, mapa do teste, specs por feature, design system (docs/design)
 .claude/agents/         agentes do time de IA
 ```
 
@@ -86,18 +86,27 @@ O comando `/feature <id>` roda o pipeline inteiro. Manualmente, a ordem é:
 | # | Agente | Modelo | Papel |
 |---|---|---|---|
 | 1 | `planner` | Opus 5.5 | Escreve `docs/specs/<feature>.md`: escopo, critérios de aceite, arquivos, plano de testes |
-| 2 | `developer` | Sonnet 5.5 | Implementa a spec (TDD na lógica pura), deixa typecheck/lint/test verdes |
-| 3 | `qa` | Sonnet 5.5 | Escreve testes de componente/E2E, testa a11y e os cenários `_delay`/`_fail` da API |
-| 4 | `reviewer` | Opus 5.5 | Revisa qualidade, arquitetura e aderência à spec. Só lê |
-| 5 | `security` | Opus 5.5 | Revisa segurança e privacidade (PII, XSS, env, deps). Só lê |
+| 2 | `ui-designer` | Opus 5.5 | Escreve a seção `## UI/UX` da spec (layout, estados, microcopy, interações). Na F1, cria `docs/design/design-system.md` |
+| 3 | `developer` | Sonnet 5.5 | Implementa a spec (TDD na lógica pura), deixa typecheck/lint/test verdes |
+| 4 | `qa` | Sonnet 5.5 | Automatiza: testes de componente/E2E, axe, cenários `_delay`/`_fail` da API |
+| 5 | `reviewer` | Opus 5.5 | Revisa qualidade, arquitetura e aderência à spec. Só lê |
+| 6 | `security` | Opus 5.5 | Revisa segurança e privacidade (PII, XSS, env, deps). Só lê |
+| 7 | `ux-reviewer` | Opus 5.5 | Roda o app, tira screenshots por viewport e revisa usabilidade (Nielsen, mobile, teclado, estados). Só lê |
 
-`reviewer` e `security` rodam em paralelo. Achado bloqueante volta para o `developer`; o ciclo
-repete até os dois aprovarem (no máximo 3 voltas; depois disso, pare e pergunte ao usuário).
+`reviewer`, `security` e `ux-reviewer` rodam em paralelo. Achado bloqueante volta para o `developer`
+(ou para o `ui-designer`, se contradizer a spec de UI); o ciclo repete até os três aprovarem
+(no máximo 3 voltas; depois disso, pare e pergunte ao usuário).
+
+Toda UI segue `docs/design/design-system.md` (tokens, componentes, microcopy). Não invente cor,
+espaçamento ou componente fora dele: peça ao `ui-designer` para incluir.
 
 ### Definição de pronto (por feature)
 
 1. Critérios de aceite da spec atendidos.
 2. `npm run typecheck && npm run lint && npm run test` verdes.
-3. `reviewer` e `security` sem achado bloqueante.
+3. `reviewer`, `security` e `ux-reviewer` sem achado bloqueante.
 4. `CLAUDE.md` da feature atualizado se alguma decisão mudou.
 5. Commits atômicos em Conventional Commits (`feat(hotel-search): ...`, `test(checkout): ...`, `fix: ...`).
+   **Sem atribuição de IA**: nada de `Co-Authored-By: Claude`, `Claude-Session:`, "Generated with Claude"
+   ou link de sessão em commits, títulos/descrições de PR ou comentários. O autor é só o desenvolvedor.
+   Título de PR também segue Conventional Commits (`feat(checkout): ...`).
