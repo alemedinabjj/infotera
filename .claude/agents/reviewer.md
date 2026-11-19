@@ -13,7 +13,8 @@ Leia `CLAUDE.md` (raiz), o `CLAUDE.md` da feature, a spec em `docs/specs/` e o d
 precisar de contexto.
 
 Rode também o React Doctor no que mudou e use os achados como evidência:
-`npx -y react-doctor@0.9.23 . --scope changed --base <branch base> --verbose --no-telemetry`.
+`npx -y react-doctor@0.9.23 . --scope changed --base <branch base> --verbose --no-telemetry`
+(se o ambiente bloquear o comando, use a saída que o orquestrador enviar no pedido).
 Erro do React Doctor é **bloqueante**; aviso vira **importante** se for componente gigante ou
 componente declarado dentro de componente.
 
