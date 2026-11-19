@@ -6,7 +6,7 @@ Spec: `docs/specs/F6-booking-confirmation.md` (Decisões 1–12 e `## UI/UX`). `
 
 ## Estrutura
 ```
-model/      booking-id (parseBookingId: UUID v4 minúsculo) · load-result (BookingLoad, Settled, classifyLoadError) ·
+model/      booking-id (parseBookingId: UUID v4 minúsculo ou id curto do json-server) · load-result (BookingLoad, Settled, classifyLoadError) ·
             confirmation-view (toBookingView, toStayView) · guests · booked-at (America/Sao_Paulo) · metadata · booking-number
 api/        booking (bookingQueryOptions) · confirmation.server (loadBooking, loadStayDetails) · confirmation-metadata.server
 components/ BookingConfirmation (RSC) → ConfirmationView → Header/BookingNumber/StaySummary/GuestList/PaymentSummary/NextSteps
@@ -17,6 +17,9 @@ components/ BookingConfirmation (RSC) → ConfirmationView → Header/BookingNum
 - **Rota sempre dinâmica** (`await connection()`), `no-store`, `noindex, nofollow`. **Nota para a F7:** não aplicar PPR/ISR/`use cache`
   nesta rota (tem PII). O histórico (`shared/lib/booking-history`, `infotera:booking-history`) guarda só `{ id, savedAt }`; a F7 lista
   com `GET /bookings/:id` por id e remove os 404 (`removeFromHistory`).
+- Ids aceitos: UUID v4 (principal, normalizado para minúsculas) e o id curto que o json-server gera para
+  reservas criadas pelo `curl` do README (`^[A-Za-z0-9_-]{6,36}$`, caixa preservada, ex.: `L-nHVI_`). Ids só com
+  dígitos (e UUID de outra versão, ou sem hífens) continuam rejeitados: anti-enumeração.
 - Id validado por `parseBookingId` antes de qualquer request; path com `encodeURIComponent` (`fetchBooking` em shared).
 - Hotel e quarto começam juntos depois da reserva; a promessa (`loadStayDetails`, nunca rejeita) vai para o RSC em `<Suspense>`.
   `404` e quarto de outro hotel = `missing` (sem retry); o resto = `error` (um `ErrorState` e um `RefreshButton`; retry ok → foco no h2).

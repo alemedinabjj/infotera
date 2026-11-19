@@ -15,7 +15,7 @@ export const generateMetadata = async ({
 /**
  * `/confirmation/[bookingId]`. Sempre dinâmica (`connection()`): a página tem nome, e-mail e
  * reserva e nunca pode entrar em cache de rota. O id é validado antes de qualquer request: o que
- * não é UUID v4 vira "não encontrada" sem chamar a API.
+ * não é UUID v4 nem id curto do json-server (nunca só dígitos) vira "não encontrada" sem chamar a API.
  */
 const ConfirmationPage = async ({ params }: PageProps<"/confirmation/[bookingId]">) => {
   await connection();

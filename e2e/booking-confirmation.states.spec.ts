@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
+import { z } from "zod";
 import { analyzeAccessibility } from "./helpers/axe";
 import { bookingPath, createBooking, README_FORMAT_BOOKING } from "./helpers/booking";
 import { noHorizontalScroll } from "./helpers/hotel-details";
+import { API_URL } from "./helpers/hotel-search";
 
 // Mock-api real. Reservas forjadas por `POST` direto (a API não valida nada): hotel inexistente,
 // quarto de outro hotel, total adulterado e corpo fora do contrato são cenários reais.
@@ -47,6 +49,15 @@ test.describe("reserva não encontrada (critérios 7, 8 e 9)", () => {
     await page.goto("/confirmation/1");
     await expect(page.getByRole("heading", NOT_FOUND)).toBeVisible();
     await expect(page.getByText(id)).toHaveCount(0);
+  });
+
+  test("reserva do curl do README (id curto do json-server) abre", async ({ page, request }) => {
+    const response = await request.post(`${API_URL}/bookings`, { data: README_FORMAT_BOOKING });
+    const { id } = z.object({ id: z.string() }).parse(await response.json());
+    expect(id).not.toMatch(/^\d+$/);
+    await page.goto(bookingPath(id));
+    await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
+    await expect(page.getByText(id, { exact: true })).toBeVisible();
   });
 
   test("UUID em maiúsculas abre normalmente, com o número em minúsculas", async ({
