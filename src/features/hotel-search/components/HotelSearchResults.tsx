@@ -1,12 +1,10 @@
 "use client";
 
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ErrorBoundary } from "@/shared/ui";
-import { useFocusAfterRetry } from "../hooks/useFocusAfterRetry";
-import { focusResultsHeading, useFocusOnPageChange } from "../hooks/useFocusOnPageChange";
-import { useHotelResults } from "../hooks/useHotelResults";
-import { useSearchFilters } from "../hooks/useSearchFilters";
+import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
+import { useResultsController } from "../hooks/useResultsController";
 import { describeAnnouncement, describeToolbar } from "../model/results-view";
 import { countActiveFilters, serializeSearchFilters } from "../model/search-filters";
 import { FiltersDrawer, FiltersTrigger } from "./FiltersDrawer";
@@ -28,25 +26,11 @@ type HotelSearchResultsProps = {
  */
 export const HotelSearchResults = ({ destination, criteria }: HotelSearchResultsProps) => {
   const headingId = useId();
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
-  const { filters, update, replacePage, pageHref } = useSearchFilters();
-  const results = useHotelResults(destination, filters, replacePage);
+  const { filters, update, pageHref, results, headingRef, sectionRef, sectionMinHeight, retry } =
+    useResultsController(destination);
   const { view } = results;
-  useFocusOnPageChange({
-    headingRef,
-    page: filters.page,
-    filtersKey: serializeSearchFilters({ ...filters, page: 1 }).toString(),
-    ready: view.kind === "results" && !view.stale,
-    silent: view.kind === "out-of-range",
-  });
-
-  const markRetried = useFocusAfterRetry({
-    headingRef,
-    ready: view.kind === "results" && !view.stale,
-    failed: view.kind === "error" && !results.isFetching,
-  });
 
   const toolbar = describeToolbar({
     view,
@@ -65,7 +49,12 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
   return (
     <div className="lg:grid lg:grid-cols-[18rem_1fr] lg:gap-8">
       <FiltersPanel filters={filters} onChange={update} />
-      <section aria-labelledby={headingId} className="flex min-w-0 flex-col gap-4">
+      <section
+        ref={sectionRef}
+        aria-labelledby={headingId}
+        style={{ minHeight: sectionMinHeight }}
+        className="flex min-w-0 flex-col gap-4"
+      >
         <p className="sr-only" aria-live="polite">
           {drawerOpen ? "" : announcement}
         </p>
@@ -100,10 +89,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
             criteria={criteria}
             selectedAmenities={filters.amenities}
             pageHref={pageHref}
-            onRetry={() => {
-              markRetried();
-              results.retry();
-            }}
+            onRetry={retry}
             retrying={results.isFetching}
             onClearFilters={() => {
               update({ type: "clear" });

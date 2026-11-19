@@ -198,6 +198,46 @@ describe("HotelSearchResults: paginação (critérios 7 e 8)", () => {
   });
 });
 
+describe("HotelSearchResults: altura segurada ao filtrar na sidebar", () => {
+  const stubLayout = (desktop: boolean) => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: desktop, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(640);
+  };
+  const section = () => countHeading().closest("section");
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("em lg o min-height guarda a altura anterior e é liberado ao paginar", async () => {
+    stubApi();
+    stubLayout(true);
+    start();
+    await screen.findAllByRole("heading", { level: 3 });
+    expect(section()?.style.minHeight).toBe("");
+    const pool = screen.getAllByRole("checkbox", { name: "Piscina" })[0];
+    if (!pool) throw new Error("checkbox ausente");
+    await userEvent.setup().click(pool);
+    expect(section()?.style.minHeight).toBe("640px");
+    await waitFor(() => expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(10));
+    expect(section()?.style.minHeight).toBe("640px");
+    act(() => window.history.pushState(null, "", `/search?${CRITERIA}&amenity=pool&page=2`));
+    await waitFor(() => expect(section()?.style.minHeight).toBe(""));
+  });
+
+  it("no celular (sheet) nada é segurado", async () => {
+    stubApi();
+    stubLayout(false);
+    start();
+    await screen.findAllByRole("heading", { level: 3 });
+    const pool = screen.getAllByRole("checkbox", { name: "Piscina" })[0];
+    if (!pool) throw new Error("checkbox ausente");
+    await userEvent.setup().click(pool);
+    expect(section()?.style.minHeight).toBe("");
+  });
+});
+
 describe("HotelSearchResults: ordenação (critério 13)", () => {
   it("'Menor preço' grava sort=price-asc e pede a ordenação certa à API", async () => {
     const user = userEvent.setup();
