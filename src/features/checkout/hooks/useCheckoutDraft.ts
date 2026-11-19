@@ -10,12 +10,12 @@ import type { CheckoutStep } from "../model/steps";
 export const DRAFT_DEBOUNCE_MS = 500;
 
 /**
- * Persistência do rascunho no `sessionStorage` com debounce de 500 ms e *flush* no `pagehide`.
+ * Persistência do rascunho (grava o passo mais adiante alcançado) no `sessionStorage` com debounce de 500 ms e *flush* no `pagehide`.
  * O que vai ao storage é decidido por `toPersistedDraft` (whitelist): nunca cartão, CVV, validade,
  * documento, idade, cupom nem aceite. `clear` apaga e **para** a gravação (reserva criada).
  */
-export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, step: CheckoutStep) => {
-  const stepRef = useRef(step);
+export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, reached: CheckoutStep) => {
+  const stepRef = useRef(reached);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const stopped = useRef(false);
   const mounted = useRef(false);
@@ -36,11 +36,11 @@ export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, step: Chec
   }, [write]);
 
   useEffect(() => {
-    stepRef.current = step;
+    stepRef.current = reached;
     // A montagem não grava (nada foi digitado); mudar de passo grava.
     if (mounted.current) schedule();
     mounted.current = true;
-  }, [step, schedule]);
+  }, [reached, schedule]);
 
   useEffect(() => {
     const subscription = form.watch(schedule);

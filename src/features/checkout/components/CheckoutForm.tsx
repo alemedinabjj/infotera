@@ -7,6 +7,7 @@ import { revealBlock } from "@/shared/lib/scroll";
 import { Alert, ErrorSummary } from "@/shared/ui";
 import type { CheckoutFlow } from "../hooks/useCheckoutFlow";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { noticeText } from "../model/notices";
 import { stepCounter, stepDocumentTitle, stepTitle } from "../model/steps";
 import { SUMMARY_TOGGLE_ID } from "./BookingSummary";
 import { DeferBlurProvider } from "./blur-context";
@@ -18,12 +19,6 @@ import { SubmitError } from "./SubmitError";
 
 export const DEMO_NOTICE = "Ambiente de demonstração — não use dados reais.";
 
-const NOTICE_TEXT = {
-  restored: "Recuperamos os dados que você preencheu nesta sessão.",
-  "payment-wiped":
-    "Por segurança, os dados do cartão não ficam salvos. Preencha o pagamento de novo.",
-} as const;
-
 /**
  * `<form>` dos 3 passos: aviso de demonstração, título do passo (alvo do foco), resumo de erros,
  * passo atual, alerta do envio e ações. Um `useForm` para tudo; só o passo atual fica montado.
@@ -32,6 +27,7 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
   const { checkout, submit, price, selection, roomCount } = flow;
   const { form, step } = checkout;
   const headingId = useId();
+  const hasChildren = checkout.fields.some((field) => field.kind === "child");
   useDocumentTitle(stepDocumentTitle(step));
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -71,7 +67,9 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
               {stepTitle(step)}
             </h2>
           </div>
-          {checkout.notice ? <Alert tone="info">{NOTICE_TEXT[checkout.notice.kind]}</Alert> : null}
+          {checkout.notice ? (
+            <Alert tone="info">{noticeText(checkout.notice.kind, hasChildren)}</Alert>
+          ) : null}
           {checkout.summary.length > 0 ? (
             <ErrorSummary
               key={checkout.attempts}

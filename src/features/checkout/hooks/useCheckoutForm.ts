@@ -10,6 +10,7 @@ import { stepOfField, summarizeCheckoutErrors } from "../model/error-summary";
 import {
   CHECKOUT_STEPS,
   type CheckoutStep,
+  furthestStep,
   nextStep,
   previousStep,
   STEP_FIELDS,
@@ -40,10 +41,12 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
   const [step, setStep] = useState<CheckoutStep>(initial.step);
   const [notice, setNotice] = useState<CheckoutNotice | null>(initial.notice);
   const [attempts, setAttempts] = useState(0);
+  const [reached, setReached] = useState(initial.reached);
+  const paymentWipePending = useRef(initial.paymentWipePending);
   const stepRef = useRef(step);
   const containerRef = useRef<HTMLFormElement>(null);
   const blur = useDeferredBlur(containerRef);
-  const draft = useCheckoutDraft(form, step);
+  const draft = useCheckoutDraft(form, reached);
 
   useEffect(() => {
     stepRef.current = step;
@@ -58,7 +61,11 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
   const focus = useCheckoutFocus(form, summaryItems[0]?.id);
 
   const moveTo = (target: CheckoutStep) => {
-    setNotice(null);
+    setReached((current) => furthestStep(current, target));
+    // Restaurou no passo 1 depois de ter passado dele: ao chegar ao pagamento, o aviso do cartão.
+    const wiped = paymentWipePending.current && target === "payment";
+    if (wiped) paymentWipePending.current = false;
+    setNotice(wiped ? { kind: "payment-wiped", step: target } : null);
     setStep(target);
     focus.focusHeading();
   };

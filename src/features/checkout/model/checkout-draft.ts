@@ -9,6 +9,7 @@ export const CHECKOUT_DRAFT_VERSION = 1;
 
 export const persistedDraftSchema = z.object({
   v: z.literal(CHECKOUT_DRAFT_VERSION),
+  /** Passo mais adiante já alcançado (não o atual): independe de o passo 1 estar válido. */
   step: z.enum(CHECKOUT_STEPS),
   contact: z.object({
     firstName: z.string(),
