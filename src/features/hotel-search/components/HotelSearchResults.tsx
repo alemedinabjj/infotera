@@ -32,8 +32,8 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
     useResultsController(destination);
   const { view } = results;
 
+  const { toolbar, announcement } = useResultsText(results, filters.page, destination);
   const resetKey = `${destination}?${serializeSearchFilters(filters).toString()}`;
-  const { toolbar, announcement } = useResultsText(results, filters.page, destination, resetKey);
 
   return (
     <div className="lg:grid lg:grid-cols-[18rem_1fr] lg:gap-8">

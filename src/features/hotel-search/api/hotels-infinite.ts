@@ -1,4 +1,4 @@
-import { infiniteQueryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import type { SearchFilters } from "../model/search-filters";
 import { toHotelsRequest } from "../model/to-api-query";
 import {
@@ -26,3 +26,26 @@ export const hotelsInfiniteQueryOptions = (destination: string, filters: SearchF
     getNextPageParam: (_last, allPages) => nextFeedPage(allPages),
     placeholderData: keepPreviousIfSameDestination(destination),
   });
+
+/** Máximo de tentativas extras de um lote quando já há itens na tela (a lista não some). */
+const NEXT_BATCH_RETRIES = 1;
+
+type RetryOption = boolean | number | ((failureCount: number, error: Error) => boolean);
+
+const allowsRetry = (retry: RetryOption | undefined, failureCount: number, error: Error) => {
+  if (typeof retry === "function") return retry(failureCount, error);
+  if (typeof retry === "number") return failureCount < retry;
+  return retry === true;
+};
+
+/**
+ * `retry` do feed: a 1ª carga segue o padrão do client (2 tentativas); um lote seguinte, com os
+ * itens anteriores já na tela, tenta só 1 vez a mais (a espera até o erro cai de ~3 s para ~1 s).
+ * Decide no momento da falha: olha se a consulta já tem dados.
+ */
+export const nextBatchRetry =
+  (client: QueryClient, queryKey: QueryKey) => (failureCount: number, error: Error) => {
+    const standard = allowsRetry(client.getDefaultOptions().queries?.retry, failureCount, error);
+    const hasItems = client.getQueryData(queryKey) !== undefined;
+    return hasItems ? standard && failureCount < NEXT_BATCH_RETRIES : standard;
+  };

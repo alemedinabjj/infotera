@@ -10,15 +10,15 @@ import type { FeedState } from "./results-model";
 
 /**
  * Anúncio do feed para o `aria-live`: `Mais 4 hotéis carregados. Mostrando 14 de 14.` quando o
- * nº de lotes cresce dentro da MESMA consulta (`queryKey`). Vazio fora da rolagem contínua, em
+ * nº de lotes cresce dentro da MESMA consulta (`feed.queryKey`). Vazio fora da rolagem contínua, em
  * troca de filtro e quando não há nada novo (a contagem inicial é anunciada pelo texto geral).
  */
-export const useFeedAnnouncement = (
-  feed: FeedState | null,
-  total: number,
-  queryKey: string,
-): string => {
-  const progress = { key: queryKey, batches: feed?.batches ?? 0, loaded: feed?.loaded ?? 0 };
+export const useFeedAnnouncement = (feed: FeedState | null, total: number): string => {
+  const progress = {
+    key: feed?.queryKey ?? "",
+    batches: feed?.batches ?? 0,
+    loaded: feed?.loaded ?? 0,
+  };
   const [snapshot, setSnapshot] = useState<AnnouncementSnapshot>({
     ...progress,
     previousLoaded: progress.loaded,

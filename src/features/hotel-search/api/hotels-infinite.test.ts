@@ -1,9 +1,9 @@
-import { InfiniteQueryObserver } from "@tanstack/react-query";
+import { InfiniteQueryObserver, QueryClient } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeHotel } from "@/shared/testing/fixtures";
 import { makeTestQueryClient } from "@/shared/testing/render";
 import { DEFAULT_FILTERS } from "../model/search-filters";
-import { hotelsInfiniteQueryOptions, nextFeedPage } from "./hotels-infinite";
+import { hotelsInfiniteQueryOptions, nextBatchRetry, nextFeedPage } from "./hotels-infinite";
 
 const RIO = "Rio de Janeiro, RJ";
 const ALL = Array.from({ length: 14 }, (_, index) =>
@@ -78,5 +78,29 @@ describe("hotelsInfiniteQueryOptions", () => {
     ]);
     expect(fetchMock).toHaveBeenCalledOnce();
     unsubscribe();
+  });
+});
+
+describe("nextBatchRetry", () => {
+  const key = ["hotels", "infinite", {}] as const;
+  const clientWithRetry = (retry: number) =>
+    new QueryClient({ defaultOptions: { queries: { retry } } });
+
+  it("1ª carga (sem dados): segue o padrão do client", () => {
+    const retry = nextBatchRetry(clientWithRetry(2), key);
+    expect([0, 1, 2].map((count) => retry(count, new Error("x")))).toEqual([true, true, false]);
+  });
+
+  it("lote seguinte (com dados na tela): só 1 tentativa extra", () => {
+    const client = clientWithRetry(2);
+    client.setQueryData(key, { pages: [], pageParams: [] });
+    const retry = nextBatchRetry(client, key);
+    expect([0, 1, 2].map((count) => retry(count, new Error("x")))).toEqual([true, false, false]);
+  });
+
+  it("client sem retry continua sem retry", () => {
+    const client = clientWithRetry(0);
+    client.setQueryData(key, { pages: [], pageParams: [] });
+    expect(nextBatchRetry(client, key)(0, new Error("x"))).toBe(false);
   });
 });

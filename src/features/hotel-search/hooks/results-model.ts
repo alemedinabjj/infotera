@@ -8,6 +8,8 @@ export type FeedState = {
   footer: FeedFooter;
   /** Hotéis carregados até agora (todos os lotes). */
   loaded: number;
+  /** Identifica a consulta (filtros + ordenação): troca de filtro zera o que depende de lote. */
+  queryKey: string;
   /** Lotes carregados (cresce a cada `loadMore`). */
   batches: number;
   /** Um lote está sendo buscado (inclusive o "Tentar de novo" depois de um erro). */

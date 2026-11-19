@@ -20,10 +20,9 @@ export const useResultsText = (
   results: ResultsModel,
   page: number,
   destination: string,
-  queryKey: string,
 ): ResultsText => {
   const { view, slow, total, feed } = results;
-  const feedAnnouncement = useFeedAnnouncement(feed, total, queryKey);
+  const feedAnnouncement = useFeedAnnouncement(feed, total);
   return {
     toolbar: describeToolbar({
       view,

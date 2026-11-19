@@ -1,8 +1,8 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { hotelsInfiniteQueryOptions } from "../api/hotels-infinite";
+import { hotelsInfiniteQueryOptions, nextBatchRetry } from "../api/hotels-infinite";
 import { deriveFeedFooter } from "../model/feed";
 import { deriveResultsView } from "../model/results-view";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
@@ -19,9 +19,12 @@ export const useHotelFeed = (
   filters: SearchFilters,
   enabled: boolean,
 ): ResultsModel => {
+  const client = useQueryClient();
+  const options = hotelsInfiniteQueryOptions(destination, filters);
   const query = useInfiniteQuery({
-    ...hotelsInfiniteQueryOptions(destination, filters),
+    ...options,
     enabled,
+    retry: nextBatchRetry(client, options.queryKey),
   });
   const pages = query.data?.pages;
   const items = useMemo(() => pages?.flatMap((page) => page.items) ?? [], [pages]);
@@ -59,6 +62,7 @@ export const useHotelFeed = (
         total,
       }),
       loaded: items.length,
+      queryKey: JSON.stringify(options.queryKey),
       batches: pages?.length ?? 0,
       isFetchingNextPage: query.isFetchingNextPage,
       loadMore: () => void query.fetchNextPage(),
