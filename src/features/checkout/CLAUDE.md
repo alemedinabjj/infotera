@@ -26,7 +26,9 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
 - **CSP com nonce só em `/checkout`** (`src/proxy.ts`) + carga de documento ao entrar (`assignLocation` na F4 e
   `useStrictDocument`). A página chama `connection()`.
 - **Um `useForm` para os 3 passos**; passo em estado local (não na URL); `trigger(STEP_FIELDS[step], { shouldFocus })`.
-  O foco do campo inválido roda **depois** do efeito do `ErrorSummary` (o campo nunca fica atrás do header nem da barra).
+  `useCheckoutFocus` cuida do foco: o campo inválido roda **depois** do efeito do `ErrorSummary` e revela o contêiner
+  inteiro (`data-reveal-block`) com `revealBlock`, entre o header e a barra fixa; o `h2` revela o bloco "Passo N de 3".
+  O alerta do envio (`SubmitError`) se revela inteiro (rAF pós-commit). Toast só na falha de transporte da action.
 - **Bloqueio só na entrada** (`admitted` em `CheckoutRoute`): mudar a quantidade de quartos (optimistic) ou refetch do
   quarto não pode derrubar o formulário; o envio devolve `unavailable` com alerta e "Ver quartos".
 - **Quartos otimistas**: `useRoomCount` (reducer com `seq`; consultas simultâneas compartilham o `fetchQuery`); persiste em
@@ -34,6 +36,12 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
   disparar o redirect para `/`.
 - **Cupons locais** (`BEMVINDO10`, `FERIAS15`, `DESCONTO50`, `VERAO2024`), consulta com cache por código (`staleTime: Infinity`),
   elegibilidade reavaliada por `buildQuote` quando os quartos mudam.
+- **Telefone**: o valor guardado são os dígitos brutos (até 15); a máscara é só de exibição e o excesso por país é erro
+  de validação (BR → US → BR preserva o número).
+- **Rascunho**: `step` é o passo **máximo alcançado**; se a restauração cai no passo 1 (ex.: idade da criança), o aviso do
+  cartão apagado aparece ao chegar ao passo 2. Título do documento por efeito (`useDocumentTitle`).
+- **Desktop**: o `ActionBar` vira card estático com "Total R$ X" ao lado do botão; o total do aside é `sticky bottom-0`.
+- **Envio**: `inFlight` (ref) garante 1 request; no retry ambíguo, `bookingMatchesInput` confere que a reserva lida é a deste pedido.
 - **Máscaras**: `applyMask` conta letras e dígitos antes do cursor (vale para passaporte também); sem `maxLength`.
 - **Botões nunca `disabled`**: `loading`/`aria-disabled`; blur do campo adiado com `useDeferredBlur` enquanto um botão é
   pressionado; ErrorSummary e SubmitError remontados por `key`.
