@@ -135,15 +135,19 @@ describe("FiltersDrawer (critério 29)", () => {
     const user = userEvent.setup();
     stubApi();
     let listener: (event: MediaQueryListEvent) => void = () => undefined;
-    vi.stubGlobal("matchMedia", () => ({
+    // Outros consumidores (ex.: `useReducedMotion` do Motion) também chamam `matchMedia`: só a
+    // consulta de desktop interessa a este teste.
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: false,
       addEventListener: (_: string, handler: typeof listener) => {
-        listener = handler;
+        if (query === "(min-width: 1024px)") listener = handler;
       },
       removeEventListener: () => undefined,
     }));
     start();
     await openSheet(user);
     act(() => listener(Object.assign(new Event("change"), { matches: true, media: "" })));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // A saída é animada: o <dialog> só fecha depois dela.
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 });

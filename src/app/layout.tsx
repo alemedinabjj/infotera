@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AppProviders } from "@/shared/providers/AppProviders";
-import { CompareTray, SavedNav } from "@/shared/saved";
+import { CompareTray } from "@/shared/saved/components/CompareTray";
+import { SavedNav } from "@/shared/saved/components/SavedNav";
 import { SiteHeader } from "@/shared/ui/layout/SiteHeader";
 import { SkipLink } from "@/shared/ui/layout/SkipLink";
 import "./globals.css";

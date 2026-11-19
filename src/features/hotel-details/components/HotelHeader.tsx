@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import type { Hotel } from "@/shared/api/schemas";
 import { propertyTypeLabel } from "@/shared/lib/labels";
-import { CompareCheckbox, FavoriteButton } from "@/shared/saved";
+import { CompareCheckbox } from "@/shared/saved/components/CompareCheckbox";
+import { FavoriteButton } from "@/shared/saved/components/FavoriteButton";
 import { Badge, buttonClassName, ChevronDownIcon, MapPinIcon, RatingScore } from "@/shared/ui";
 import { FromPrice } from "./FromPrice";
 import { ShareButton } from "./ShareButton";
