@@ -50,10 +50,11 @@ export const FiltersDrawer = ({
           <ClearFiltersButton
             active={hasActiveFilters(filters)}
             onClear={() => onChange({ type: "clear" })}
-            className="flex-1"
+            className="shrink-0 whitespace-nowrap"
           />
+          {/* Largura fixa (restante do rodapé): o rótulo vira "Atualizando…" sem mexer no botão. */}
           <Button
-            className="flex-1"
+            className="min-w-0 flex-1 basis-0 px-3 whitespace-nowrap"
             leftIcon={action.updating ? <Spinner /> : undefined}
             onClick={onClose}
           >
