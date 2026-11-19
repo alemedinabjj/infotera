@@ -1,0 +1,147 @@
+"use client";
+
+import { m, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import type { Hotel } from "@/shared/api/schemas";
+import { removeFromHistory, restoreBookingHistory } from "@/shared/lib/booking-history";
+import { cn } from "@/shared/lib/cn";
+import { motionPreset, staggerDelay } from "@/shared/lib/motion";
+import { Button } from "@/shared/ui";
+import type { HistoryRow } from "../model/history-rows";
+import { HISTORY_MESSAGES } from "../model/messages";
+import { HistoryItem } from "./HistoryItem";
+import { HistoryItemFailed, HistoryItemSkeleton } from "./HistoryItemStates";
+import { RemovedHistoryItem } from "./RemovedHistoryItem";
+
+type HotelLookup = { state: "loading" | "ready" | "unavailable"; hotels: readonly Hotel[] };
+
+type HistoryRowItemProps = {
+  row: HistoryRow;
+  index: number;
+  /** O id ainda está guardado (se não, a linha virou "fantasma"). */
+  kept: boolean;
+  hotels: HotelLookup;
+  retrying: boolean;
+  onRetry: () => void;
+};
+
+type FocusTarget = "undo" | "remove" | null;
+
+const Content = ({
+  row,
+  hotels,
+  retrying,
+  onRetry,
+  removeButton,
+}: Omit<HistoryRowItemProps, "index" | "kept"> & {
+  removeButton: (label?: string) => React.ReactNode;
+}) => {
+  switch (row.kind) {
+    case "found": {
+      const hotel = hotels.hotels.find((item) => item.id === row.booking.hotelId);
+      const state = hotels.state === "ready" && !hotel ? "unavailable" : hotels.state;
+      return (
+        <HistoryItem booking={row.booking} hotel={{ state, hotel }} removeButton={removeButton} />
+      );
+    }
+    case "pending":
+    case "missing":
+      return <HistoryItemSkeleton />;
+    case "failed":
+    case "unreadable":
+      return (
+        <HistoryItemFailed
+          unreadable={row.kind === "unreadable"}
+          retrying={retrying}
+          onRetry={onRetry}
+          removeButton={removeButton()}
+        />
+      );
+    default: {
+      const unreachable: never = row;
+      return unreachable;
+    }
+  }
+};
+
+/**
+ * Uma linha do histórico. Remover troca o conteúdo por um "fantasma" na mesma célula (altura
+ * idêntica, nada abaixo se move); o foco vai a "Desfazer" e, ao desfazer, volta a "Remover".
+ */
+export const HistoryRowItem = ({
+  row,
+  index,
+  kept,
+  hotels,
+  retrying,
+  onRetry,
+}: HistoryRowItemProps) => {
+  const preset = motionPreset("list-item", useReducedMotion() ?? false);
+  const [focus, setFocus] = useState<FocusTarget>(null);
+  const undoRef = useRef<HTMLButtonElement>(null);
+  const removeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (focus === null) return;
+    (focus === "undo" ? undoRef : removeRef).current?.focus();
+    setFocus(null);
+  }, [focus]);
+
+  const removeButton = (label?: string) => (
+    <Button
+      ref={removeRef}
+      variant="ghost"
+      size="sm"
+      aria-label={label}
+      onClick={() => {
+        removeFromHistory(row.entry.id);
+        setFocus("undo");
+      }}
+    >
+      {HISTORY_MESSAGES.remove}
+    </Button>
+  );
+  const hotel =
+    row.kind === "found"
+      ? hotels.hotels.find((item) => item.id === row.booking.hotelId)
+      : undefined;
+  const name =
+    row.kind === "found"
+      ? (hotel?.name ?? HISTORY_MESSAGES.hotelUnavailable)
+      : HISTORY_MESSAGES.thisBooking;
+
+  return (
+    <m.li
+      initial={preset.initial}
+      animate={preset.animate}
+      transition={{ ...preset.transition, delay: staggerDelay(index) }}
+      className="grid"
+    >
+      <div
+        className={cn(
+          "col-start-1 row-start-1 overflow-hidden rounded-card border border-border bg-surface shadow-card",
+          !kept && "invisible",
+        )}
+        inert={!kept}
+      >
+        <Content
+          row={row}
+          hotels={hotels}
+          retrying={retrying}
+          onRetry={onRetry}
+          removeButton={removeButton}
+        />
+      </div>
+      {kept ? null : (
+        <RemovedHistoryItem
+          hotel={name}
+          undoRef={undoRef}
+          onUndo={() => {
+            restoreBookingHistory([row.entry]);
+            setFocus("remove");
+          }}
+        />
+      )}
+    </m.li>
+  );
+};
