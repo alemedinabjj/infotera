@@ -80,6 +80,8 @@ features/<nome>/
 - Named exports. Componentes como `const Nome = (...) => ...`.
 - Lógica (datas, preço, filtros ↔ URL) fica em `model/` como função pura, nunca dentro do componente.
 - JSDoc nos componentes e hooks exportados que não forem óbvios.
+- Tamanho (Biome bloqueia): até 80 linhas por função/componente, 250 por arquivo (500 em testes),
+  complexidade cognitiva até 15. Passou do limite → extraia subcomponente, hook ou função em `model/`.
 - Acessibilidade não é opcional: label em todo input, foco visível, navegação por teclado, `aria-live` para loading/erro, contraste AA, nada quebrado no mobile (320px).
 - Toda tela com dado remoto tem os 4 estados: loading (skeleton), erro (com retry), vazio, sucesso.
 - Identificadores e código em inglês; textos da UI e documentação em pt-BR.
