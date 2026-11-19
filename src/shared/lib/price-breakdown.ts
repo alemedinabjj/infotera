@@ -6,6 +6,12 @@ import { pluralize } from "./format";
 export const SERVICE_FEE_BPS = 1000;
 export const ISS_BPS = 500;
 
+const BPS_DENOMINATOR = 10_000;
+
+/** Percentual em bps com arredondamento half-up, só em aritmética inteira. */
+export const applyBps = (cents: number, bps: number): number =>
+  Math.floor((cents * bps + BPS_DENOMINATOR / 2) / BPS_DENOMINATOR);
+
 /** Uma linha do detalhamento do preço. `code` é `null` quando o desconto não grava o cupom. */
 export type PriceLine =
   | { kind: "stay"; nightlyCents: number; nights: number; rooms: number; amountCents: number }
@@ -67,7 +73,8 @@ export const priceBreakdownLines = (breakdown: PriceBreakdown): PriceLine[] => [
 
 /**
  * O detalhamento gravado só é confiável se fechar a conta: estadia = diária × noites × quartos,
- * as linhas somam `totalCents` e `totalCents` bate com `totalPrice` (reais) da reserva.
+ * taxa de serviço e ISS = `applyBps(base, ...)` com `base = estadia − desconto`, as linhas somam
+ * `totalCents` e `totalCents` bate com `totalPrice` (reais) da reserva.
  */
 export const isBreakdownConsistent = (breakdown: PriceBreakdown, totalPrice: number): boolean => {
   const stay = breakdown.nightlyCents * breakdown.nights * breakdown.rooms;
@@ -76,8 +83,11 @@ export const isBreakdownConsistent = (breakdown: PriceBreakdown, totalPrice: num
     breakdown.discountCents +
     breakdown.serviceFeeCents +
     breakdown.taxCents;
+  const base = breakdown.subtotalCents - breakdown.discountCents;
   return (
     stay === breakdown.subtotalCents &&
+    breakdown.serviceFeeCents === applyBps(base, SERVICE_FEE_BPS) &&
+    breakdown.taxCents === applyBps(base, ISS_BPS) &&
     sum === breakdown.totalCents &&
     breakdown.totalCents === reaisToCents(totalPrice)
   );

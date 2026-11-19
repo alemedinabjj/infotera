@@ -1,16 +1,11 @@
 import { reaisToCents } from "@/shared/lib/currency";
 import {
+  applyBps,
   ISS_BPS,
   type PriceLine,
   priceBreakdownLines,
   SERVICE_FEE_BPS,
 } from "@/shared/lib/price-breakdown";
-
-const BPS_DENOMINATOR = 10_000;
-
-/** Percentual em bps com arredondamento half-up, só em aritmética inteira. */
-export const applyBps = (cents: number, bps: number): number =>
-  Math.floor((cents * bps + BPS_DENOMINATOR / 2) / BPS_DENOMINATOR);
 
 export type PriceDiscount = { code: string } & (
   | { kind: "percent"; bps: number }

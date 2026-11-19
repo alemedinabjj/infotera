@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PriceBreakdown } from "../api/schemas";
 import {
+  applyBps,
   isBreakdownConsistent,
   priceBreakdownLines,
   priceLineAmount,
@@ -81,6 +82,14 @@ describe("priceBreakdownLines", () => {
   });
 });
 
+describe("applyBps", () => {
+  it("arredonda meio centavo para cima", () => {
+    expect(applyBps(5, 1000)).toBe(1); // 0,5
+    expect(applyBps(4, 1000)).toBe(0); // 0,4
+    expect(applyBps(15, 1000)).toBe(2); // 1,5
+  });
+});
+
 describe("isBreakdownConsistent", () => {
   it("aceita o detalhamento que fecha a conta", () => {
     expect(isBreakdownConsistent(breakdown, 3726)).toBe(true);
@@ -91,6 +100,12 @@ describe("isBreakdownConsistent", () => {
     ["total diferente de totalPrice", {}, 3000],
     ["estadia diferente de diária × noites × quartos", { subtotalCents: 360001 }, 3726],
     ["taxa adulterada", { taxCents: 1 }, 3726],
+    [
+      "taxa de serviço adulterada com total ajustado",
+      { serviceFeeCents: 32_500, totalCents: 372_700 },
+      3727,
+    ],
+    ["ISS adulterado com total ajustado", { taxCents: 16_300, totalCents: 372_700 }, 3727],
   ])("rejeita: %s", (_name, override, totalPrice) => {
     expect(isBreakdownConsistent({ ...breakdown, ...override }, totalPrice)).toBe(false);
   });

@@ -1,14 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ISS_BPS, SERVICE_FEE_BPS } from "@/shared/lib/price-breakdown";
-import { applyBps, calculatePrice } from "./price";
-
-describe("applyBps", () => {
-  it("arredonda meio centavo para cima", () => {
-    expect(applyBps(5, 1000)).toBe(1); // 0,5
-    expect(applyBps(4, 1000)).toBe(0); // 0,4
-    expect(applyBps(15, 1000)).toBe(2); // 1,5
-  });
-});
+import { applyBps, ISS_BPS, SERVICE_FEE_BPS } from "@/shared/lib/price-breakdown";
+import { calculatePrice } from "./price";
 
 describe("calculatePrice", () => {
   it("1 quarto, 3 noites a R$ 1.200", () => {
