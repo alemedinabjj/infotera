@@ -1,11 +1,10 @@
-import { type InfiniteData, infiniteQueryOptions, type QueryClient } from "@tanstack/react-query";
+import { infiniteQueryOptions } from "@tanstack/react-query";
 import type { SearchFilters } from "../model/search-filters";
 import { toHotelsRequest } from "../model/to-api-query";
 import {
   fetchHotelsPage,
   type HotelsPage,
   hotelsFeedKey,
-  hotelsPageKey,
   keepPreviousIfSameDestination,
 } from "./hotels";
 
@@ -17,34 +16,13 @@ export const nextFeedPage = (pages: readonly HotelsPage[]): number | undefined =
   return loaded < last.total ? pages.length + 1 : undefined;
 };
 
-/**
- * Lote 1 vindo da página 1 do modo "Em páginas" em cache: trocar para "Rolagem contínua" não
- * mostra skeleton nem faz request.
- */
-const seedFromPage = (client: QueryClient, destination: string, filters: SearchFilters) => {
-  const key = hotelsPageKey(destination, filters, 1);
-  const page = client.getQueryData<HotelsPage>(key);
-  if (page === undefined) return undefined;
-  const data: InfiniteData<HotelsPage, number> = { pages: [page], pageParams: [1] };
-  return { data, updatedAt: client.getQueryState(key)?.dataUpdatedAt };
-};
-
 /** Rolagem contínua: cada lote é uma página de 10 (mesmo `fetchHotelsPage` do modo páginas). */
-export const hotelsInfiniteQueryOptions = (
-  destination: string,
-  filters: SearchFilters,
-  client: QueryClient,
-) =>
+export const hotelsInfiniteQueryOptions = (destination: string, filters: SearchFilters) =>
   infiniteQueryOptions({
     queryKey: hotelsFeedKey(destination, filters),
     initialPageParam: 1,
-    queryFn: ({ pageParam, client: queryClient, signal }) =>
-      fetchHotelsPage(toHotelsRequest(destination, filters, pageParam), {
-        client: queryClient,
-        signal,
-      }),
+    queryFn: ({ pageParam, client, signal }) =>
+      fetchHotelsPage(toHotelsRequest(destination, filters, pageParam), { client, signal }),
     getNextPageParam: (_last, allPages) => nextFeedPage(allPages),
     placeholderData: keepPreviousIfSameDestination(destination),
-    initialData: () => seedFromPage(client, destination, filters)?.data,
-    initialDataUpdatedAt: () => seedFromPage(client, destination, filters)?.updatedAt,
   });

@@ -10,6 +10,7 @@ import { countActiveFilters, serializeSearchFilters } from "../model/search-filt
 import { DistanceHelp } from "./DistanceHelp";
 import { FiltersDrawer, FiltersTrigger } from "./FiltersDrawer";
 import { FiltersPanel } from "./FiltersPanel";
+import { ListModeSelect } from "./ListModeSelect";
 import { ResultsError } from "./ResultsError";
 import { ResultsSection } from "./ResultsSection";
 import { ResultsToolbar } from "./ResultsToolbar";
@@ -38,7 +39,9 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
     view,
     slow: results.slow,
     total: results.total,
-    listing: { mode: "pages", page: filters.page },
+    listing: results.feed
+      ? { mode: "infinite", loaded: results.feed.loaded }
+      : { mode: "pages", page: filters.page },
   });
   const announcement = describeAnnouncement({
     view,
@@ -67,8 +70,15 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
           status={toolbar.status}
           filtersTrigger={
             <FiltersTrigger
+              className="min-[26rem]:col-span-2 min-[26rem]:justify-self-start sm:col-span-1"
               activeCount={countActiveFilters(filters)}
               onClick={() => setDrawerOpen(true)}
+            />
+          }
+          listMode={
+            <ListModeSelect
+              value={filters.view}
+              onChange={(value) => update({ type: "setView", value })}
             />
           }
           sort={
@@ -92,6 +102,8 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
             center={results.center}
             total={results.total}
             page={filters.page}
+            headingId={headingId}
+            feed={results.feed}
             destination={destination}
             criteria={criteria}
             selectedAmenities={filters.amenities}

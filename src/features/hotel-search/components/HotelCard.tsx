@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { type RefCallback, useId } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import { pluralize } from "@/shared/lib/format";
@@ -15,6 +16,17 @@ import { HotelCardFooter } from "./HotelCardFooter";
 import { HotelImage } from "./HotelImage";
 import { RatingScore } from "./RatingScore";
 
+/** Posição do card no feed (padrão ARIA `feed`): tamanho do conjunto conhecido pelo total da API. */
+export type FeedItemProps = {
+  /** 1-based. */
+  posInSet: number;
+  setSize: number;
+  /** Índice 0-based (`data-index` do virtualizador). */
+  index: number;
+  /** Mede o card (`measureElement`). */
+  ref?: RefCallback<HTMLElement>;
+};
+
 type HotelCardProps = {
   hotel: Hotel;
   /** `null` no modo `browse` (sem datas): sem total e link sem critérios. */
@@ -25,6 +37,8 @@ type HotelCardProps = {
   center: GeoPoint | null;
   /** Primeiro card da lista: foto com `loading="eager"`. */
   priority?: boolean;
+  /** Só na rolagem contínua: o `article` vira item do `feed`. */
+  feed?: FeedItemProps;
 };
 
 const AmenityList = ({
@@ -73,12 +87,22 @@ export const HotelCard = ({
   selectedAmenities,
   center,
   priority = false,
+  feed,
 }: HotelCardProps) => {
+  const titleId = useId();
   const prefetch = usePrefetchHotel(hotel.id);
   const pricing = deriveCardPricing(hotel, criteria);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow duration-150 hover:shadow-raised has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus sm:flex-row">
+    <article
+      ref={feed?.ref}
+      data-index={feed?.index}
+      aria-posinset={feed?.posInSet}
+      aria-setsize={feed?.setSize}
+      aria-labelledby={feed ? titleId : undefined}
+      tabIndex={feed ? -1 : undefined}
+      className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow duration-150 hover:shadow-raised has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row"
+    >
       <HotelImage
         src={hotel.thumbnail}
         alt={hotel.name}
@@ -86,7 +110,7 @@ export const HotelCard = ({
         eager={priority}
       />
       <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
-        <h3 className="line-clamp-2 text-lg font-semibold text-fg">
+        <h3 id={titleId} className="line-clamp-2 text-lg font-semibold text-fg">
           <Link
             href={hotelHref(hotel.id, criteria)}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"

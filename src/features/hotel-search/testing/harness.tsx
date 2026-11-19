@@ -2,7 +2,7 @@ import { vi } from "vitest";
 import type { Hotel } from "@/shared/api/schemas";
 import { makeHotel, makeSearchCriteria } from "@/shared/testing/fixtures";
 import { setTestUrl } from "@/shared/testing/next-navigation";
-import { renderWithProviders } from "@/shared/testing/render";
+import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
 import { HotelSearchResults } from "../components/HotelSearchResults";
 
 /** Utilitários dos testes de componente de `/search` (feed, distância): destino, API stubada e render. */
@@ -46,7 +46,19 @@ export const stubApi = (handler: Handler = paged) => {
 export const requestedUrls = (fetchMock: ReturnType<typeof stubApi>): URL[] =>
   fetchMock.mock.calls.map(([input]) => new URL(input));
 
+/** Mesma regra do app: dado de 60 s não é refeito ao reativar uma query (troca de modo). */
+const makeClient = () => {
+  const client = makeTestQueryClient();
+  client.setDefaultOptions({
+    ...client.getDefaultOptions(),
+    queries: { ...client.getDefaultOptions().queries, staleTime: 60_000 },
+  });
+  return client;
+};
+
 export const start = (query = "") => {
   setTestUrl(`/search?${CRITERIA}${query}`);
-  return renderWithProviders(<HotelSearchResults destination={RIO} criteria={criteria} />);
+  return renderWithProviders(<HotelSearchResults destination={RIO} criteria={criteria} />, {
+    queryClient: makeClient(),
+  });
 };

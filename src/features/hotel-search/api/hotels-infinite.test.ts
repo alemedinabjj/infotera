@@ -1,9 +1,8 @@
-import { InfiniteQueryObserver, QueryObserver } from "@tanstack/react-query";
+import { InfiniteQueryObserver } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeHotel } from "@/shared/testing/fixtures";
 import { makeTestQueryClient } from "@/shared/testing/render";
 import { DEFAULT_FILTERS } from "../model/search-filters";
-import { hotelsQueryOptions } from "./hotels";
 import { hotelsInfiniteQueryOptions, nextFeedPage } from "./hotels-infinite";
 
 const RIO = "Rio de Janeiro, RJ";
@@ -51,7 +50,7 @@ describe("hotelsInfiniteQueryOptions", () => {
     const client = makeTestQueryClient();
     const observer = new InfiniteQueryObserver(
       client,
-      hotelsInfiniteQueryOptions(RIO, DEFAULT_FILTERS, client),
+      hotelsInfiniteQueryOptions(RIO, DEFAULT_FILTERS),
     );
     const unsubscribe = observer.subscribe(() => undefined);
     await vi.waitFor(() => expect(observer.getCurrentResult().data?.pages).toHaveLength(1));
@@ -70,10 +69,7 @@ describe("hotelsInfiniteQueryOptions", () => {
     const fetchMock = stubApi();
     const client = makeTestQueryClient();
     const filters = { ...DEFAULT_FILTERS, sort: "distance" as const, view: "infinite" as const };
-    const observer = new InfiniteQueryObserver(
-      client,
-      hotelsInfiniteQueryOptions(RIO, filters, client),
-    );
+    const observer = new InfiniteQueryObserver(client, hotelsInfiniteQueryOptions(RIO, filters));
     const unsubscribe = observer.subscribe(() => undefined);
     await vi.waitFor(() => expect(observer.getCurrentResult().data?.pages).toHaveLength(1));
     await observer.fetchNextPage();
@@ -82,39 +78,5 @@ describe("hotelsInfiniteQueryOptions", () => {
     ]);
     expect(fetchMock).toHaveBeenCalledOnce();
     unsubscribe();
-  });
-
-  it("initialData: a página 1 em cache vira o lote 1 (sem request)", async () => {
-    const fetchMock = stubApi();
-    const client = makeTestQueryClient();
-    const first = await client.fetchQuery(hotelsQueryOptions(RIO, DEFAULT_FILTERS, client));
-    const calls = fetchMock.mock.calls.length;
-    const options = hotelsInfiniteQueryOptions(RIO, DEFAULT_FILTERS, client);
-    const observer = new InfiniteQueryObserver(client, {
-      ...options,
-      staleTime: 60_000,
-    });
-    expect(observer.getCurrentResult().data?.pages).toEqual([first]);
-    expect(observer.getCurrentResult().data?.pageParams).toEqual([1]);
-    expect(fetchMock.mock.calls.length).toBe(calls);
-  });
-
-  it("initialData: o 1º lote do feed em cache vira a página 1", async () => {
-    const fetchMock = stubApi();
-    const client = makeTestQueryClient();
-    const feed = await client.fetchInfiniteQuery({
-      ...hotelsInfiniteQueryOptions(RIO, DEFAULT_FILTERS, client),
-      pages: 1,
-    });
-    const calls = fetchMock.mock.calls.length;
-    const options = hotelsQueryOptions(RIO, DEFAULT_FILTERS, client);
-    const data = client.getQueryData(options.queryKey);
-    expect(data).toBeUndefined();
-    const observer = new QueryObserver(client, {
-      ...options,
-      staleTime: 60_000,
-    });
-    expect(observer.getCurrentResult().data).toEqual(feed.pages[0]);
-    expect(fetchMock.mock.calls.length).toBe(calls);
   });
 });

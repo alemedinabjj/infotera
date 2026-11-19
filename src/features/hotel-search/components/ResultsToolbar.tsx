@@ -10,6 +10,7 @@ type ResultsToolbarProps = {
   /** Gatilho do sheet de filtros (só abaixo de `lg`). */
   filtersTrigger?: ReactNode;
   sort: ReactNode;
+  listMode: ReactNode;
 };
 
 const Heading = ({ heading }: { heading: ToolbarHeading }) =>
@@ -56,8 +57,9 @@ export const ResultsToolbar = ({
   status,
   filtersTrigger,
   sort,
+  listMode,
 }: ResultsToolbarProps) => (
-  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
+  <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between xl:gap-4">
     <div>
       <h2
         id={headingId}
@@ -71,9 +73,10 @@ export const ResultsToolbar = ({
         <Status status={status} />
       </p>
     </div>
-    <div className="grid grid-cols-1 items-end gap-3 min-[26rem]:grid-cols-[auto_1fr] lg:block">
+    <div className="grid grid-cols-1 gap-3 min-[26rem]:grid-cols-2 sm:grid-cols-[auto_1fr_1fr] sm:items-end lg:flex lg:flex-wrap lg:items-center lg:gap-4">
       {filtersTrigger}
       {sort}
+      {listMode}
     </div>
   </div>
 );
