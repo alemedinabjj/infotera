@@ -5,7 +5,7 @@ import { RatingScore } from "./RatingScore";
 describe("RatingScore", () => {
   it("nota, rótulo e contagem; leitor lê a frase completa", () => {
     const { container } = render(<RatingScore rating={4.8} reviewCount={2847} />);
-    expect(container).toHaveTextContent("Nota 4,8 de 5,Excelente· 2.847 avaliações");
+    expect(container).toHaveTextContent("Nota 4,8 de 5,Excelente·2.847 avaliações");
   });
 
   it("showLabel=false esconde o rótulo", () => {

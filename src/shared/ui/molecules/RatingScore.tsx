@@ -35,14 +35,22 @@ export const RatingScore = ({
       </span>
       <span className="sr-only"> de 5{standalone ? "" : ","}</span>
       <Stars value={rating} decorative />
-      {showLabel && !standalone ? (
-        <span className="text-sm font-medium text-fg-muted">{ratingLabel(rating)}</span>
-      ) : null}
       {standalone ? null : (
-        <span className="text-sm text-fg-subtle">
-          <span aria-hidden="true">· </span>
-          {pluralize(reviewCount, "avaliação", "avaliações")}
-        </span>
+        <>
+          {/* O separador fica colado ao item anterior: se a contagem quebrar de linha, ela não
+              começa com um "·" solto. */}
+          <span className="inline-flex items-center gap-x-2 whitespace-nowrap">
+            {showLabel ? (
+              <span className="text-sm font-medium text-fg-muted">{ratingLabel(rating)}</span>
+            ) : null}
+            <span aria-hidden="true" className="text-sm text-fg-subtle">
+              ·
+            </span>
+          </span>
+          <span className="text-sm text-fg-subtle">
+            {pluralize(reviewCount, "avaliação", "avaliações")}
+          </span>
+        </>
       )}
     </p>
   );
