@@ -27,4 +27,6 @@ components/ BookingConfirmation (RSC) → ConfirmationView → Header/BookingNum
 - PII mínima: sem telefone, idade nem documento na tela; título genérico; logs só `{ event, resource, kind, status }` (sem id).
 - Copiar: **sem toast** (feedback no botão + linha `aria-live` abaixo, falha visível e número selecionado).
 - `FocusOnMount` mora em `shared/ui` (usado também por `error.tsx`/`not-found.tsx`); "Está demorando…" é CSS puro (`animate-slow-notice`).
-- Reservas somem ao reiniciar a mock-api (E2E cria a sua por `POST` direto; `_delay`/`_fail` não passam pelo `page.route` do servidor).
+- Reservas somem ao reiniciar a mock-api (E2E cria a sua por `POST` direto). Hotel e quarto são requests do **servidor**: o E2E os segura/falha pelo
+  control-proxy (`serverApi`, hotel exclusivo do worker via `controlledHotel`): `booking-confirmation.layout-shift.spec.ts`
+  (segura, mede o skeleton, solta, mede o final) e `booking-confirmation.section-error.spec.ts` (critérios 13 e 19).
