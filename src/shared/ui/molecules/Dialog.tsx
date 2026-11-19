@@ -184,7 +184,8 @@ export const Dialog = ({
               aria-labelledby={titleId}
               // biome-ignore lint/a11y/noNoninteractiveTabindex: região rolável nomeada; o teclado precisa rolar o texto longo
               tabIndex={0}
-              className={layout.body}
+              // Contorno por dentro: o `overflow-hidden` do dialog cortaria o anel de foco externo.
+              className={cn(layout.body, "focus-visible:outline-offset-[-2px]")}
             >
               {children}
             </section>
