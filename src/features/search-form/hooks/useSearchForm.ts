@@ -17,11 +17,22 @@ import { useDeferredBlur } from "./useDeferredBlur";
 import { useFormNotices } from "./useFormNotices";
 import { useRecentSearches } from "./useRecentSearches";
 
+type SearchFormOptions = {
+  /**
+   * Destino do envio no lugar de `/search?...`. Com ele a navegação **não rola** a página (quem
+   * usa já está no conteúdo que vai mudar).
+   */
+  getSubmitHref?: (criteria: SearchCriteria) => string;
+};
+
 /**
  * Liga RHF + schema + navegação. Submit válido: grava a busca nas recentes e vai para
  * `/search?...` dentro de uma transition (o botão fica "Buscando…" até a rota trocar).
  */
-export const useSearchForm = (initialCriteria?: Partial<SearchCriteria>) => {
+export const useSearchForm = (
+  initialCriteria?: Partial<SearchCriteria>,
+  { getSubmitHref }: SearchFormOptions = {},
+) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [attempts, setAttempts] = useState(0);
@@ -45,7 +56,10 @@ export const useSearchForm = (initialCriteria?: Partial<SearchCriteria>) => {
   const onSubmit = form.handleSubmit(
     (criteria) => {
       recent.add(criteria);
-      startTransition(() => router.push(`/search?${searchCriteriaToQueryString(criteria)}`));
+      startTransition(() => {
+        if (getSubmitHref) router.push(getSubmitHref(criteria), { scroll: false });
+        else router.push(`/search?${searchCriteriaToQueryString(criteria)}`);
+      });
     },
     () => setAttempts((count) => count + 1),
   );

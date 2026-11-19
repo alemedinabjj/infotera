@@ -20,15 +20,37 @@ type SearchFormProps = {
   showRecentSearches?: boolean;
   /** `id` do título da página (vira o nome acessível do `<form>`). */
   labelledBy?: string;
+  /** Destino já definido pela página (ex.: detalhe do hotel): vira texto, sem combobox. */
+  fixedDestination?: string;
+  /** Para onde enviar no lugar de `/search?...`; a navegação não rola a página. */
+  getSubmitHref?: (criteria: SearchCriteria) => string;
+  /** Rótulo do botão de envio (padrão "Buscar hotéis"). */
+  submitLabel?: string;
+  /** Rótulo do botão durante o envio (padrão "Buscando…"). */
+  submitLoadingText?: string;
 };
+
+const FixedDestination = ({ name }: { name: string }) => (
+  <dl className="flex flex-col gap-1">
+    <dt className="text-sm font-medium text-fg">Destino</dt>
+    <dd className="text-base text-fg">{name}</dd>
+  </dl>
+);
 
 /** Formulário de busca: destino (autocomplete), datas, hóspedes e envio para `/search`. */
 export const SearchForm = ({
   initialCriteria,
   showRecentSearches = true,
   labelledBy,
+  fixedDestination,
+  getSubmitHref,
+  submitLabel = "Buscar hotéis",
+  submitLoadingText = "Buscando…",
 }: SearchFormProps) => {
-  const search = useSearchForm(initialCriteria);
+  const search = useSearchForm(
+    fixedDestination ? { ...initialCriteria, destination: fixedDestination } : initialCriteria,
+    { getSubmitHref },
+  );
   const { form, notices } = search;
 
   const clearRecent = () => {
@@ -55,24 +77,28 @@ export const SearchForm = ({
               onSelect={(field) => form.setFocus(field)}
             />
           ) : null}
-          <Controller
-            control={form.control}
-            name="destination"
-            render={({ field, fieldState }) => (
-              <DestinationCombobox
-                value={field.value}
-                error={fieldState.error?.message}
-                inputRef={field.ref}
-                onBlur={() => search.deferBlur(field.onBlur)}
-                onChange={(name) =>
-                  form.setValue("destination", name, {
-                    shouldDirty: true,
-                    shouldValidate: name !== "",
-                  })
-                }
-              />
-            )}
-          />
+          {fixedDestination ? (
+            <FixedDestination name={fixedDestination} />
+          ) : (
+            <Controller
+              control={form.control}
+              name="destination"
+              render={({ field, fieldState }) => (
+                <DestinationCombobox
+                  value={field.value}
+                  error={fieldState.error?.message}
+                  inputRef={field.ref}
+                  onBlur={() => search.deferBlur(field.onBlur)}
+                  onChange={(name) =>
+                    form.setValue("destination", name, {
+                      shouldDirty: true,
+                      shouldValidate: name !== "",
+                    })
+                  }
+                />
+              )}
+            />
+          )}
           <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6">
             <DateRangeFields
               notice={notices.notice}
@@ -89,9 +115,9 @@ export const SearchForm = ({
             className="lg:ml-auto lg:w-auto lg:min-w-56"
             leftIcon={<SearchIcon className="size-5" />}
             loading={search.isPending}
-            loadingText="Buscando…"
+            loadingText={submitLoadingText}
           >
-            Buscar hotéis
+            {submitLabel}
           </Button>
           <p className="sr-only" aria-live="polite">
             {notices.announcement}
