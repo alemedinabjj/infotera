@@ -1,7 +1,7 @@
-import Image from "next/image";
 import type { Hotel } from "@/shared/api/schemas";
 import { MapPinIcon } from "@/shared/ui";
 import { osmLink, staticMapLayout, tileUrl } from "../model/static-map";
+import { MapTile } from "./MapTile";
 import { Section } from "./Section";
 
 const ZOOM = 15;
@@ -25,14 +25,9 @@ const StaticMap = ({ hotel }: StaticMapProps) => {
     <div className="relative aspect-[2/1] overflow-hidden rounded-card border border-border bg-surface-sunken">
       <div role="img" aria-label={`Mapa: ${hotel.address}`} className="absolute inset-0">
         {map.tiles.map((tile) => (
-          <Image
+          <MapTile
             key={`${tile.x}/${tile.y}`}
             src={tileUrl(tile)}
-            alt=""
-            width={256}
-            height={256}
-            unoptimized
-            className="absolute max-w-none"
             style={{
               left: `${tile.leftPct}%`,
               top: `${tile.topPct}%`,

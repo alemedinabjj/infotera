@@ -1,22 +1,21 @@
-"use client";
-
-import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { Skeleton } from "@/shared/ui";
 
 /**
  * Skeleton da rota (`loading.tsx`): aparece na hora ao abrir o hotel (o cold start da API pode
- * demorar dezenas de segundos). Mesma geometria da página; após 5 s, avisa que está demorando.
+ * demorar dezenas de segundos). Mesma geometria da página. Server Component: o aviso "demorando"
+ * já está no HTML numa região `role="status"` e é revelado por CSS (`animate-slow-notice`, 5 s),
+ * então aparece mesmo sem hidratação. O atraso vale também com movimento reduzido (revelar texto
+ * não é movimento).
  */
 export const HotelDetailsSkeleton = () => {
-  const slow = useSlowLoading(true);
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
-      <p className="sr-only" aria-live="polite">
-        Carregando hotel…
-      </p>
-      <p aria-hidden={!slow} className="min-h-5 text-sm text-fg-muted">
-        {slow ? "Está demorando mais que o normal…" : null}
-      </p>
+      <div role="status" className="flex flex-col">
+        <p className="sr-only">Carregando hotel…</p>
+        <p className="invisible min-h-5 animate-slow-notice text-sm text-fg-muted">
+          Está demorando mais que o normal…
+        </p>
+      </div>
       <Skeleton className="h-5 w-48" />
       <div className="flex flex-col gap-2">
         <Skeleton className="h-5 w-40" />

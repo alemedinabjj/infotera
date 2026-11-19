@@ -55,6 +55,8 @@
   --animate-fade-in: fade-in 200ms var(--ease-standard);
   --animate-slide-up: slide-up 300ms var(--ease-standard);
   --animate-slide-in-right: slide-in-right 300ms var(--ease-standard);
+  /* Revela, só com CSS, um aviso que nasce escondido (loading.tsx, antes da hidratação): 5 s. */
+  --animate-slow-notice: slow-notice 0s linear 5s forwards;
 
   @keyframes fade-in {
     from {
@@ -72,6 +74,14 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  @keyframes slow-notice {
+    from {
+      visibility: hidden;
+    }
+    to {
+      visibility: visible;
     }
   }
   @keyframes slide-in-right {
