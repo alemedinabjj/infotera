@@ -1,12 +1,8 @@
 import type { CancellationPolicy, Room } from "@/shared/api/schemas";
 import { cancellationDetails } from "@/shared/lib/cancellation";
+import { bedsLabel } from "@/shared/lib/room-labels";
 import { BedIcon, CheckIcon, ChevronDownIcon, InfoIcon, UserIcon } from "@/shared/ui";
-import {
-  bedsLabel,
-  roomAmenityLabel,
-  roomCapacityLabel,
-  roomSizeLabel,
-} from "../model/room-labels";
+import { roomAmenityLabel, roomCapacityLabel, roomSizeLabel } from "../model/room-labels";
 
 const VISIBLE_AMENITIES = 4;
 
