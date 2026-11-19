@@ -7,13 +7,14 @@ import {
   describePriceSummary,
   type PriceDraft,
   type PriceThumb,
+  priceResetKey,
   priceValueText,
 } from "../model/price-range";
 import { PRICE_RANGE, type SearchFilters } from "../model/search-filters";
 import { FilterGroup } from "./FilterGroup";
 
 type PriceFilterProps = {
-  filters: Pick<SearchFilters, "minPrice" | "maxPrice">;
+  filters: SearchFilters;
   onChange: (change: FilterChange) => void;
 };
 
@@ -52,7 +53,7 @@ const Thumb = ({ thumb, label, value, onMove }: ThumbProps) => {
  */
 export const PriceFilter = ({ filters, onChange }: PriceFilterProps) => {
   const url: PriceDraft = { min: filters.minPrice, max: filters.maxPrice };
-  const { draft, move } = usePriceDraft(url, ({ min, max }) =>
+  const { draft, move } = usePriceDraft(url, priceResetKey(filters), ({ min, max }) =>
     onChange({ type: "setPrice", min, max }),
   );
 

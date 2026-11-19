@@ -1,5 +1,5 @@
 import { formatBRL } from "@/shared/lib/currency";
-import { PRICE_RANGE } from "./search-filters";
+import { PRICE_RANGE, type SearchFilters, serializeSearchFilters } from "./search-filters";
 
 export type PriceDraft = { min: number; max: number };
 export type PriceThumb = "min" | "max";
@@ -30,3 +30,15 @@ export const describePriceSummary = ({ min, max }: PriceDraft): string => {
   if (hasMax) return `Até ${reais(max)}`;
   return "Qualquer preço";
 };
+
+/**
+ * Chave dos filtros que não são o preço (nem a página): quando muda por fora (ex.: "Limpar
+ * filtros"), o rascunho dos sliders volta à URL e qualquer gravação pendente é descartada.
+ */
+export const priceResetKey = (filters: SearchFilters): string =>
+  serializeSearchFilters({
+    ...filters,
+    minPrice: PRICE_RANGE.min,
+    maxPrice: PRICE_RANGE.max,
+    page: 1,
+  }).toString();

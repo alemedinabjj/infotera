@@ -165,6 +165,17 @@ describe("FiltersPanel: limpar filtros (critério 16)", () => {
     expect(clear).toHaveAttribute("aria-disabled", "true");
   });
 
+  it("limpar durante o debounce do slider não regrava o preço", async () => {
+    vi.useFakeTimers();
+    start("&minRating=4");
+    fireEvent.change(screen.getByLabelText("Mínimo"), { target: { value: "500" } });
+    fireEvent.click(screen.getByRole("button", { name: "Limpar filtros" }));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(search()).toBe(CRITERIA);
+    expect(screen.getByLabelText("Mínimo")).toHaveValue("0");
+    vi.useRealTimers();
+  });
+
   it("Voltar do navegador ressincroniza os sliders", () => {
     start("&maxPrice=500");
     expect(screen.getByLabelText("Máximo")).toHaveValue("500");
