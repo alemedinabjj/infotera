@@ -5,6 +5,7 @@ import {
   hotelHref,
   parseSearchPage,
   searchPageDestination,
+  searchPageKey,
   searchPageTitle,
 } from "./search-page";
 
@@ -114,5 +115,19 @@ describe("describeSearchSummary", () => {
 
   it("browse: datas não definidas", () => {
     expect(describeSearchSummary(null, "2026-11-01")).toBe("Datas não definidas");
+  });
+});
+
+describe("searchPageKey", () => {
+  it("muda com os critérios e ignora filtros", () => {
+    const a = parseSearchPage(new URLSearchParams(CRITERIA));
+    const b = parseSearchPage(new URLSearchParams(`${CRITERIA}&minRating=4&page=2`));
+    const c = parseSearchPage(new URLSearchParams(CRITERIA.replace("adults=2", "adults=3")));
+    expect(searchPageKey(a)).toBe(searchPageKey(b));
+    expect(searchPageKey(a)).not.toBe(searchPageKey(c));
+    expect(searchPageKey(parseSearchPage(new URLSearchParams("destination=Bonito")))).toBe(
+      "browse:Bonito",
+    );
+    expect(searchPageKey(parseSearchPage(new URLSearchParams("")))).toBe("missing");
   });
 });

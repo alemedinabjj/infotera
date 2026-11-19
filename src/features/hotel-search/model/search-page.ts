@@ -86,3 +86,19 @@ export const describeSearchSummary = (criteria: StayCriteria | null, today: ISOD
     formatGuests(criteria),
   ].join(" · ");
 };
+
+/** Chave de remontagem dos formulários/cabeçalho: muda quando os critérios mudam (nova busca). */
+export const searchPageKey = (page: SearchPage): string => {
+  switch (page.kind) {
+    case "missing-destination":
+      return "missing";
+    case "browse":
+      return `browse:${page.destination}`;
+    case "stay":
+      return searchCriteriaToQueryString(page.criteria);
+    default: {
+      const unreachable: never = page;
+      return unreachable;
+    }
+  }
+};
