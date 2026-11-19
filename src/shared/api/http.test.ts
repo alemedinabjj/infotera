@@ -139,6 +139,30 @@ describe("apiGet", () => {
     expect(error).toBe(abortError);
     expect(isApiError(error)).toBe(false);
   });
+
+  it("abort do chamador durante response.json() é relançado, não vira parse", async () => {
+    const controller = new AbortController();
+    const abortError = new DOMException("aborted", "AbortError");
+    useFetch(async () => {
+      const response = json(hotel);
+      vi.spyOn(response, "json").mockImplementation(async () => {
+        controller.abort();
+        throw abortError;
+      });
+      return response;
+    });
+    const error = await catchError(apiGet("/hotels/1", hotelSchema, { signal: controller.signal }));
+    expect(error).toBe(abortError);
+  });
+
+  it("TimeoutError durante response.json() vira timeout", async () => {
+    useFetch(async () => {
+      const response = json(hotel);
+      vi.spyOn(response, "json").mockRejectedValue(new DOMException("t", "TimeoutError"));
+      return response;
+    });
+    expect(await catchError(apiGet("/hotels/1", hotelSchema))).toMatchObject({ kind: "timeout" });
+  });
 });
 
 describe("apiGetPage", () => {

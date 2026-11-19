@@ -95,9 +95,24 @@ const send = async (
   return response;
 };
 
-const parseBody = async <T>(response: Response, schema: z.ZodType<T>): Promise<T> => {
+const parseBody = async <T>(
+  response: Response,
+  schema: z.ZodType<T>,
+  signal?: AbortSignal,
+): Promise<T> => {
+  let data: unknown;
   try {
-    return schema.parse(await response.json());
+    data = await response.json();
+  } catch (error) {
+    // Cancelamento do chamador durante a leitura do corpo é relançado como está.
+    if (signal?.aborted) throw error;
+    if (isTimeoutError(error)) {
+      throw new ApiError("timeout", response.status, "A requisição excedeu o tempo limite.", error);
+    }
+    throw new ApiError("parse", response.status, "Resposta da API fora do contrato.", error);
+  }
+  try {
+    return schema.parse(data);
   } catch (error) {
     throw new ApiError("parse", response.status, "Resposta da API fora do contrato.", error);
   }
@@ -108,7 +123,7 @@ export const apiGet = async <T>(
   path: string,
   schema: z.ZodType<T>,
   opts: RequestOptions = {},
-): Promise<T> => parseBody(await send(path, opts), schema);
+): Promise<T> => parseBody(await send(path, opts), schema, opts.signal);
 
 const readTotal = (header: string | null, fallback: number): number => {
   if (header === null) return fallback;
@@ -123,7 +138,7 @@ export const apiGetPage = async <T>(
   opts: RequestOptions = {},
 ): Promise<{ items: T[]; total: number }> => {
   const response = await send(path, opts);
-  const items = await parseBody(response, z.array(itemSchema));
+  const items = await parseBody(response, z.array(itemSchema), opts.signal);
   return { items, total: readTotal(response.headers.get("X-Total-Count"), items.length) };
 };
 
@@ -137,5 +152,5 @@ export const apiPost = async <T>(
   const headers = new Headers(opts.init?.headers);
   headers.set("Content-Type", "application/json");
   const response = await send(path, opts, { method: "POST", headers, body: JSON.stringify(body) });
-  return parseBody(response, schema);
+  return parseBody(response, schema, opts.signal);
 };

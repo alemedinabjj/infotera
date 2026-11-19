@@ -58,3 +58,9 @@ describe("hotelQueryOptions", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe("http://api.test/hotels/1");
   });
 });
+
+describe("makeQueryClient no browser", () => {
+  it("usa shouldRetry", () => {
+    expect(makeQueryClient().getDefaultOptions().queries?.retry).toBe(shouldRetry);
+  });
+});

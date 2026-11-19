@@ -27,7 +27,8 @@ export const makeQueryClient = (): QueryClient =>
     defaultOptions: {
       queries: {
         staleTime: 60_000,
-        retry: shouldRetry,
+        // Servidor (SSR/prefetch): sem retry, para não segurar a renderização com backoff.
+        retry: typeof window === "undefined" ? 0 : shouldRetry,
         retryDelay,
         refetchOnWindowFocus: false,
       },
