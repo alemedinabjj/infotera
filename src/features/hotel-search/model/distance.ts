@@ -54,12 +54,12 @@ const numberFormat = (fractionDigits: number): Intl.NumberFormat =>
  */
 export const formatDistanceFromCenter = (km: number): string => {
   const meters = Math.round((km * 1000) / 50) * 50;
-  if (meters < 100) return "a menos de 100 m do centro";
-  if (meters < 1000) return `${numberFormat(0).format(meters)} m do centro`;
+  if (meters < 100) return "a menos de 100 m do ponto central";
+  if (meters < 1000) return `a ${numberFormat(0).format(meters)} m do ponto central`;
   const tenths = Math.round(km * 10) / 10;
   return tenths < 10
-    ? `${numberFormat(1).format(tenths)} km do centro`
-    : `${numberFormat(0).format(Math.round(km))} km do centro`;
+    ? `a ${numberFormat(1).format(tenths)} km do ponto central`
+    : `a ${numberFormat(0).format(Math.round(km))} km do ponto central`;
 };
 
 /** Fatia 1-based; página fora do intervalo devolve lista vazia. */

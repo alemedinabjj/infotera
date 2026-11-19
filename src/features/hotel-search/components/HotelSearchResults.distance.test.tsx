@@ -22,7 +22,7 @@ describe("HotelSearchResults: distância no card (critérios 1 e 6)", () => {
     stubApi();
     start();
     await screen.findAllByRole("heading", { level: 3 });
-    expect(screen.getAllByText(/do centro$/, { selector: "p" })).toHaveLength(10);
+    expect(screen.getAllByText(/do ponto central$/, { selector: "p" })).toHaveLength(10);
   });
 
   it("falha do centroide: a lista aparece sem a linha de distância", async () => {
@@ -31,14 +31,14 @@ describe("HotelSearchResults: distância no card (critérios 1 e 6)", () => {
     );
     start();
     expect(await screen.findAllByRole("heading", { level: 3 })).toHaveLength(10);
-    expect(screen.queryByText(/do centro$/, { selector: "p" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/do ponto central$/, { selector: "p" })).not.toBeInTheDocument();
   });
 
   it("destino com 1 hotel não mostra distância", async () => {
     stubApi(() => hotelsResponse(ALL.slice(0, 1), 1));
     start();
     await screen.findAllByRole("heading", { level: 3 });
-    expect(screen.queryByText(/do centro$/, { selector: "p" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/do ponto central$/, { selector: "p" })).not.toBeInTheDocument();
   });
 });
 

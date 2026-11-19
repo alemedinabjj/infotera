@@ -61,15 +61,15 @@ describe("sortByDistance", () => {
 
 describe("formatDistanceFromCenter", () => {
   it.each([
-    [0.04, "a menos de 100 m do centro"],
-    [0.41, "400 m do centro"],
-    [0.48, "500 m do centro"],
-    [0.975, "1,0 km do centro"],
-    [2.04, "2,0 km do centro"],
-    [2.31, "2,3 km do centro"],
-    [4.89, "4,9 km do centro"],
-    [9.96, "10 km do centro"],
-    [20.22, "20 km do centro"],
+    [0.04, "a menos de 100 m do ponto central"],
+    [0.41, "a 400 m do ponto central"],
+    [0.48, "a 500 m do ponto central"],
+    [0.975, "a 1,0 km do ponto central"],
+    [2.04, "a 2,0 km do ponto central"],
+    [2.31, "a 2,3 km do ponto central"],
+    [4.89, "a 4,9 km do ponto central"],
+    [9.96, "a 10 km do ponto central"],
+    [20.22, "a 20 km do ponto central"],
   ])("%s km -> %s", (km, text) => {
     expect(formatDistanceFromCenter(km)).toBe(text);
   });
@@ -109,11 +109,11 @@ describe("seed (protege contra mudança de fórmula)", () => {
   });
 
   it("textos do card", () => {
-    expect(textFor("Rio de Janeiro, RJ", 18)).toBe("2,0 km do centro");
-    expect(textFor("Rio de Janeiro, RJ", 11)).toBe("2,3 km do centro");
-    expect(textFor("Rio de Janeiro, RJ", 17)).toBe("4,9 km do centro");
-    expect(textFor("Florianópolis, SC", 4)).toBe("20 km do centro");
-    expect(textFor("Gramado, RS", 43)).toBe("500 m do centro");
-    expect(textFor("Fernando de Noronha, PE", 47)).toBe("400 m do centro");
+    expect(textFor("Rio de Janeiro, RJ", 18)).toBe("a 2,0 km do ponto central");
+    expect(textFor("Rio de Janeiro, RJ", 11)).toBe("a 2,3 km do ponto central");
+    expect(textFor("Rio de Janeiro, RJ", 17)).toBe("a 4,9 km do ponto central");
+    expect(textFor("Florianópolis, SC", 4)).toBe("a 20 km do ponto central");
+    expect(textFor("Gramado, RS", 43)).toBe("a 500 m do ponto central");
+    expect(textFor("Fernando de Noronha, PE", 47)).toBe("a 400 m do ponto central");
   });
 });

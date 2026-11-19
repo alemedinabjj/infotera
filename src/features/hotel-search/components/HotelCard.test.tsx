@@ -41,7 +41,7 @@ describe("HotelCard: distância do centro", () => {
       hotel: makeHotel({ latitude: center.latitude, longitude: center.longitude + 0.0225 }),
       center,
     });
-    expect(screen.getByText("2,3 km do centro")).toBeInTheDocument();
+    expect(screen.getByText("a 2,3 km do ponto central")).toBeInTheDocument();
     expect(container.querySelector("article svg[aria-hidden='true']")).not.toBeNull();
   });
 
@@ -50,12 +50,12 @@ describe("HotelCard: distância do centro", () => {
       hotel: makeHotel({ latitude: center.latitude, longitude: center.longitude + 0.0049 }),
       center,
     });
-    expect(screen.getByText("500 m do centro")).toBeInTheDocument();
+    expect(screen.getByText("a 500 m do ponto central")).toBeInTheDocument();
   });
 
   it("sem centro não há linha de distância", () => {
     renderCard();
-    expect(screen.queryByText(/do centro/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/do ponto central/)).not.toBeInTheDocument();
   });
 });
 
