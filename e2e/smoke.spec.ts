@@ -6,6 +6,7 @@ test("home: estrutura, headers de segurança, acessibilidade e 320px", async ({ 
 
   expect(response?.status()).toBe(200);
   expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(response?.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
   expect(response?.headers()["x-powered-by"]).toBeUndefined();
 
   await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
