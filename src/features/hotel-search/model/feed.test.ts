@@ -4,6 +4,7 @@ import {
   describeFeedAnnouncement,
   type FeedFooter,
   feedKeyTarget,
+  nextAnnouncementSnapshot,
   withPinnedIndex,
 } from "./feed";
 
@@ -37,8 +38,8 @@ describe("describeFeedAnnouncement", () => {
   const announce = (previousLoaded: number, loaded: number, total: number, footer: FeedFooter) =>
     describeFeedAnnouncement({ previousLoaded, loaded, total, footer });
 
-  it("carregando", () => {
-    expect(announce(10, 10, 14, { kind: "loading-more" })).toBe("Carregando mais hotéis…");
+  it("carregando: vazio (quem fala é o botão)", () => {
+    expect(announce(10, 10, 14, { kind: "loading-more" })).toBe("");
   });
 
   it("lote novo: plural e singular", () => {
@@ -101,5 +102,34 @@ describe("feedKeyTarget", () => {
     expect(key("Home")).toBeNull();
     expect(key("a")).toBeNull();
     expect(key("PageDown", true)).toBeNull();
+  });
+});
+
+describe("nextAnnouncementSnapshot", () => {
+  const first = { key: "a", batches: 1, loaded: 10, previousLoaded: 10 };
+
+  it("lote novo na mesma consulta: guarda o anterior", () => {
+    expect(nextAnnouncementSnapshot(first, { key: "a", batches: 2, loaded: 14 })).toEqual({
+      key: "a",
+      batches: 2,
+      loaded: 14,
+      previousLoaded: 10,
+    });
+  });
+
+  it("filtro novo (4 -> 7 hotéis, mesmo nº de lotes): nada a anunciar", () => {
+    const four = { key: "a", batches: 1, loaded: 4, previousLoaded: 4 };
+    const switched = nextAnnouncementSnapshot(four, { key: "b", batches: 1, loaded: 4 });
+    const arrived = nextAnnouncementSnapshot(switched, { key: "b", batches: 1, loaded: 7 });
+    expect(arrived.previousLoaded).toBe(arrived.loaded);
+  });
+
+  it("chave nova com mais lotes que a anterior (placeholder): nada a anunciar", () => {
+    const next = nextAnnouncementSnapshot(first, { key: "b", batches: 2, loaded: 14 });
+    expect(next.previousLoaded).toBe(14);
+  });
+
+  it("sem mudança: devolve o mesmo objeto", () => {
+    expect(nextAnnouncementSnapshot(first, { key: "a", batches: 1, loaded: 10 })).toBe(first);
   });
 });

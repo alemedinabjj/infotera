@@ -20,9 +20,10 @@ export const useResultsText = (
   results: ResultsModel,
   page: number,
   destination: string,
+  queryKey: string,
 ): ResultsText => {
   const { view, slow, total, feed } = results;
-  const feedAnnouncement = useFeedAnnouncement(feed, total);
+  const feedAnnouncement = useFeedAnnouncement(feed, total, queryKey);
   return {
     toolbar: describeToolbar({
       view,
@@ -30,6 +31,10 @@ export const useResultsText = (
       total,
       listing: feed ? { mode: "infinite", loaded: feed.loaded } : { mode: "pages", page },
     }),
-    announcement: feedAnnouncement || describeAnnouncement({ view, slow, total, destination }),
+    // Durante o lote o botão já diz "Carregando mais hotéis…": o anunciador geral fica mudo.
+    announcement:
+      feed?.footer.kind === "loading-more"
+        ? ""
+        : feedAnnouncement || describeAnnouncement({ view, slow, total, destination }),
   };
 };

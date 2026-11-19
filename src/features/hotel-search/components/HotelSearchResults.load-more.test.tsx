@@ -56,7 +56,8 @@ describe("feed: carregamento automático (critério 12)", () => {
       "true",
     );
     expect(screen.getByRole("feed")).toHaveAttribute("aria-busy", "true");
-    expect(announcer()).toHaveTextContent("Carregando mais hotéis…");
+    // O botão já diz "Carregando…": o anunciador geral fica mudo (sem leitura dupla).
+    expect(announcer()).toBeEmptyDOMElement();
 
     release();
     await waitFor(() => expect(articles()).toHaveLength(14));
@@ -141,6 +142,22 @@ describe("feed: falha no lote (critério 16)", () => {
     await waitFor(() => expect(articles()).toHaveLength(14));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await waitFor(() => expect(articles()[10]).toHaveFocus());
+  });
+});
+
+describe("feed: anúncio do lote", () => {
+  it("trocar o filtro (4 -> 7 hotéis) não anuncia 'Mais 3 hotéis carregados'", async () => {
+    const user = userEvent.setup();
+    stubApi((url) =>
+      url.searchParams.has("rating_gte")
+        ? hotelsResponse(ALL.slice(0, 7), 7)
+        : hotelsResponse(ALL.slice(0, 4), 4),
+    );
+    start("&view=infinite");
+    await screen.findAllByRole("article");
+    await user.click(screen.getByRole("radio", { name: /4,5 ou mais/ }));
+    await waitFor(() => expect(articles()).toHaveLength(7));
+    expect(announcer()).not.toHaveTextContent("Mais");
   });
 });
 

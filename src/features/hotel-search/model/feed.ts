@@ -40,9 +40,9 @@ const pluralLoaded = (count: number): string =>
   count === 1 ? "Mais 1 hotel carregado" : `Mais ${count} hotéis carregados`;
 
 /**
- * Texto do anunciador do feed: `Carregando mais hotéis…` durante o lote e, quando chega,
- * `Mais 4 hotéis carregados. Mostrando 14 de 14.`. Vazio se não há nada novo a dizer (a contagem
- * inicial e o erro — `role="alert"` — têm anúncio próprio).
+ * Texto do anunciador do feed quando o lote chega: `Mais 4 hotéis carregados. Mostrando 14 de 14.`.
+ * Vazio se não há nada novo a dizer (a contagem inicial e o erro — `role="alert"` — têm anúncio
+ * próprio; durante o lote quem fala é o botão).
  */
 export const describeFeedAnnouncement = ({
   previousLoaded,
@@ -51,8 +51,8 @@ export const describeFeedAnnouncement = ({
   footer,
 }: AnnouncementInput): string => {
   switch (footer.kind) {
+    // "Carregando mais hotéis…" já é lido pelo botão (`aria-live`/estado): sem anúncio duplicado.
     case "loading-more":
-      return "Carregando mais hotéis…";
     case "error-more":
       return "";
     case "more":
@@ -66,6 +66,36 @@ export const describeFeedAnnouncement = ({
       return unreachable;
     }
   }
+};
+
+/** Fotografia do feed para o anúncio: de qual consulta (`key`), quantos lotes e hotéis. */
+export type AnnouncementSnapshot = {
+  key: string;
+  batches: number;
+  loaded: number;
+  /** Hotéis antes do último lote (igual a `loaded` quando não há nada novo a anunciar). */
+  previousLoaded: number;
+};
+
+type FeedProgress = Pick<AnnouncementSnapshot, "key" | "batches" | "loaded">;
+
+/**
+ * Próxima fotografia. Só há "lote novo" quando o nº de lotes cresce DENTRO da mesma consulta:
+ * trocar de filtro (4 -> 7 hotéis) não é "Mais 3 hotéis carregados".
+ */
+export const nextAnnouncementSnapshot = (
+  previous: AnnouncementSnapshot,
+  progress: FeedProgress,
+): AnnouncementSnapshot => {
+  if (
+    previous.key === progress.key &&
+    previous.batches === progress.batches &&
+    previous.loaded === progress.loaded
+  ) {
+    return previous;
+  }
+  const grew = previous.key === progress.key && progress.batches > previous.batches;
+  return { ...progress, previousLoaded: grew ? previous.loaded : progress.loaded };
 };
 
 /** Garante que o índice com foco continua na janela virtual (senão o foco cairia no `body`). */
