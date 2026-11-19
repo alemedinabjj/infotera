@@ -15,7 +15,8 @@ model/results-view.ts     deriveResultsView, toolbar, anúncios, rótulo do prim
 model/price-range.ts      limite entre os dois sliders, aria-valuetext, resumo · labels.ts · card-amenities.ts · image.ts
 api/hotels.ts             hotelsQueryOptions(destination, filters) → { items, total } + keepPreviousIfSameDestination
 hooks/useSearchFilters    lê (useSearchParams) e grava (history.replaceState) · useHotelResults · usePrefetchHotel
-hooks/usePriceDraft       sliders locais, commit 400 ms, ressincroniza com a URL · useFocusOnPageChange · useSlowLoading
+hooks/usePriceDraft       sliders locais, timer de 400 ms no handler (cancelado por mudança externa) · useSlowLoading
+hooks/useResultsController  liga filtros + query + foco/altura · useFocusOnPageChange · useFocusAfterRetry · useKeepResultsHeight
 hooks/useCloseOnDesktop · useFocusAfterEdit
 components/               HotelSearchResults (cliente) · ResultsToolbar/Section/List/Skeleton/Empty/Error · HotelCard(+Footer,
                           Image, Skeleton) · RatingScore · PriceTag · FiltersPanel/Fields/Drawer + um componente por filtro ·
@@ -40,6 +41,16 @@ index.ts                  API pública usada por app/search
   Total do card = `stayTotal` em centavos, sem taxas (rótulo "total · N noites · N quartos").
 - **Sliders**: dois `<input type="range">` (0–3.000, passo 50), 3.000 = sem máximo. Valor local imediato,
   URL 400 ms depois do último movimento; nunca regrava um valor debounced que ficou para trás.
+- **Foco só por navegação**: o foco vai ao h2 quando a página muda com os mesmos filtros (link, Voltar);
+  filtro/ordenação/preço na página ≥ 2 volta à 1 mas o foco fica no controle (`filtersKey`). Depois de
+  "Tentar de novo" o foco vai ao h2 quando a lista chega (`useFocusAfterRetry`).
+- **Retry**: no TanStack v5 o refetch de query sem dados volta a `pending`; `useHotelResults` mantém a
+  visão `error` (botão "Tentando…") enquanto `errorUpdateCount > 0` e ainda sem dado.
+- **Altura segurada (≥ lg)**: antes de aplicar um filtro guardamos `offsetHeight` da coluna de resultados
+  como `min-height` (o controle não pula quando a lista encolhe); liberada na paginação, Voltar ou outro
+  destino. Escolhida em vez de rolar para o h2 porque o controle fica parado sob o cursor. Sem efeito no sheet.
+- **Fotos**: schemas só aceitam `images.unsplash.com` (fotos) e `i.pravatar.cc` (avatares); o loader devolve o
+  placeholder cinza para host desconhecido. Aviso de datas passadas é calculado no RSC (sem deslocar a página).
 - **Placeholder só do mesmo destino** e nunca em erro/offline (`deriveResultsView`): lista dos filtros
   antigos não fica sob os controles novos. Offline = `fetchStatus === "paused"`.
 - **Erros**: retry do query client + `ErrorState` com "Tentar de novo"; erro de renderização cai na
