@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { type RefCallback, useId } from "react";
+import { type CSSProperties, type RefCallback, useId } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import { pluralize } from "@/shared/lib/format";
@@ -25,6 +25,8 @@ export type FeedItemProps = {
   index: number;
   /** Mede o card (`measureElement`). */
   ref?: RefCallback<HTMLElement>;
+  /** Posição absoluta do item virtualizado. */
+  style?: CSSProperties;
 };
 
 type HotelCardProps = {
@@ -96,6 +98,7 @@ export const HotelCard = ({
   return (
     <article
       ref={feed?.ref}
+      style={feed?.style}
       data-index={feed?.index}
       aria-posinset={feed?.posInSet}
       aria-setsize={feed?.setSize}

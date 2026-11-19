@@ -56,7 +56,13 @@ const makeClient = () => {
   return client;
 };
 
+/** Janela alta: o feed virtualizado monta todos os cards (o jsdom não tem layout). */
+export const setViewportHeight = (height: number) => {
+  Object.defineProperty(window, "innerHeight", { value: height, configurable: true });
+};
+
 export const start = (query = "") => {
+  setViewportHeight(4000);
   setTestUrl(`/search?${CRITERIA}${query}`);
   return renderWithProviders(<HotelSearchResults destination={RIO} criteria={criteria} />, {
     queryClient: makeClient(),

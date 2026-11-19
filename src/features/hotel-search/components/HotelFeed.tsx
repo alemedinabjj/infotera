@@ -1,17 +1,17 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
-import { cn } from "@/shared/lib/cn";
-import { revealBelowHeader } from "@/shared/lib/scroll";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import type { FeedState } from "../hooks/results-model";
 import { useAutoLoadMore } from "../hooks/useAutoLoadMore";
+import { useFeedKeyboard } from "../hooks/useFeedKeyboard";
+import { useFeedVirtualizer } from "../hooks/useFeedVirtualizer";
 import { useFocusFeedItem } from "../hooks/useFocusFeedItem";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
 import type { GeoPoint } from "../model/distance";
 import { FeedFooter } from "./FeedFooter";
-import { HotelCard } from "./HotelCard";
+import { FeedItems } from "./FeedItems";
 
 type HotelFeedProps = {
   hotels: readonly Hotel[];
@@ -27,30 +27,19 @@ type HotelFeedProps = {
 };
 
 /**
- * Rolagem contínua: `role="feed"` com um `article` por hotel + rodapé (botão "Carregar mais hotéis",
- * carregamento automático perto do fim). O foco vai ao 1º card novo quando o lote chega pelo botão.
+ * Rolagem contínua virtualizada: só os cards perto da janela ficam no DOM. Carregamento automático
+ * perto do fim + botão "Carregar mais hotéis"; o foco vai ao 1º card novo quando o lote chega pelo
+ * botão; teclado do padrão ARIA `feed`.
  */
-export const HotelFeed = ({
-  hotels,
-  total,
-  headingId,
-  criteria,
-  selectedAmenities,
-  center,
-  stale,
-  feed,
-}: HotelFeedProps) => {
+export const HotelFeed = ({ hotels, headingId, feed, ...rest }: HotelFeedProps) => {
   const feedRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const endRef = useRef<HTMLParagraphElement>(null);
-  const fetching = feed.isFetchingNextPage;
+  const keys = useMemo(() => hotels.map((hotel) => hotel.id), [hotels]);
+  const { virtualizer, scrollMargin, focusIndex } = useFeedVirtualizer({ feedRef, keys });
+  const footerTargets = useMemo(() => [buttonRef, endRef], []);
 
-  const focusIndex = useCallback((index: number) => {
-    const card = feedRef.current?.querySelector<HTMLElement>(`[data-index="${index}"]`);
-    card?.focus({ preventScroll: true });
-    revealBelowHeader(card ?? null);
-  }, []);
   const loadMore = useFocusFeedItem({
     loaded: feed.loaded,
     buttonRef,
@@ -58,33 +47,24 @@ export const HotelFeed = ({
     focusIndex,
   });
   useAutoLoadMore({ sentinelRef, enabled: feed.footer.kind === "more", onLoadMore: loadMore });
+  useFeedKeyboard({ feedRef, count: hotels.length, focusIndex, headingId, footerTargets });
 
   return (
     <>
-      <div
-        ref={feedRef}
-        role="feed"
-        aria-labelledby={headingId}
-        aria-busy={stale || fetching}
-        className={cn("flex flex-col gap-4 transition-opacity lg:gap-6", stale && "opacity-60")}
-      >
-        {hotels.map((hotel, index) => (
-          <HotelCard
-            key={hotel.id}
-            hotel={hotel}
-            criteria={criteria}
-            selectedAmenities={selectedAmenities}
-            center={center}
-            priority={index === 0}
-            feed={{ posInSet: index + 1, setSize: total, index }}
-          />
-        ))}
-      </div>
+      <FeedItems
+        {...rest}
+        feedRef={feedRef}
+        virtualizer={virtualizer}
+        scrollMargin={scrollMargin}
+        hotels={hotels}
+        headingId={headingId}
+        busy={rest.stale || feed.isFetchingNextPage}
+      />
       <FeedFooter
         footer={feed.footer}
         loaded={feed.loaded}
-        total={total}
-        fetching={fetching}
+        total={rest.total}
+        fetching={feed.isFetchingNextPage}
         onLoadMore={loadMore}
         onBackToTop={() => focusResultsHeading(document.getElementById(headingId))}
         sentinelRef={sentinelRef}
