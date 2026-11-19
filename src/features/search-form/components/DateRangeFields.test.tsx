@@ -13,14 +13,14 @@ import {
 } from "../model/search-form.schema";
 import { DateRangeFields } from "./DateRangeFields";
 
-const Harness = () => {
+const Harness = ({ initialNotice = null }: { initialNotice?: DateNotice | null }) => {
   const form = useForm<SearchFormValues>({
     defaultValues: DEFAULT_SEARCH_FORM_VALUES,
     resolver: searchFormResolver,
     mode: "onTouched",
     reValidateMode: "onChange",
   });
-  const [notice, setNotice] = useState<DateNotice | null>(null);
+  const [notice, setNotice] = useState<DateNotice | null>(initialNotice);
   return (
     <FormProvider {...form}>
       <form>
@@ -31,8 +31,8 @@ const Harness = () => {
 };
 
 const TODAY = todayISO();
-const setup = () => {
-  render(<Harness />);
+const setup = (initialNotice: DateNotice | null = null) => {
+  render(<Harness initialNotice={initialNotice} />);
   return {
     checkIn: screen.getByLabelText(/Check-in/),
     checkOut: screen.getByLabelText(/Check-out/),
@@ -133,5 +133,22 @@ describe("DateRangeFields", () => {
       expect(screen.queryByText(FORM_MESSAGES.checkOutRequired)).not.toBeInTheDocument(),
     );
     expect(checkOut).toHaveValue(addDays(TODAY, 3));
+  });
+
+  it("sair do check-in vazio não faz o erro do check-out aparecer antes de ele ser tocado", async () => {
+    const user = userEvent.setup();
+    const { checkIn, checkOut } = setup();
+    await user.click(checkIn);
+    await user.tab();
+    expect(await screen.findByText(FORM_MESSAGES.checkInRequired)).toBeInTheDocument();
+    expect(screen.queryByText(FORM_MESSAGES.checkOutRequired)).not.toBeInTheDocument();
+    expect(checkOut).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("mudar o check-out não apaga o aviso do check-in", () => {
+    const text = "As datas dessa busca já passaram. Escolha novas datas.";
+    const { checkOut } = setup({ field: "checkIn", text });
+    fireEvent.change(checkOut, { target: { value: addDays(TODAY, 4) } });
+    expect(screen.getByText(text)).toBeInTheDocument();
   });
 });

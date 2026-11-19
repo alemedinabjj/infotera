@@ -35,7 +35,8 @@ const summarize = (checkIn: string, checkOut: string): string => {
 
 /** Check-in e check-out nativos (`type="date"`) com `min`/`max` coerentes e resumo de noites. */
 export const DateRangeFields = ({ notice, onNotice }: DateRangeFieldsProps) => {
-  const { control, getValues, setValue, getFieldState } = useFormContext<SearchFormValues>();
+  const { control, getValues, setValue, getFieldState, trigger } =
+    useFormContext<SearchFormValues>();
   const today = useToday();
   const [checkIn, checkOut] = useWatch({ control, name: ["checkIn", "checkOut"] });
   const bounds = dateBounds(today, checkIn);
@@ -43,9 +44,13 @@ export const DateRangeFields = ({ notice, onNotice }: DateRangeFieldsProps) => {
   const changeCheckIn = (value: string, apply: (value: string) => void) => {
     apply(value);
     const adjusted = adjustCheckOut(value, getValues("checkOut"));
+    // Check-out ainda intocado e sem erro não é revalidado: o erro dele não aparece "do nada".
+    const checkOutState = getFieldState("checkOut");
+    const revalidate = checkOutState.isTouched || checkOutState.error !== undefined;
     if (adjusted.checkOut !== getValues("checkOut")) {
-      const hasError = getFieldState("checkOut").error !== undefined;
-      setValue("checkOut", adjusted.checkOut, { shouldDirty: true, shouldValidate: hasError });
+      setValue("checkOut", adjusted.checkOut, { shouldDirty: true, shouldValidate: revalidate });
+    } else if (revalidate) {
+      void trigger("checkOut");
     }
     onNotice(
       adjusted.adjusted
@@ -61,7 +66,6 @@ export const DateRangeFields = ({ notice, onNotice }: DateRangeFieldsProps) => {
         <Controller
           control={control}
           name="checkIn"
-          rules={{ deps: ["checkOut"] }}
           render={({ field, fieldState }) => (
             <Field
               label="Check-in"
@@ -111,7 +115,8 @@ export const DateRangeFields = ({ notice, onNotice }: DateRangeFieldsProps) => {
                   max={bounds.checkOutMax}
                   onBlur={field.onBlur}
                   onChange={(event) => {
-                    onNotice(null);
+                    // Só apaga o aviso deste campo; o do check-in segue visível.
+                    if (notice?.field === "checkOut") onNotice(null);
                     field.onChange(event.target.value);
                   }}
                   startIcon={<CalendarIcon className="size-5" />}
