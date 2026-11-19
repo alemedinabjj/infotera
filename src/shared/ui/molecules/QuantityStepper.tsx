@@ -43,52 +43,51 @@ export const QuantityStepper = ({
     .filter(Boolean)
     .join(" ");
   return (
-    <fieldset
-      aria-labelledby={labelId}
-      className={cn("flex min-w-0 items-center justify-between gap-4", className)}
-    >
-      <div className="min-w-0">
-        <p id={labelId} className="text-base font-medium text-fg">
-          {label}
-        </p>
-        {description ? (
-          <p id={descriptionId} className="text-sm text-fg-muted">
-            {description}
+    <fieldset aria-labelledby={labelId} className={cn("flex min-w-0 flex-col", className)}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p id={labelId} className="text-base font-medium text-fg">
+            {label}
           </p>
-        ) : null}
-        <div aria-live="polite">
-          {hint ? (
-            <p id={hintId} className="mt-1 flex items-start gap-1.5 text-sm text-fg-muted">
-              <InfoIcon className="mt-0.5 size-4 shrink-0" />
-              <span>{hint}</span>
+          {description ? (
+            <p id={descriptionId} className="text-sm text-fg-muted">
+              {description}
             </p>
           ) : null}
         </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <IconButton
+            variant="secondary"
+            aria-label={decreaseLabel}
+            aria-describedby={describedBy || undefined}
+            icon={<MinusIcon className="size-5" />}
+            aria-disabled={atMin || undefined}
+            onClick={() => {
+              if (!atMin) onChange(Math.max(min, value - step));
+            }}
+          />
+          <output aria-live="polite" className="w-8 text-center font-semibold text-fg tabular-nums">
+            {value}
+          </output>
+          <IconButton
+            variant="secondary"
+            aria-label={increaseLabel}
+            aria-describedby={describedBy || undefined}
+            icon={<PlusIcon className="size-5" />}
+            aria-disabled={atMax || undefined}
+            onClick={() => {
+              if (!atMax) onChange(Math.min(max, value + step));
+            }}
+          />
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <IconButton
-          variant="secondary"
-          aria-label={decreaseLabel}
-          aria-describedby={describedBy || undefined}
-          icon={<MinusIcon className="size-5" />}
-          aria-disabled={atMin || undefined}
-          onClick={() => {
-            if (!atMin) onChange(Math.max(min, value - step));
-          }}
-        />
-        <output aria-live="polite" className="w-8 text-center font-semibold text-fg tabular-nums">
-          {value}
-        </output>
-        <IconButton
-          variant="secondary"
-          aria-label={increaseLabel}
-          aria-describedby={describedBy || undefined}
-          icon={<PlusIcon className="size-5" />}
-          aria-disabled={atMax || undefined}
-          onClick={() => {
-            if (!atMax) onChange(Math.min(max, value + step));
-          }}
-        />
+      <div aria-live="polite">
+        {hint ? (
+          <p id={hintId} className="mt-1 flex items-start gap-1.5 text-sm text-fg-muted">
+            <InfoIcon className="mt-0.5 size-4 shrink-0" />
+            <span>{hint}</span>
+          </p>
+        ) : null}
       </div>
     </fieldset>
   );

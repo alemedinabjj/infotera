@@ -549,6 +549,10 @@ Descrição/ajuda             ← text-sm text-fg-muted, id="<id>-description"
 Adultos                     [ − ]  2  [ + ]
 A partir de 18 anos
 ```
+- **Layout (regra anti-salto):** o fieldset é uma coluna. Linha 1 = `flex items-start justify-between`:
+  label + descrição à esquerda, botões (`shrink-0`) alinhados **ao topo** à direita. O `hint` ocupa a
+  **largura total abaixo da linha**, nunca na coluna estreita do label; assim, o hint aparecer/sumir/quebrar
+  em 2–3 linhas não move os botões (decisão do orquestrador, F2).
 - `IconButton secondary` 44px para − e +, valor central `w-8 text-center tabular-nums font-semibold`.
 - Botão no limite fica `aria-disabled` (mantém o foco; clique ignorado; visual `text-fg-subtle`),
   nunca `disabled` — senão o foco some do botão que acabou de chegar ao limite. Valor é `<output aria-live="polite">`.
@@ -556,7 +560,7 @@ A partir de 18 anos
   com `aria-labelledby` no label.
 - Props: `label`, `description?`, `hint?`, `value`, `min`, `max`, `onChange`, `step=1`.
 - `hint` (F2): motivo do limite ("Até 5 hóspedes por quarto…"), texto vem da feature. Renderizado abaixo
-  da descrição como `text-sm text-fg-muted` com ícone `info` `size-4`, dentro de um contêiner **sempre
+  da linha como `text-sm text-fg-muted` com ícone `info` `size-4`, dentro de um contêiner **sempre
   montado** com `aria-live="polite"` (vazio quando não há hint). Descrição e hint ligados por
   `aria-describedby` **nos dois botões** (é o elemento que tem foco), para o leitor de tela ler o motivo ao
   focar o "+" bloqueado. Não usar `warning`: limite não é erro.
