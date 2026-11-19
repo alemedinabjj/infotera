@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { applyFilterChange, type FilterChange } from "../model/filter-change";
 import { parseSearchFilters, type SearchFilters, withFilters } from "../model/search-filters";
 
@@ -24,14 +24,30 @@ type UseSearchFilters = {
 export const useSearchFilters = (): UseSearchFilters => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const filters = useMemo(() => parseSearchFilters(searchParams), [searchParams]);
+  const urlFilters = useMemo(() => parseSearchFilters(searchParams), [searchParams]);
+  // O Next atualiza `useSearchParams` numa transition (um tique depois do `replaceState`): sem
+  // isso o controle marcado "desmarcaria" por um instante. O valor otimista vale enquanto a URL
+  // lida ainda é a mesma de quando a mudança foi feita; qualquer mudança de URL assume a partir daí.
+  const [optimistic, setOptimistic] = useState<{
+    base: SearchFilters;
+    value: SearchFilters;
+  } | null>(null);
+  const filters = optimistic?.base === urlFilters ? optimistic.value : urlFilters;
 
-  const write = useCallback((change: (current: SearchFilters) => SearchFilters) => {
-    const current = new URLSearchParams(window.location.search);
-    const next = withFilters(current, change(parseSearchFilters(current)));
-    const query = next.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
-  }, []);
+  const write = useCallback(
+    (change: (current: SearchFilters) => SearchFilters) => {
+      const current = new URLSearchParams(window.location.search);
+      const nextFilters = change(parseSearchFilters(current));
+      const query = withFilters(current, nextFilters).toString();
+      setOptimistic({ base: urlFilters, value: nextFilters });
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${query ? `?${query}` : ""}`,
+      );
+    },
+    [urlFilters],
+  );
 
   const update = useCallback(
     (change: FilterChange) => write((current) => applyFilterChange(current, change)),
