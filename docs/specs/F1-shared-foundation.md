@@ -287,8 +287,9 @@ Verificáveis com `npm run typecheck && npm run lint && npm run test` e `npm run
     zera estado e storage.
 
 **ui / providers / layout**
-21. `Button`: `<button type="button">` por padrão; `loading` → `disabled`, `aria-busy="true"`, spinner
-    `aria-hidden` e o rótulo continua no nome acessível; `buttonClassName({ variant, size })` exportado
+21. `Button`: `<button type="button">` por padrão; `loading` → `aria-disabled="true"` +
+    `aria-busy="true"` (sem `disabled`, mantém o foco) e clique ignorado, spinner `aria-hidden`,
+    `loadingText` opcional como rótulo visível em `aria-live="polite"` (revisado, ver "Ajustes pós-revisão"); `buttonClassName({ variant, size })` exportado
     para estilizar `<Link>`; foco visível (`focus-visible:` com o token de anel do design system).
 22. `Field` liga `label[for]` ao controle, `aria-describedby` = ids de hint e erro presentes,
     `aria-invalid="true"` só com erro; a mensagem de erro é ligada por `aria-describedby` e **não** usa
@@ -449,3 +450,12 @@ Escopo de commit `shared` (pedido do usuário), sem atribuição de IA. Ao fim d
 | 8 | Enum estrito quebrar a lista inteira se a API ganhar comodidade nova | Mock controlado + teste de 100% do seed; trade-off registrado na decisão 14. |
 | 9 | `GET /bookings/:id` público expõe dados do hóspede | Schema sem CPF/cartão (decisão 13); id não sequencial recomendado à F5; nota no README. |
 | 10 | `cache()` do React importado em código de cliente | `getServerQueryClient` em arquivo próprio, usado só em Server Components; revisão do `reviewer`. |
+
+## Ajustes pós-revisão
+
+- **Critério 21 revisado:** `Button` em `loading` não usa mais `disabled` (que tirava o foco). Usa
+  `aria-disabled="true"` + `aria-busy="true"` e uma guarda no `onClick`, conforme o design system.
+  Nova prop opcional `loadingText` troca o rótulo visível durante o loading, dentro de um `<span aria-live="polite">`.
+  `QuantityStepper` adota o mesmo padrão (`aria-disabled` + guarda) nos limites mín/máx.
+- Estilos do botão movidos para `ui/atoms/button-styles.ts` (`buttonClassName`), reexportado pelo barrel.
+- `BookingDraft` usa storage seguro (`createRawStorage`): JSON corrompido é descartado e a hidratação sempre conclui.

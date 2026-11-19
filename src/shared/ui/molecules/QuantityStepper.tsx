@@ -18,7 +18,7 @@ type QuantityStepperProps = {
   className?: string;
 };
 
-/** Contador com botões −/+. Desabilita no limite; o valor é anunciado via `<output>`. */
+/** Contador com botões −/+. No limite usa `aria-disabled` (mantém o foco) e ignora cliques; o valor é anunciado via `<output>`. */
 export const QuantityStepper = ({
   label,
   description,
@@ -32,6 +32,8 @@ export const QuantityStepper = ({
   className,
 }: QuantityStepperProps) => {
   const labelId = useId();
+  const atMin = value <= min;
+  const atMax = value >= max;
   return (
     <fieldset
       aria-labelledby={labelId}
@@ -48,8 +50,10 @@ export const QuantityStepper = ({
           variant="secondary"
           aria-label={decreaseLabel}
           icon={<MinusIcon className="size-5" />}
-          disabled={value <= min}
-          onClick={() => onChange(Math.max(min, value - step))}
+          aria-disabled={atMin || undefined}
+          onClick={() => {
+            if (!atMin) onChange(Math.max(min, value - step));
+          }}
         />
         <output aria-live="polite" className="w-8 text-center font-semibold text-fg tabular-nums">
           {value}
@@ -58,8 +62,10 @@ export const QuantityStepper = ({
           variant="secondary"
           aria-label={increaseLabel}
           icon={<PlusIcon className="size-5" />}
-          disabled={value >= max}
-          onClick={() => onChange(Math.min(max, value + step))}
+          aria-disabled={atMax || undefined}
+          onClick={() => {
+            if (!atMax) onChange(Math.min(max, value + step));
+          }}
         />
       </div>
     </fieldset>

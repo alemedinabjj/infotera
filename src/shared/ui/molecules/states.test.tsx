@@ -16,7 +16,9 @@ describe("ErrorState", () => {
 
   it("durante o retry o botão fica em loading", () => {
     render(<ErrorState title="Erro" onRetry={() => undefined} retrying />);
-    expect(screen.getByRole("button", { name: "Tentar de novo" })).toBeDisabled();
+    const button = screen.getByRole("button", { name: "Tentando…" });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).toHaveAttribute("aria-busy", "true");
   });
 });
 

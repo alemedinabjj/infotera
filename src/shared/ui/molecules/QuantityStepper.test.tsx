@@ -48,11 +48,21 @@ describe("QuantityStepper", () => {
     expect(screen.getByRole("status")).toHaveTextContent("1");
   });
 
-  it("desabilita nos limites", () => {
+  it("usa aria-disabled nos limites, mantém o foco e ignora cliques", async () => {
+    const user = userEvent.setup();
     const { unmount } = render(<Harness initial={1} />);
-    expect(screen.getByRole("button", { name: "Remover adulto" })).toBeDisabled();
+    const decrease = screen.getByRole("button", { name: "Remover adulto" });
+    expect(decrease).toHaveAttribute("aria-disabled", "true");
+    expect(decrease).not.toBeDisabled();
+    decrease.focus();
+    await user.click(decrease);
+    expect(decrease).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent("1");
     unmount();
     render(<Harness initial={3} />);
-    expect(screen.getByRole("button", { name: "Adicionar adulto" })).toBeDisabled();
+    const increase = screen.getByRole("button", { name: "Adicionar adulto" });
+    expect(increase).toHaveAttribute("aria-disabled", "true");
+    await user.click(increase);
+    expect(screen.getByRole("status")).toHaveTextContent("3");
   });
 });

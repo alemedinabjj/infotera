@@ -49,7 +49,12 @@ export const ErrorState = ({
       {onRetry || action ? (
         <div className="mt-2 flex flex-wrap justify-center gap-3">
           {onRetry ? (
-            <Button variant="secondary" onClick={onRetry} loading={retrying}>
+            <Button
+              variant="secondary"
+              onClick={onRetry}
+              loading={retrying}
+              loadingText="Tentando…"
+            >
               {retryLabel}
             </Button>
           ) : null}

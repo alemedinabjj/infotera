@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import Link from "next/link";
 import { describe, expect, it, vi } from "vitest";
 import { Badge } from "./Badge";
-import { Button, buttonClassName } from "./Button";
+import { Button } from "./Button";
+import { buttonClassName } from "./button-styles";
 import { Checkbox } from "./Checkbox";
 import { IconButton } from "./IconButton";
 import { Input } from "./Input";
@@ -22,12 +23,32 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it("loading desabilita, marca aria-busy e mantém o rótulo", () => {
-    render(<Button loading>Confirmar reserva</Button>);
+  it("loading usa aria-disabled + aria-busy, mantém o foco e ignora cliques", async () => {
+    const onClick = vi.fn();
+    render(
+      <Button loading onClick={onClick}>
+        Confirmar reserva
+      </Button>,
+    );
     const button = screen.getByRole("button", { name: "Confirmar reserva" });
-    expect(button).toBeDisabled();
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAttribute("aria-disabled", "true");
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(button.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    button.focus();
+    await userEvent.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(button).toHaveFocus();
+  });
+
+  it("loadingText substitui o rótulo em uma região aria-live polite", () => {
+    render(
+      <Button loading loadingText="Confirmando…">
+        Confirmar reserva
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Confirmando…" });
+    expect(button.querySelector('[aria-live="polite"]')).toHaveTextContent("Confirmando…");
   });
 
   it("tem anel de foco visível com o token do design system", () => {

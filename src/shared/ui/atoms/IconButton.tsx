@@ -29,7 +29,7 @@ export const IconButton = ({
     className={cn(
       "inline-flex size-11 shrink-0 items-center justify-center rounded-control transition-colors duration-150",
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
-      "disabled:cursor-not-allowed disabled:text-fg-subtle",
+      "disabled:cursor-not-allowed disabled:text-fg-subtle aria-disabled:cursor-not-allowed aria-disabled:text-fg-subtle",
       VARIANTS[variant],
       className,
     )}
