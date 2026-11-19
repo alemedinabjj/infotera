@@ -13,16 +13,17 @@ type LoaderInput = { src: string; width: number; quality?: number };
 /**
  * Loader do `next/image` para o CDN do Unsplash (imgix redimensiona na borda, sem custo de
  * otimização no servidor do Next). Reescreve `w`, `h` (4:3), `fit=crop`, `q` e `auto=format`
- * e preserva os demais params. URL que não é do Unsplash volta intacta.
+ * e preserva os demais params. Host desconhecido (ou URL inválida) nunca vira `src`: devolve o
+ * placeholder cinza (`BLUR_DATA_URL`), então a imagem cai no fallback visual.
  */
 export const unsplashLoader = ({ src, width, quality }: LoaderInput): string => {
   let url: URL;
   try {
     url = new URL(src);
   } catch {
-    return src;
+    return BLUR_DATA_URL;
   }
-  if (url.hostname !== UNSPLASH_HOST) return src;
+  if (url.protocol !== "https:" || url.hostname !== UNSPLASH_HOST) return BLUR_DATA_URL;
   url.searchParams.set("w", String(width));
   url.searchParams.set("h", String(Math.round((width * 3) / 4)));
   url.searchParams.set("fit", "crop");

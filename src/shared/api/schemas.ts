@@ -6,7 +6,9 @@ import { isoDateSchema } from "../lib/dates";
  * Enums estritos de propósito: o teste do seed garante que 100% dos registros passam.
  */
 
-const httpsUrlSchema = z.url({ protocol: /^https$/ });
+/** Fotos só vêm de hosts conhecidos (a CSP da F5 libera os mesmos): nada de URL arbitrária em `<img>`. */
+const photoUrlSchema = z.url({ protocol: /^https$/, hostname: /^images\.unsplash\.com$/ });
+const avatarUrlSchema = z.url({ protocol: /^https$/, hostname: /^i\.pravatar\.cc$/ });
 const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Horário inválido. Use HH:MM.");
 const countSchema = z.number().int().nonnegative();
 
@@ -86,8 +88,8 @@ export const hotelSchema = z.object({
   address: z.string(),
   latitude: z.number(),
   longitude: z.number(),
-  images: z.array(httpsUrlSchema),
-  thumbnail: httpsUrlSchema,
+  images: z.array(photoUrlSchema),
+  thumbnail: photoUrlSchema,
   amenities: z.array(amenitySchema),
   checkInTime: timeSchema,
   checkOutTime: timeSchema,
@@ -107,7 +109,7 @@ export const roomSchema = z.object({
   beds: z.array(bedSchema),
   pricePerNight: z.number().nonnegative(),
   amenities: z.array(roomAmenitySchema),
-  images: z.array(httpsUrlSchema),
+  images: z.array(photoUrlSchema),
   available: countSchema,
 });
 export type Room = z.infer<typeof roomSchema>;
@@ -116,7 +118,7 @@ export const reviewSchema = z.object({
   id: z.number().int(),
   hotelId: z.number().int(),
   guestName: z.string(),
-  guestAvatar: httpsUrlSchema,
+  guestAvatar: avatarUrlSchema,
   rating: z.number().int().min(1).max(5),
   title: z.string(),
   comment: z.string(),

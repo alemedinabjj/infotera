@@ -25,10 +25,14 @@ describe("unsplashLoader", () => {
     expect(url.searchParams.getAll("w")).toEqual(["800"]);
   });
 
-  it("URL que não é do Unsplash (ou inválida) volta intacta", () => {
-    const other = "https://images.example.com/h1.jpg?w=400";
-    expect(unsplashLoader({ src: other, width: 640 })).toBe(other);
-    expect(unsplashLoader({ src: "/local.png", width: 640 })).toBe("/local.png");
+  it("host desconhecido, http ou URL inválida nunca vira src: cai no placeholder", () => {
+    for (const src of [
+      "https://images.example.com/h1.jpg?w=400",
+      "http://images.unsplash.com/photo-1",
+      "/local.png",
+    ]) {
+      expect(unsplashLoader({ src, width: 640 })).toBe(BLUR_DATA_URL);
+    }
   });
 });
 
