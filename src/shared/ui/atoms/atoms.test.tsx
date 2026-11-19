@@ -122,6 +122,12 @@ describe("Skeleton, Badge e Stars", () => {
     expect(screen.getByText("Esgotado")).toHaveClass("text-danger");
   });
 
+  it("Stars decorative esconde o contêiner e remove o role img", () => {
+    const { container } = render(<Stars value={4} decorative />);
+    expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
   it("Stars tem nome acessível e estrelas aria-hidden", () => {
     const { container } = render(<Stars value={4.5} />);
     expect(screen.getByRole("img", { name: "Avaliação 4,5 de 5" })).toBeInTheDocument();

@@ -9,6 +9,8 @@ type StarsProps = {
   value: number;
   /** Nome acessível; padrão "Avaliação 4,5 de 5". */
   label?: string;
+  /** Só decorativa (a nota já aparece em texto): esconde das tecnologias assistivas. */
+  decorative?: boolean;
   className?: string;
 };
 
@@ -16,10 +18,11 @@ const fillPercent = (value: number, index: number): number =>
   Math.round(Math.min(Math.max(value - index, 0), 1) * 100);
 
 /** Estrelas decorativas com nome acessível único. Mostre sempre a nota em texto ao lado. */
-export const Stars = ({ value, label, className }: StarsProps) => (
+export const Stars = ({ value, label, decorative = false, className }: StarsProps) => (
   <span
-    role="img"
-    aria-label={label ?? `Avaliação ${formatRating(value)} de 5`}
+    {...(decorative
+      ? { "aria-hidden": true }
+      : { role: "img", "aria-label": label ?? `Avaliação ${formatRating(value)} de 5` })}
     className={cn("inline-flex gap-0.5", className)}
   >
     {STAR_INDEXES.map((index) => (
