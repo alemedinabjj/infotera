@@ -24,7 +24,7 @@ describe("normalizePassport / maskPassport", () => {
   });
 
   it("mostra só os 3 últimos", () => {
-    expect(maskPassport("FZ123456")).toBe("*****456");
+    expect(maskPassport("FZ123456")).toBe("******456");
     expect(maskPassport("AB1234567")).toBe("******567");
   });
 });

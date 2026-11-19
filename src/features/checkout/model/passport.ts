@@ -13,8 +13,6 @@ export const isValidPassport = (value: string): boolean => {
   return PASSPORT_PATTERN.test(normalized) && /\d/.test(normalized) && new Set(normalized).size > 1;
 };
 
-/** Revisão: `******456` (só os 3 últimos). */
-export const maskPassport = (value: string): string => {
-  const normalized = normalizePassport(value);
-  return `${"*".repeat(Math.max(normalized.length - 3, 0))}${normalized.slice(-3)}`;
-};
+/** Revisão: `******456` (só os 3 últimos; nº fixo de asteriscos para não revelar o tamanho). */
+export const maskPassport = (value: string): string =>
+  `******${normalizePassport(value).slice(-3)}`;
