@@ -333,6 +333,8 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   Conjunto mínimo: `search`, `map-pin`, `calendar`, `user`, `bed`, `star`, `chevron-left/right/down`,
   `x`, `plus`, `minus`, `check`, `alert-circle`, `info`, `check-circle`, `wifi-off`, `filter`,
   `share`/`link`, `arrow-left`. Comodidades: um ícone por `Amenity` com fallback `check`.
+  Tipos de destino (F2, opções do combobox): `building` (city), `umbrella` (beach), `palm-tree` (island),
+  `trees` (nature) — traços no estilo Lucide. `history` (relógio com seta) para "Buscas recentes".
 - **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[4/3]` no card,
   `aspect-video` no hero da galeria), `object-cover`, `sizes` correto, `bg-surface-sunken` enquanto carrega.
   `alt` = nome do hotel + contexto ("Hotel Copacabana Palace, foto 2 de 8"). Imagem quebrada → manter o
@@ -548,11 +550,16 @@ Adultos                     [ − ]  2  [ + ]
 A partir de 18 anos
 ```
 - `IconButton secondary` 44px para − e +, valor central `w-8 text-center tabular-nums font-semibold`.
-- Botão no limite fica `disabled` (ex.: adultos = 1 desabilita −). Valor é `<output aria-live="polite">`.
-- `aria-label` dos botões com contexto: "Diminuir adultos", "Aumentar adultos". Grupo com `role="group"`
-  e `aria-labelledby` no label.
-- Props: `label`, `description?`, `value`, `min`, `max`, `onChange`, `step=1`. Ao atingir o máximo,
-  descrição vira aviso "Máximo de 6 adultos por busca" (texto vem da feature).
+- Botão no limite fica `aria-disabled` (mantém o foco; clique ignorado; visual `text-fg-subtle`),
+  nunca `disabled` — senão o foco some do botão que acabou de chegar ao limite. Valor é `<output aria-live="polite">`.
+- `aria-label` dos botões com contexto: "Diminuir adultos", "Aumentar adultos". Grupo `<fieldset>`
+  com `aria-labelledby` no label.
+- Props: `label`, `description?`, `hint?`, `value`, `min`, `max`, `onChange`, `step=1`.
+- `hint` (F2): motivo do limite ("Até 5 hóspedes por quarto…"), texto vem da feature. Renderizado abaixo
+  da descrição como `text-sm text-fg-muted` com ícone `info` `size-4`, dentro de um contêiner **sempre
+  montado** com `aria-live="polite"` (vazio quando não há hint). Descrição e hint ligados por
+  `aria-describedby` **nos dois botões** (é o elemento que tem foco), para o leitor de tela ler o motivo ao
+  focar o "+" bloqueado. Não usar `warning`: limite não é erro.
 
 #### Alert (mensagem inline)
 Bloco `rounded-card border p-4 flex gap-3`, ícone à esquerda, título `font-semibold` + texto + ação opcional.
@@ -612,7 +619,12 @@ Check-out                         3 noites
 - `min` do check-in = hoje (data local); `min` do check-out = check-in + 1; `max` do check-out =
   check-in + 30. Ao mudar o check-in para depois do check-out, **ajustar o check-out para check-in + 1**
   e anunciar ("Check-out ajustado para 16/12/2026") em vez de mostrar erro.
-- Abaixo: resumo `"3 noites"` (`text-sm text-fg-muted tabular-nums`, `aria-live="polite"`).
+- Abaixo: resumo `"3 noites"` (`text-sm text-fg-muted tabular-nums`, `aria-live="polite"`). A linha tem
+  altura reservada (`min-h-5`) e, sem as duas datas, mostra a dica `Escolha as datas para ver o total de
+  noites.` (troca de texto, sem layout shift). Com período inválido, fica vazia (o erro do campo explica).
+- Ajuste automático: além do anúncio, o texto aparece visível como `description` do Field do check-out
+  (`Check-out ajustado para 16/12/2026.`) até a próxima mudança de qualquer data.
+- `startIcon` `calendar` no Input. iOS: `[&::-webkit-date-and-time-value]:text-left` (o Safari centraliza).
 - Erros por campo (via Field). Valor interno sempre `YYYY-MM-DD`; exibição de datas fora do input
   sempre com `Intl.DateTimeFormat("pt-BR")`.
 
@@ -629,12 +641,21 @@ Destino
 └─────────────────────────────────────┘
 ```
 - Opção: `min-h-11 px-3 flex items-center gap-3`, ícone por `type` (city/beach/island/nature), nome
-  com o trecho digitado em `font-semibold` (`<mark>` sem fundo), tipo à direita `text-sm text-fg-subtle`.
+  com o trecho digitado em `font-semibold` (`<mark class="bg-transparent text-inherit font-semibold">`),
+  tipo à direita `text-sm text-fg-subtle` precedido de `<span class="sr-only">, </span>` (nome acessível
+  "Florianópolis, SC, Cidade"). Hover `bg-surface-sunken`; ativa (`aria-selected="true"`) `bg-primary-soft`
+  + `text-primary` no ícone. Ao mover a ativa, `scrollIntoView({ block: "nearest" })`.
+- Popover: `<div>` posicionado contém o `<ul role="listbox">` (sempre no DOM com `id` estável, `hidden`
+  quando fechado, para o `aria-controls` nunca apontar para o vazio) e, **fora** do `ul`, as linhas de
+  status (carregando/vazio/erro) — listbox só pode ter `option`. Altura `max-h-[min(20rem,50dvh)]`
+  (o teclado virtual do celular come metade da tela). `p-1`, opções `rounded-control`.
+- Fechar por foco: o popover fecha quando o foco sai do **wrapper** do combobox (`focusout` com
+  `relatedTarget` fora dele) — assim o botão "Tentar de novo" dentro do popover é alcançável por Tab.
 - Teclado: ↓/↑ movem (abre se fechado), Enter seleciona, Esc fecha (segundo Esc limpa o texto). Tab **não**
   seleciona: só fecha e segue (evita seleção acidental). Home/End movem o cursor no input.
 - Mouse/toque: clique seleciona; clique fora fecha. Selecionar preenche o input com o `name` e fecha.
 - Estados do popover:
-  - `< 2 caracteres`: fechado (ou mostra "Buscas recentes" se houver, definido na F2).
+  - `< 2 caracteres`: fechado. (Buscas recentes ficam numa seção abaixo do formulário, não no popover — F2.)
   - Carregando: spinner no `endSlot`, mantém resultados anteriores; se não houver anteriores, 1 linha
     "Buscando destinos…".
   - Resultados: contagem anunciada numa região `aria-live="polite"` separada ("5 destinos encontrados").
@@ -743,7 +764,9 @@ Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
 | Validade | `Cartão vencido. Use um cartão com validade futura.` / `Use o formato MM/AA.` |
 | CVV | `Digite os 3 ou 4 números do verso do cartão.` |
 | Termos | `Para continuar, aceite os termos da reserva.` |
-| Resumo no topo do form | Título: `Corrija 2 campos para continuar` + lista de links para cada campo |
+| Resumo no topo do form | Título: `Corrija 2 campos para continuar` (1 → `Corrija 1 campo para continuar`) + lista de botões com aparência de link, um por campo: `{Rótulo}: {mensagem}` |
+| Data obrigatória | `Escolha a data de check-in.` / `Escolha a data de check-out.` |
+| Destino vazio | `Escolha um destino da lista.` (mesma do digitado sem escolher: a ação é a mesma) |
 
 ### 6.4 Vazio
 
@@ -782,6 +805,7 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 ### 6.7 Sucesso e outros
 
 - Toast copiar link: `Link copiado.`
+- Buscas recentes apagadas: toast `Buscas recentes apagadas.`
 - Confirmação: h1 `Reserva confirmada` · `Enviamos os detalhes para nome@exemplo.com.` (simulado) ·
   `Número da reserva` em destaque `tabular-nums`.
 - Política de cancelamento: `free` → `Cancelamento grátis` (badge success) · `moderate` → `Cancelamento com
