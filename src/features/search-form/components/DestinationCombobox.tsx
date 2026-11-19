@@ -33,6 +33,7 @@ export const DestinationCombobox = ({
   const combobox = useCombobox({
     itemKeys: field.items.map((item) => item.id),
     canOpen: field.hasQuery,
+    canActivate: !field.isStale,
     closeOnTab: field.view !== "error",
     onSelect: (index) => {
       const suggestion = field.items[index];

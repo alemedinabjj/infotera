@@ -1,7 +1,8 @@
-import { screen, waitFor } from "@testing-library/react";
+import { onlineManager } from "@tanstack/react-query";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from "vitest";
 import { renderWithProviders } from "@/shared/testing/render";
 import { DestinationCombobox } from "./DestinationCombobox";
 
@@ -185,6 +186,72 @@ describe("DestinationCombobox: erro", () => {
     await user.tab();
     expect(screen.getByRole("button", { name: "depois" })).toHaveFocus();
     expect(input).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
+describe("DestinationCombobox: offline e lista de outra busca", () => {
+  let onLine: MockInstance<() => boolean>;
+
+  beforeEach(() => {
+    onLine = vi.spyOn(window.navigator, "onLine", "get");
+  });
+
+  afterEach(() => {
+    onLine.mockRestore();
+    onlineManager.setOnline(true);
+  });
+
+  const goOffline = () => {
+    onLine.mockReturnValue(false);
+    onlineManager.setOnline(false);
+    window.dispatchEvent(new Event("offline"));
+  };
+
+  it("offline mostra a linha offline e não exibe a lista de outra busca", async () => {
+    const { user, input } = setup();
+    await user.type(input, "flor");
+    await vi.advanceTimersByTimeAsync(300);
+    await screen.findAllByRole("option");
+
+    fetchMock.mockImplementation(() => new Promise(() => undefined));
+    act(goOffline);
+    await user.type(input, "i");
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(screen.queryByRole("option")).toBeNull();
+    expect((await screen.findAllByText(/Você está sem internet/)).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Buscando destinos…", { selector: "p:not(.sr-only)" })).toBeNull();
+  });
+
+  it("↓ e Enter não ativam opções enquanto a lista é de outra busca (placeholder)", async () => {
+    const { user, input } = setup();
+    await user.type(input, "flor");
+    await vi.advanceTimersByTimeAsync(300);
+    await screen.findAllByRole("option");
+
+    fetchMock.mockImplementation(() => new Promise(() => undefined));
+    await user.type(input, "i");
+    await vi.advanceTimersByTimeAsync(300);
+    expect(screen.getAllByRole("option").length).toBeGreaterThan(0); // placeholder visível
+
+    await user.keyboard("{ArrowDown}");
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+    await user.keyboard("{Enter}");
+    expect(onChange).not.toHaveBeenCalledWith(expect.stringContaining("Flor"));
+  });
+
+  it("trocar as opções (mesmo com a mesma quantidade) zera a opção ativa", async () => {
+    const { user, input } = setup();
+    await user.type(input, "ri");
+    await vi.advanceTimersByTimeAsync(300);
+    await screen.findAllByRole("option");
+    await user.keyboard("{ArrowDown}");
+    expect(input).toHaveAttribute("aria-activedescendant");
+
+    await user.type(input, "o");
+    await vi.advanceTimersByTimeAsync(300);
+    await screen.findAllByRole("option");
+    expect(input).not.toHaveAttribute("aria-activedescendant");
   });
 });
 

@@ -9,7 +9,7 @@ export type ComboboxAction =
   | { type: "prev"; count: number }
   | { type: "first"; count: number }
   | { type: "last"; count: number }
-  | { type: "itemsChanged"; count: number };
+  | { type: "itemsReplaced" };
 
 export const INITIAL_COMBOBOX_STATE: ComboboxState = { isOpen: false, activeIndex: -1 };
 
@@ -25,7 +25,7 @@ const prevIndex = (current: number, count: number): number =>
 
 /**
  * Reducer puro do teclado. ↓/↑ circulam e abrem se fechado (a primeira ↓ ativa a primeira
- * opção; a primeira ↑ ativa a última); `itemsChanged` desativa o índice que saiu do intervalo.
+ * opção; a primeira ↑ ativa a última); `itemsReplaced` (opções trocadas) desativa o índice ativo.
  */
 export const comboboxReducer = (state: ComboboxState, action: ComboboxAction): ComboboxState => {
   switch (action.type) {
@@ -42,8 +42,8 @@ export const comboboxReducer = (state: ComboboxState, action: ComboboxAction): C
       return moveTo(0, action.count);
     case "last":
       return moveTo(action.count - 1, action.count);
-    case "itemsChanged":
-      return state.activeIndex < action.count ? state : { ...state, activeIndex: -1 };
+    case "itemsReplaced":
+      return state.activeIndex < 0 ? state : { ...state, activeIndex: -1 };
     default: {
       const unreachable: never = action;
       return unreachable;

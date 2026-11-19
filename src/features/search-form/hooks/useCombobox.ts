@@ -14,6 +14,8 @@ type UseComboboxOptions = {
   itemKeys: readonly (string | number)[];
   /** `false` mantém o popover fechado (nada a mostrar). */
   canOpen: boolean;
+  /** `false` enquanto as opções são de outra busca (placeholder): ↓/↑/Enter não ativam nada. */
+  canActivate?: boolean;
   /** `false` no estado de erro: Tab precisa chegar ao "Tentar de novo" dentro do popover. */
   closeOnTab: boolean;
   onSelect: (index: number) => void;
@@ -30,6 +32,7 @@ type UseComboboxOptions = {
 export const useCombobox = ({
   itemKeys,
   canOpen,
+  canActivate = true,
   closeOnTab,
   onSelect,
   onEscapeClosed,
@@ -40,22 +43,27 @@ export const useCombobox = ({
   const [state, dispatch] = useReducer(comboboxReducer, INITIAL_COMBOBOX_STATE);
   const count = itemKeys.length;
   const isOpen = state.isOpen && canOpen;
-  const activeIndex = isOpen ? state.activeIndex : -1;
+  const activeIndex = isOpen && canActivate ? state.activeIndex : -1;
   const optionId = (index: number) => `${listboxId}-${itemKeys[index]}`;
 
+  // Troca de opções (mesmo com a mesma quantidade) invalida o índice ativo: ele apontaria para
+  // outra opção do que a pessoa estava vendo.
+  const identity = itemKeys.join("|");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `identity` é o gatilho; o valor não é lido
   useEffect(() => {
-    dispatch({ type: "itemsChanged", count });
-  }, [count]);
+    dispatch({ type: "itemsReplaced" });
+  }, [identity]);
 
   const handleArrow = (event: KeyboardEvent<HTMLInputElement>) => {
     if (!canOpen) return;
     event.preventDefault();
+    if (!canActivate) return;
     if (event.altKey) dispatch({ type: "open" });
     else dispatch({ type: event.key === "ArrowDown" ? "next" : "prev", count });
   };
 
   const handleEnter = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (!isOpen || activeIndex < 0) return; // sem ativa: submit nativo
+    if (!isOpen || !canActivate || activeIndex < 0) return; // sem ativa: submit nativo
     event.preventDefault();
     onSelect(activeIndex);
   };

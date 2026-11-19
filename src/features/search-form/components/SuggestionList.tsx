@@ -4,7 +4,7 @@ import type { MouseEvent } from "react";
 import type { Suggestion } from "@/shared/api/schemas";
 import { AlertCircleIcon, Button, Spinner } from "@/shared/ui";
 import type { useCombobox } from "../hooks/useCombobox";
-import type { SuggestionsView } from "../hooks/useDestinationField";
+import type { SuggestionsView } from "../model/suggestions-view";
 import { SuggestionOption } from "./SuggestionOption";
 
 type Combobox = ReturnType<typeof useCombobox>;

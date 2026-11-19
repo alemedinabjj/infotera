@@ -45,10 +45,12 @@ describe("comboboxReducer", () => {
     expect(comboboxReducer(open(2), { type: "reset" })).toEqual(INITIAL_COMBOBOX_STATE);
   });
 
-  it("itemsChanged só reseta o índice fora do limite", () => {
-    expect(comboboxReducer(open(4), { type: "itemsChanged", count: 3 })).toEqual(open(-1));
-    expect(comboboxReducer(open(2), { type: "itemsChanged", count: 3 })).toEqual(open(2));
-    const state = open(1);
-    expect(comboboxReducer(state, { type: "itemsChanged", count: 5 })).toBe(state);
+  it("itemsReplaced desativa o índice, mas mantém o popover aberto", () => {
+    expect(comboboxReducer(open(2), { type: "itemsReplaced" })).toEqual(open(-1));
+    const state = open(-1);
+    expect(comboboxReducer(state, { type: "itemsReplaced" })).toBe(state);
+    expect(comboboxReducer(INITIAL_COMBOBOX_STATE, { type: "itemsReplaced" })).toBe(
+      INITIAL_COMBOBOX_STATE,
+    );
   });
 });
