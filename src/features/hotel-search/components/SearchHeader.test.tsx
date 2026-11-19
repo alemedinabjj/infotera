@@ -1,6 +1,7 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { markFocusAfterNavigation } from "@/shared/lib/focus-after-navigation";
 import { Toaster } from "@/shared/ui";
 import { MissingDestination } from "./MissingDestination";
 import { SearchHeader } from "./SearchHeader";
@@ -123,46 +124,16 @@ describe("SearchHeader: copiar link (critério 15)", () => {
 });
 
 describe("SearchHeader: foco depois de Alterar busca", () => {
-  it("o envio do painel leva o foco ao h1 na próxima montagem", async () => {
-    const user = userEvent.setup();
-    const { unmount } = renderHeader();
-    await user.click(screen.getByRole("button", { name: "Alterar busca" }));
-    const form = screen.getByRole("form");
-    act(() => {
-      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-    });
+  it("o envio válido (marcado pelo formulário) leva o foco ao h1 na próxima montagem", () => {
+    markFocusAfterNavigation("/search?destination=Outro");
     window.history.pushState(null, "", "/search?destination=Outro");
-    unmount();
     renderHeader();
     expect(screen.getByRole("heading", { level: 1 })).toHaveFocus();
   });
 
-  const submitPanel = async () => {
-    const user = userEvent.setup();
-    const { unmount } = renderHeader();
-    await user.click(screen.getByRole("button", { name: "Alterar busca" }));
-    act(() => {
-      screen
-        .getByRole("form")
-        .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-    });
-    return unmount;
-  };
-
-  it("envio sem mudar a URL não conta como edição", async () => {
-    const unmount = await submitPanel();
-    unmount();
-    renderHeader();
-    expect(screen.getByRole("heading", { level: 1 })).not.toHaveFocus();
-  });
-
-  it("Voltar/Avançar descarta o envio pendente (sem prazo)", async () => {
-    const unmount = await submitPanel();
-    act(() => {
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    });
+  it("envio marcado para outra URL (Voltar/Avançar) não rouba o foco", () => {
+    markFocusAfterNavigation("/search?destination=Outro");
     window.history.pushState(null, "", "/search?destination=Depois");
-    unmount();
     renderHeader();
     expect(screen.getByRole("heading", { level: 1 })).not.toHaveFocus();
   });

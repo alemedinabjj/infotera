@@ -35,7 +35,7 @@ shared/
 - **`booking-draft`**: `skipHydration` + `BookingDraftHydrator`; a F5 deve esperar
   `useBookingDraftHydrated()` antes de redirecionar "sem seleção". Guarda só ids e critérios, nunca PII.
 - **Datas são `YYYY-MM-DD`** (`ISODate`); nunca `new Date("2026-12-01")`. Use `dates.ts`.
-- **Query keys** vivem em `api/query-keys.ts`; query options só dos endpoints usados por 2+ features
+- **Query keys** vivem em `api/query-keys.ts` (`hotels.infinite` é a rolagem contínua da F3b, com `InfiniteData`); query options só dos endpoints usados por 2+ features
   (`hotelQueryOptions`, `hotelRoomsQueryOptions`, `roomQueryOptions`). O resto fica na feature dona.
 - **`http.ts`**: `apiGet`, `apiGetPage` (`X-Total-Count`, exposto via CORS pela mock-api), `apiPost`;
   falhas viram `ApiError { kind, status }`. Texto de UI vem de `toUserMessage`, nunca do corpo da API.
@@ -71,9 +71,8 @@ Unitário obrigatório para tudo em `lib/` e para os schemas (casos válidos e i
 - **CSP (F5)**: `img-src` precisa de `images.unsplash.com`, `i.pravatar.cc` e `tile.openstreetmap.org` (mapa do detalhe).
 
 - `lib/focus-after-navigation`: `markFocusAfterNavigation(href)` no envio **válido** + `consumeFocusAfterNavigation()`
-  em toda montagem (zera sempre; `true` só se `pathname+search === href`). Usado pela F4. **TODO hotel-search**:
-  `useFocusAfterEdit` ainda usa o `pendingEdit` de módulo (marca antes de validar e sobrevive a envio inválido);
-  migrar para este utilitário.
+  em toda montagem (zera sempre; `true` só se `pathname+search === href`). Usado pela F4 (`useFocusAfterDates`) e pela hotel-search
+  (`useFocusAfterEdit`, via `app/search/SearchEditForm`).
 - `todayISO()` é sempre do fuso `America/Sao_Paulo` (servidor em UTC).
 
 ## Pendentes para features

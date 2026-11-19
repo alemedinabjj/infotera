@@ -3,7 +3,7 @@
 import type { FilterChange } from "../model/filter-change";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
 import { ClearFiltersButton } from "./ClearFiltersButton";
-import { FiltersFields } from "./FiltersFields";
+import { FiltersBoundary } from "./FiltersBoundary";
 
 type FiltersPanelProps = {
   filters: SearchFilters;
@@ -25,6 +25,6 @@ export const FiltersPanel = ({ filters, onChange }: FiltersPanelProps) => (
         onClear={() => onChange({ type: "clear" })}
       />
     </div>
-    <FiltersFields filters={filters} onChange={onChange} />
+    <FiltersBoundary filters={filters} onChange={onChange} />
   </aside>
 );

@@ -5,6 +5,7 @@ import {
   cards,
   countHeading,
   criteriaQuery,
+  holdRequests,
   searchPath,
 } from "./helpers/hotel-search";
 import { test } from "./helpers/mock-api-server";
@@ -113,38 +114,43 @@ test.describe("modos da página", () => {
 });
 
 test.describe("API lenta (_delay)", () => {
-  test("skeleton com aria-busy e anúncio, depois a lista", async ({ page, slowApi }) => {
-    await redirectHotelsTo(page, slowApi.url);
+  // A resposta fica retida por um portão (`holdRequests`) até as asserções terminarem: nada
+  // depende de quanto tempo a API "demora".
+  test("skeleton com aria-busy e anúncio, depois a lista", async ({ page }) => {
+    const gate = await holdRequests(page, HOTELS_LIST);
     await page.goto(searchPath());
     await expect(page.locator("ul[aria-busy='true']").first()).toBeVisible();
     await expect(page.getByText("Carregando hotéis…").first()).toBeVisible();
-    await expect(cards(page)).toHaveCount(10, { timeout: 8000 });
+    gate.release();
+    await expect(cards(page)).toHaveCount(10);
     await expect(page.locator("ul[aria-busy='true']")).toHaveCount(0);
   });
 
   test("depois de 5 s carregando avisa que está demorando", async ({ page }) => {
-    await redirectHotelsTo(page, "http://localhost:3333", "_delay=6500");
+    const gate = await holdRequests(page, HOTELS_LIST);
     await page.goto(searchPath());
+    await expect(page.getByText("Carregando hotéis…").first()).toBeVisible();
     await expect(page.getByText("Está demorando mais que o normal…").first()).toBeVisible({
-      timeout: 8000,
+      timeout: 10_000,
     });
-    await expect(cards(page)).toHaveCount(10, { timeout: 10_000 });
+    gate.release();
+    await expect(cards(page)).toHaveCount(10);
   });
 
   test("trocar o filtro com API lenta mantém a lista anterior e mostra 'Atualizando resultados…'", async ({
     page,
-    slowApi,
     isMobile,
   }) => {
     test.skip(isMobile, "o filtro do celular é coberto em hotel-search.mobile.spec.ts");
     await page.goto(searchPath());
     await expect(cards(page)).toHaveCount(10);
-    await redirectHotelsTo(page, slowApi.url);
+    const gate = await holdRequests(page, HOTELS_LIST);
     await page.getByRole("checkbox", { name: "Piscina" }).check();
     await expect(page.getByText("Atualizando resultados…")).toBeVisible();
     await expect(cards(page)).toHaveCount(10);
     await expect(page.locator("ul[aria-busy='true']")).toBeVisible();
-    await expect(cards(page)).toHaveCount(7, { timeout: 8000 });
+    gate.release();
+    await expect(cards(page)).toHaveCount(7);
     await expect(page.getByText("Atualizando resultados…")).toHaveCount(0);
   });
 });

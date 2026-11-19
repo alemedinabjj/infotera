@@ -1,7 +1,13 @@
 /** Quartos restantes a partir dos quais o card avisa que está acabando. */
 export const SCARCE_THRESHOLD = 2;
 
-export type AvailabilityStatus = "sold-out" | "insufficient" | "scarce" | "available";
+export type AvailabilityStatus =
+  | "sold-out"
+  | "insufficient"
+  /** Há quartos livres, mas nenhum comporta o grupo na quantidade de quartos pedida. */
+  | "no-fit"
+  | "scarce"
+  | "available";
 
 /**
  * Disponibilidade do hotel para a busca: sem quartos (`sold-out`), menos quartos que o pedido
@@ -27,6 +33,8 @@ export type AvailabilityDescription = {
 
 type DescribeInput = {
   status: AvailabilityStatus;
+  /** Hóspedes da busca (adultos + crianças), para o texto de `no-fit`. */
+  guests?: number;
   availableRooms: number;
   requestedRooms: number;
   /** `stay` tem datas; no `browse` o esgotado diz "no momento". */
@@ -41,6 +49,7 @@ export const describeAvailability = ({
   availableRooms,
   requestedRooms,
   hasDates,
+  guests = 0,
 }: DescribeInput): AvailabilityDescription => {
   switch (status) {
     case "sold-out":
@@ -57,6 +66,11 @@ export const describeAvailability = ({
           text: `Só ${availableRooms} ${availableRooms === 1 ? "quarto disponível" : "quartos disponíveis"}`,
         },
         note: `Sua busca pede ${roomsText(requestedRooms)}.`,
+      };
+    case "no-fit":
+      return {
+        badge: { tone: "warning", text: "Não comporta o grupo" },
+        note: `Nenhum quarto acomoda ${guests} ${guests === 1 ? "hóspede" : "hóspedes"} em ${roomsText(requestedRooms)}.`,
       };
     case "scarce":
       return {

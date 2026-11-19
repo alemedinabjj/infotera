@@ -1,4 +1,4 @@
-import type { APIRequestContext, Locator, Page } from "@playwright/test";
+import type { APIRequestContext, Locator, Page, Route } from "@playwright/test";
 import { addDays, todayISO } from "../../src/shared/lib/dates";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3333";
@@ -51,3 +51,23 @@ export const cards = (page: Page): Locator => page.getByRole("article");
 /** O h2 da contagem ("14 hotéis encontrados"), alvo de foco. */
 export const countHeading = (page: Page): Locator =>
   page.getByRole("heading", { level: 2, name: /encontrados|Resultados|Nenhum hotel encontrado/ });
+
+/**
+ * Segura as respostas que casam com `pattern` até `release()`: o estado transitório (skeleton,
+ * "demorando", lote carregando) fica na tela o tempo que as asserções precisarem, sem depender de
+ * um atraso fixo da API (que vira flakiness em máquina lenta). `release()` solta as pendentes e
+ * as seguintes; chame no fim do teste (ou deixe o contexto fechar).
+ */
+export const holdRequests = async (page: Page, pattern: RegExp | string) => {
+  let open: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  let held = 0;
+  await page.route(pattern, async (route: Route) => {
+    held += 1;
+    await gate;
+    await route.continue().catch(() => undefined);
+  });
+  return { release: open, held: () => held };
+};

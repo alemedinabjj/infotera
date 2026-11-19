@@ -341,7 +341,7 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   Tipos de destino (F2, opções do combobox): `building` (city), `umbrella` (beach), `palm-tree` (island),
   `trees` (nature) — traços no estilo Lucide. `history` (relógio com seta) para "Buscas recentes".
   Checkout (F5): `credit-card` (cartão), `lock` (nota de privacidade), `tag` (cupom).
-- **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[4/3]` no card,
+- **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[5/2]` empilhado no card do celular,
   `aspect-video` no hero da galeria), `object-cover`, `sizes` correto, `bg-surface-sunken` enquanto carrega.
   `alt` = nome do hotel + contexto ("Hotel Copacabana Palace, foto 2 de 8"). Imagem quebrada → manter o
   bloco cinza com ícone `bed` centralizado (sem layout shift).
@@ -397,7 +397,7 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 
 ### 4.4 Grid de cards de hotel
 
-- Mobile (base): lista de 1 coluna, card vertical (imagem em cima `aspect-[4/3]`).
+- Mobile (base): lista de 1 coluna, card vertical (imagem em cima `aspect-[5/2]`: 4:3 e a barra de controles empilhada empurravam nome e preço para fora da 1ª tela em 375×667; a barra usa 2 colunas a partir de 23rem).
 - `sm` a `lg`: card **horizontal** (imagem à esquerda `w-56`, conteúdo à direita) em 1 coluna — leitura de
   lista de resultados é mais rápida que grid para comparar preço.
 - Lista sempre `<ul role="list">` com `<li>` por card; contagem de resultados acima em `aria-live="polite"`.
@@ -409,7 +409,9 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 14 hotéis encontrados                 ← h2 text-xl font-semibold min-h-7, tabIndex=-1 (alvo de foco)
 Mostrando 1–10 de 14                  ← linha de status min-h-5 text-sm text-fg-muted tabular-nums
 [⚲ Filtros (2)] [Mais populares ▾]    ← < lg: grid-cols-[auto_1fr] gap-3 items-end; ≥ lg: Filtros some,
-                                         "Ordenar por" vira label inline à direita (select w-56)
+                                         "Ordenar por" vira label inline (select w-56) e "Exibir" (select w-52,
+                                         cabe "Rolagem contínua"). O h2 fica numa linha (lg:whitespace-nowrap)
+                                         e os selects ficam ABAIXO dele, também no xl (sem "tudo numa linha")
 ```
 - A **linha de status** troca de texto, nunca de altura: `Mostrando 1–10 de 14` ↔ `Spinner` +
   `Atualizando resultados…` ↔ `Carregando hotéis…` ↔ `Está demorando mais que o normal…`.
@@ -537,7 +539,9 @@ Variante `overlay` para sobre imagem: `bg-surface/90 text-fg shadow-card`. **`ar
 
 #### Select
 `<select>` nativo (acessível e bom no mobile) com o mesmo visual do Input, `appearance-none` e ícone
-`chevron-down` à direita (`pointer-events-none`). Uso: ordenação, nota mínima. Mesmos estados do Input.
+`chevron-down` à direita (`pointer-events-none`). Uso: ordenação, modo de exibição ("Exibir"), nota
+mínima. Mesmos estados do Input. Texto de ajuda do select (ex.: ordenação por distância) é um
+`p.text-sm.text-fg-muted` ligado por `aria-describedby`, em largura total logo abaixo da toolbar.
 
 #### Checkbox
 `<input type="checkbox">` nativo estilizado com `accent-primary` **ou** custom: caixa `size-5 rounded-sm
@@ -936,6 +940,28 @@ São da feature (F3/F4), mas devem compor: `Card interactive` + imagem `aspect-[
 - **SimilarHotelCard (F4)**: `Card interactive` compacto; `< sm` horizontal (foto `w-24
   aspect-square`), `sm+` vertical (foto `aspect-[4/3]`); nome `text-base line-clamp-2`, `RatingScore
   sm` sem rótulo, `PriceTag nightly-line`, badge de disponibilidade.
+- Linha de distância (após `Tipo · destino`, ambos os modos de listagem): `p.flex.items-center.gap-1
+  .text-sm.text-fg-muted` com `MapPinIcon size-4 shrink-0 text-fg-subtle` (`aria-hidden`) e o texto
+  `a 2,3 km do ponto central` (+ `title` com a explicação e, só para leitor de tela, `, em linha reta`: a
+  linha aparece em qualquer ordenação; o texto de ajuda da toolbar, só com `sort=distance`). Omitida quando o centro não existe; no skeleton vira uma linha `h-5 w-32` na
+  mesma posição (nada se move quando a lista chega).
+
+#### Rodapé do feed (rolagem contínua)
+`role="feed"` com os cards em `gap-4 lg:gap-6`; abaixo, `FeedFooter`: `mt-6 flex min-h-11 flex-col
+items-center gap-2`. Quatro estados (o rodapé só troca de conteúdo, nunca de lugar):
+- `more`: `Button secondary md` (`w-full sm:w-auto`) `Carregar mais hotéis` + `text-sm text-fg-muted`
+  `Mostrando 10 de 14`. É o fallback de teclado/leitor de tela do carregamento automático.
+- `loading-more`: mesmo botão em `loading` (`aria-disabled`, `aria-busy`) com `Carregando mais hotéis…`.
+- `error-more`: `Alert danger` em largura total (`role="alert"`) `Não foi possível carregar mais
+  hotéis.` / `Os hotéis já carregados continuam aqui.` + `Button secondary sm` `Tentar de novo`
+  (`Tentando…`); os cards já carregados continuam. O carregamento automático não repete sozinho.
+  O botão fica no lugar e o `Alert` entra abaixo dele; quando chega, é trazido à vista com
+  `scrollIntoView({ block: "nearest" })` (`behavior: "auto"` com `prefers-reduced-motion`) SEM mover o
+  foco. Com troca de filtro em andamento (lista esmaecida) o rodapé antigo fica `invisible`.
+- `end`: `p tabIndex=-1` `Você viu todos os 14 hotéis.` (1: `Você viu o único hotel.`) + `Button ghost sm`
+  `Voltar ao topo` (alvo mínimo 44 px). Com um lote só, o rodapé já nasce em `end`.
+Card do feed: `article` com anel de foco `focus-visible:outline-2 outline-offset-2 outline-focus`.
+`prefers-reduced-motion`: rolagens sem animação.
 
 #### StepIndicator (F5)
 `<ol aria-label="Etapas da reserva" class="grid grid-cols-N">`, cada passo em coluna centralizada:
@@ -1101,7 +1127,14 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | Resumo da busca | `12–15 dez · 3 noites · 2 adultos · 1 quarto` · sem datas: `Datas não definidas` |
 | Contagem | `Nenhum hotel encontrado` · `1 hotel encontrado` · `14 hotéis encontrados` |
 | Linha de status | `Mostrando 1–10 de 14` · `Carregando hotéis…` · `Atualizando resultados…` |
-| Ordenar | `Ordenar por`: `Mais populares` · `Menor preço` · `Maior avaliação` |
+| Ordenar | `Ordenar por`: `Mais populares` · `Menor preço` · `Maior avaliação` · `Distância do centro` |
+| Ajuda da distância | `Distância em linha reta até o ponto médio dos hotéis de {destino}.` |
+| Distância no card | `a menos de 100 m do ponto central` · `a 500 m do ponto central` · `a 2,3 km do ponto central` · `a 20 km do ponto central` |
+| Exibir | `Exibir`: `Em páginas` · `Rolagem contínua` · status do feed `Mostrando 10 de 14` |
+| Rodapé do feed | `Carregar mais hotéis` · `Carregando mais hotéis…` · `Você viu todos os 14 hotéis.` · `Voltar ao topo` |
+| Erro do lote | `Não foi possível carregar mais hotéis.` · `Os hotéis já carregados continuam aqui.` · `Tentar de novo` / `Tentando…` |
+| Anunciador do feed | `Carregando mais hotéis…` · `Mais 4 hotéis carregados. Mostrando 14 de 14.` · `Mais 1 hotel carregado. Mostrando 11 de 11.` |
+| Filtros (boundary) | `Não foi possível mostrar os filtros.` · `Tentar de novo` |
 | Filtros | `Filtros` · `Filtros (3)` · `Limpar filtros` · `Ver 14 hotéis` / `Ver 1 hotel` / `Ver resultados` |
 | Preço | `Preço por noite` · `Mínimo` / `Máximo` · `Qualquer preço` · `A partir de R$ 200` · `Até R$ 1.500` · `R$ 200 – R$ 1.500` · topo `R$ 3.000 ou mais` |
 | Nota mínima | `Qualquer nota` · `4,5 ou mais` Excelente · `4,0 ou mais` Muito bom · `3,5 ou mais` Bom (nunca "4,5+": ambíguo no leitor de tela) |

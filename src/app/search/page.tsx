@@ -12,6 +12,7 @@ import {
 } from "@/features/hotel-search";
 import { SearchForm } from "@/features/search-form";
 import { isBeforeToday, todayISO } from "@/shared/lib/dates";
+import { SearchEditForm } from "./SearchEditForm";
 
 export const generateMetadata = async ({
   searchParams,
@@ -48,10 +49,10 @@ const SearchPage = async ({ searchParams }: PageProps<"/search">) => {
         mode={stay ? "stay" : "browse"}
         pastDates={stay ? isBeforeToday(stay.checkIn, today) : false}
         editForm={
-          <SearchForm
+          <SearchEditForm
             key={key}
-            initialCriteria={stay ?? { destination }}
-            showRecentSearches={false}
+            criteria={stay}
+            destination={destination}
             labelledBy={SEARCH_EDIT_HEADING_ID}
           />
         }

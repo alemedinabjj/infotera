@@ -6,6 +6,9 @@ export const queryKeys = {
   hotels: {
     all: ["hotels"] as const,
     list: (params: Readonly<Record<string, KeyParam>>) => ["hotels", "list", params] as const,
+    /** Rolagem contínua: dado em formato `InfiniteData`, por isso não compartilha o prefixo de `list`. */
+    infinite: (params: Readonly<Record<string, KeyParam>>) =>
+      ["hotels", "infinite", params] as const,
     detail: (id: number) => ["hotels", "detail", id] as const,
   },
   rooms: {

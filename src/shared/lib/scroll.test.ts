@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { revealBelowHeader } from "./scroll";
+import { revealBelowHeader, revealNearest } from "./scroll";
 
 const makeElement = (top: number) => {
   const element = document.createElement("div");
@@ -42,5 +42,39 @@ describe("revealBelowHeader", () => {
     const visible = makeElement(10);
     revealBelowHeader(visible);
     expect(visible.scrollIntoView).not.toHaveBeenCalled();
+  });
+});
+
+describe("revealNearest", () => {
+  const stubMotion = (reduce: boolean) =>
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: reduce })),
+    );
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("fora da janela (abaixo): rola o mínimo, suave", () => {
+    stubMotion(false);
+    Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
+    const element = makeElement(580);
+    revealNearest(element);
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "smooth" });
+  });
+
+  it("movimento reduzido: behavior auto", () => {
+    stubMotion(true);
+    Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
+    const element = makeElement(580);
+    revealNearest(element);
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "auto" });
+  });
+
+  it("já inteiro na janela: não rola", () => {
+    stubMotion(false);
+    Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
+    const element = makeElement(100);
+    revealNearest(element);
+    expect(element.scrollIntoView).not.toHaveBeenCalled();
+    expect(() => revealNearest(null)).not.toThrow();
   });
 });

@@ -1,10 +1,14 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { type RefObject, useEffect, useRef } from "react";
+import { seedViewSwitch } from "../api/view-switch";
 import type { FilterChange } from "../model/filter-change";
 import { serializeSearchFilters } from "../model/search-filters";
+import type { ResultsModel } from "./results-model";
 import { useFocusAfterRetry } from "./useFocusAfterRetry";
 import { useFocusOnPageChange } from "./useFocusOnPageChange";
+import { useHotelFeed } from "./useHotelFeed";
 import { useHotelResults } from "./useHotelResults";
 import { useKeepResultsHeight } from "./useKeepResultsHeight";
 import { useSearchFilters } from "./useSearchFilters";
@@ -12,7 +16,8 @@ import { useSearchFilters } from "./useSearchFilters";
 type UseResultsController = Omit<ReturnType<typeof useSearchFilters>, "update"> & {
   /** Aplica a mudança de filtro guardando antes a altura da coluna de resultados. */
   update: (change: FilterChange) => void;
-  results: ReturnType<typeof useHotelResults>;
+  /** Modelo do modo ativo (páginas ou rolagem contínua). */
+  results: ResultsModel;
   headingRef: RefObject<HTMLHeadingElement | null>;
   sectionRef: RefObject<HTMLElement | null>;
   sectionMinHeight: number | undefined;
@@ -26,8 +31,13 @@ type UseResultsController = Omit<ReturnType<typeof useSearchFilters>, "update"> 
  */
 export const useResultsController = (destination: string): UseResultsController => {
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const client = useQueryClient();
   const { filters, update: applyChange, replacePage, pageHref } = useSearchFilters();
-  const results = useHotelResults(destination, filters);
+  // Os dois hooks ficam montados (só um busca): a toolbar e o foco no select nunca desmontam.
+  const infinite = filters.view === "infinite";
+  const pagesModel = useHotelResults(destination, filters, !infinite);
+  const feedModel = useHotelFeed(destination, filters, infinite);
+  const results = infinite ? feedModel : pagesModel;
   const { view } = results;
   const outOfRangeTo = view.kind === "out-of-range" ? view.lastPage : null;
 
@@ -63,6 +73,7 @@ export const useResultsController = (destination: string): UseResultsController 
     sectionMinHeight: keep.minHeight,
     update: (change) => {
       keep.hold();
+      if (change.type === "setView") seedViewSwitch(client, destination, filters, change.value);
       applyChange(change);
     },
     retry: () => {

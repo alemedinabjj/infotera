@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { sortLabel } from "./labels";
-import { SORT_OPTIONS } from "./search-filters";
+import { listModeLabel, sortLabel } from "./labels";
+import { LIST_MODES, SORT_OPTIONS } from "./search-filters";
 
 describe("labels", () => {
   it("ordenações", () => {
@@ -8,6 +8,11 @@ describe("labels", () => {
       "Mais populares",
       "Menor preço",
       "Maior avaliação",
+      "Distância do centro",
     ]);
+  });
+
+  it("modos de listagem", () => {
+    expect(LIST_MODES.map(listModeLabel)).toEqual(["Em páginas", "Rolagem contínua"]);
   });
 });
