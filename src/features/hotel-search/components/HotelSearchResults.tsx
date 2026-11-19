@@ -7,6 +7,7 @@ import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
 import { useResultsController } from "../hooks/useResultsController";
 import { describeAnnouncement, describeToolbar } from "../model/results-view";
 import { countActiveFilters, serializeSearchFilters } from "../model/search-filters";
+import { DistanceHelp } from "./DistanceHelp";
 import { FiltersDrawer, FiltersTrigger } from "./FiltersDrawer";
 import { FiltersPanel } from "./FiltersPanel";
 import { ResultsError } from "./ResultsError";
@@ -26,6 +27,7 @@ type HotelSearchResultsProps = {
  */
 export const HotelSearchResults = ({ destination, criteria }: HotelSearchResultsProps) => {
   const headingId = useId();
+  const distanceHelpId = useId();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const { filters, update, pageHref, results, headingRef, sectionRef, sectionMinHeight, retry } =
@@ -72,10 +74,14 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
           sort={
             <SortSelect
               value={filters.sort}
+              describedBy={filters.sort === "distance" ? distanceHelpId : undefined}
               onChange={(value) => update({ type: "setSort", value })}
             />
           }
         />
+        {filters.sort === "distance" ? (
+          <DistanceHelp id={distanceHelpId} destination={destination} />
+        ) : null}
         <ErrorBoundary
           resetKeys={[resetKey]}
           fallback={({ reset }) => <ResultsError onRetry={reset} retrying={false} />}
