@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Hotel } from "@/shared/api/schemas";
 import { hotelsQueryOptions } from "../api/hotels";
+import type { GeoPoint } from "../model/distance";
 import { deriveResultsView, type ResultsView } from "../model/results-view";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
 import { useSlowLoading } from "./useSlowLoading";
@@ -11,6 +12,8 @@ type UseHotelResults = {
   view: ResultsView;
   items: Hotel[];
   total: number;
+  /** Centroide do destino (`null` sem ele). */
+  center: GeoPoint | null;
   /** Está carregando demais (> 5 s). */
   slow: boolean;
   retry: () => void;
@@ -41,6 +44,7 @@ export const useHotelResults = (destination: string, filters: SearchFilters): Us
     view,
     items: query.data?.items ?? [],
     total: query.data?.total ?? 0,
+    center: query.data?.center ?? null,
     slow,
     retry: () => void query.refetch(),
     isFetching: query.isFetching,

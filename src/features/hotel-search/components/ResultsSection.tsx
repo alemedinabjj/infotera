@@ -2,6 +2,7 @@ import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { getTotalPages } from "@/shared/lib/pagination";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { Alert, Pagination, WifiOffIcon } from "@/shared/ui";
+import type { GeoPoint } from "../model/distance";
 import type { ResultsView } from "../model/results-view";
 import { PAGE_SIZE } from "../model/search-filters";
 import { ResultsEmpty } from "./ResultsEmpty";
@@ -12,6 +13,7 @@ import { ResultsSkeleton } from "./ResultsSkeleton";
 type ResultsSectionProps = {
   view: ResultsView;
   hotels: readonly Hotel[];
+  center: GeoPoint | null;
   total: number;
   page: number;
   destination: string;
@@ -61,6 +63,7 @@ export const ResultsSection = (props: ResultsSectionProps) => {
             hotels={props.hotels}
             criteria={props.criteria}
             selectedAmenities={props.selectedAmenities}
+            center={props.center}
             stale={view.stale}
           />
           <Pagination

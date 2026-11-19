@@ -7,8 +7,10 @@ import { CheckIcon } from "@/shared/ui";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
 import { deriveCardPricing } from "../model/card-pricing";
+import type { GeoPoint } from "../model/distance";
 import { amenityLabel, propertyTypeLabel } from "../model/labels";
 import { hotelHref } from "../model/search-page";
+import { HotelCardDistance } from "./HotelCardDistance";
 import { HotelCardFooter } from "./HotelCardFooter";
 import { HotelImage } from "./HotelImage";
 import { RatingScore } from "./RatingScore";
@@ -19,6 +21,8 @@ type HotelCardProps = {
   criteria: SearchCriteria | null;
   /** Comodidades filtradas: aparecem primeiro e em destaque. */
   selectedAmenities: readonly Amenity[];
+  /** Centroide do destino (distância no card); `null` omite a linha. */
+  center: GeoPoint | null;
   /** Primeiro card da lista: foto com `loading="eager"`. */
   priority?: boolean;
 };
@@ -67,38 +71,38 @@ export const HotelCard = ({
   hotel,
   criteria,
   selectedAmenities,
+  center,
   priority = false,
 }: HotelCardProps) => {
   const prefetch = usePrefetchHotel(hotel.id);
   const pricing = deriveCardPricing(hotel, criteria);
 
   return (
-    <li>
-      <article className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow duration-150 hover:shadow-raised has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus sm:flex-row">
-        <HotelImage
-          src={hotel.thumbnail}
-          alt={hotel.name}
-          muted={pricing.status === "sold-out"}
-          eager={priority}
-        />
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
-          <h3 className="line-clamp-2 text-lg font-semibold text-fg">
-            <Link
-              href={hotelHref(hotel.id, criteria)}
-              className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
-              {...prefetch}
-            >
-              {hotel.name}
-            </Link>
-          </h3>
-          <p className="text-sm text-fg-muted">
-            {propertyTypeLabel(hotel.propertyType)} · {hotel.destination}
-          </p>
-          <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
-          <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
-          <HotelCardFooter pricing={pricing} />
-        </div>
-      </article>
-    </li>
+    <article className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow duration-150 hover:shadow-raised has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus sm:flex-row">
+      <HotelImage
+        src={hotel.thumbnail}
+        alt={hotel.name}
+        muted={pricing.status === "sold-out"}
+        eager={priority}
+      />
+      <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
+        <h3 className="line-clamp-2 text-lg font-semibold text-fg">
+          <Link
+            href={hotelHref(hotel.id, criteria)}
+            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
+            {...prefetch}
+          >
+            {hotel.name}
+          </Link>
+        </h3>
+        <p className="text-sm text-fg-muted">
+          {propertyTypeLabel(hotel.propertyType)} · {hotel.destination}
+        </p>
+        <HotelCardDistance hotel={hotel} center={center} />
+        <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
+        <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
+        <HotelCardFooter pricing={pricing} />
+      </div>
+    </article>
   );
 };

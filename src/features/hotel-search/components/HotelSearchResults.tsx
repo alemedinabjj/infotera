@@ -83,6 +83,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
           <ResultsSection
             view={view}
             hotels={results.items}
+            center={results.center}
             total={results.total}
             page={filters.page}
             destination={destination}

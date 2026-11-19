@@ -15,20 +15,49 @@ const cardClient = () =>
 const renderCard = (props: Partial<Parameters<typeof HotelCard>[0]> = {}, client = cardClient()) =>
   renderWithProviders(
     <ul>
-      <HotelCard
-        hotel={makeHotel({
-          id: 13,
-          name: "Pousada Vista Corcovado",
-          pricePerNight: 180,
-          availableRooms: 9,
-        })}
-        criteria={criteria}
-        selectedAmenities={[]}
-        {...props}
-      />
+      <li>
+        <HotelCard
+          hotel={makeHotel({
+            id: 13,
+            name: "Pousada Vista Corcovado",
+            pricePerNight: 180,
+            availableRooms: 9,
+          })}
+          criteria={criteria}
+          selectedAmenities={[]}
+          center={null}
+          {...props}
+        />
+      </li>
     </ul>,
     { queryClient: client },
   );
+
+describe("HotelCard: distância do centro", () => {
+  const center = { latitude: -22.9683, longitude: -43.1792 };
+
+  it("mostra a distância abaixo de tipo e destino, com ícone decorativo", () => {
+    const { container } = renderCard({
+      hotel: makeHotel({ latitude: center.latitude, longitude: center.longitude + 0.0225 }),
+      center,
+    });
+    expect(screen.getByText("2,3 km do centro")).toBeInTheDocument();
+    expect(container.querySelector("article svg[aria-hidden='true']")).not.toBeNull();
+  });
+
+  it("formata distâncias curtas em metros", () => {
+    renderCard({
+      hotel: makeHotel({ latitude: center.latitude, longitude: center.longitude + 0.0049 }),
+      center,
+    });
+    expect(screen.getByText("500 m do centro")).toBeInTheDocument();
+  });
+
+  it("sem centro não há linha de distância", () => {
+    renderCard();
+    expect(screen.queryByText(/do centro/)).not.toBeInTheDocument();
+  });
+});
 
 describe("HotelCard: conteúdo (critérios 2 a 5)", () => {
   it("mostra foto, único link, tipo e destino, nota e preço por noite", () => {
