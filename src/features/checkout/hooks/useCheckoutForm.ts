@@ -114,6 +114,7 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     goNext,
     goBack: () => moveTo(previousStep(step)),
     goTo: moveTo,
+    markAttempt: () => setAttempts((count) => count + 1),
     showFieldError,
     clearDraft: draft.clear,
   };

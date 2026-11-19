@@ -19,9 +19,10 @@ export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, step: Chec
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const stopped = useRef(false);
   const mounted = useRef(false);
+  const dirty = useRef(false);
 
   const write = useCallback(() => {
-    if (stopped.current) return;
+    if (stopped.current || !dirty.current) return;
     createStorage("session").write(
       CHECKOUT_DRAFT_KEY,
       toPersistedDraft(form.getValues(), stepRef.current),
@@ -29,6 +30,7 @@ export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, step: Chec
   }, [form]);
 
   const schedule = useCallback(() => {
+    dirty.current = true;
     clearTimeout(timer.current);
     timer.current = setTimeout(write, DRAFT_DEBOUNCE_MS);
   }, [write]);

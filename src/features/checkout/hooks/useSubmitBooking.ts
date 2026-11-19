@@ -69,7 +69,9 @@ export const useSubmitBooking = ({
       onCreated(result.bookingId);
       return;
     }
-    if (result.status === "price-changed" || result.status === "unavailable") {
+    // Preço mudou: busca o preço novo. `unavailable` não refaz a consulta (a tela não pode virar o
+    // estado bloqueante no meio do alerta com a ação "Ver quartos").
+    if (result.status === "price-changed") {
       void queryClient.invalidateQueries({ queryKey: roomQueryOptions(selection.roomId).queryKey });
     }
     if (result.status === "coupon-invalid")
