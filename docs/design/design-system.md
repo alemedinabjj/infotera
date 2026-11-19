@@ -365,8 +365,8 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   mostrar só "Infotera" mas o link mantém `aria-label="Infotera Hotéis, página inicial"`.
 - Primeiro item focável da página: link "Pular para o conteúdo" (`sr-only focus:not-sr-only`) apontando
   para `<main id="conteudo">`.
-- Nas páginas de resultado/detalhe, o header pode mostrar um resumo compacto da busca
-  ("São Paulo, SP · 12–15 dez · 2 hóspedes") como link "Alterar busca" (definido na spec da F3).
+- O resumo da busca **não** vai no header global (F3: o header é do layout raiz). Fica no topo da
+  página de resultados, com o disclosure "Alterar busca" (§5.2 Disclosure).
 
 ### 4.3 Estrutura da página
 
@@ -384,6 +384,23 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 - `sm` a `lg`: card **horizontal** (imagem à esquerda `w-56`, conteúdo à direita) em 1 coluna — leitura de
   lista de resultados é mais rápida que grid para comparar preço.
 - Lista sempre `<ul role="list">` com `<li>` por card; contagem de resultados acima em `aria-live="polite"`.
+- No card horizontal, a foto estica até a altura do card: `sm:w-56 sm:shrink-0 sm:aspect-auto
+  sm:min-h-42` (168px = 4:3 de 224px; exceção de geometria permitida) com `object-cover`.
+
+**Toolbar de resultados (F3)** — acima da lista, altura estável em todos os estados:
+```
+14 hotéis encontrados                 ← h2 text-xl font-semibold min-h-7, tabIndex=-1 (alvo de foco)
+Mostrando 1–10 de 14                  ← linha de status min-h-5 text-sm text-fg-muted tabular-nums
+[⚲ Filtros (2)] [Mais populares ▾]    ← < lg: grid-cols-[auto_1fr] gap-3 items-end; ≥ lg: Filtros some,
+                                         "Ordenar por" vira label inline à direita (select w-56)
+```
+- A **linha de status** troca de texto, nunca de altura: `Mostrando 1–10 de 14` ↔ `Spinner` +
+  `Atualizando resultados…` ↔ `Carregando hotéis…` ↔ `Está demorando mais que o normal…`.
+- O anúncio para leitor de tela é um `<p class="sr-only" aria-live="polite">` **separado** do h2 (o h2
+  recebe foco; se fosse live, leria duas vezes).
+- Lista "velha" durante a troca (placeholder): `opacity-60 transition-opacity` + `aria-busy="true"`,
+  continua clicável. Se a troca falhar/ficar offline, a lista velha sai (nunca mostrar resultado que
+  não corresponde aos filtros marcados).
 
 ### 4.5 Barra de ação fixa (mobile)
 
@@ -491,6 +508,16 @@ Não é interativo. Se transmitir status crítico (esgotado), o texto do badge b
   quando aparecer sozinho.
 - `RatingScore` (molécula): `[4,6] ★★★★½ (1.234 avaliações)` → nota `font-semibold tabular-nums text-fg`,
   contagem `text-sm text-fg-subtle`. Nota com 1 casa decimal e vírgula (`formatRating`).
+  Implementação (F3):
+  ```
+  4,8 ★★★★★ Excelente · 2.847 avaliações
+  ```
+  `flex flex-wrap items-center gap-x-2 gap-y-1`; nota `text-base font-semibold`, `Stars decorative`,
+  rótulo `text-sm font-medium text-fg-muted` (`ratingLabel`), contagem `text-sm text-fg-subtle`
+  precedida de `· ` (quebra para a linha de baixo em 320px). Nome acessível pela ordem do DOM com
+  `sr-only`: "Nota 4,8 de 5, Excelente, 2.847 avaliações". Props: `rating`, `reviewCount`,
+  `showLabel = true`, `size: "sm" | "md"` (`sm` = nota `text-sm`, para reviews na F4).
+  `reviewCount` 0 → `Sem avaliações` (sem estrelas).
 - Notas são 0–5 (hotel com decimal, review inteiro). Rótulo qualitativo opcional: ≥ 4,5 "Excelente",
   ≥ 4,0 "Muito bom", ≥ 3,5 "Bom", abaixo "Regular" (função pura em `shared/lib`).
 
@@ -517,10 +544,28 @@ Mostra dinheiro com `formatBRL` (de `shared/lib/currency`), `tabular-nums`, `whi
 - Leitura por leitor de tela como frase: `aria-label` não é necessário se a ordem do DOM já for
   "a partir de R$ 890 por noite". Não quebrar o valor com elementos que separem "R$" do número.
 - Valores longos (até `R$ 300.000,00`) cabem em 320px: o rótulo quebra para a linha de baixo, o valor nunca.
-- Quando há datas na busca, o card mostra **também o total** da estadia (`R$ 2.670 total · 3 noites`) logo
-  abaixo do preço por noite: o usuário compara total, não diária.
+- Quando há datas na busca, o card mostra **também o total** da estadia: o usuário compara total, não
+  diária. Nesse caso (F3) o **total vira o número grande** e a diária desce para linha secundária;
+  nunca os dois no mesmo tamanho:
+  ```
+              R$ 540,00          ← text-xl font-bold (no card; text-2xl fora dele)
+   total · 3 noites · 1 quarto   ← text-sm text-fg-muted
+   a partir de R$ 180 por noite  ← text-sm text-fg-subtle
+  ```
+  Sem datas, vale a variante `nightly`. Alinhamento no card: `text-right`, embaixo à direita.
 - Centavos: exibir sempre no total e no breakdown; no preço por noite do card pode omitir se for inteiro
   (`maximumFractionDigits: 0`), decidido por prop `compact`.
+
+#### Range (slider)
+`<input type="range">` nativo (teclado, toque e leitor de tela de graça). F3: filtro de preço.
+- `h-11 w-full cursor-pointer accent-primary` (a altura dá o alvo de 44px; o polegar `primary` tem
+  6.67:1 vs branco). Foco: anel global.
+- Sempre com `<label>` visível acima e `aria-valuetext` formatado (`R$ 500`, `R$ 3.000 ou mais`).
+- Faixa (mínimo e máximo) = **dois ranges empilhados** com labels `Mínimo`/`Máximo` dentro de um
+  `fieldset`; um não ultrapassa o outro (para no valor do outro). Acima, resumo em texto
+  `text-base font-semibold tabular-nums` com `aria-hidden` (os ranges já falam o valor).
+  Proibido: dois polegares sobrepostos no mesmo trilho (alvo e foco frágeis).
+- Commit com debounce (400ms); o resumo em texto atualiza na hora.
 
 ### 5.2 Molecules
 
@@ -579,6 +624,17 @@ escolha outro", aviso de capacidade do quarto, aviso de modo offline.
   + título `underline`; foco: anel no card (`has-[:focus-visible]:outline`).
 - `selected`: `border-primary ring-1 ring-primary` (ex.: quarto selecionado).
 - `disabled`/esgotado: imagem com `grayscale opacity-70` e badge "Esgotado"; texto continua com contraste AA.
+- Classes exatas do `interactive` (F3): card `group relative flex flex-col sm:flex-row
+  hover:shadow-raised transition-shadow duration-150 has-[a:focus-visible]:outline-2
+  has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus`; link do título
+  `after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline`.
+  Nenhum outro elemento focável dentro do card. Estrutura `<li><article>…<h3><a>`.
+
+#### Disclosure ("Alterar busca")
+Botão que mostra/esconde um painel logo **abaixo** dele (nada acima se move). `Button secondary sm`
+com `rightIcon` `ChevronDownIcon` (`rotate-180 transition-transform` quando aberto), `aria-expanded`,
+`aria-controls` = id do painel. Abrir não move o foco (padrão disclosure); fechar pelo mesmo botão.
+Painel fechado = não montado. Uso: "Alterar busca" na F3 (painel com o `SearchForm`).
 
 #### Breadcrumb
 `<nav aria-label="Você está aqui"><ol>` com separador `chevron-right` `aria-hidden`. Último item é
@@ -703,6 +759,22 @@ principal: filtros da F3.
 ```
 Gatilho: `Button secondary` "Filtros" com contador ("Filtros (3)").
 
+Implementação (F3): **`Dialog placement="sheet"`** (mesmo ciclo de vida do Dialog; não é componente
+separado).
+- `<dialog>`: `mt-auto mb-0 w-full max-w-none max-h-[90dvh] rounded-t-dialog rounded-b-none
+  animate-slide-up` (wrapper interno com o mesmo `max-h`). ≥ `sm` continua bottom-sheet (`sm:max-w-lg
+  sm:mx-auto`).
+- Footer em **linha** (`flex-row gap-3`, botões `flex-1`: largura fixa, o texto pode mudar sem mexer
+  no layout), `pb-[max(1rem,env(safe-area-inset-bottom))]`. Secundária (ghost) à esquerda, primária
+  à direita.
+- O resultado esperado no primário (`Ver 8 hotéis`); durante o fetch `Spinner` + `Atualizando…` mas
+  **clicável** (fecha; não usar `loading`). 0 resultados/erro: `Ver resultados`.
+- Conteúdo fora do `<dialog>` modal fica inerte: anúncios `aria-live` relevantes precisam de uma
+  região própria dentro do sheet.
+- `closeOnBackdrop` quando as mudanças já estão aplicadas (filtros ao vivo). Fecha sozinho ao cruzar
+  `lg` (`matchMedia`).
+- Foco inicial no primeiro controle; ao fechar, volta ao gatilho.
+
 #### Toast
 Feedback **efêmero e não essencial** de uma ação (ex.: "Link copiado", "Não foi possível confirmar a
 reserva" — que também aparece inline).
@@ -720,6 +792,13 @@ reserva" — que também aparece inline).
 São da feature (F3/F4), mas devem compor: `Card interactive` + imagem `aspect-[4/3]` + `Badge` +
 `RatingScore` + `PriceTag`. Hierarquia: nome → local/tipo → nota → comodidades (até 3 + "+2") → preço
 (alinhado embaixo/direita) → disponibilidade.
+- Bloco de preço: `mt-auto border-t border-border pt-3 flex flex-wrap items-end justify-between
+  gap-x-3 gap-y-2`; badge de disponibilidade à esquerda (colado ao preço), preço `ml-auto text-right`.
+  A diária nunca some; o total some quando não dá para reservar (esgotado / quartos insuficientes).
+- Comodidades: `CheckIcon size-4 text-success` decorativo + texto `text-sm`; as que batem com o filtro
+  vêm primeiro em `text-fg font-medium`; "+N" `text-fg-subtle` com `sr-only` " comodidades".
+- Skeleton com a mesma geometria (foto `block`, linhas com a altura do `line-height` de cada texto,
+  `border-t` e 3 linhas à direita).
 
 ---
 
@@ -791,6 +870,8 @@ Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
 | Seção não carregou | `Não foi possível carregar as avaliações.` | `Tentar de novo` |
 | Envio da reserva falhou | Alert: `Não foi possível confirmar sua reserva` · `Nenhuma cobrança foi feita. Seus dados foram mantidos; tente de novo em instantes.` + toast `Não foi possível confirmar a reserva.` | `Tentar de novo` |
 | Sem conexão (`navigator.onLine === false`) | Alert warning: `Você está sem internet. Assim que a conexão voltar, tente de novo.` | — |
+| Sem conexão numa lista que recarrega sozinha (F3) | Alert warning (`WifiOffIcon`): `Você está sem internet.` · `Os hotéis aparecem assim que a conexão voltar.` (com dados da mesma busca: `Os resultados podem estar desatualizados.`) | — |
+| Erro de renderização da rota de busca | h1 `Não foi possível abrir a busca` · `Tente de novo ou faça uma nova busca.` | `Tentar de novo` + `Fazer nova busca` |
 | Lento (> 5s) | Texto abaixo do skeleton: `Está demorando mais que o normal…` | — |
 | Autocomplete | `Não foi possível carregar os destinos.` | `Tentar de novo` |
 | Copiar link falhou | Toast: `Não foi possível copiar. Copie o endereço na barra do navegador.` | — |
@@ -803,10 +884,29 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 |---|---|---|
 | Esgotado (hotel/quarto) | Badge `danger` + botão desabilitado | Badge `Esgotado` · botão `Esgotado` · nota `Sem quartos disponíveis para estas datas.` |
 | Escassez (1–2) | Badge `warning` | `Apenas 1 quarto!` / `Apenas 2 quartos!` |
+| Menos quartos que a busca (F3) | Badge `warning`, sem total | Badge `Só 2 quartos disponíveis` · nota `Sua busca pede 3 quartos.` |
+| Esgotado sem datas na busca | Badge `danger` | nota `Sem quartos disponíveis no momento.` |
 | Disponível | — | Nada (não poluir) |
 | Quarto ficou indisponível no checkout | Alert `warning` | `Este quarto esgotou enquanto você reservava. Escolha outro quarto no mesmo hotel.` + `Ver quartos` |
 
-### 6.7 Sucesso e outros
+### 6.7 Resultados, filtros e ordenação (F3)
+
+| Item | Texto |
+|---|---|
+| Título da página | `Hotéis em {destino}` · sem destino: `Para onde você vai?` |
+| Resumo da busca | `12–15 dez · 3 noites · 2 adultos · 1 quarto` · sem datas: `Datas não definidas` |
+| Contagem | `Nenhum hotel encontrado` · `1 hotel encontrado` · `14 hotéis encontrados` |
+| Linha de status | `Mostrando 1–10 de 14` · `Carregando hotéis…` · `Atualizando resultados…` |
+| Ordenar | `Ordenar por`: `Mais populares` · `Menor preço` · `Maior avaliação` |
+| Filtros | `Filtros` · `Filtros (3)` · `Limpar filtros` · `Ver 14 hotéis` / `Ver 1 hotel` / `Ver resultados` |
+| Preço | `Preço por noite` · `Mínimo` / `Máximo` · `Qualquer preço` · `A partir de R$ 200` · `Até R$ 1.500` · `R$ 200 – R$ 1.500` · topo `R$ 3.000 ou mais` |
+| Nota mínima | `Qualquer nota` · `4,5 ou mais` Excelente · `4,0 ou mais` Muito bom · `3,5 ou mais` Bom (nunca "4,5+": ambíguo no leitor de tela) |
+| Tipos | `Hotel` · `Pousada` · `Resort` |
+| Comodidades (ordem de exibição) | `Wi-Fi` · `Café da manhã` · `Piscina` · `Estacionamento` · `Acesso à praia` · `Restaurante` · `Bar` · `Academia` · `Spa` · `Serviço de quarto` · `Clube infantil` · `Concierge` · `Manobrista` · `Centro de negócios` · `Acesso ao lounge` |
+| Alert sem datas | `Escolha as datas da estadia` · `Com datas e hóspedes, mostramos o preço total e a disponibilidade de cada hotel.` |
+| Alert datas passadas | `As datas desta busca já passaram` · `Preços e disponibilidade podem ter mudado. Use "Alterar busca" para escolher novas datas.` |
+
+### 6.8 Sucesso e outros
 
 - Toast copiar link: `Link copiado.`
 - Buscas recentes apagadas: toast `Buscas recentes apagadas.`
@@ -815,7 +915,8 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 - Política de cancelamento: `free` → `Cancelamento grátis` (badge success) · `moderate` → `Cancelamento com
   reembolso parcial` · `strict` → `Sem reembolso em caso de cancelamento`. Detalhe expansível na F4.
 - `aria-label`s padrão: `Fechar`, `Fechar notificação`, `Limpar destino`, `Foto anterior`, `Próxima foto`,
-  `Página {n}`, `Diminuir {campo}`, `Aumentar {campo}`, `Copiar link do hotel`, `Paginação`, `Você está aqui`.
+  `Página {n}`, `Diminuir {campo}`, `Aumentar {campo}`, `Copiar link do hotel`, `Paginação`, `Você está aqui`,
+  `Fechar filtros`.
 
 ---
 
@@ -839,7 +940,8 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 
 | Nível | Componentes | Introduzido em |
 |---|---|---|
-| atoms | Button (+ButtonLink), IconButton, Input, Select, Checkbox, Radio, Badge, Stars, Skeleton, Spinner, PriceTag, icons | F1 |
-| molecules | Field, Stepper, Alert, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox | F1 (Combobox e DateRange podem nascer na F2 e ser promovidos se reutilizados) |
-| organisms | Dialog, Drawer, Toast/Toaster, Header, Footer | F1 (Drawer pode nascer na F3) |
+| atoms | Button (+ButtonLink), IconButton, Input, Select, Checkbox, Radio, Badge, Stars, Skeleton, Spinner, PriceTag, icons | F1 (PriceTag nasce na F3) |
+| atoms | Range (estilo do `input type="range"` nativo) | F3 (classes no componente do filtro; promover se reutilizado) |
+| molecules | Field, Stepper, Alert, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure | F1 (Combobox/DateRange nascem na F2; Card, RatingScore e Disclosure nascem na F3 e sobem no 2º uso) |
+| organisms | Dialog (`placement: "center" \| "sheet"`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3) |
 | feature | HotelCard, RoomCard, Gallery/Lightbox, PriceBreakdown, StepIndicator | F3–F5, compondo os acima |

@@ -476,3 +476,342 @@ json-server: `new RegExp(pattern, "i").test(String(hotel.amenities))`.
 | `webServer` da mock-api no CI sem `npm install` em `mock-api/` | Documentar no `CLAUDE.md` raiz; CI roda `npm ci --prefix mock-api` |
 | Funções/arquivos acima do limite do Biome | Divisão planejada (seção Arquivos); `npm run lint` em toda tarefa |
 | `SearchForm` dentro do `/search` mostra "Buscas recentes" | Aceitável (atalho útil); o ui-designer decide se o painel esconde a lista |
+
+## UI/UX
+
+Referências: `docs/design/design-system.md` §4.3–4.4 (página com sidebar, lista de cards), §5.1
+PriceTag/RatingScore/Range, §5.2 Card/Pagination/EmptyState/ErrorState, §5.3 Drawer, §6 (microcopy).
+O design system foi atualizado nesta feature: `Range` (slider), `RatingScore` e `PriceTag` detalhados
+(total em destaque no card), `Card interactive` com as classes exatas, `Drawer` = `Dialog
+placement="sheet"`, padrão "linha de status" da lista, disclosure "Alterar busca", rótulos de
+comodidades/tipos/ordenação e mensagens novas em §6.
+
+### Decisões de UX
+
+1. **Com datas, o total é o número grande do card; a diária vira linha secundária.** Quem compara
+   hotéis para 3 noites decide pelo total. Sem datas (`browse`), a diária é o número grande. Nunca os
+   dois no mesmo tamanho (dois números grandes = nenhuma hierarquia).
+2. **Nada aparece/some sob o dedo.** "Limpar filtros" fica sempre montado (com `aria-disabled` quando
+   não há filtro ativo: o foco não se perde ao limpar); a linha de status da lista ("Mostrando 1–10
+   de 14" ↔ "Atualizando resultados…") tem altura reservada (`min-h-5`) e troca texto; o painel
+   "Alterar busca" abre **abaixo** do botão; o botão "Ver N hotéis" do sheet tem largura fixa
+   (`flex-1`). Nenhum filtro valida no blur.
+3. **Lista anterior só fica na tela se for da mesma busca e só durante a troca.** Placeholder
+   (filtro/página anterior) aparece esmaecido com "Atualizando resultados…". Se a troca **falhar** ou
+   ficar **offline**, o placeholder sai e entra o estado de erro/offline: nunca mostrar hotéis que
+   não correspondem aos filtros marcados (lição F2). Ver "Ajustes aos critérios".
+4. **Buscas recentes escondidas no painel "Alterar busca"; visíveis no modo sem destino.** No painel,
+   elas empurrariam a lista ~300 px para baixo no celular e repetem a busca que já está na tela; no
+   modo sem destino a página *é* um formulário de busca e o atalho ajuda. Exige prop nova no
+   `SearchForm`: `showRecentSearches?: boolean` (padrão `true`).
+5. **Preço com dois sliders nativos empilhados (Mínimo/Máximo) + resumo em texto acima.** Confirma a
+   Decisão 7: alvo de 44 px por slider, teclado nativo (setas, PageUp/Down, Home/End), `aria-valuetext`
+   em reais. O resumo ("R$ 200 – R$ 1.500") atualiza na hora; a lista, 400 ms depois.
+6. **Erro e vazio no topo da coluna de resultados**, logo abaixo da toolbar (não centralizados num
+   bloco alto): o "Tentar de novo" fica na primeira tela do celular (~480 px do topo em 375×667).
+
+### Layout
+
+Página: `SearchHeader` em largura total; abaixo, `lg:grid lg:grid-cols-[18rem_1fr] lg:gap-8`
+(sidebar de filtros à esquerda, `hidden lg:block`). Espaço entre header da página e grid: `gap-6
+lg:gap-8`. Nada de `<main>` (é do layout).
+
+**320–375 px — modo `stay`:**
+```
+┌ SiteHeader (sticky h-14) ──────────┐
+└────────────────────────────────────┘
+ Hotéis em Rio de Janeiro, RJ           h1 text-2xl font-bold (quebra linha)
+ 12–15 dez · 3 noites · 2 adultos ·     p text-sm text-fg-muted tabular-nums
+ 1 quarto
+ [Alterar busca ▾] [🔗 Copiar link]     Button secondary sm (aria-expanded) · Button ghost sm
+ ┌ painel (fechado por padrão) ──────┐  SearchForm sem buscas recentes
+ └───────────────────────────────────┘
+ [⚠ Alert warning: datas passadas]      só se check-in < hoje
+ 14 hotéis encontrados                  h2 text-xl font-semibold, tabIndex=-1 (alvo de foco)
+ Mostrando 1–10 de 14                   linha de status min-h-5 text-sm text-fg-muted
+ [⚲ Filtros (2)] [Mais populares   ▾]   grid-cols-[auto_1fr] gap-3 items-end;
+                  └ label "Ordenar por" acima do select (text-sm font-medium)
+┌ HotelCard ─────────────────────────┐  <li>, Card interactive
+│ [        foto 4:3 (100%)         ] │
+│ Pousada Vista Corcovado            │  h3 > a, text-lg font-semibold, line-clamp-2
+│ Pousada · Rio de Janeiro, RJ       │  text-sm text-fg-muted
+│ 4,8 ★★★★★ Excelente                │  RatingScore (quebra antes da contagem se faltar espaço)
+│ 2.847 avaliações                   │
+│ ✓ Piscina ✓ Spa ✓ Wi-Fi +4         │  text-sm, filtradas primeiro (text-fg font-medium)
+│ ───────────────────────────────────│  border-t border-border pt-3
+│ [Apenas 1 quarto!]     R$ 540,00   │  badge à esquerda; preço à direita (flex-wrap:
+│        total · 3 noites · 1 quarto │  o badge sobe para a linha de cima se não couber)
+│      a partir de R$ 180 por noite  │
+└────────────────────────────────────┘
+ … mais 9 cards (gap-4)
+ [‹ Anterior]  Página 1 de 2  [Próxima ›]   Pagination links, mt-8
+```
+
+**≥ 1024 px:**
+```
+ Hotéis em Rio de Janeiro, RJ                          [Alterar busca ▾] [🔗 Copiar link]
+ 12–15 dez · 3 noites · 2 adultos · 1 quarto           (lg:flex lg:items-end lg:justify-between)
+ ┌ painel Alterar busca (largura total, quando aberto) ──────────────────────────────────┐
+ └───────────────────────────────────────────────────────────────────────────────────────┘
+┌ Filtros ─────── [Limpar filtros] ┐  14 hotéis encontrados              Ordenar por [Mais populares ▾]
+│ Preço por noite                  │  Mostrando 1–10 de 14                          (label inline, select w-56)
+│ R$ 200 – R$ 1.500                │ ┌ card horizontal ───────────────────────────────────────────────┐
+│ Mínimo                           │ │ ┌foto w-56┐ Pousada Vista Corcovado                            │
+│ [==o====================]        │ │ │ 4:3     │ Pousada · Rio de Janeiro, RJ                       │
+│ Máximo                           │ │ │         │ 4,8 ★★★★★ Excelente · 2.847 avaliações             │
+│ [=========o=============]        │ │ │         │ ✓ Piscina ✓ Spa ✓ Wi-Fi +4                         │
+│ ──────────────────────────────── │ │ │         │ ─────────────────────────────────────────────────  │
+│ Nota mínima                      │ │ └─────────┘ [Apenas 1 quarto!]                  R$ 540,00      │
+│ ( ) Qualquer nota                │ │                                total · 3 noites · 1 quarto     │
+│ (•) 4,5 ou mais  Excelente       │ │                              a partir de R$ 180 por noite      │
+│ ( ) 4,0 ou mais  Muito bom       │ └────────────────────────────────────────────────────────────────┘
+│ ( ) 3,5 ou mais  Bom             │   … (gap-6)
+│ ──────────────────────────────── │        [‹ Anterior] [1] [2] [Próxima ›]
+│ Tipo de hospedagem               │
+│ [ ] Hotel  [ ] Pousada [ ] Resort│  (um por linha)
+│ ──────────────────────────────── │
+│ Comodidades                      │
+│ [x] Piscina  … (15, um por linha)│
+└──────────────────────────────────┘
+```
+- Sidebar: `aside` com classes de `Card static`, `p-5`, cabeçalho `flex min-h-11 items-center
+  justify-between` (h2 "Filtros" `text-lg font-semibold` + "Limpar filtros" ghost sm). Grupos
+  separados por `divide-y divide-border`, cada `fieldset` `py-5` (primeiro `pt-0`). Sem `sticky`
+  (a lista de comodidades é longa; scroll aninhado é pior). Todas as 15 comodidades visíveis (sem
+  "ver mais": menos um estado, e a marcada nunca fica escondida).
+- Card `sm+`: horizontal (`sm:flex-row`). Foto `sm:w-56 sm:shrink-0`, `aspect-[4/3]` no mobile e
+  `sm:aspect-auto sm:min-h-42` (= 4:3 de 224 px) esticando até a altura do card (`object-cover`),
+  para não sobrar "buraco" sob a foto. Corpo `flex flex-1 flex-col gap-2 p-4 md:p-5`; bloco de preço
+  empurrado para baixo (`mt-auto`).
+- Toolbar ≥ `lg`: `flex items-start justify-between gap-4`; "Filtros (n)" escondido (`lg:hidden`).
+- 320 px: nenhum elemento com largura fixa; select ocupa `1fr` (≈ 160 px); nome do hotel e
+  comodidades quebram linha; valores monetários `whitespace-nowrap`.
+
+**Bottom-sheet de filtros (< `lg`):**
+```
+┌───────────────────────────────────┐  Dialog placement="sheet": colado embaixo, w-full,
+│ Filtros                       [×] │  max-h-[90dvh], rounded-t-dialog, animate-slide-up
+├───────────────────────────────────┤
+│ Preço por noite                   │  mesmos fieldsets da sidebar (sem o h2 e sem o
+│ …                                 │  "Limpar filtros" do topo), corpo rolável
+│ Comodidades                       │
+│ [x] Piscina                       │
+├───────────────────────────────────┤  footer border-t, flex-row gap-3, px-5 pt-4
+│ [Limpar filtros]  [ Ver 4 hotéis ]│  ghost flex-1 · primary flex-1
+└───────────────────────────────────┘  pb-[max(1rem,env(safe-area-inset-bottom))]
+```
+
+**Modo `browse`** (destino sem datas válidas): igual ao `stay`, com resumo `Datas não definidas`,
+painel "Alterar busca" **aberto** e, dentro dele, antes do formulário, `Alert info`. Cards sem total.
+
+**Modo `missing-destination`**: wrapper `mx-auto flex max-w-4xl flex-col gap-8` (igual à home):
+h1 + parágrafo + `SearchForm` vazio **com** buscas recentes. Sem toolbar, filtros nem lista.
+
+**Ordem de leitura e foco** (= ordem visual):
+SkipLink → logo → "Alterar busca" → [campos do painel, se aberto] → "Copiar link" → [Alert] →
+(≥ lg) sidebar: "Limpar filtros" → Mínimo → Máximo → radios de nota (1 parada, setas) → tipos →
+comodidades → h2 da contagem (só programático, `tabIndex=-1`) → (< lg) "Filtros (n)" → "Ordenar por"
+→ link de cada card → paginação.
+
+### Hierarquia
+
+1. **Onde e quando**: h1 com o destino + resumo (datas, noites, hóspedes) — confirma que a busca é a
+   certa antes de olhar preço.
+2. **Quantos e em que ordem**: contagem + ordenação.
+3. **Card**: nome → tipo/destino → nota → comodidades → **preço** (total em destaque com datas) →
+   disponibilidade (badge colado ao preço: é onde a decisão acontece).
+4. Filtros: sempre à mão (sidebar fixa na coluna, ou botão no topo da lista no celular).
+5. Ações secundárias ("Copiar link", "Limpar filtros") em `ghost`. Primária única: nenhuma na lista
+   (o card é o link); no sheet, "Ver N hotéis"; nos vazios, a ação do EmptyState.
+
+### Componentes
+
+| Uso | Componente | Observação |
+|---|---|---|
+| Resumo + ações | `Button secondary sm` (`rightIcon` `ChevronDownIcon`, `rotate-180` aberto) · `Button ghost sm` (`leftIcon` `LinkIcon`) | `SearchHeader` |
+| Painel "Alterar busca" | `SearchForm` (F2) com `showRecentSearches={false}` e `labelledBy` | **prop nova no `SearchForm`** (Decisão de UX 4) |
+| Avisos de modo | `Alert` `info` (browse) / `warning` (datas passadas, offline) | |
+| Card | `HotelCard` com as classes de `Card interactive` (DS §5.2) | nasce na feature; extrair para `shared/ui` na F4 |
+| Nota | `RatingScore` (DS §5.2) sobre `Stars decorative` + `formatRating` + `ratingLabel` | nasce na feature |
+| Preço | `PriceTag` (DS §5.1) `nightly` / bloco `stay` do card | nasce na feature |
+| Disponibilidade | `Badge` `danger` / `warning` | |
+| Tipo/comodidades | texto + `CheckIcon` `size-4 text-success` `aria-hidden` | sem ícone por comodidade nesta feature |
+| Skeleton | `Skeleton` `block`/`line` | `HotelCardSkeleton`, `ResultsSkeleton` |
+| Filtros | `Range` (input nativo, DS §5.1), `Radio`, `Checkbox`, `fieldset`/`legend` | sem componente novo além do estilo do range |
+| Ordenação | `Field` + `Select` | |
+| Sheet | `Dialog placement="sheet"` + `footer` | **alteração em `shared/ui`** (Decisão 19) |
+| Gatilho do sheet | `Button secondary md` `leftIcon` `FilterIcon`, `aria-haspopup="dialog"` | |
+| Paginação | `Pagination` modo `getHref` | |
+| Vazio / erro | `EmptyState` / `ErrorState` (`headingLevel={2}`) | erro de rota: `ErrorState variant="page" headingLevel={1}` |
+| Feedback de cópia | `toast.success` / `toast.error` | |
+
+### SearchHeader (resumo + "Alterar busca")
+
+- Resumo `stay`: `formatDateRange(checkIn, checkOut, today)` + `pluralize(noites)` + `formatGuests`,
+  separados por ` · ` → `12–15 dez · 3 noites · 2 adultos · 1 quarto`. O RSC calcula com
+  `todayISO()` do servidor (o ano só aparece se a estadia não for no ano corrente; divergência de fuso
+  na virada do ano é aceitável). Sem skeleton aqui.
+- "Alterar busca": disclosure (`aria-expanded`, `aria-controls="search-edit-panel"`). Abrir não move
+  o foco (padrão disclosure); o painel aparece logo abaixo, então o próximo Tab entra no formulário.
+  Fechar: o mesmo botão (sem Esc: o Esc pertence ao combobox dentro do painel). Enviar navega (nova
+  `key`) e o painel fecha; foco vai para o h1 (`tabIndex=-1`, `revealBelowHeader`).
+- Painel: `div#search-edit-panel` com `h2.sr-only` "Alterar busca" (id usado em `labelledBy` do
+  form). Fechado = não montado (estado do formulário não precisa sobreviver ao fechar).
+- "Copiar link": copia `location.href`; toast. O botão não muda de texto (o toast é status
+  `aria-live` e já anuncia).
+- Datas passadas (`stay` + `isBeforeToday`): `Alert warning` abaixo da linha de ações, montado só no
+  cliente após `useToday()` (entra antes da lista carregar, logo não empurra nada já visto em
+  conexões normais; aceito).
+
+### Card do hotel
+
+- Estrutura DOM: `<li><article class="Card interactive">` → foto → `h3 > a` → meta → nota →
+  comodidades → bloco de preço/disponibilidade. Um único link (`<a>` do nome) com
+  `after:absolute after:inset-0`; nada focável além dele dentro do card.
+- Foco: link `focus-visible:outline-none`; card `has-[a:focus-visible]:outline-2
+  has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus`. Hover:
+  `hover:shadow-raised` + nome `group-hover:underline`. `cursor-pointer` via o pseudo-elemento.
+- Foto: `alt` = nome do hotel (critério 2). Esgotado: `grayscale opacity-70`. Quebrada: bloco
+  `bg-surface-sunken` com `BedIcon size-8 text-fg-subtle` centralizado, mesmo tamanho.
+- Meta: `{Tipo} · {destino}` (`text-sm text-fg-muted`).
+- Comodidades: `<ul class="flex flex-wrap gap-x-3 gap-y-1 text-sm">`, até 3 itens com `CheckIcon`;
+  as que estão no filtro vêm primeiro em `text-fg font-medium`, as outras `text-fg-muted`; o "+N" é
+  `text-fg-subtle` com `+4<span class="sr-only"> comodidades</span>`. Sem comodidades: linha omitida.
+- Bloco de preço (`border-t border-border pt-3 mt-auto flex flex-wrap items-end justify-between
+  gap-x-3 gap-y-2`; preço `ml-auto text-right`):
+
+| Situação | Esquerda | Direita |
+|---|---|---|
+| `stay` disponível | — | **R$ 540,00** (`text-xl font-bold`) / `total · 3 noites · 1 quarto` (`text-sm text-fg-muted`) / `a partir de R$ 180 por noite` (`text-sm text-fg-subtle`) |
+| `stay` escassez (≤ 2) | Badge warning `Apenas 1 quarto!` | igual ao disponível |
+| `stay` insuficiente | Badge warning `Só 2 quartos disponíveis` | `Sua busca pede 3 quartos.` (`text-sm text-fg-muted`) / `a partir de R$ 180 por noite` (sem total) |
+| esgotado (`stay` ou `browse`) | Badge danger `Esgotado` | `Sem quartos disponíveis para estas datas.` (`browse`: `Sem quartos disponíveis no momento.`) / `a partir de R$ 180 por noite` em `text-fg-subtle` |
+| `browse` | Badge (escassez) se houver | `a partir de` / **R$ 180** (`text-xl font-bold`, sem centavos se inteiro) / `por noite` |
+
+  A diária nunca some (preço nunca escondido); o total some quando não pode ser reservado.
+- Leitura por leitor de tela (ordem do DOM): "Pousada Vista Corcovado, link · Pousada · Rio de
+  Janeiro, RJ · Nota 4,8 de 5, Excelente, 2.847 avaliações · Piscina, Spa, Wi-Fi, +4 comodidades ·
+  Apenas 1 quarto! · R$ 540,00 total · 3 noites · 1 quarto · a partir de R$ 180 por noite".
+
+### Estados da seção de resultados
+
+A toolbar (h2 + linha de status + Filtros + Ordenar) fica montada em todos os estados (filtros e
+ordenação operáveis durante erro). O h2 é o alvo de foco; o anunciador é **separado** (abaixo).
+
+| View | h2 | Linha de status (`min-h-5`) | Área da lista |
+|---|---|---|---|
+| `loading` (1ª carga / nova busca / out-of-range) | `Skeleton` `h-7 w-48` + `sr-only` "Resultados" | `Spinner` + `Carregando hotéis…`; após 5 s `Está demorando mais que o normal…` | 4 × `HotelCardSkeleton`, contêiner `aria-busy="true"` |
+| `results` | `14 hotéis encontrados` (+ `sr-only` `, página 2 de 2` se > 1 página) | `Mostrando 11–14 de 14` | lista + paginação |
+| `results` + `stale` (placeholder) | contagem anterior | `Spinner` + `Atualizando resultados…` | lista anterior `opacity-60 transition-opacity`, `aria-busy="true"`, clicável |
+| `empty-filters` | `Nenhum hotel encontrado` | vazia | EmptyState `Nenhum hotel com esses filtros` + `Limpar filtros` (primária) |
+| `empty-destination` | `Nenhum hotel encontrado` | vazia | EmptyState `Nenhum hotel em Bonito, MS` + `Fazer nova busca` (`ButtonLink` primário para `/`) |
+| `error` | `Resultados indisponíveis` | vazia | ErrorState `Não foi possível carregar os hotéis` / `Verifique sua conexão e tente de novo.` + `Tentar de novo` (`Tentando…`) |
+| `offline` | `Resultados indisponíveis` | vazia | `Alert warning` (com ícone `WifiOffIcon`) `Você está sem internet.` / `Os hotéis aparecem assim que a conexão voltar.` |
+| offline com dados **da mesma chave** | contagem | `Mostrando …` | `Alert warning` `Você está sem internet. Os resultados podem estar desatualizados.` acima da lista |
+| fallback da error boundary | `Resultados indisponíveis` | vazia | mesmo ErrorState; "Tentar de novo" reseta boundary + query |
+
+- Skeleton do card = mesma geometria: foto `Skeleton block aspect-[4/3]` (≥ sm `w-56`), nome
+  `line h-7 w-3/4`, meta `line h-5 w-1/2`, nota `line h-6 w-2/3`, comodidades `line h-5 w-5/6`,
+  `border-t` e, à direita, `line h-7 w-28` + `line h-5 w-40` + `line h-5 w-36`. Dentro do mesmo
+  contêiner do card (`border`, `rounded-card`, `bg-surface`).
+- `loading.tsx` da rota: h1 `line h-8 w-2/3`, resumo `line h-5 w-1/2`, dois botões `h-9 w-36`/`w-28`,
+  sidebar ≥ lg com 4 blocos `h-24`, toolbar e 4 cards. (Raramente aparece: o RSC não espera API.)
+- Troca de estado nunca mexe na toolbar (altura estável: h2 `min-h-7`, status `min-h-5`).
+
+**Anunciador** (`<p class="sr-only" aria-live="polite">`, sempre montado em `HotelSearchResults`):
+`Carregando hotéis…` → `Está demorando mais que o normal…` → `14 hotéis encontrados` /
+`1 hotel encontrado` / `Nenhum hotel com esses filtros` / `Nenhum hotel em Bonito, MS`. Erro: nada
+(o `ErrorState` é `role="alert"`). Durante `stale`: nada (só anuncia quando chega o dado novo; trocar
+de página com a mesma contagem não reanuncia — o foco no h2 já lê). Com o sheet aberto, este
+anunciador fica vazio e o sheet usa o seu (o conteúdo fora do `<dialog>` modal fica inerte).
+
+### Interações
+
+| Ação | Feedback imediato | Depois | Foco |
+|---|---|---|---|
+| Marcar checkbox / radio | controle muda; "Filtros (n)" e "Ver N" mudam | lista esmaece + "Atualizando…"; nova contagem anunciada | fica no controle |
+| Arrastar/teclar no slider | resumo em texto e `aria-valuetext` na hora; o outro slider limita | URL e lista 400 ms após o último movimento | fica no slider |
+| Mudar ordenação | select muda | igual ao filtro (página 1) | fica no select |
+| "Limpar filtros" (sidebar/sheet) | controles voltam ao padrão; botão fica `aria-disabled` | lista atualiza | fica no botão |
+| "Limpar filtros" (EmptyState) | EmptyState some | lista | h2 da contagem (`preventScroll` + `revealBelowHeader`) |
+| Página (Anterior/número/Próxima) | navegação (link real) | lista nova; scroll ao topo da lista | h2 da contagem, sem ficar sob o header (`scroll-padding-top` já existe) |
+| Hover ≥ 150 ms / foco no card | sombra `raised` + sublinhado | prefetch silencioso | — |
+| "Filtros (n)" | sheet sobe (`slide-up`, 300 ms) | — | primeiro controle do sheet (slider Mínimo); ao fechar, volta ao gatilho |
+| "Ver N hotéis" / × / Esc / backdrop | sheet fecha (sempre, mesmo carregando) | — | gatilho "Filtros (n)" |
+| "Tentar de novo" | botão `Tentando…` (`aria-busy`) | lista ou erro de novo | continua no botão; se a lista chegar, h2 da contagem |
+| "Copiar link" | toast `Link copiado.` | — | fica no botão |
+| Tela cresce para ≥ lg com sheet aberto | sheet fecha | sidebar aparece com o mesmo estado (URL) | `body` (gatilho sumiu) — aceito |
+
+- Sheet: backdrop fecha (`closeOnBackdrop`: filtros aplicam na hora, não há o que perder). Botão
+  primário: `Ver 14 hotéis` / `Ver 1 hotel` / `Ver resultados` (0, erro, offline); durante o fetch,
+  `leftIcon` `Spinner` + `Atualizando…`, **clicável** (não usar `loading`, que ignora o clique).
+  Anunciador próprio `sr-only aria-live` dentro do corpo com o mesmo texto do anunciador principal.
+- Slider: o polegar arrastado para no valor do outro (sem trocar de papel). `step` 50; teclado
+  nativo (setas ±50, PageUp/PageDown ≈ 10% do intervalo, Home/End), sem `onKeyDown` próprio.
+- Nunca mostrar toast para filtro aplicado (o feedback é a lista e o anúncio).
+
+### Microcopy (final)
+
+| Onde | Texto |
+|---|---|
+| `metadata.title` | `Hotéis em {destino} \| Infotera Hotéis` · sem destino `Buscar hotéis \| Infotera Hotéis` |
+| h1 `stay`/`browse` | `Hotéis em {destino}` |
+| Resumo `stay` | `12–15 dez · 3 noites · 2 adultos · 1 quarto` (crianças: `2 adultos, 1 criança · 1 quarto`) |
+| Resumo `browse` | `Datas não definidas` |
+| Botões do topo | `Alterar busca` · `Copiar link` |
+| h2 `sr-only` do painel | `Alterar busca` |
+| Alert `browse` | título `Escolha as datas da estadia` · texto `Com datas e hóspedes, mostramos o preço total e a disponibilidade de cada hotel.` |
+| Alert datas passadas | título `As datas desta busca já passaram` · texto `Preços e disponibilidade podem ter mudado. Use "Alterar busca" para escolher novas datas.` |
+| Toasts | `Link copiado.` · `Não foi possível copiar. Copie o endereço na barra do navegador.` |
+| h1 sem destino / texto | `Para onde você vai?` · `Escolha um destino para ver hotéis, preços e disponibilidade.` |
+| Contagem (h2 e anúncio) | `Nenhum hotel encontrado` · `1 hotel encontrado` · `14 hotéis encontrados` (+ `sr-only` `, página 2 de 2`) |
+| Linha de status | `Mostrando 1–10 de 14` · `Carregando hotéis…` · `Está demorando mais que o normal…` · `Atualizando resultados…` |
+| Sem resultados (h2) | `Resultados indisponíveis` (erro/offline) |
+| Ordenar | label `Ordenar por` · `Mais populares` · `Menor preço` · `Maior avaliação` |
+| Gatilho do sheet | `Filtros` · `Filtros (3)` |
+| Título do sheet / sidebar | `Filtros` · fechar `Fechar filtros` |
+| Rodapé do sheet | `Limpar filtros` · `Ver 14 hotéis` · `Ver 1 hotel` · `Ver resultados` · `Atualizando…` |
+| Preço | legend `Preço por noite` · resumo `Qualquer preço` / `A partir de R$ 200` / `Até R$ 1.500` / `R$ 200 – R$ 1.500` · labels `Mínimo` / `Máximo` · `aria-valuetext` `R$ 200` / `R$ 3.000 ou mais` |
+| Nota | legend `Nota mínima` · `Qualquer nota` · `4,5 ou mais` + `Excelente` · `4,0 ou mais` + `Muito bom` · `3,5 ou mais` + `Bom` (qualificador `text-fg-muted` dentro do label) |
+| Tipo | legend `Tipo de hospedagem` · `Hotel` · `Pousada` · `Resort` |
+| Comodidades | legend `Comodidades` · ordem de exibição: `Wi-Fi`, `Café da manhã`, `Piscina`, `Estacionamento`, `Acesso à praia`, `Restaurante`, `Bar`, `Academia`, `Spa`, `Serviço de quarto`, `Clube infantil`, `Concierge`, `Manobrista`, `Centro de negócios`, `Acesso ao lounge` |
+| Card | meta `Pousada · Rio de Janeiro, RJ` · `+4` (`sr-only` ` comodidades`) · preço conforme tabela do card |
+| Nota no card | visível `4,8` ★ `Excelente · 2.847 avaliações`; `sr-only` antes: `Nota `, depois de 4,8: ` de 5,` · `1 avaliação` · `Sem avaliações` (0) |
+| Disponibilidade | `Esgotado` · `Apenas 1 quarto!` · `Apenas 2 quartos!` · `Só 2 quartos disponíveis` · `Sua busca pede 3 quartos.` · `Sem quartos disponíveis para estas datas.` · `Sem quartos disponíveis no momento.` |
+| Vazio destino | `Nenhum hotel em Bonito, MS` · `Ainda não temos hospedagens neste destino. Tente uma cidade próxima ou outra data.` · `Fazer nova busca` |
+| Vazio filtros | `Nenhum hotel com esses filtros` · `Tente aumentar a faixa de preço ou remover alguma comodidade.` · `Limpar filtros` |
+| Erro | `Não foi possível carregar os hotéis` · `Verifique sua conexão e tente de novo.` · `Tentar de novo` / `Tentando…` |
+| Offline | `Você está sem internet.` · `Os hotéis aparecem assim que a conexão voltar.` / `Os resultados podem estar desatualizados.` |
+| `error.tsx` da rota | h1 `Não foi possível abrir a busca` · `Tente de novo ou faça uma nova busca.` · `Tentar de novo` + `Fazer nova busca` (ghost, `/`) |
+| Paginação | `nav` `Paginação` · `Anterior` · `Próxima` · `Página {n}` · `Página 1 de 2` |
+| Lista | `section aria-labelledby` = h2 da contagem; `ul role="list"` sem label próprio |
+| Sidebar | `aside aria-labelledby` = h2 `Filtros` |
+
+### Acessibilidade (o que testar)
+
+- Alvos ≥ 44 px: sliders (`h-11`), linhas de radio/checkbox (`min-h-11`), botões `sm` (área 44),
+  link do card (card inteiro), itens da paginação.
+- Hierarquia: h1 → h2 (`Alterar busca` sr-only, `Filtros`, contagem) → h3 (nomes dos hotéis). Um h1.
+- `fieldset`/`legend` em preço, nota, tipo, comodidades; legend visível `text-base font-semibold`.
+- Sliders: `<input type="range">` com `<label>` visível, `min`/`max`/`step`, `aria-valuetext`. Resumo
+  em texto acima com `aria-hidden="true"` (os sliders já falam o valor; evita leitura dupla).
+- Foco nunca atrás do header sticky: todo foco programático usa `preventScroll` + `revealBelowHeader`.
+- Estrelas `aria-hidden`; nota sempre em texto. Esgotado: texto, não só cinza.
+- Sheet: `<dialog>` modal, título `Filtros`, foco inicial no slider Mínimo, Esc, foco volta ao gatilho;
+  axe com o sheet aberto.
+- `prefers-reduced-motion`: slide-up do sheet, `opacity` da lista stale e `pulse` do skeleton zerados.
+- 320 px e zoom 200%: sem scroll horizontal na toolbar (grid `auto/1fr`), cards, sheet e paginação.
+
+### Ajustes aos critérios (UX)
+
+- **Crit. 11**: as opções de nota são `Qualquer nota`, `4,5 ou mais`, `4,0 ou mais`, `3,5 ou mais`
+  (o "+" lido como "mais" é ambíguo no leitor de tela).
+- **Crit. 18 / 23**: "dados anteriores" = dados **da mesma chave** em cache. Se a troca de
+  filtro/página falhar ou ficar offline, o placeholder sai e aparece o erro/offline (nunca a lista de
+  outros filtros sob os controles novos). `deriveResultsView`: `isPlaceholderData` + erro → `error`;
+  + `paused` → `offline`.
+- **Crit. 19**: "Está demorando mais que o normal…" aparece na linha de status acima do skeleton (não
+  abaixo: no celular, abaixo de 4 cards fica fora da tela).
+- **Crit. 29**: rótulo do primário do sheet com 0 resultados/erro é `Ver resultados`; com fetch em
+  andamento, `Atualizando…` (continua clicável).
+- **Arquivos**: `SearchForm` ganha `showRecentSearches?: boolean`; teste da F2 cobre o `false`.
