@@ -24,6 +24,22 @@ export const galleryNavigation = (index: number, total: number, action: GalleryA
   }
 };
 
+/** Tecla do lightbox → ação (`null` para as demais). */
+export const galleryKeyAction = (key: string): GalleryAction | null => {
+  switch (key) {
+    case "ArrowRight":
+      return "next";
+    case "ArrowLeft":
+      return "prev";
+    case "Home":
+      return "first";
+    case "End":
+      return "last";
+    default:
+      return null;
+  }
+};
+
 /** `Hotel Copacabana Palace, foto 2 de 5` (índice base 0). */
 export const photoAlt = (name: string, index: number, total: number): string =>
   `${name}, foto ${index + 1} de ${total}`;
@@ -52,15 +68,19 @@ export const galleryPreview = (total: number): GalleryPreview => {
   };
 };
 
-/** Classes da principal na grade `sm+` (ocupa tudo quando não há miniaturas). */
+/** Classes da principal na grade (`sm+`; no celular a foto é um bloco só). */
 export const mainPhotoSpan = (thumbCount: number): string =>
-  thumbCount === 0 ? "col-span-4 row-span-2" : "col-span-2 row-span-2";
+  thumbCount === 0 ? "sm:col-span-4 sm:row-span-2" : "sm:col-span-2 sm:row-span-2";
 
 const THUMB_PLACEMENT: Record<number, readonly string[]> = {
   4: ["", "", "", ""],
-  3: ["col-start-3 row-start-1", "col-start-3 row-start-2", "col-start-4 row-start-1 row-span-2"],
-  2: ["col-start-3 row-span-2", "col-start-4 row-span-2"],
-  1: ["col-span-2 row-span-2"],
+  3: [
+    "sm:col-start-3 sm:row-start-1",
+    "sm:col-start-3 sm:row-start-2",
+    "sm:col-start-4 sm:row-start-1 sm:row-span-2",
+  ],
+  2: ["sm:col-start-3 sm:row-span-2", "sm:col-start-4 sm:row-span-2"],
+  1: ["sm:col-span-2 sm:row-span-2"],
 };
 
 /** Posição da miniatura `position` (0-based) na grade de 4 colunas × 2 linhas, sem buracos. */

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   GALLERY_PREVIEW_COUNT,
+  galleryKeyAction,
   galleryNavigation,
   galleryPreview,
   mainPhotoSpan,
@@ -30,6 +31,17 @@ describe("galleryNavigation", () => {
   });
 });
 
+describe("galleryKeyAction", () => {
+  it("setas, Home e End; o resto é ignorado", () => {
+    expect(galleryKeyAction("ArrowRight")).toBe("next");
+    expect(galleryKeyAction("ArrowLeft")).toBe("prev");
+    expect(galleryKeyAction("Home")).toBe("first");
+    expect(galleryKeyAction("End")).toBe("last");
+    expect(galleryKeyAction("Tab")).toBeNull();
+    expect(galleryKeyAction("Escape")).toBeNull();
+  });
+});
+
 describe("textos", () => {
   it("alt, rótulo do botão e contador (índice base 0)", () => {
     expect(photoAlt("Hotel X", 1, 5)).toBe("Hotel X, foto 2 de 5");
@@ -53,13 +65,13 @@ describe("galleryPreview e grade", () => {
 
   it("a grade nunca deixa buraco: cada total de miniaturas ocupa as 8 células", () => {
     // células ocupadas por miniaturas = 4 colunas×2 linhas − 4 da principal (2×2) = 4
-    expect(mainPhotoSpan(0)).toBe("col-span-4 row-span-2");
-    expect(mainPhotoSpan(3)).toBe("col-span-2 row-span-2");
-    expect(thumbPlacement(1, 0)).toBe("col-span-2 row-span-2");
+    expect(mainPhotoSpan(0)).toBe("sm:col-span-4 sm:row-span-2");
+    expect(mainPhotoSpan(3)).toBe("sm:col-span-2 sm:row-span-2");
+    expect(thumbPlacement(1, 0)).toBe("sm:col-span-2 sm:row-span-2");
     expect(thumbPlacement(2, 0)).toContain("row-span-2");
     expect(thumbPlacement(2, 1)).toContain("row-span-2");
-    expect(thumbPlacement(3, 0)).toBe("col-start-3 row-start-1");
-    expect(thumbPlacement(3, 1)).toBe("col-start-3 row-start-2");
+    expect(thumbPlacement(3, 0)).toBe("sm:col-start-3 sm:row-start-1");
+    expect(thumbPlacement(3, 1)).toBe("sm:col-start-3 sm:row-start-2");
     expect(thumbPlacement(3, 2)).toContain("row-span-2");
     expect(thumbPlacement(4, 2)).toBe("");
     expect(thumbPlacement(0, 0)).toBe("");
