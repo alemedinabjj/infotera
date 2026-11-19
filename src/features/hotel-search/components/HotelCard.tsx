@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
-import type { SearchCriteria } from "@/shared/lib/search-params";
 import { pluralize } from "@/shared/lib/format";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 import { CheckIcon } from "@/shared/ui";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
