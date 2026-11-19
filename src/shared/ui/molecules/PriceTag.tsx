@@ -33,6 +33,8 @@ type PriceTagProps =
       /** Quando o total não pode ser reservado: só a diária, discreta. */
       variant: "nightly-line";
       nightly: number;
+      /** Preço exato (de um quarto): `R$ 1.200 por noite`, sem "a partir de". */
+      exact?: boolean;
     };
 
 /** Preço do card (design system §5.1). O valor nunca quebra: `whitespace-nowrap`. */
@@ -86,8 +88,8 @@ export const PriceTag = (props: PriceTagProps) => {
     case "nightly-line":
       return (
         <p className="text-sm text-fg-subtle">
-          a partir de <span className="whitespace-nowrap tabular-nums">{money(props.nightly)}</span>{" "}
-          por noite
+          {props.exact ? null : "a partir de "}
+          <span className="whitespace-nowrap tabular-nums">{money(props.nightly)}</span> por noite
         </p>
       );
     default: {

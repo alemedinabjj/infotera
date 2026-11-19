@@ -39,6 +39,12 @@ describe("PriceTag", () => {
     expect(container).not.toHaveTextContent("a partir de");
   });
 
+  it("nightly-line exact: diária do quarto sem 'a partir de'", () => {
+    const { container } = render(<PriceTag variant="nightly-line" nightly={1200} exact />);
+    expect(container).toHaveTextContent("R$ 1.200 por noite");
+    expect(container).not.toHaveTextContent("a partir de");
+  });
+
   it("nightly-line: linha discreta", () => {
     const { container } = render(<PriceTag variant="nightly-line" nightly={1200.5} />);
     expect(container).toHaveTextContent("a partir de R$ 1.200,50 por noite");
