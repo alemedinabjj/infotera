@@ -207,6 +207,8 @@ test.describe("envio", () => {
 
   test("dois Enter rápidos no checkbox geram uma só chamada da action", async ({ page }) => {
     await acceptTermsViaDialog(page);
+    // O dialog anima a saída antes de fechar (e devolver o foco): só depois o checkbox aceita foco.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     const calls = actionRequests(page);
     let release: () => void = () => undefined;
     const gate = new Promise<void>((resolve) => {

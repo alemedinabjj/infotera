@@ -137,12 +137,12 @@ test.describe("filtros na barra lateral", () => {
   test("tipos (OU) e nota mínima", async ({ page }) => {
     await page.goto(searchPath());
     await expect(cards(page)).toHaveCount(10);
-    await page.getByRole("checkbox", { name: "Pousada" }).check();
+    await page.getByRole("checkbox", { name: "Pousada", exact: true }).check();
     await expect(cards(page)).toHaveCount(4);
-    await page.getByRole("checkbox", { name: "Resort" }).check();
+    await page.getByRole("checkbox", { name: "Resort", exact: true }).check();
     await expect(cards(page)).toHaveCount(5);
-    await page.getByRole("checkbox", { name: "Pousada" }).uncheck();
-    await page.getByRole("checkbox", { name: "Resort" }).uncheck();
+    await page.getByRole("checkbox", { name: "Pousada", exact: true }).uncheck();
+    await page.getByRole("checkbox", { name: "Resort", exact: true }).uncheck();
     await page.getByRole("radio", { name: /4,5 ou mais/ }).check();
     await expect(cards(page)).toHaveCount(5);
     await expect(page).toHaveURL(/minRating=4\.5/);

@@ -97,9 +97,10 @@ export const CompareTray = () => {
 
   return (
     <>
-      <p aria-live="polite" className="sr-only">
+      {/* `div`, não `p.sr-only`: o anunciador do feed da F3b é achado por esse seletor. */}
+      <div aria-live="polite" className="sr-only">
         {announcement}
-      </p>
+      </div>
       <AnimatePresence>{visible ? <TrayBar key="tray" items={items} /> : null}</AnimatePresence>
     </>
   );

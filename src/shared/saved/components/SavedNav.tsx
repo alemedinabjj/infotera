@@ -60,7 +60,8 @@ const Counter = ({ count }: { count: number }) => {
     <m.span
       key={pulses}
       aria-hidden="true"
-      initial={preset.initial}
+      // `false` até o 1º pulso: o servidor e a hidratação não podem depender de `reduced motion`.
+      initial={pulses > 0 ? preset.initial : false}
       animate={pulses > 0 ? preset.animate : undefined}
       transition={preset.transition}
       className={cn(

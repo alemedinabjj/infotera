@@ -128,6 +128,32 @@ test.describe("sem reduced motion", () => {
   });
 });
 
+test.describe("hidratação", () => {
+  for (const reducedMotion of ["reduce", "no-preference"] as const) {
+    test.describe(`com reducedMotion=${reducedMotion}`, () => {
+      test.use({ reducedMotion });
+
+      test("sem erro de hidratação no console (/, /hotel/1, /search)", async ({ page }) => {
+        const errors: string[] = [];
+        page.on("console", (message) => {
+          if (message.type() === "error") errors.push(message.text());
+        });
+        page.on("pageerror", (error) => errors.push(error.message));
+        for (const path of ["/", "/hotel/1", searchPath()]) {
+          await page.goto(path);
+          await expect(page.getByRole("banner")).toBeVisible();
+          await page.getByRole("link", { name: /^Favoritos/ }).waitFor();
+        }
+        await expect(page.getByRole("article").first()).toBeVisible();
+        // Recursos externos (fotos) podem falhar no ambiente: só interessa a hidratação.
+        expect(errors.filter((text) => /hydrat|didn't match|did not match/i.test(text))).toEqual(
+          [],
+        );
+      });
+    });
+  }
+});
+
 test.describe("HTML do servidor", () => {
   for (const path of ["/hotel/1", searchPath(), "/favorites", "/compare", "/my-bookings"]) {
     test(`${path.split("?")[0]} não traz conteúdo invisível`, async ({ request }) => {

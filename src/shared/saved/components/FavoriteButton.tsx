@@ -79,7 +79,7 @@ export const FavoriteButton = ({
       icon={
         <m.span
           key={pulses}
-          initial={preset.initial}
+          initial={pulses > 0 ? preset.initial : false}
           animate={pulses > 0 ? preset.animate : undefined}
           transition={preset.transition}
           className={favorite ? "text-danger" : undefined}
