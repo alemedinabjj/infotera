@@ -54,9 +54,14 @@ describe("motionPreset", () => {
     expect(preset.exit?.transition?.duration ?? 0).toBeLessThanOrEqual(0.15);
   });
 
+  it("o passo nunca começa invisível", () => {
+    expect(motionPreset("step", false).initial).not.toHaveProperty("opacity");
+    expect(motionPreset("step", true).initial).toEqual({});
+  });
+
   it("o passo entra pela direção pedida", () => {
-    expect(motionPreset("step", false, 1).initial).toMatchObject({ x: 16, opacity: 0 });
-    expect(motionPreset("step", false, -1).initial).toMatchObject({ x: -16, opacity: 0 });
+    expect(motionPreset("step", false, 1).initial).toMatchObject({ x: 16 });
+    expect(motionPreset("step", false, -1).initial).toMatchObject({ x: -16 });
   });
 });
 

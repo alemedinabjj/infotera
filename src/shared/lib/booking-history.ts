@@ -72,7 +72,8 @@ export const removeFromHistory = (id: string): void => removeManyFromHistory([id
 /** Tira vários ids de uma vez (reservas que deram 404). */
 export const removeManyFromHistory = (ids: readonly string[]): void => {
   if (ids.length === 0) return;
-  write(readBookingHistory().filter((item) => !ids.includes(item.id)));
+  const removed = new Set(ids);
+  write(readBookingHistory().filter((item) => !removed.has(item.id)));
 };
 
 /** Apaga o histórico inteiro (a reserva continua válida no servidor). */

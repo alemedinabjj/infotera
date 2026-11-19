@@ -89,8 +89,9 @@ const regular = (name: MotionPresetName, direction: 1 | -1): MotionPreset => {
       };
     case "step":
       return {
-        initial: { opacity: 0, x: direction * STEP_OFFSET_PX },
-        animate: { opacity: 1, x: 0 },
+        // Sem opacidade: se a animação não rodar (JS lento), o passo continua visível.
+        initial: { x: direction * STEP_OFFSET_PX },
+        animate: { x: 0 },
         transition: { duration: DURATION.base, ease: EASE_STANDARD },
       };
     case "favorite-pulse":
@@ -116,7 +117,7 @@ const regular = (name: MotionPresetName, direction: 1 | -1): MotionPreset => {
 const reducedFade = (hasExit: boolean): MotionPreset =>
   fade(DURATION.fast, hasExit ? DURATION.fast : undefined);
 
-const PULSES: readonly MotionPresetName[] = ["favorite-pulse", "badge-pulse"];
+const PULSES: readonly MotionPresetName[] = ["favorite-pulse", "badge-pulse", "step"];
 
 /**
  * Preset de animação pelo nome. `reduced` zera deslocamento e escala e limita o fade a 150 ms.

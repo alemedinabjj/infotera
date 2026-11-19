@@ -64,5 +64,5 @@ Unit em `model/` e `api/` (tabelas para validadores, gate, cupons); componente p
 Falhas da mock-api **dentro** da action não passam pelo `page.route`: cobertas em `create-booking.server.test.ts`.
 
 ## F7a (extras)
-- `AnimatedStep` envolve o passo atual: só o passo novo anima (`x` ±16 + fade, direção por `stepDirection`), sem saída, sem animar na
+- `AnimatedStep` envolve o passo atual: só o passo novo anima (`x` ±16, sem opacidade para nunca ficar invisível, direção por `stepDirection`), sem saída, sem animar na
   1ª renderização, com `overflow-x-clip`. O foco no `h2` do passo não mudou.
