@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { formatBRL } from "@/shared/lib/currency";
 import { makeRoom } from "@/shared/testing/fixtures";
 import { seedRooms } from "@/shared/testing/seed";
-import { buildRoomComparison, canCompare, onlyDifferences } from "./room-comparison";
+import {
+  buildRoomComparison,
+  canCompare,
+  comparisonAnnouncement,
+  onlyDifferences,
+} from "./room-comparison";
 
 describe("buildRoomComparison: hotel 18 (seed)", () => {
   const rooms = seedRooms(18);
@@ -91,5 +96,12 @@ describe("1 quarto", () => {
     const { rows } = buildRoomComparison([makeRoom({ available: 0, pricePerNight: 99.5 })]);
     expect(rows.find((row) => row.key === "availability")?.cells).toEqual(["Esgotado"]);
     expect(rows.find((row) => row.key === "price")?.cells).toEqual([formatBRL(99.5)]);
+  });
+});
+
+describe("comparisonAnnouncement", () => {
+  it("todas ou parte das características", () => {
+    expect(comparisonAnnouncement(12, 12)).toBe("Mostrando todas as 12 características");
+    expect(comparisonAnnouncement(6, 12)).toBe("Mostrando 6 de 12 características");
   });
 });

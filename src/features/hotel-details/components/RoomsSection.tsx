@@ -6,8 +6,10 @@ import type { CancellationPolicy } from "@/shared/api/schemas";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { buttonClassName, EmptyState } from "@/shared/ui";
 import { focusCheckIn } from "../hooks/focus-dates";
+import { canCompare } from "../model/room-comparison";
 import { roomTypesLabel } from "../model/room-labels";
 import { sectionHeadingId } from "../model/sections";
+import { RoomComparison } from "./RoomComparison";
 import { RoomList } from "./RoomList";
 import { RoomsLoading } from "./RoomsLoading";
 import { SectionBoundary } from "./SectionBoundary";
@@ -69,6 +71,7 @@ const RoomsContent = ({
         cancellationPolicy={cancellationPolicy}
         onPickDates={focusCheckIn}
       />
+      {canCompare(rooms) ? <RoomComparison rooms={rooms} /> : null}
     </>
   );
 };

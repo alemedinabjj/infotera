@@ -92,3 +92,9 @@ export const onlyDifferences = (rows: readonly ComparisonRow[]): ComparisonRow[]
 
 /** A comparação só faz sentido com 2 ou mais quartos. */
 export const canCompare = (rooms: readonly Room[]): boolean => rooms.length >= 2;
+
+/** Anúncio (`aria-live`) do filtro: `Mostrando 6 de 12 características` / `…todas as 12…`. */
+export const comparisonAnnouncement = (visible: number, total: number): string =>
+  visible === total
+    ? `Mostrando todas as ${total} características`
+    : `Mostrando ${visible} de ${total} características`;
