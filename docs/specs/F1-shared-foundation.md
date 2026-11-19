@@ -291,11 +291,13 @@ Verificáveis com `npm run typecheck && npm run lint && npm run test` e `npm run
     `aria-hidden` e o rótulo continua no nome acessível; `buttonClassName({ variant, size })` exportado
     para estilizar `<Link>`; foco visível (`focus-visible:` com o token de anel do design system).
 22. `Field` liga `label[for]` ao controle, `aria-describedby` = ids de hint e erro presentes,
-    `aria-invalid="true"` só com erro, erro com `role="alert"` não (texto ligado por describedby; o
-    resumo de erros é da feature). `getByLabelText` encontra `Input`, `Select`, `Checkbox`, `Radio`.
-23. `QuantityStepper`: botões "−"/"+" com nome acessível (`aria-label` recebido por prop), valor
-    anunciado (`role="spinbutton"`? não: `<output aria-live="polite">` + botões), desabilita nos
-    limites `min`/`max`, teclado (Tab/Enter/Espaço) funciona.
+    `aria-invalid="true"` só com erro; a mensagem de erro é ligada por `aria-describedby` e **não** usa
+    `role="alert"` (anunciar a cada tecla seria ruidoso com `mode: "onChange"`; o resumo de erros no
+    submit é da feature). `getByLabelText` encontra `Input`, `Select`, `Checkbox`, `Radio`.
+23. `QuantityStepper`: rótulo visível ligado ao grupo (`role="group"` + `aria-labelledby`), botões
+    "−"/"+" com nome acessível recebido por prop ("Remover adulto"/"Adicionar adulto"), valor em
+    `<output aria-live="polite">`; desabilita o botão no limite `min`/`max`; Tab/Enter/Espaço funcionam.
+    Descartado `role="spinbutton"`: exige setas/PageUp e é pouco previsível em leitores de tela mobile.
 24. `Pagination`: `<nav aria-label>`; página atual com `aria-current="page"`; modo link
     (`getHref(page)` → `<Link>`) e modo botão (`onPageChange`); "Anterior/Próxima" desabilitados nos
     extremos; reticências com `aria-hidden`; não renderiza nada com `totalPages <= 1`.
@@ -342,7 +344,7 @@ Novos:
 | `src/shared/lib/pagination.ts` | `getTotalPages`, `getPaginationRange` |
 | `src/shared/lib/*.test.ts` | um por arquivo |
 | `src/shared/stores/booking-draft.ts` (+ `.test.ts`) | store, seletores, `useBookingDraftHydrated` |
-| `src/shared/ui/atoms/{Button,Input,Select,Checkbox,Radio,Skeleton,Spinner,Badge,Stars,VisuallyHidden}.tsx` | atoms; aparência/variantes do design system; todos aceitam `className` e fazem `forwardRef`-free (React 19: `ref` como prop) |
+| `src/shared/ui/atoms/{Button,Input,Select,Checkbox,Radio,Skeleton,Spinner,Badge,Stars,VisuallyHidden}.tsx` | atoms; aparência/variantes do design system; todos aceitam `className` (mesclado com `cn`) e `ref` como prop (React 19, sem `forwardRef`) |
 | `src/shared/ui/molecules/{Field,QuantityStepper,Pagination,EmptyState,ErrorState,Alert,Dialog}.tsx` | molecules |
 | `src/shared/ui/toast/{toast-store.ts,Toaster.tsx}` | decisão 9 |
 | `src/shared/ui/icons.tsx` | SVGs do design system, `aria-hidden` |
@@ -437,7 +439,7 @@ Escopo de commit `shared` (pedido do usuário), sem atribuição de IA. Ao fim d
 
 | # | Risco | Mitigação |
 |---|---|---|
-| 1 | `X-Total-Count` não exposto por CORS no browser (só no servidor) | Verificação na Tarefa 7; fallback `total = items.length` evita quebra; se faltar, a F3 pagina no servidor (Server Component) ou o `mock-api/server.js`... **não** é editado (não é nosso): registrar e decidir na F3. |
+| 1 | `X-Total-Count` não exposto por CORS no browser (só no servidor) | Verificação na Tarefa 7; fallback `total = items.length` evita quebra. Se o header não for exposto, a F3 busca a lista no Server Component (sem CORS) — `mock-api/` não é editado (não é código nosso). |
 | 2 | Hydration mismatch do store persistido | `skipHydration` + `BookingDraftHydrator` + `useBookingDraftHydrated` (decisão 2); critério 20. |
 | 3 | Off-by-one de fuso em datas | Decisão 4; testes com DST e `formatDate` em `timeZone: "UTC"`. |
 | 4 | jsdom sem `showModal` | Polyfill em `vitest.setup.ts` (seta/remove `open`, dispara `close`); comportamento real (foco preso, inert) validado em E2E nas features que usam Dialog. |
