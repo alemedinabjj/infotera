@@ -21,7 +21,7 @@ const RootLayout = ({ children }: LayoutProps<"/">) => (
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6 lg:py-10 xl:px-8"
+          className="mx-auto w-full max-w-6xl scroll-mt-14 px-4 py-6 md:px-6 lg:scroll-mt-16 lg:py-10 xl:px-8"
         >
           {children}
         </main>
