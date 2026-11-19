@@ -117,6 +117,11 @@ Regras:
 - Títulos longos (nome de hotel até ~34 caracteres) quebram linha; no card, `line-clamp-2`. Nunca `truncate`
   em preço.
 - Comprimento de linha de texto corrido: `max-w-prose`.
+- **Identificadores** (número da reserva, F6): `font-mono` (pilha padrão do Tailwind) `text-xl
+  font-semibold`, `translate="no"`, `select-all`, `wrap-anywhere` e `<wbr>` depois de cada hífen (a
+  quebra cai entre grupos, nunca no meio; o `<wbr>` não entra no texto copiado). Nunca em
+  maiúsculas se o valor for sensível a caixa. `font-mono` só para identificadores; preços seguem com
+  Inter + `tabular-nums`.
 
 ### 1.3 Espaçamento
 
@@ -310,6 +315,8 @@ fica estático, spinner para (por isso Spinner **sempre** vem com texto). Nada d
       scroll-behavior: auto !important;
     }
   }
+
+**§3 Ícones e imagens — acrescentar ao fim do item "Ícones" (depois da linha da F5):**
 }
 ```
 
@@ -341,6 +348,7 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   Tipos de destino (F2, opções do combobox): `building` (city), `umbrella` (beach), `palm-tree` (island),
   `trees` (nature) — traços no estilo Lucide. `history` (relógio com seta) para "Buscas recentes".
   Checkout (F5): `credit-card` (cartão), `lock` (nota de privacidade), `tag` (cupom).
+  Confirmação (F6): `copy` (dois retângulos sobrepostos, estilo Lucide `copy`).
 - **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[5/2]` empilhado no card do celular,
   `aspect-video` no hero da galeria), `object-cover`, `sizes` correto, `bg-surface-sunken` enquanto carrega.
   `alt` = nome do hotel + contexto ("Hotel Copacabana Palace, foto 2 de 8"). Imagem quebrada → manter o
@@ -468,6 +476,23 @@ no topo; também cobriria os toasts.
 - Âncoras dependem do `scroll-padding-top` global; `scroll-behavior: smooth` só sem
   `prefers-reduced-motion`.
 - Ordem DOM = ordem visual em todas as larguras (nada de `order-*` para reordenar blocos).
+
+### 4.7 Página de recibo (confirmação, F6)
+
+- Uma coluna `max-w-3xl` (`flex flex-col gap-6 lg:gap-8`) em todas as larguras, sem sidebar: página de
+  leitura com uma ação. Cada bloco é `<section aria-labelledby>` num `Card static` com h2.
+- Topo: ícone de status em círculo `size-12` (`bg-success-soft text-success`, `CheckCircleIcon size-6`)
+  → h1 (alvo de foco no mount) → frase de apoio → cartão-resumo (identificador + linha `Estadia ·
+  Total`, `grid gap-4 sm:grid-cols-2`, empilha abaixo de `sm` para o valor nunca quebrar).
+- Conteúdo em streaming entra **abaixo** de todo controle já visível (nada se move sob o clique).
+- Estados de página (vazio, ilegível, erro) usam a mesma largura `max-w-3xl`.
+
+### 4.8 Impressão
+
+Sem CSS de impressão por página: variantes `print:` do Tailwind. `print:hidden` em header global,
+`Toaster`, botões e links de navegação; cartões `print:shadow-none print:break-inside-avoid` (borda
+fica); fundo branco pela regra do §2. Conteúdo que precisa sair impresso não fica em `<details>`
+fechado. Nada aparece só na impressão.
 
 ---
 
@@ -711,6 +736,21 @@ um por erro, na ordem do DOM: `{Rótulo}: {mensagem}`. Itens genéricos `{ id, l
 `onSelect(id)` (a feature foca o campo). Remontado (`key`) a cada tentativa para ser anunciado de novo;
 ao montar, `revealBelowHeader`. Atualiza enquanto o usuário corrige e some sem erros.
 
+#### Valor copiável (F6)
+Valor em destaque + `Button secondary md` "Copiar {objeto}" (`CopyIcon`), `w-full sm:w-auto`, logo
+abaixo do valor.
+- Sucesso: rótulo `Copiado` + `CheckIcon` por 2 s. Os dois rótulos ficam na mesma célula de um
+  `inline-grid` (o inativo `invisible aria-hidden`), então a largura não muda. Anúncio `sr-only` numa
+  linha `aria-live="polite"` sempre montada, **abaixo** do botão (`min-h-5`), esvaziada antes de cada
+  escrita. **Sem toast**: o feedback fica no controle.
+- Falha (`copyText` → `false`): a mesma linha mostra, visível, `InfoIcon size-4` + `text-sm
+  text-fg-muted` com a saída manual, e o valor fica selecionado (`selectAllChildren`). O foco fica
+  no botão.
+- O valor é `select-all` (um toque seleciona tudo), e o botão só aparece com JS (espaço `min-h-11`
+  reservado).
+- Diferença para "Copiar link" (F4): lá o valor não está na tela e o botão não muda, então o toast é o
+  feedback.
+
 #### Card
 `bg-surface border border-border rounded-card shadow-card overflow-hidden`. Variantes:
 - `static`: só contêiner.
@@ -786,6 +826,11 @@ Igual ao EmptyState com ícone `alert-circle`/`wifi-off` em `danger-soft`, `role
 `secondary` "Tentar de novo" (`onRetry`). Durante o retry, o botão entra em `loading` ("Tentando…").
 Variante `inline` (dentro de uma seção, ex.: reviews falharam mas o hotel carregou) e `page` (rota inteira,
 `error.tsx`). Se o erro for 404, não usar ErrorState: usar página "não encontrado" com EmptyState.
+- Em Server Component, o retry entra pela prop `action` (ilha cliente, ex.: `RefreshButton` com
+  `router.refresh()` em `startTransition` e `Button loading` "Tentando…"), sem `onRetry`. Quando duas
+  partes da mesma seção falham juntas, mostre **um** `ErrorState` que nomeia o que faltou ("…do hotel
+  e do quarto.") com um único retry. O que carregou aparece abaixo. Sucesso do retry: o foco vai para o
+  h2 da seção (o botão sumiu).
 
 #### DateRange (inputs nativos)
 Dois `<input type="date">` nativos (picker do sistema = melhor no celular), dentro de um `<fieldset>`
@@ -983,6 +1028,9 @@ entre concluídos).
 incluídos.` (`text-sm text-fg-muted`). Skeleton com as mesmas linhas, `aria-busy` + sr `Calculando o
 total…`; só a linha do desconto vira skeleton enquanto o cupom valida. O total não é região viva (quem
 anuncia é o controle que mudou o preço).
+Promovido para `shared/ui/molecules` na F6 (2º uso: confirmação, sem skeleton e sem cupom). Sem
+detalhamento confiável (ausente ou inconsistente), mostre só `Total` + valor `text-2xl font-bold`, sem
+a nota de impostos.
 
 #### Cupom (F5)
 Recolhido em `Button ghost sm` "Tenho um cupom de desconto" (`TagIcon`, `aria-expanded`), **acima** do
@@ -1025,6 +1073,7 @@ Checkout: `Continuar para pagamento` · `Revisar reserva` · `Confirmar reserva`
 condições` · `Li e aceito` · `Aplicar` · `Remover` · `Ver detalhes da reserva` · `Tenho um cupom de
 desconto` · `Escolher novas datas` · `Voltar ao hotel`.
 Loading: `Confirmando reserva…` · `Calculando total…` · `Aplicando…`.
+Confirmação: `Copiar número da reserva` / `Copiado` · `Ver página do hotel` · `Fazer nova busca`.
 
 ### 6.3 Validação (erro diz como resolver)
 
@@ -1069,6 +1118,7 @@ Loading: `Confirmando reserva…` · `Calculando total…` · `Aplicando…`.
 | Checkout sem seleção | `Nenhum quarto selecionado` | `Escolha um hotel e um quarto para fazer a reserva.` | `Buscar hotéis` |
 | Hotel não encontrado (404) | `Hotel não encontrado` | `O link pode estar errado ou o hotel não está mais disponível.` | `Fazer nova busca` |
 | Reserva não encontrada (404) | `Reserva não encontrada` | `Confira o número da reserva no link. Reservas de teste são apagadas quando o sistema reinicia.` | `Fazer nova busca` |
+| Reserva ilegível (fora do contrato) | `Não foi possível exibir esta reserva` | `Os dados desta reserva estão incompletos. Tentar de novo não resolve: faça uma nova busca.` | `Fazer nova busca` |
 
 ### 6.5 Erro de rede / servidor
 
@@ -1095,6 +1145,9 @@ Loading: `Confirmando reserva…` · `Calculando total…` · `Aplicando…`.
 | Seções do checkout | `Não foi possível carregar os dados do hotel.` / `Não foi possível carregar o preço.` · `Verifique sua conexão e tente de novo.` | `Tentar de novo` |
 | Confirmação de quartos falhou | hint: `Não foi possível confirmar a disponibilidade. Tente de novo.` (valor volta) | — |
 | Ambiente de demonstração (checkout) | Alert info no topo do formulário, em todos os passos: `Ambiente de demonstração — não use dados reais.` (a API é pública e sem autenticação) | — |
+| Erro ao carregar a reserva (rota) | h1 `Não foi possível carregar sua reserva` · `Sua reserva não foi afetada. Verifique sua conexão e tente de novo.` | `Tentar de novo` + `Fazer nova busca` |
+| Hotel/quarto da confirmação | `Não foi possível carregar os dados do hotel.` / `…do quarto.` / `…do hotel e do quarto.` · `Sua reserva está confirmada. Verifique sua conexão e tente de novo.` | `Tentar de novo` |
+| Copiar número falhou | linha abaixo do botão (sem toast): `Não foi possível copiar. Selecione o número e copie.` | — |
 
 Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem status HTTP ao usuário.
 
@@ -1147,8 +1200,16 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 
 - Toast copiar link: `Link copiado.`
 - Buscas recentes apagadas: toast `Buscas recentes apagadas.`
-- Confirmação: h1 `Reserva confirmada` · `Enviamos os detalhes para nome@exemplo.com.` (simulado) ·
-  `Número da reserva` em destaque `tabular-nums`.
+- Confirmação (F6): h1 `Reserva confirmada` · `Enviamos os detalhes para nome@exemplo.com.` (simulado;
+  só com titular) · `Reserva feita em 19/11/2026, 12:04 (horário de Brasília)` · `Número da reserva`
+  (UUID completo, §1.2 Identificadores) · `Copiar número da reserva` / `Copiado` / sr `Número da reserva
+  copiado.` · seções `Sua estadia`, `Hóspedes`, `Pagamento`, `Próximos passos` · `Cartão final 1111` ·
+  `Pagamento simulado: nenhum valor foi cobrado.` · hóspedes `Ana Souza · titular` / `· adulto` /
+  `· criança` (sem idade, sem telefone) · faltando `Hotel #{id}` / `Os dados deste hotel não estão mais
+  disponíveis.` · horário sem hotel `Confirme com o hotel` · próximos passos `Guarde o número da
+  reserva. Ele também está no endereço desta página.` · `No check-in, apresente um documento com foto
+  de cada hóspede.` · `Não compartilhe o link desta página: quem tiver o link vê os dados da
+  reserva.` · `Cancelar ou alterar a reserva não está disponível nesta demonstração.`
 - Política de cancelamento: `free` → `Cancelamento grátis` (badge success) · `moderate` → `Cancelamento com
   reembolso parcial` (badge neutral) · `strict` → `Sem reembolso em caso de cancelamento` (badge warning).
   Regras (texto ilustrativo, F4, em `<details>` "Ver regras de cancelamento"):
@@ -1203,6 +1264,6 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 |---|---|---|
 | atoms | Button (+ButtonLink), IconButton, Input, Select, Checkbox, Radio, Badge, Stars, Skeleton, Spinner, PriceTag, RemoteImage, icons | F1 (PriceTag nasce na F3; PriceTag e RemoteImage sobem na F4) |
 | atoms | Range (estilo do `input type="range"` nativo) · Avatar | F3 · F4 (na feature até o 2º uso) |
-| molecules | Field (+ campo composto), Stepper, Alert, ErrorSummary, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação | F1 (Combobox/DateRange na F2; ErrorSummary nasce na F2 e sobe na F5; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso) |
+| molecules | Field (+ campo composto), Stepper, Alert, ErrorSummary, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação, PriceBreakdown | F1 (Combobox/DateRange na F2; ErrorSummary nasce na F2 e sobe na F5; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso; PriceBreakdown nasce na F5 e sobe na F6) |
 | organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`, `focusableBody`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4; `focusableBody` na F5) |
-| feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, StepIndicator, PriceBreakdown, CouponForm, ActionBar (barra fixa) | F3–F5, compondo os acima (ActionBar sobe para shared no 2º uso) |
+| feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, StepIndicator, CouponForm, ActionBar (barra fixa), BookingNumber/CopyBookingNumber (valor copiável), StayDetails (hotel/quarto em streaming) | F3–F6, compondo os acima (ActionBar sobe para shared no 2º uso) |
