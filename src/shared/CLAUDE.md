@@ -7,46 +7,47 @@ feature só fica na feature; promova para cá quando aparecer o segundo uso.
 ## Estrutura
 ```
 shared/
-  api/        env.ts · http.ts · schemas.ts · query-client.ts
-  lib/        dates.ts · currency.ts · search-params.ts · storage.ts
-  ui/         atoms/ (Button, Input, Select, Checkbox, Skeleton, Badge, Stars, Spinner)
-              molecules/ (Field, Stepper, Pagination, EmptyState, ErrorState, Dialog)
-  providers/  AppProviders (QueryClientProvider + Toaster)
-  stores/     booking-draft.ts (Zustand + persist)
+  api/        env · http · errors · schemas · query-keys · endpoints · queries
+              query-client · server-query-client (só para Server Components)
+  lib/        cn · dates · currency · format · search-params · storage · pagination
+  ui/         atoms/ (Button, IconButton, Input, Select, Checkbox, Radio, Skeleton, Spinner,
+                       Badge, Stars, VisuallyHidden)
+              molecules/ (Field, QuantityStepper, Pagination, EmptyState, ErrorState, Alert, Dialog)
+              toast/ (toast-store, Toaster) · layout/ (SiteHeader, SkipLink) · icons.tsx · index.ts
+  providers/  AppProviders (QueryClientProvider + BookingDraftHydrator + Toaster)
+  stores/     booking-draft.ts (Zustand + persist em sessionStorage)
+  testing/    render.tsx (renderWithProviders) · fixtures.ts (makeHotel/Room/Review/SearchCriteria)
 ```
 
-## api/
-- `env.ts`: valida `NEXT_PUBLIC_API_URL` com Zod no load; falha alta e clara se faltar.
-- `http.ts`: `apiGet(path, schema, init?)` → faz fetch, checa `res.ok`, lança `ApiError { status, message }`,
-  faz `schema.parse` do JSON. Variante paginada devolve `{ items, total }` lendo `X-Total-Count`.
-  Funciona em Server e Client Components (sem APIs de browser).
-- `schemas.ts`: Zod de `Suggestion`, `Hotel`, `Room`, `Review`, `Booking`, `Amenity`, `RoomAmenity`,
-  portados de `mock-api/types.ts`. Tipos exportados via `z.infer`. Não use os `interface` do mock direto.
-- `query-client.ts`: `retry` até 2 com backoff exponencial, sem retry em 4xx; `staleTime` 60s.
-  No servidor, um `QueryClient` por request (`cache()` do React).
-
-## lib/
-- `dates.ts`: `nightsBetween`, `toISODate`, `isPast`, regras de 1–30 noites. Datas como `YYYY-MM-DD`
-  em string; cuidado com fuso (use datas locais, não `new Date("2026-12-01")` que vira UTC).
-- `currency.ts`: `formatBRL` com `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`.
-- `search-params.ts`: schema Zod dos critérios de busca (destination, checkIn, checkOut, rooms, adults,
-  children) + `parseSearchParams(URLSearchParams)` e `serializeSearchParams(obj)`. Usado por F2, F3, F4, F5.
-- `storage.ts`: wrapper de localStorage com try/catch e validação Zod na leitura (dado corrompido → default).
+## Decisões que valem para todas as features
+- **Critérios de busca: a URL é a fonte da verdade até o hotel.** F2 serializa com
+  `serializeSearchCriteria`, F3/F4 repetem os params nos links e leem com `parseSearchCriteria`; no
+  "Selecionar" a F4 grava `{ hotelId, roomId, criteria }` no `booking-draft` e a F5 lê do store
+  (URL do checkout sem dados manipuláveis).
+- **"Check-in no passado" não está no schema da URL** (depende do relógio e do fuso). Use
+  `isBeforeToday(checkIn, todayISO())` no cliente: F2/F5 bloqueiam, F3/F4 só avisam.
+- **`booking-draft`**: `skipHydration` + `BookingDraftHydrator`; a F5 deve esperar
+  `useBookingDraftHydrated()` antes de redirecionar "sem seleção". Guarda só ids e critérios, nunca PII.
+- **Datas são `YYYY-MM-DD`** (`ISODate`); nunca `new Date("2026-12-01")`. Use `dates.ts`.
+- **Query keys** vivem em `api/query-keys.ts`; query options só dos endpoints usados por 2+ features
+  (`hotelQueryOptions`, `hotelRoomsQueryOptions`, `roomQueryOptions`). O resto fica na feature dona.
+- **`http.ts`**: `apiGet`, `apiGetPage` (`X-Total-Count`, exposto via CORS pela mock-api), `apiPost`;
+  falhas viram `ApiError { kind, status }`. Texto de UI vem de `toUserMessage`, nunca do corpo da API.
+- **Mutations sem retry** (`POST /bookings` não é idempotente). Queries: sem retry em 4xx/parse.
+- **`<main id="main-content">` é do layout raiz**; páginas não renderizam `<main>`.
+- **Shared não tem tela de catálogo**: componentes são provados por testes de componente.
+- `Button loading` usa `disabled` + `aria-busy` (o rótulo permanece no nome acessível).
+- `EmptyState`/`ErrorState` aceitam `headingLevel` (use 1 quando ocupam a página).
 
 ## ui/
 - Fonte da verdade visual: `docs/design/design-system.md`. Tokens viram o `@theme` do Tailwind;
   nada de cor ou espaçamento solto (`#3b82f6`, `mt-[13px]`) nos componentes.
 - Atomic Design: atoms não importam molecules; molecules compõem atoms.
-- Todo componente aceita `className` e mescla com `cn()` (clsx + tailwind-merge).
-- Acessível por padrão: `Field` liga label/erro/descrição por `id` e `aria-describedby`; `Dialog`
-  prende o foco e fecha com Esc; `Skeleton` tem `aria-hidden` e o container usa `aria-busy`.
+- Todo componente aceita `className` e mescla com `cn()`; `ref` como prop (React 19).
+- Acessível por padrão: `Field` liga label/erro/descrição por `id` e `aria-describedby` (erro sem
+  `role="alert"`); `Dialog` usa `<dialog>` nativo (foco preso, Esc); `Skeleton` tem `aria-hidden`.
 - Sem texto de negócio nos componentes de `ui/` (recebem por props).
-
-## stores/booking-draft.ts
-Estado que atravessa features: critérios da busca + `{ hotelId, roomId }` selecionados.
-- Guarde **ids e critérios**, não o objeto inteiro do hotel (dado de servidor é do TanStack Query).
-- Persistido em `sessionStorage` com `version` e `migrate`. Nunca guarde PII aqui.
-- Exponha seletores (`useSelectedRoom`, `useSearchCriteria`) para evitar re-render global.
+- Componentes com hooks têm `"use client"` (Dialog, Toaster, AppProviders); os demais servem em RSC.
 
 ## Testes
-Unitário obrigatório para tudo em `lib/` e para os schemas (casos válidos e inválidos).
+Unitário obrigatório para tudo em `lib/` e para os schemas (casos válidos e inválidos; o seed inteiro de `mock-api/db.seed.json` deve passar).
