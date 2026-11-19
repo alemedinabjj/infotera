@@ -64,6 +64,20 @@ describe("BookingNumber e copiar (critério 16)", () => {
     vi.useRealTimers();
   });
 
+  it("desmontar durante o 'Copiado' cancela o timeout", async () => {
+    const user = userEvent.setup();
+    stubClipboard(async () => undefined);
+    const { unmount } = renderNumber();
+    const button = await screen.findByRole("button", { name: "Copiar número da reserva" });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    await user.click(button);
+    await screen.findByRole("button", { name: "Copiado" });
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+    vi.useRealTimers();
+  });
+
   it("por teclado (Enter) também copia", async () => {
     const user = userEvent.setup();
     const writeText = stubClipboard(async () => undefined);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { copyText } from "@/shared/lib/clipboard";
 import { cn } from "@/shared/lib/cn";
 import { buttonClassName, CheckIcon, CopyIcon, InfoIcon } from "@/shared/ui";
@@ -37,6 +37,13 @@ export const CopyBookingNumber = ({ value, numberId }: CopyBookingNumberProps) =
   const [state, setState] = useState<CopyState>({ status: "idle", attempt: 0 });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
   const handleCopy = async () => {
     if (timer.current) clearTimeout(timer.current);
     const copied = await copyText(value);
@@ -60,10 +67,17 @@ export const CopyBookingNumber = ({ value, numberId }: CopyBookingNumberProps) =
           <button
             type="button"
             onClick={handleCopy}
-            className={cn(buttonClassName({ variant: "secondary" }), "w-full sm:w-auto")}
+            className={cn(
+              buttonClassName({ variant: "secondary", size: "sm" }),
+              "w-full py-2 sm:w-auto",
+            )}
           >
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            <span className="inline-grid">
+            {copied ? (
+              <CheckIcon className="size-5 shrink-0" />
+            ) : (
+              <CopyIcon className="size-5 shrink-0" />
+            )}
+            <span className="inline-grid text-center">
               <span
                 aria-hidden={copied || undefined}
                 className={`col-start-1 row-start-1 ${copied ? "invisible" : ""}`}
