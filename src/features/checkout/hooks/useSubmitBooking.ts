@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
 import { queryKeys } from "@/shared/api/query-keys";
-import { useOnline } from "@/shared/hooks/useOnline";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
 import { toast } from "@/shared/ui";
 import { createBookingAction } from "../api/create-booking.action";
@@ -21,6 +20,7 @@ import {
   type FailedResult,
   type SubmitFeedback,
   submitFeedback,
+  TRANSPORT_TOAST,
 } from "../model/create-booking-result";
 import type { QuoteResult } from "../model/quote";
 import type { CheckoutPrice } from "./checkout-price";
@@ -54,9 +54,10 @@ export const useSubmitBooking = ({
   onInvalidField,
 }: SubmitOptions) => {
   const queryClient = useQueryClient();
-  const online = useOnline();
   const attempt = useRef<Attempt | null>(null);
   const keyRef = useRef(0);
+  // Marcada antes do `mutate`: dois envios no mesmo tick (Enter repetido) não passam por `isPending`.
+  const inFlight = useRef(false);
   const [state, setState] = useState<SubmitState>({ kind: "none" });
   const mutation = useMutation({
     mutationFn: createBookingAction,
@@ -91,14 +92,13 @@ export const useSubmitBooking = ({
       previousTotalCents: quote.quote.totalCents,
       totalWithoutCouponCents: quote.baseQuote.totalCents,
       couponCode: quote.quote.couponCode,
-      online,
+      online: navigator.onLine,
     });
-    if (feedback.toast) toast.error(feedback.toast);
     show((key) => ({ kind: "feedback", feedback, key }));
   };
 
   const submit = (values: CheckoutValues): void => {
-    if (mutation.isPending) return;
+    if (inFlight.current || mutation.isPending) return;
     if (price.status === "loading") return;
     if (price.status === "error") {
       show((key) => ({ kind: "price-unavailable", key }));
@@ -108,9 +108,16 @@ export const useSubmitBooking = ({
     const draftRequest = toBookingRequest(values, selection, quote.quote, "");
     attempt.current = nextAttemptId(attempt.current, requestFingerprint(draftRequest));
     const request = { ...draftRequest, attemptId: attempt.current.id };
+    inFlight.current = true;
     mutation.mutate(request, {
+      onSettled: () => {
+        inFlight.current = false;
+      },
       onSuccess: (result) => handle(result, quote),
-      onError: () => handle(FAILED_ON_TRANSPORT, quote),
+      onError: () => {
+        toast.error(TRANSPORT_TOAST);
+        handle(FAILED_ON_TRANSPORT, quote);
+      },
     });
   };
 
