@@ -27,13 +27,12 @@ export const SectionError = <TData, TKey extends QueryKey>({
 }: SectionErrorProps<TData, TKey>) => {
   const { retry, retrying } = useSectionRetry(options, { onFinished });
   const ref = useRef<HTMLDivElement>(null);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: só no momento em que o erro monta
   useEffect(() => {
     if (!focusRetry) return;
     const button = ref.current?.querySelector("button");
     button?.focus({ preventScroll: true });
     revealBelowHeader(button ?? null);
-  }, []);
+  }, [focusRetry]);
   return (
     <div ref={ref}>
       <ErrorState
