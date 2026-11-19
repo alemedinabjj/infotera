@@ -116,3 +116,12 @@ describe("toFormValues / defaults", () => {
     });
   });
 });
+
+describe("mensagens com check-in/check-out", () => {
+  it("usam hífen não separável (U+2011) para não quebrar a palavra no mobile", () => {
+    for (const message of [FORM_MESSAGES.checkInRequired, FORM_MESSAGES.checkOutRequired]) {
+      expect(message).toMatch(/check‑(in|out)/);
+      expect(message).not.toMatch(/check-(in|out)/);
+    }
+  });
+});

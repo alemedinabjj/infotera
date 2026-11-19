@@ -29,7 +29,7 @@ export const SEARCH_MESSAGES = {
   rooms: `Escolha de ${SEARCH_LIMITS.minRooms} a ${SEARCH_LIMITS.maxRooms} quartos.`,
   adults: `Informe de 1 a ${SEARCH_LIMITS.maxAdults} adultos.`,
   children: `Informe de 0 a ${SEARCH_LIMITS.maxChildren} crianças.`,
-  checkOutOrder: "O check-out precisa ser pelo menos 1 dia depois do check-in.",
+  checkOutOrder: "O check\u2011out precisa ser pelo menos 1 dia depois do check\u2011in.",
   maxNights: `A estadia pode ter no máximo ${SEARCH_LIMITS.maxNights} noites.`,
   adultsPerRoom: "Inclua pelo menos 1 adulto por quarto.",
   guestsPerRoom: `Cada quarto acomoda até ${SEARCH_LIMITS.maxGuestsPerRoom} hóspedes. Aumente os quartos ou reduza os hóspedes.`,

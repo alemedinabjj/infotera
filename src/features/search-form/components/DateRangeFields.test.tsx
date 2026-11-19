@@ -6,7 +6,11 @@ import { describe, expect, it } from "vitest";
 import { addDays, todayISO } from "@/shared/lib/dates";
 import type { DateNotice } from "../model/notices";
 import { searchFormResolver } from "../model/search-form.resolver";
-import { DEFAULT_SEARCH_FORM_VALUES, type SearchFormValues } from "../model/search-form.schema";
+import {
+  DEFAULT_SEARCH_FORM_VALUES,
+  FORM_MESSAGES,
+  type SearchFormValues,
+} from "../model/search-form.schema";
 import { DateRangeFields } from "./DateRangeFields";
 
 const Harness = () => {
@@ -61,7 +65,7 @@ describe("DateRangeFields", () => {
     const start = addDays(TODAY, 5);
     fireEvent.change(checkIn, { target: { value: start } });
     expect(checkOut).toHaveValue(addDays(start, 1));
-    expect(screen.queryByText(/Check-out ajustado/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Check\u2011out ajustado/)).not.toBeInTheDocument();
     expect(screen.getByText(/^1 noite ·/)).toBeInTheDocument();
   });
 
@@ -73,9 +77,9 @@ describe("DateRangeFields", () => {
     fireEvent.change(checkIn, { target: { value: later } });
     expect(checkOut).toHaveValue(addDays(later, 1));
     const [year, month, day] = addDays(later, 1).split("-");
-    expect(screen.getByText(`Check-out ajustado para ${day}/${month}/${year}.`)).toBeVisible();
+    expect(screen.getByText(`Check\u2011out ajustado para ${day}/${month}/${year}.`)).toBeVisible();
     fireEvent.change(checkOut, { target: { value: addDays(later, 3) } });
-    expect(screen.queryByText(/Check-out ajustado/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Check\u2011out ajustado/)).not.toBeInTheDocument();
   });
 
   it("período válido mostra N noites com dias da semana", () => {
@@ -123,10 +127,10 @@ describe("DateRangeFields", () => {
     const { checkIn, checkOut } = setup();
     await user.click(checkOut);
     await user.tab();
-    expect(await screen.findByText("Escolha a data de check-out.")).toBeInTheDocument();
+    expect(await screen.findByText(FORM_MESSAGES.checkOutRequired)).toBeInTheDocument();
     fireEvent.change(checkIn, { target: { value: addDays(TODAY, 2) } });
     await waitFor(() =>
-      expect(screen.queryByText("Escolha a data de check-out.")).not.toBeInTheDocument(),
+      expect(screen.queryByText(FORM_MESSAGES.checkOutRequired)).not.toBeInTheDocument(),
     );
     expect(checkOut).toHaveValue(addDays(TODAY, 3));
   });

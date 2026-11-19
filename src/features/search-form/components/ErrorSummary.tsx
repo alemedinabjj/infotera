@@ -17,7 +17,7 @@ export const ErrorSummary = ({ items, onSelect }: ErrorSummaryProps) => (
           <button
             type="button"
             onClick={() => onSelect(item.field)}
-            className="min-h-11 py-2 text-left text-primary underline"
+            className="block min-h-11 w-full py-2 text-left text-primary underline"
           >
             {item.label}: {item.message}
           </button>

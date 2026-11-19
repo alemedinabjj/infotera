@@ -26,10 +26,13 @@ export const DEFAULT_SEARCH_FORM_VALUES: SearchFormValues = {
   children: 0,
 };
 
-/** Mensagens exclusivas do formulário; as demais vêm de `SEARCH_MESSAGES`. */
+/**
+ * Mensagens exclusivas do formulário; as demais vêm de `SEARCH_MESSAGES`. "check‑in/out" usa hífen
+ * não separável (U+2011) para a palavra não quebrar em duas linhas no mobile.
+ */
 export const FORM_MESSAGES = {
-  checkInRequired: "Escolha a data de check-in.",
-  checkOutRequired: "Escolha a data de check-out.",
+  checkInRequired: "Escolha a data de check\u2011in.",
+  checkOutRequired: "Escolha a data de check\u2011out.",
   checkInPast: "Escolha uma data a partir de hoje.",
 } as const;
 
