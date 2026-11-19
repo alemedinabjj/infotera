@@ -3,8 +3,8 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
+import { lowestNightlyPrice } from "@/shared/lib/pricing";
 import { Badge, ErrorBoundary, PriceTag, Skeleton } from "@/shared/ui";
-import { lowestNightlyPrice } from "../model/from-price";
 
 const MUTED = "text-sm text-fg-muted";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeHotel, makeSearchCriteria } from "@/shared/testing/fixtures";
-import { hotelBreadcrumb, searchHref } from "./breadcrumb";
+import { hotelBreadcrumb } from "./breadcrumb";
 
 const hotel = makeHotel();
 
@@ -23,11 +23,5 @@ describe("hotelBreadcrumb", () => {
   it("sem critérios, leva a /search só com o destino", () => {
     const crumb = hotelBreadcrumb(hotel, null);
     expect(crumb.backHref).toBe("/search?destination=Rio+de+Janeiro%2C+RJ");
-  });
-});
-
-describe("searchHref", () => {
-  it("escapa o destino", () => {
-    expect(searchHref("São Paulo, SP", null)).toBe("/search?destination=S%C3%A3o+Paulo%2C+SP");
   });
 });

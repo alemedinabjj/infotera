@@ -1,19 +1,22 @@
-import { cn } from "@/shared/lib/cn";
-import { CheckIcon, MinusIcon } from "@/shared/ui";
-import { type ComparisonRow as Row, YES } from "../model/room-comparison";
+import { cn } from "../../lib/cn";
+import { type ComparisonRow, YES } from "../../lib/comparison";
+import { Badge } from "../atoms/Badge";
+import { CheckIcon, MinusIcon } from "../icons";
 
-type ComparisonRowProps = {
-  row: Row;
-  /** `id` de cada quarto, na ordem das células (chaves estáveis). */
-  roomIds: readonly number[];
+type ComparisonTableRowProps = {
+  row: ComparisonRow;
+  /** `id` de cada coluna, na ordem das células (chaves estáveis). */
+  columnIds: readonly number[];
   /** Todas as linhas diferem: sem faixa colorida, só o marcador e o texto para leitor de tela. */
   markerOnly?: boolean;
+  /** Texto sr-only da linha que difere (ex.: `, diferente entre os quartos`). */
+  differsLabel: string;
 };
 
 /** Hífen sem quebra: "Ar-condicionado" não vira "Ar-" / "condicionado" na coluna estreita. */
-const NON_BREAKING_HYPHEN = "\u2011";
+const NON_BREAKING_HYPHEN = "‑";
 
-const Cell = ({ row, value }: { row: Row; value: string }) => {
+const Cell = ({ row, value }: { row: ComparisonRow; value: string }) => {
   if (row.kind === "text") return <>{value}</>;
   const yes = value === YES;
   return (
@@ -31,8 +34,14 @@ const Cell = ({ row, value }: { row: Row; value: string }) => {
 /**
  * Linha da tabela. Quando difere: barra à esquerda e texto para leitor de tela (a diferença nunca
  * é só cor) e, salvo `markerOnly`, faixa `primary-soft` na linha inteira (inclusive o `th` fixo).
+ * Colunas em `row.best` ganham o selo de texto `row.bestLabel`.
  */
-export const ComparisonRow = ({ row, roomIds, markerOnly = false }: ComparisonRowProps) => {
+export const ComparisonTableRow = ({
+  row,
+  columnIds,
+  markerOnly = false,
+  differsLabel,
+}: ComparisonTableRowProps) => {
   const band = row.differs && !markerOnly;
   return (
     <tr className={band ? "bg-primary-soft" : undefined}>
@@ -45,11 +54,16 @@ export const ComparisonRow = ({ row, roomIds, markerOnly = false }: ComparisonRo
         )}
       >
         {row.label.replaceAll("-", NON_BREAKING_HYPHEN)}
-        {row.differs ? <span className="sr-only">, diferente entre os quartos</span> : null}
+        {row.differs ? <span className="sr-only">{differsLabel}</span> : null}
       </th>
       {row.cells.map((value, index) => (
-        <td key={roomIds[index]} className="px-3 py-3 text-fg">
+        <td key={columnIds[index]} className="px-3 py-3 align-top text-fg">
           <Cell row={row} value={value} />
+          {row.best?.includes(index) && row.bestLabel ? (
+            <Badge tone="success" className="mt-1 flex w-fit">
+              {row.bestLabel}
+            </Badge>
+          ) : null}
         </td>
       ))}
     </tr>

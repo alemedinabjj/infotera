@@ -1,21 +1,9 @@
 import { type Room, type RoomAmenity, roomAmenitySchema } from "@/shared/api/schemas";
+import { type ComparisonRow, makeRow, NO, YES } from "@/shared/lib/comparison";
 import { formatBRL } from "@/shared/lib/currency";
 import { bedsLabel } from "@/shared/lib/room-labels";
+import type { ComparisonTableMessages } from "@/shared/ui";
 import { roomAmenityLabel, roomSizeLabel } from "./room-labels";
-
-export const YES = "Sim";
-export const NO = "Não";
-
-export type ComparisonRow = {
-  key: string;
-  label: string;
-  /** `boolean`: células `Sim`/`Não` (ícone + texto); `text`: texto puro. */
-  kind: "text" | "boolean";
-  /** Uma célula por quarto, na ordem de `rooms`. */
-  cells: string[];
-  /** Nem todas as células são iguais. */
-  differs: boolean;
-};
 
 export type RoomComparison = { rooms: readonly Room[]; rows: ComparisonRow[] };
 
@@ -25,13 +13,6 @@ const availabilityText = (available: number): string => {
 };
 
 const priceText = (price: number): string => formatBRL(price, { cents: !Number.isInteger(price) });
-
-const makeRow = (
-  key: string,
-  label: string,
-  kind: ComparisonRow["kind"],
-  cells: string[],
-): ComparisonRow => ({ key, label, kind, cells, differs: new Set(cells).size > 1 });
 
 const amenityRow = (amenity: RoomAmenity, rooms: readonly Room[]): ComparisonRow =>
   makeRow(
@@ -87,9 +68,7 @@ export const buildRoomComparison = (rooms: readonly Room[]): RoomComparison => {
   };
 };
 
-/** Só as linhas em que os quartos diferem. */
-export const onlyDifferences = (rows: readonly ComparisonRow[]): ComparisonRow[] =>
-  rows.filter((row) => row.differs);
+export { onlyDifferences } from "@/shared/lib/comparison";
 
 /** A comparação só faz sentido com 2 ou mais quartos. */
 export const canCompare = (rooms: readonly Room[]): boolean => rooms.length >= 2;
@@ -99,3 +78,15 @@ export const comparisonAnnouncement = (visible: number, total: number): string =
   visible === total
     ? `Mostrando todas as ${total} características`
     : `Mostrando ${visible} de ${total} características`;
+
+/** Textos da tabela de comparação de quartos (a molécula de `shared` não tem microcopy). */
+export const ROOM_COMPARISON_MESSAGES: ComparisonTableMessages = {
+  caption: "Comparar quartos",
+  cornerLabel: "Característica",
+  onlyDifferences: "Mostrar só diferenças",
+  legend: "Linhas marcadas mudam entre os quartos.",
+  scrollHint: "Arraste para o lado para ver todos.",
+  differs: ", diferente entre os quartos",
+  empty: "Os quartos têm as mesmas características.",
+  announce: comparisonAnnouncement,
+};

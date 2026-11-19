@@ -3,3 +3,9 @@ import { type SearchCriteria, searchCriteriaToQueryString } from "./search-param
 /** Link do card para o detalhe: com os critérios no modo `stay`, sem nada no `browse`. */
 export const hotelHref = (hotelId: number, criteria: SearchCriteria | null): string =>
   criteria ? `/hotel/${hotelId}?${searchCriteriaToQueryString(criteria)}` : `/hotel/${hotelId}`;
+
+/** Link para a lista: com os critérios da busca (`stay`) ou só com o destino (`browse`). */
+export const searchHref = (destination: string, criteria: SearchCriteria | null): string =>
+  criteria
+    ? `/search?${searchCriteriaToQueryString(criteria)}`
+    : `/search?${new URLSearchParams({ destination }).toString()}`;
