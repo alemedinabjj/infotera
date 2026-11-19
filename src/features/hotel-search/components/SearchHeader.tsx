@@ -3,7 +3,7 @@
 import { type ReactNode, useRef, useState } from "react";
 import { cn } from "@/shared/lib/cn";
 import { Alert, Button, ChevronDownIcon, copyCurrentUrl, LinkIcon } from "@/shared/ui";
-import { markEditSubmitted, useFocusAfterEdit } from "../hooks/useFocusAfterEdit";
+import { useFocusAfterEdit } from "../hooks/useFocusAfterEdit";
 
 /** `id` do `h2` do painel: o formulário o usa como `labelledBy`. */
 export const SEARCH_EDIT_HEADING_ID = "search-edit-heading";
@@ -86,7 +86,7 @@ export const SearchHeader = ({
         </div>
       </div>
       {open ? (
-        <div id={PANEL_ID} className="flex flex-col gap-4" onSubmitCapture={markEditSubmitted}>
+        <div id={PANEL_ID} className="flex flex-col gap-4">
           <h2 id={SEARCH_EDIT_HEADING_ID} className="sr-only">
             Alterar busca
           </h2>

@@ -80,7 +80,7 @@ index.ts                  API pública usada por app/search
   liberar `images.unsplash.com` direto em `img-src`.
 - **Três modos** (`parseSearchPage`): sem destino (formulário com recentes), `browse` (lista sem total, painel
   aberto) e `stay`. "Alterar busca" é o `SearchForm` da F2 compondo por slot em `app/search/page.tsx`
-  (`showRecentSearches={false}`); `key` = critérios remonta e fecha o painel; foco vai ao h1 (`useFocusAfterEdit`).
+  (`showRecentSearches={false}`); `key` = critérios remonta e fecha o painel; foco vai ao h1 (`useFocusAfterEdit` consome `shared/lib/focus-after-navigation`, marcado no envio válido por `app/search/SearchEditForm`).
 - **Sheet de filtros** = `Dialog placement="sheet"` com `initialFocus` no slider Mínimo; o anunciador principal
   fica mudo com o sheet aberto (o sheet tem o seu).
 - Fora do escopo: facets, chips, Web Share (F4), geolocalização do usuário ("perto de mim"), persistir o modo de exibição.
