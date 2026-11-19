@@ -1,4 +1,4 @@
-import { QueryObserver } from "@tanstack/react-query";
+import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeHotel } from "@/shared/testing/fixtures";
 import { makeTestQueryClient } from "@/shared/testing/render";
@@ -219,6 +219,31 @@ describe("fetchHotelsPage: ordenação de API", () => {
     const page = await fetchHotelsPage(request, { client: makeTestQueryClient() });
     expect(ids(page)).toEqual([3]);
     expect(page.center).toBeNull();
+  });
+});
+
+describe("fetchHotelsPage: retry do centroide", () => {
+  const retrying = () =>
+    new QueryClient({ defaultOptions: { queries: { retry: 2, retryDelay: 0 } } });
+  const centerCalls = (fetchMock: ReturnType<typeof stubRoutes>) =>
+    fetchMock.mock.calls.filter(([input]) => !new URL(input).searchParams.has("_page")).length;
+  const failingCenter = (url: URL) =>
+    url.searchParams.has("_page") ? json([LINE[2]], 3) : new Response("{}", { status: 500 });
+
+  it("ordenação de API: o centroide (opcional) não tenta de novo, para não atrasar a lista", async () => {
+    const fetchMock = stubRoutes(failingCenter);
+    await fetchHotelsPage(toHotelsRequest(RIO, DEFAULT_FILTERS), { client: retrying() });
+    expect(centerCalls(fetchMock)).toBe(1);
+  });
+
+  it("distance: o centroide é obrigatório e segue o retry do client", async () => {
+    const fetchMock = stubRoutes(failingCenter);
+    await expect(
+      fetchHotelsPage(toHotelsRequest(RIO, { ...DEFAULT_FILTERS, sort: "distance" }), {
+        client: retrying(),
+      }),
+    ).rejects.toMatchObject({ status: 500 });
+    expect(centerCalls(fetchMock)).toBe(3);
   });
 });
 

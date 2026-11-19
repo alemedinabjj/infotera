@@ -36,9 +36,21 @@ export const destinationHotelsQueryOptions = (filterQuery: HotelsFilterQuery) =>
     staleTime: CENTER_STALE_TIME,
   });
 
-/** Centroide do destino INTEIRO (sem filtros): a distância de um hotel não muda ao filtrar. */
-const fetchCenter = async (destination: string, client: QueryClient): Promise<GeoPoint | null> =>
-  computeCentroid(await client.fetchQuery(destinationHotelsQueryOptions({ destination })));
+/**
+ * Centroide do destino INTEIRO (sem filtros): a distância de um hotel não muda ao filtrar.
+ * `optional` (ordenação de API): sem retry, para a falha de um dado acessório não atrasar a lista.
+ */
+const fetchCenter = async (
+  destination: string,
+  client: QueryClient,
+  optional: boolean,
+): Promise<GeoPoint | null> =>
+  computeCentroid(
+    await client.fetchQuery({
+      ...destinationHotelsQueryOptions({ destination }),
+      ...(optional ? { retry: false } : {}),
+    }),
+  );
 
 type PageContext = { client: QueryClient; signal?: AbortSignal };
 
@@ -50,7 +62,7 @@ const fetchDistancePage = async (
   // Sem filtros as duas buscas têm a mesma chave: um request só. Aqui o centro é obrigatório.
   const [hotels, center] = await Promise.all([
     client.fetchQuery(destinationHotelsQueryOptions(filterQuery)),
-    fetchCenter(filterQuery.destination, client),
+    fetchCenter(filterQuery.destination, client, false),
   ]);
   const sorted = sortByDistance(hotels, center);
   return { items: slicePage(sorted, page, limit), total: sorted.length, center };
@@ -70,7 +82,7 @@ export const fetchHotelsPage = async (
       const { destination } = request.query;
       const [page, center] = await Promise.all([
         fetchHotels(request.query, context.signal),
-        fetchCenter(destination, context.client).catch(() => null),
+        fetchCenter(destination, context.client, true).catch(() => null),
       ]);
       return { ...page, center };
     }
