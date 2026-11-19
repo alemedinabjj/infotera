@@ -40,24 +40,32 @@ type DialogProps = {
   closeLabel?: string;
   /** Fecha ao clicar no backdrop (só para dialogs informativos). */
   closeOnBackdrop?: boolean;
+  /** Seletor CSS do controle que recebe o foco ao abrir (padrão: o 1º focável, o "Fechar"). */
+  initialFocus?: string;
   className?: string;
 };
 
 /** Abre/fecha o `<dialog>` nativo, devolve o foco ao gatilho e trava o scroll do body. */
-const useDialogLifecycle = (ref: RefObject<HTMLDialogElement | null>, open: boolean) => {
+const useDialogLifecycle = (
+  ref: RefObject<HTMLDialogElement | null>,
+  open: boolean,
+  initialFocus: string | undefined,
+) => {
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog || !open) return;
     const trigger = document.activeElement;
     const previousOverflow = document.body.style.overflow;
     if (!dialog.open) dialog.showModal();
+    // `showModal` foca o 1º focável (o "Fechar"); aqui a feature escolhe um controle mais útil.
+    if (initialFocus) dialog.querySelector<HTMLElement>(initialFocus)?.focus();
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
       if (dialog.open) dialog.close();
       if (trigger instanceof HTMLElement) trigger.focus();
     };
-  }, [ref, open]);
+  }, [ref, open, initialFocus]);
 };
 
 /**
@@ -74,12 +82,13 @@ export const Dialog = ({
   placement = "center",
   closeLabel = "Fechar",
   closeOnBackdrop = false,
+  initialFocus,
   className,
 }: DialogProps) => {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const pressStartedOnBackdrop = useRef(false);
-  useDialogLifecycle(ref, open);
+  useDialogLifecycle(ref, open, initialFocus);
   const layout = PLACEMENTS[placement];
 
   return (

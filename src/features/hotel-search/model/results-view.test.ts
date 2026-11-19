@@ -4,6 +4,7 @@ import {
   describeAnnouncement,
   describePageSuffix,
   describeResultCount,
+  describeSheetAction,
   describeToolbar,
   describeVisibleRange,
   outOfRangePage,
@@ -153,5 +154,30 @@ describe("describeToolbar", () => {
     });
     expect(toolbar({ kind: "error" }).heading).toMatchObject({ text: "Resultados indisponíveis" });
     expect(toolbar({ kind: "offline" }).status).toEqual({ kind: "none" });
+  });
+});
+
+describe("describeSheetAction", () => {
+  const action = (v: ResultsView, total = 14) => describeSheetAction(v, total);
+  const results = (stale: boolean): ResultsView => ({
+    kind: "results",
+    stale,
+    offlineWithData: false,
+  });
+
+  it("resultado esperado no primário", () => {
+    expect(action(results(false))).toEqual({ text: "Ver 14 hotéis", updating: false });
+    expect(action(results(false), 1)).toEqual({ text: "Ver 1 hotel", updating: false });
+  });
+
+  it("durante a troca mostra Atualizando…", () => {
+    expect(action(results(true))).toEqual({ text: "Atualizando…", updating: true });
+    expect(action({ kind: "loading" }).updating).toBe(true);
+  });
+
+  it("sem resultados, erro ou offline: Ver resultados", () => {
+    for (const kind of ["empty-filters", "empty-destination", "error", "offline"] as const) {
+      expect(action({ kind }, 0)).toEqual({ text: "Ver resultados", updating: false });
+    }
   });
 });

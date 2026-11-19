@@ -147,3 +147,14 @@ describe("Dialog placement", () => {
     expect(trigger).toHaveFocus();
   });
 });
+
+describe("Dialog initialFocus", () => {
+  it("foca o controle indicado em vez do botão Fechar", () => {
+    render(
+      <Dialog open title="T" onClose={() => undefined} initialFocus="input[name='primeiro']">
+        <input name="primeiro" aria-label="Primeiro" />
+      </Dialog>,
+    );
+    expect(screen.getByLabelText("Primeiro")).toHaveFocus();
+  });
+});

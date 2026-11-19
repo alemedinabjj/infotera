@@ -161,3 +161,32 @@ export const describeToolbar = ({
     }
   }
 };
+
+export type SheetAction = { text: string; updating: boolean };
+
+/**
+ * Rótulo do botão primário do sheet de filtros: `Ver 14 hotéis`, `Ver 1 hotel`, `Ver resultados`
+ * (0 resultados, erro, offline) e `Atualizando…` enquanto a lista troca (continua clicável).
+ */
+export const describeSheetAction = (view: ResultsView, total: number): SheetAction => {
+  switch (view.kind) {
+    case "loading":
+    case "out-of-range":
+      return { text: "Atualizando…", updating: true };
+    case "results":
+      if (view.stale) return { text: "Atualizando…", updating: true };
+      return {
+        text: total === 1 ? "Ver 1 hotel" : `Ver ${total.toLocaleString("pt-BR")} hotéis`,
+        updating: false,
+      };
+    case "empty-destination":
+    case "empty-filters":
+    case "error":
+    case "offline":
+      return { text: "Ver resultados", updating: false };
+    default: {
+      const unreachable: never = view;
+      return unreachable;
+    }
+  }
+};

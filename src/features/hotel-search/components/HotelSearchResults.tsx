@@ -1,14 +1,15 @@
 "use client";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { useId, useRef } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ErrorBoundary } from "@/shared/ui";
 import { focusResultsHeading, useFocusOnPageChange } from "../hooks/useFocusOnPageChange";
 import { useHotelResults } from "../hooks/useHotelResults";
 import { useSearchFilters } from "../hooks/useSearchFilters";
 import { describeAnnouncement, describeToolbar } from "../model/results-view";
-import { serializeSearchFilters } from "../model/search-filters";
+import { countActiveFilters, serializeSearchFilters } from "../model/search-filters";
+import { FiltersDrawer, FiltersTrigger } from "./FiltersDrawer";
 import { FiltersPanel } from "./FiltersPanel";
 import { ResultsError } from "./ResultsError";
 import { ResultsSection } from "./ResultsSection";
@@ -28,6 +29,8 @@ type HotelSearchResultsProps = {
 export const HotelSearchResults = ({ destination, criteria }: HotelSearchResultsProps) => {
   const headingId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const { filters, update, replacePage, pageHref } = useSearchFilters();
   const results = useHotelResults(destination, filters, replacePage);
   const { view } = results;
@@ -44,6 +47,12 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
     total: results.total,
     page: filters.page,
   });
+  const announcement = describeAnnouncement({
+    view,
+    slow: results.slow,
+    total: results.total,
+    destination,
+  });
   const resetKey = `${destination}?${serializeSearchFilters(filters).toString()}`;
 
   return (
@@ -51,13 +60,19 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
       <FiltersPanel filters={filters} onChange={update} />
       <section aria-labelledby={headingId} className="flex min-w-0 flex-col gap-4">
         <p className="sr-only" aria-live="polite">
-          {describeAnnouncement({ view, slow: results.slow, total: results.total, destination })}
+          {drawerOpen ? "" : announcement}
         </p>
         <ResultsToolbar
           headingId={headingId}
           headingRef={headingRef}
           heading={toolbar.heading}
           status={toolbar.status}
+          filtersTrigger={
+            <FiltersTrigger
+              activeCount={countActiveFilters(filters)}
+              onClick={() => setDrawerOpen(true)}
+            />
+          }
           sort={
             <SortSelect
               value={filters.sort}
@@ -94,6 +109,15 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
           )}
         </QueryErrorResetBoundary>
       </section>
+      <FiltersDrawer
+        open={drawerOpen}
+        onClose={closeDrawer}
+        filters={filters}
+        onChange={update}
+        view={view}
+        total={results.total}
+        announcement={announcement}
+      />
     </div>
   );
 };
