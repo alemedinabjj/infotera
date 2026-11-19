@@ -24,7 +24,7 @@ export type BookingDraftState = { selection: RoomSelection | null };
 const initialState: BookingDraftState = { selection: null };
 
 /**
- * Persistido em `sessionStorage` com `skipHydration`: o `BookingDraftHydrator` reidrata no cliente
+ * Persistido em `sessionStorage` com `skipHydration`: o `StoreHydrator` reidrata no cliente
  * para o HTML do servidor (store vazio) não divergir do primeiro render do cliente.
  */
 export const useBookingDraft = create<BookingDraftState>()(
