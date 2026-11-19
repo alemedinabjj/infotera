@@ -155,6 +155,12 @@
       scroll-behavior: auto !important;
     }
   }
+
+  @media print {
+    body {
+      background-color: var(--color-surface);
+    }
+  }
 }
 
 /*

@@ -98,7 +98,7 @@ export const Toaster = () => {
   return (
     <div
       data-toaster
-      className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col gap-3 sm:right-6 sm:bottom-6 sm:left-auto sm:w-96"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col gap-3 sm:right-6 sm:bottom-6 sm:left-auto sm:w-96 print:hidden"
     >
       <div role="status" aria-live="polite" className={regionClass}>
         {toasts
