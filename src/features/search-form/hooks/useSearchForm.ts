@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { todayISO } from "@/shared/lib/dates";
+import { revealBelowHeader } from "@/shared/lib/scroll";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { summarizeErrors } from "../model/error-summary";
 import { EXPIRED_DATES_NOTICE, formatRestored } from "../model/notices";
@@ -12,6 +13,7 @@ import {
   type SearchFormValues,
   toFormValues,
 } from "../model/search-form.schema";
+import { useDeferredBlur } from "./useDeferredBlur";
 import { useFormNotices } from "./useFormNotices";
 import { useRecentSearches } from "./useRecentSearches";
 
@@ -24,6 +26,9 @@ export const useSearchForm = (initialCriteria?: SearchCriteria) => {
   const [isPending, startTransition] = useTransition();
   const [attempts, setAttempts] = useState(0);
   const submitRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const blur = useDeferredBlur(containerRef);
   const notices = useFormNotices();
   const recent = useRecentSearches();
   const form = useForm<SearchFormValues, unknown, SearchCriteria>({
@@ -48,8 +53,12 @@ export const useSearchForm = (initialCriteria?: SearchCriteria) => {
   /** Preenche o formulário com uma busca recente (não envia). */
   const restore = (criteria: SearchCriteria) => {
     const { values, datesExpired } = restoreRecentSearch(criteria, todayISO());
+    blur.cancel(); // a validação de blur pendente é do formulário antigo
     setAttempts(0);
     form.reset(values);
+    // O formulário fica acima da lista de recentes: traz o topo do card para a vista (abaixo do
+    // header fixo) antes de focar, para a pessoa ver o que foi preenchido.
+    revealBelowHeader(formRef.current);
     if (datesExpired) {
       notices.showNotice({ field: "checkIn", text: EXPIRED_DATES_NOTICE });
       // `reset` re-registra os campos no próximo render; o foco espera por ele.
@@ -57,7 +66,7 @@ export const useSearchForm = (initialCriteria?: SearchCriteria) => {
     } else {
       notices.showNotice(null);
       notices.announce(formatRestored(criteria.destination));
-      submitRef.current?.focus();
+      submitRef.current?.focus({ preventScroll: true });
     }
   };
 
@@ -66,6 +75,9 @@ export const useSearchForm = (initialCriteria?: SearchCriteria) => {
     onSubmit,
     isPending,
     submitRef,
+    formRef,
+    containerRef,
+    deferBlur: blur.defer,
     notices,
     recent,
     restore,

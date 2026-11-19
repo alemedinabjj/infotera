@@ -40,11 +40,9 @@ const goHome = async (page: Page) => {
   await expect(submit(page)).toBeVisible();
 };
 
-test.describe("risco: erro do blur empurra o botão e o clique de mouse se perde", () => {
-  // BUG conhecido (QA F2): no mousedown o input perde o foco, o erro "Escolha um destino da lista."
-  // aparece e o botão desce ~26px; o mouseup cai no <form> e o click nunca dispara. A pessoa precisa
-  // clicar de novo. `test.fail` mantém o CI verde e vira vermelho assim que o bug for corrigido
-  // (aí é só remover a linha).
+test.describe("erro do blur não empurra o botão: o 1º clique de mouse conta", () => {
+  // A validação do blur espera o clique em um botão terminar (useDeferredBlur). Antes, o erro
+  // "Escolha um destino da lista." descia o botão ~26px entre mousedown e mouseup e o click se perdia.
   for (const viewport of [
     { width: 1280, height: 800 },
     { width: 375, height: 667 },
@@ -53,8 +51,6 @@ test.describe("risco: erro do blur empurra o botão e o clique de mouse se perde
     test(`destino digitado sem escolher + clique de mouse em Buscar hotéis (${viewport.width}px)`, async ({
       page,
     }) => {
-      // Em 320 px o botão fica abaixo da dobra e o scroll anchoring compensa o deslocamento: sem bug.
-      test.fail(viewport.width > 320, "bug: blur com erro desloca o botão e o click se perde");
       await page.setViewportSize(viewport);
       await goHome(page);
       await checkInInput(page).fill("2030-01-10");
@@ -64,6 +60,20 @@ test.describe("risco: erro do blur empurra o botão e o clique de mouse se perde
       await humanClick(page, submit(page));
       await expect(summary(page)).toBeVisible({ timeout: 2000 });
       await expect(page.getByText("Escolha um destino da lista.").first()).toBeVisible();
+    });
+
+    test(`o mesmo com toque (${viewport.width}px)`, async ({ browser }) => {
+      const context = await browser.newContext({ viewport, hasTouch: true });
+      const page = await context.newPage();
+      await goHome(page);
+      await checkInInput(page).fill("2030-01-10");
+      await checkOutInput(page).fill("2030-01-12");
+      await type(page, "flor");
+      await expect(page.getByRole("option", { name: /Florianópolis/ })).toBeVisible();
+      await submit(page).scrollIntoViewIfNeeded();
+      await submit(page).tap();
+      await expect(summary(page)).toBeVisible({ timeout: 2000 });
+      await context.close();
     });
   }
 
@@ -95,16 +105,40 @@ test.describe("risco: erro do blur empurra o botão e o clique de mouse se perde
   test("clique rápido (click do Playwright) com texto sem escolha mostra o resumo", async ({
     page,
   }) => {
-    test.fail(
-      true,
-      "bug: mesmo o click rápido do Playwright perde o clique (blur desloca o botão)",
-    );
     await goHome(page);
     await type(page, "flor");
     await submit(page).click();
     await expect(summary(page)).toBeVisible();
     await expect(destination(page)).toBeFocused();
     await expect(destination(page)).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("buscas recentes e 'Limpar buscas recentes' funcionam no 1º clique com destino inválido digitado", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      const item = (destination: string) => ({
+        destination,
+        checkIn: "2030-01-10",
+        checkOut: "2030-01-12",
+        rooms: 1,
+        adults: 2,
+        children: 0,
+      });
+      window.localStorage.setItem(
+        "infotera:recent-searches",
+        JSON.stringify([item("Gramado, RS"), item("Natal, RN")]),
+      );
+    });
+    await goHome(page);
+    await type(page, "flor");
+    await expect(page.getByRole("option", { name: /Florianópolis/ })).toBeVisible();
+    await humanClick(page, page.getByRole("button", { name: /Natal, RN/ }));
+    await expect(destination(page)).toHaveValue("Natal, RN");
+
+    await type(page, "xyzw");
+    await humanClick(page, page.getByRole("button", { name: "Limpar buscas recentes" }));
+    await expect(page.getByRole("heading", { name: "Buscas recentes" })).toHaveCount(0);
   });
 });
 
@@ -165,6 +199,63 @@ for (const width of [320, 375]) {
     });
   });
 }
+
+test.describe("foco não fica atrás do header fixo (WCAG 2.4.11)", () => {
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 1280, height: 500 },
+  ]) {
+    test(`envio inválido com a página rolada: resumo e 1º campo ficam abaixo do header (${viewport.width}px)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await goHome(page);
+      await submit(page).scrollIntoViewIfNeeded();
+      await page.mouse.wheel(0, 400);
+      await submit(page).press("Enter");
+      await expect(summary(page)).toBeVisible();
+      await expect(destination(page)).toBeFocused();
+      const header = await page.locator("header").first().boundingBox();
+      const alert = await summary(page).boundingBox();
+      const field = await destination(page).boundingBox();
+      expect(header).not.toBeNull();
+      expect(alert).not.toBeNull();
+      expect(field).not.toBeNull();
+      const headerBottom = header ? header.y + header.height : 0;
+      expect(alert?.y ?? -1).toBeGreaterThanOrEqual(headerBottom);
+      expect(field?.y ?? -1).toBeGreaterThanOrEqual(headerBottom);
+    });
+  }
+
+  test("restaurar busca recente de baixo da página traz o topo do formulário para a vista", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 500 });
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "infotera:recent-searches",
+        JSON.stringify([
+          {
+            destination: "Gramado, RS",
+            checkIn: "2030-01-10",
+            checkOut: "2030-01-12",
+            rooms: 1,
+            adults: 2,
+            children: 0,
+          },
+        ]),
+      );
+    });
+    await goHome(page);
+    const item = page.getByRole("button", { name: /Gramado, RS/ });
+    await item.scrollIntoViewIfNeeded();
+    await item.click();
+    await expect(submit(page)).toBeFocused();
+    const header = await page.locator("header").first().boundingBox();
+    const field = await destination(page).boundingBox();
+    expect(field?.y ?? -1).toBeGreaterThanOrEqual(header ? header.y + header.height : 0);
+  });
+});
 
 test.describe("datas com relógio fixo (page.clock)", () => {
   test.beforeEach(async ({ page }) => {

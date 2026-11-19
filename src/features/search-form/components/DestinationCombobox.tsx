@@ -63,7 +63,14 @@ export const DestinationCombobox = ({
       <VisuallyHidden>Buscando destinos…</VisuallyHidden>
     </span>
   ) : field.inputValue ? (
-    <IconButton aria-label="Limpar destino" icon={<XIcon className="size-5" />} onClick={clear} />
+    <IconButton
+      aria-label="Limpar destino"
+      icon={<XIcon className="size-5" />}
+      // Safari/iOS/Firefox mac não focam o botão no clique: sem isso o input perderia o foco
+      // (blur com relatedTarget nulo) e o erro de "destino vazio" apareceria antes do clear.
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={clear}
+    />
   ) : undefined;
 
   return (

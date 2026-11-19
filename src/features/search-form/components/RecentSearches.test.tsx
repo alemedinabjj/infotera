@@ -52,6 +52,21 @@ describe("RecentSearches", () => {
     expect(buttons[0]).toHaveAccessibleDescription("Preenche o formulário com esta busca.");
   });
 
+  it("ao restaurar, traz o topo do formulário para a vista antes de focar o botão", async () => {
+    const user = userEvent.setup();
+    seed([make({ destination: "Gramado, RS" })]);
+    const scrollIntoView = vi.fn<(options?: ScrollIntoViewOptions) => void>();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    vi.spyOn(HTMLFormElement.prototype, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(0, -400, 300, 500),
+    );
+    render();
+    await user.click(await screen.findByRole("button", { name: /Gramado, RS/ }));
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" });
+    expect(screen.getByRole("button", { name: "Buscar hotéis" })).toHaveFocus();
+    vi.restoreAllMocks();
+  });
+
   it("datas futuras: preenche o formulário inteiro, foca 'Buscar hotéis' e anuncia", async () => {
     const user = userEvent.setup();
     const item = make({ destination: "Gramado, RS", rooms: 2, adults: 3, children: 1 });

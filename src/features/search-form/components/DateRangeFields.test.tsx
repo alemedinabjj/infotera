@@ -24,7 +24,7 @@ const Harness = ({ initialNotice = null }: { initialNotice?: DateNotice | null }
   return (
     <FormProvider {...form}>
       <form>
-        <DateRangeFields notice={notice} onNotice={setNotice} />
+        <DateRangeFields notice={notice} onNotice={setNotice} deferBlur={(run) => run()} />
       </form>
     </FormProvider>
   );

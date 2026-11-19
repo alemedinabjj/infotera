@@ -151,3 +151,67 @@ describe("SearchForm: initialCriteria", () => {
     expect(push.mock.calls[0]?.[0]).toContain("destination=Gramado%2C+RS");
   });
 });
+
+describe("SearchForm: clique em botão com o destino digitado e não escolhido", () => {
+  const DESTINATION_ERROR = "Escolha um destino da lista.";
+  const KEY = "infotera:recent-searches";
+
+  it("o erro do blur espera o clique: o 1º clique em 'Buscar hotéis' mostra o resumo", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SearchForm />);
+    await user.type(destinationInput(), "flor");
+    await user.pointer({ keys: "[MouseLeft>]", target: submitButton() });
+    // O foco já saiu do campo, mas o erro (que empurraria o botão) ainda não apareceu.
+    expect(destinationInput()).not.toHaveFocus();
+    expect(screen.queryByText(DESTINATION_ERROR)).not.toBeInTheDocument();
+
+    await user.pointer({ keys: "[/MouseLeft]", target: submitButton() });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Corrija");
+    expect(screen.getAllByText(DESTINATION_ERROR).length).toBeGreaterThan(0);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("soltar fora do botão não perde a validação do blur", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SearchForm />);
+    await user.type(destinationInput(), "flor");
+    await user.pointer({ keys: "[MouseLeft>]", target: submitButton() });
+    await user.pointer({ keys: "[/MouseLeft]", target: document.body });
+    expect(await screen.findByText(DESTINATION_ERROR, {}, { timeout: 2000 })).toBeInTheDocument();
+  });
+
+  it("buscas recentes: o 1º clique em outro item preenche o formulário", async () => {
+    const make = (destination: string) => ({
+      destination,
+      checkIn: addDays(todayISO(), 10),
+      checkOut: addDays(todayISO(), 12),
+      rooms: 1,
+      adults: 2,
+      children: 0,
+    });
+    localStorage.setItem(KEY, JSON.stringify([make("Gramado, RS"), make("Natal, RN")]));
+    const user = userEvent.setup();
+    renderWithProviders(<SearchForm />);
+    await user.type(destinationInput(), "flor");
+    const item = await screen.findByRole("button", { name: /Natal, RN/ });
+    await user.pointer({ keys: "[MouseLeft>]", target: item });
+    expect(screen.queryByText(DESTINATION_ERROR)).not.toBeInTheDocument();
+    await user.pointer({ keys: "[/MouseLeft]", target: item });
+    await waitFor(() => expect(destinationInput()).toHaveValue("Natal, RN"));
+    expect(screen.queryByText(DESTINATION_ERROR)).not.toBeInTheDocument();
+  });
+
+  it("'Limpar destino': mousedown não tira o foco e nenhum erro aparece", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SearchForm />);
+    await user.type(destinationInput(), "flor");
+    const clear = await screen.findByRole("button", { name: "Limpar destino" }, { timeout: 2000 });
+    // Safari/iOS/Firefox mac não focam o botão no clique: sem preventDefault o input perderia o
+    // foco (blur com relatedTarget nulo) e o erro apareceria. Com ele, o foco nem sai do campo.
+    expect(fireEvent.mouseDown(clear)).toBe(false);
+    await user.click(clear);
+    expect(destinationInput()).toHaveValue("");
+    expect(destinationInput()).toHaveFocus();
+    expect(screen.queryByText(DESTINATION_ERROR)).not.toBeInTheDocument();
+  });
+});

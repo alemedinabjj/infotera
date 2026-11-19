@@ -3,7 +3,7 @@ import { revealBelowHeader } from "./scroll";
 
 const makeElement = (top: number) => {
   const element = document.createElement("div");
-  element.getBoundingClientRect = () => ({ top }) as DOMRect;
+  element.getBoundingClientRect = () => new DOMRect(0, top, 100, 100);
   element.scrollIntoView = vi.fn();
   return element;
 };

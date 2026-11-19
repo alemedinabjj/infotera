@@ -13,6 +13,8 @@ type DateRangeFieldsProps = {
   notice: DateNotice | null;
   /** Avisa o formulário (que também anuncia) ou limpa (`null`). */
   onNotice: (notice: DateNotice | null) => void;
+  /** Envolve a validação do blur: ela espera o clique de um botão em andamento terminar. */
+  deferBlur: (run: () => void) => void;
 };
 
 const NoticeText = ({ text }: { text: string }) => (
@@ -34,7 +36,7 @@ const summarize = (checkIn: string, checkOut: string): string => {
 };
 
 /** Check-in e check-out nativos (`type="date"`) com `min`/`max` coerentes e resumo de noites. */
-export const DateRangeFields = ({ notice, onNotice }: DateRangeFieldsProps) => {
+export const DateRangeFields = ({ notice, onNotice, deferBlur }: DateRangeFieldsProps) => {
   const { control, getValues, setValue, getFieldState, trigger } =
     useFormContext<SearchFormValues>();
   const today = useToday();
@@ -83,7 +85,7 @@ export const DateRangeFields = ({ notice, onNotice }: DateRangeFieldsProps) => {
                   ref={field.ref}
                   value={field.value}
                   min={bounds.checkInMin}
-                  onBlur={field.onBlur}
+                  onBlur={() => deferBlur(field.onBlur)}
                   onChange={(event) => changeCheckIn(event.target.value, field.onChange)}
                   startIcon={<CalendarIcon className="size-5" />}
                   className={DATE_INPUT_CLASS}
@@ -113,7 +115,7 @@ export const DateRangeFields = ({ notice, onNotice }: DateRangeFieldsProps) => {
                   value={field.value}
                   min={bounds.checkOutMin}
                   max={bounds.checkOutMax}
-                  onBlur={field.onBlur}
+                  onBlur={() => deferBlur(field.onBlur)}
                   onChange={(event) => {
                     // Só apaga o aviso deste campo; o do check-in segue visível.
                     if (notice?.field === "checkOut") onNotice(null);

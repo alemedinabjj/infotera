@@ -29,9 +29,10 @@ export const SearchForm = ({ initialCriteria, labelledBy }: SearchFormProps) => 
   };
 
   return (
-    <div className="flex flex-col gap-8 lg:gap-12">
+    <div ref={search.containerRef} className="flex flex-col gap-8 lg:gap-12">
       <FormProvider {...form}>
         <form
+          ref={search.formRef}
           noValidate
           onSubmit={search.onSubmit}
           aria-labelledby={labelledBy}
@@ -53,7 +54,7 @@ export const SearchForm = ({ initialCriteria, labelledBy }: SearchFormProps) => 
                 value={field.value}
                 error={fieldState.error?.message}
                 inputRef={field.ref}
-                onBlur={field.onBlur}
+                onBlur={() => search.deferBlur(field.onBlur)}
                 onChange={(name) =>
                   form.setValue("destination", name, {
                     shouldDirty: true,
@@ -64,7 +65,11 @@ export const SearchForm = ({ initialCriteria, labelledBy }: SearchFormProps) => 
             )}
           />
           <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6">
-            <DateRangeFields notice={notices.notice} onNotice={notices.showNotice} />
+            <DateRangeFields
+              notice={notices.notice}
+              onNotice={notices.showNotice}
+              deferBlur={search.deferBlur}
+            />
             <GuestsPicker />
           </div>
           <Button

@@ -15,9 +15,11 @@ model/combobox.ts           reducer puro do teclado (genérico: não sabe o que 
 model/suggestion-text.ts    normalizeQuery · highlightMatch · describeResultCount
 model/error-summary.ts      erros do RHF → itens do resumo (ordem do DOM)
 model/notices.ts            textos dos avisos automáticos
+model/suggestions-view.ts   deriveSuggestionsView (idle/loading/results/empty/error) · mensagens de erro/offline · anúncio
 hooks/useCombobox.ts        ARIA 1.2 + teclado (genérico) · useDestinationField.ts: texto, seleção, debounce, query
 hooks/useSearchForm.ts      useForm + submit (recente + transition + push) + restaurar recente
-hooks/useToday.ts · useOnline.ts · useRecentSearches.ts   useSyncExternalStore (servidor = null / true / [])
+hooks/useToday.ts · useOnline.ts · useRecentSearches.ts   useSyncExternalStore (servidor = null / true / null; recentes = string crua + parse memoizado)
+hooks/useDeferredBlur.ts    adia a validação do blur enquanto um botão é pressionado
 components/                 SearchForm · DestinationCombobox · SuggestionList/Option · DateRangeFields · GuestsPicker · ErrorSummary · RecentSearches
 index.ts                    export { SearchForm }
 ```
@@ -48,8 +50,26 @@ index.ts                    export { SearchForm }
 - **Sem marca de "selecionado" na opção**: com o destino escolhido o popover não reabre (query desligada).
 - Submit cai no 404 até a F3 existir; o E2E só confere a URL.
 - E2E: inputs de data do Chromium têm segmentos que consomem Tab (não dá para "Tab até" o botão a partir
-  deles); clicar em "Buscar hotéis" logo após digitar um destino inválido pode errar o clique, porque o
-  erro do blur empurra o botão para baixo (os testes usam Enter no botão).
+  deles); para cliques de mouse "humanos" (mousedown, pausa, mouseup) use o helper `humanClick` do edge spec.
+- **Blur com erro não rouba o clique (`useDeferredBlur`)**: o mousedown tira o foco do campo; se o erro do
+  blur aparecesse na hora, o botão desceria e o `click` se perderia (bug QA F2). Opção adotada: o container
+  do `SearchForm` (form + buscas recentes) ouve `pointerdown` em qualquer `<button>`; enquanto o gesto dura,
+  o `onBlur` de destino e de datas (`deferBlur`) fica pendente e roda depois do `click` (timeout 0) ou 400 ms
+  após soltar sem click. Teclado e cliques fora de botões validam na hora. `restore` descarta o pendente.
+  Descartado: `pointerup`/`mouseup` como gatilho (no touch o blur emulado vem depois do pointerup) e reservar
+  espaço fixo para o erro (design-system proíbe).
+- **"Limpar destino"**: `onMouseDown` com `preventDefault` (Safari/iOS/Firefox mac não focam o botão e o input
+  dispararia blur com `relatedTarget` nulo).
+- **Header fixo**: `html { scroll-padding-top }` (header + 16px) em `globals.css`; `revealBelowHeader`
+  (`shared/lib/scroll`) rola só se o topo estiver atrás do header. Usado no `ErrorSummary` (ao montar, depois
+  do foco no 1º inválido) e ao restaurar busca recente (foco no botão com `preventScroll`).
+- **Offline**: `deriveSuggestionsView` (model, testado em tabela) devolve `error` quando offline
+  (`!navigator.onLine` ou `fetchStatus === "paused"`) sem dados da busca atual, e só a visão `results`
+  expõe opções (nunca a lista de outra query). ↓/↑/Enter não ativam opções enquanto `isPlaceholderData`;
+  a opção ativa zera quando os ids das opções mudam. Query de sugestões com `retry: 0`.
+- Mensagens com "check‑in/check‑out" usam hífen não separável (U+2011); os rótulos dos campos não.
+- Mudar o check-out só apaga o aviso do próprio check-out. Check-out ainda não tocado e sem erro não é
+  revalidado quando o check-in muda (sem `deps`).
 
 ## Regras de negócio
 - Check-in ≥ hoje (data local). Check-out ≥ check-in + 1 dia. Máximo 30 noites.
