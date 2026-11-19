@@ -113,4 +113,15 @@ describe("feed: teclado do padrão ARIA (critério 14)", () => {
     await user.keyboard("{Control>}{Home}{/Control}");
     expect(screen.getByRole("heading", { level: 2, name: /14 hotéis encontrados/ })).toHaveFocus();
   });
+
+  it("Ctrl+Home também funciona com o foco no rodapé", async () => {
+    const user = userEvent.setup();
+    await openFeedWithAll();
+    await waitFor(() => expect(card(1)).toBeDefined());
+    card(1)?.focus();
+    await user.keyboard("{Control>}{End}{/Control}");
+    expect(screen.getByText("Você viu todos os 14 hotéis.")).toHaveFocus();
+    await user.keyboard("{Control>}{Home}{/Control}");
+    expect(screen.getByRole("heading", { level: 2, name: /14 hotéis encontrados/ })).toHaveFocus();
+  });
 });

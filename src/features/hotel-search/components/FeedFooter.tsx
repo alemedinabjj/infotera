@@ -1,12 +1,16 @@
 import type { RefObject } from "react";
+import { cn } from "@/shared/lib/cn";
 import { Alert, Button } from "@/shared/ui";
 import type { FeedFooter as FeedFooterState } from "../model/feed";
 import { describeLoadedCount } from "../model/results-view";
+import { RevealOnMount } from "./RevealOnMount";
 
 type FeedFooterProps = {
   footer: FeedFooterState;
   loaded: number;
   total: number;
+  /** Troca de filtro em andamento: o rodapé é do resultado antigo, fica invisível (mesma altura). */
+  stale: boolean;
   /** Fetch em andamento (no estado de erro, o "Tentar de novo" vira "Tentando…"). */
   fetching: boolean;
   onLoadMore: () => void;
@@ -27,6 +31,7 @@ export const FeedFooter = ({
   footer,
   loaded,
   total,
+  stale,
   fetching,
   onLoadMore,
   onBackToTop,
@@ -34,7 +39,10 @@ export const FeedFooter = ({
   buttonRef,
   endRef,
 }: FeedFooterProps) => (
-  <div ref={sentinelRef} className="mt-6 flex min-h-11 flex-col items-center gap-2">
+  <div
+    ref={sentinelRef}
+    className={cn("mt-6 flex min-h-11 flex-col items-center gap-2", stale && "invisible")}
+  >
     {footer.kind === "end" ? (
       <>
         <p ref={endRef} tabIndex={-1} className="text-sm text-fg-muted">
@@ -77,9 +85,12 @@ const MoreStatus = ({
       return <p className="text-sm text-fg-muted">{describeLoadedCount(loaded, total)}</p>;
     case "error-more":
       return (
-        <Alert tone="danger" title="Não foi possível carregar mais hotéis." className="w-full">
-          Os hotéis já carregados continuam aqui.
-        </Alert>
+        // O botão fica onde está; a mensagem entra abaixo e é trazida à vista sem mover o foco.
+        <RevealOnMount className="w-full">
+          <Alert tone="danger" title="Não foi possível carregar mais hotéis.">
+            Os hotéis já carregados continuam aqui.
+          </Alert>
+        </RevealOnMount>
       );
     default: {
       const unreachable: never = footer;

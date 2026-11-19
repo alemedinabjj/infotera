@@ -129,9 +129,14 @@ describe("HotelSearchResults: feed (critérios 11 e 17)", () => {
     expect(await screen.findByText("Atualizando resultados…")).toBeInTheDocument();
     expect(screen.getByRole("feed")).toHaveAttribute("aria-busy", "true");
     expect(articles()).toHaveLength(10);
+    // O rodapé é do resultado antigo ("Você viu todos os 14"): invisível, mas ocupa o lugar.
+    expect(screen.getByText("Você viu todos os 14 hotéis.").parentElement).toHaveClass("invisible");
     act(() => release());
     await waitFor(() => expect(articles()).toHaveLength(3));
     expect(screen.getByText("Mostrando 3 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Você viu todos os 3 hotéis.").parentElement).not.toHaveClass(
+      "invisible",
+    );
   });
 
   it("erro inicial é o mesmo ErrorState e 'Tentar de novo' recupera", async () => {

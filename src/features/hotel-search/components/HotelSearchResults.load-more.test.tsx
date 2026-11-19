@@ -17,6 +17,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 const articles = () => screen.getAllByRole("article");
@@ -142,6 +143,48 @@ describe("feed: falha no lote (critério 16)", () => {
     await waitFor(() => expect(articles()).toHaveLength(14));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await waitFor(() => expect(articles()[10]).toHaveFocus());
+  });
+});
+
+describe("feed: mensagem de erro do lote", () => {
+  it("é trazida à vista (nearest) sem mover o foco do botão", async () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      value: scrollIntoView,
+      configurable: true,
+    });
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(0, 5000, 300, 80),
+    );
+    stubApi((url) =>
+      url.searchParams.get("_page") === "2" ? new Response("{}", { status: 500 }) : paged(url),
+    );
+    start("&view=infinite");
+    await screen.findAllByRole("article");
+    const button = screen.getByRole("button", { name: "Carregar mais hotéis" });
+    button.focus();
+    triggerIntersection();
+    await screen.findByRole("alert");
+    expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: "nearest" }));
+    expect(screen.getByRole("button", { name: "Tentar de novo" })).toHaveFocus();
+  });
+
+  it("depois do erro, trocar o filtro não rouba o foco para um card", async () => {
+    const user = userEvent.setup();
+    stubApi((url) => {
+      if (url.searchParams.get("_page") === "2") return new Response("{}", { status: 500 });
+      if (url.searchParams.has("rating_gte")) return hotelsResponse(ALL.slice(0, 12), 12);
+      return paged(url);
+    });
+    start("&view=infinite");
+    await screen.findAllByRole("article");
+    const button = screen.getByRole("button", { name: "Carregar mais hotéis" });
+    button.focus();
+    await user.click(button);
+    await screen.findByRole("alert");
+    await user.click(screen.getByRole("radio", { name: /4,5 ou mais/ }));
+    await waitFor(() => expect(articles()).toHaveLength(12));
+    expect(document.activeElement?.closest("article")).toBeNull();
   });
 });
 

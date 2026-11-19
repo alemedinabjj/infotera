@@ -6,7 +6,8 @@ import { cardIndexOf } from "./useFocusedIndex";
 import { focusResultsHeading } from "./useFocusOnPageChange";
 
 type Options = {
-  feedRef: RefObject<HTMLElement | null>;
+  /** Contêiner do feed E do rodapé: o teclado vale também com o foco no rodapé. */
+  containerRef: RefObject<HTMLElement | null>;
   count: number;
   focusIndex: (index: number) => void;
   /** Título (h2) da contagem: destino de `Ctrl+Home`. */
@@ -17,19 +18,22 @@ type Options = {
 
 /**
  * Teclado do padrão ARIA `feed`: `PageDown`/`PageUp` entre cards, `Ctrl+End` para o rodapé e
- * `Ctrl+Home` para o título. Ligado no próprio feed (delegação): os cards não são controles, o
- * foco programático (`tabIndex=-1`) é que os alcança.
+ * `Ctrl+Home` para o título. Ligado num contêiner que envolve o feed e o rodapé (delegação): os
+ * cards não são controles (o foco programático, `tabIndex=-1`, é que os alcança) e `Ctrl+Home`
+ * precisa funcionar também a partir do rodapé.
  */
 export const useFeedKeyboard = ({
-  feedRef,
+  containerRef,
   count,
   focusIndex,
   headingId,
   footerTargets,
 }: Options): void => {
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
-    const current = cardIndexOf(event.target);
-    if (current === null) return;
+    const card = cardIndexOf(event.target);
+    // Fora dos cards (rodapé) só valem os atalhos com Ctrl; PageUp/PageDown ficam com o navegador.
+    if (card === null && !event.ctrlKey) return;
+    const current = card ?? count;
     const target = feedKeyTarget({ key: event.key, ctrlKey: event.ctrlKey, current, count });
     if (target === null) return;
     event.preventDefault();
@@ -43,9 +47,9 @@ export const useFeedKeyboard = ({
   });
 
   useEffect(() => {
-    const feed = feedRef.current;
-    if (!feed) return;
-    feed.addEventListener("keydown", onKeyDown);
-    return () => feed.removeEventListener("keydown", onKeyDown);
-  }, [feedRef]);
+    const container = containerRef.current;
+    if (!container) return;
+    container.addEventListener("keydown", onKeyDown);
+    return () => container.removeEventListener("keydown", onKeyDown);
+  }, [containerRef]);
 };

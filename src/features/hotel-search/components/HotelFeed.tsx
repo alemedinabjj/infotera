@@ -32,6 +32,7 @@ type HotelFeedProps = {
  * botão; teclado do padrão ARIA `feed`.
  */
 export const HotelFeed = ({ hotels, headingId, feed, ...rest }: HotelFeedProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -43,14 +44,21 @@ export const HotelFeed = ({ hotels, headingId, feed, ...rest }: HotelFeedProps) 
   const loadMore = useFocusFeedItem({
     loaded: feed.loaded,
     buttonRef,
+    queryKey: feed.queryKey,
+    failed: feed.footer.kind === "error-more",
     loadMore: feed.loadMore,
     focusIndex,
   });
-  useAutoLoadMore({ sentinelRef, enabled: feed.footer.kind === "more", onLoadMore: loadMore });
-  useFeedKeyboard({ feedRef, count: hotels.length, focusIndex, headingId, footerTargets });
+  // Com troca de filtro em andamento (`stale`) o rodapé é do resultado antigo: nada de lote.
+  useAutoLoadMore({
+    sentinelRef,
+    enabled: feed.footer.kind === "more" && !rest.stale,
+    onLoadMore: loadMore,
+  });
+  useFeedKeyboard({ containerRef, count: hotels.length, focusIndex, headingId, footerTargets });
 
   return (
-    <>
+    <div ref={containerRef}>
       <FeedItems
         {...rest}
         feedRef={feedRef}
@@ -70,7 +78,8 @@ export const HotelFeed = ({ hotels, headingId, feed, ...rest }: HotelFeedProps) 
         sentinelRef={sentinelRef}
         buttonRef={buttonRef}
         endRef={endRef}
+        stale={rest.stale}
       />
-    </>
+    </div>
   );
 };

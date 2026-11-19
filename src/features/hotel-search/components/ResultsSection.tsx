@@ -11,6 +11,7 @@ import { ResultsEmpty } from "./ResultsEmpty";
 import { ResultsError } from "./ResultsError";
 import { ResultsList } from "./ResultsList";
 import { ResultsSkeleton } from "./ResultsSkeleton";
+import { RevealOnMount } from "./RevealOnMount";
 
 type ResultsSectionProps = {
   view: ResultsView;
@@ -41,12 +42,18 @@ export const ResultsSection = (props: ResultsSectionProps) => {
     case "out-of-range":
       return <ResultsSkeleton />;
     case "error":
-      return <ResultsError onRetry={props.onRetry} retrying={props.retrying} />;
+      return (
+        <RevealOnMount>
+          <ResultsError onRetry={props.onRetry} retrying={props.retrying} />
+        </RevealOnMount>
+      );
     case "offline":
       return (
-        <Alert tone="warning" title="Você está sem internet." icon={<OfflineIcon />}>
-          Os hotéis aparecem assim que a conexão voltar.
-        </Alert>
+        <RevealOnMount>
+          <Alert tone="warning" title="Você está sem internet." icon={<OfflineIcon />}>
+            Os hotéis aparecem assim que a conexão voltar.
+          </Alert>
+        </RevealOnMount>
       );
     case "empty-destination":
       return <ResultsEmpty kind="destination" destination={props.destination} />;

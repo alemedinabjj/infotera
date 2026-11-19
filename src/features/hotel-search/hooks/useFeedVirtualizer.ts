@@ -11,6 +11,7 @@ import { useMediaQuery } from "./useMediaQuery";
 /** Altura estimada do card antes de medir: empilhado (< sm) e foto ao lado (≥ sm). */
 const ESTIMATE = { stacked: 520, row: 240 } as const;
 const MAX_FOCUS_ATTEMPTS = 10;
+const SCROLL_PADDING_END = 24;
 
 type Options = {
   feedRef: RefObject<HTMLElement | null>;
@@ -47,6 +48,8 @@ export const useFeedVirtualizer = ({ feedRef, keys }: Options) => {
     overscan: 2,
     scrollMargin,
     scrollPaddingStart,
+    // Folga embaixo: o card focado (PageDown) não encosta na borda, senão o anel de foco é cortado.
+    scrollPaddingEnd: SCROLL_PADDING_END,
     rangeExtractor,
   });
 
