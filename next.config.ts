@@ -1,19 +1,15 @@
 import type { NextConfig } from "next";
-
-const cspDirectives = [
-  "frame-ancestors 'none'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join("; ");
+import { BASELINE_DIRECTIVES, serializeCsp } from "./src/shared/lib/csp";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  { key: "Content-Security-Policy", value: cspDirectives },
 ];
+
+// `/checkout` recebe a política estrita (com nonce) do `proxy.ts`; aqui ela sairia duplicada.
+const BASELINE_CSP_SOURCE = "/((?!checkout(?:/|$)).*)";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -24,7 +20,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i.pravatar.cc", pathname: "/**" },
     ],
   },
-  headers: async () => [{ source: "/:path*", headers: securityHeaders }],
+  headers: async () => [
+    { source: "/:path*", headers: securityHeaders },
+    {
+      source: BASELINE_CSP_SOURCE,
+      headers: [{ key: "Content-Security-Policy", value: serializeCsp(BASELINE_DIRECTIVES) }],
+    },
+  ],
 };
 
 export default nextConfig;

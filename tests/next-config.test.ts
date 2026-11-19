@@ -24,19 +24,30 @@ describe("next.config", () => {
     }
   });
 
-  it("aplica os 5 headers de segurança em /:path*", async () => {
-    expect(nextConfig.headers).toBeDefined();
+  it("aplica os 4 headers de segurança em /:path*", async () => {
     const rules = headersSchema.parse(await nextConfig.headers?.());
-    expect(rules).toHaveLength(1);
-    const [rule] = rules;
-    expect(rule?.source).toBe("/:path*");
+    const rule = rules.find((r) => r.source === "/:path*");
     expect(Object.fromEntries(rule?.headers.map((h) => [h.key, h.value]) ?? [])).toEqual({
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
       "X-Frame-Options": "DENY",
       "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-      "Content-Security-Policy":
-        "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
     });
+  });
+
+  it("a CSP base vale para tudo menos /checkout (que usa a do proxy)", async () => {
+    const rules = headersSchema.parse(await nextConfig.headers?.());
+    const rule = rules.find((r) => r.source !== "/:path*");
+    expect(rule?.headers).toEqual([
+      {
+        key: "Content-Security-Policy",
+        value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+      },
+    ]);
+    const matcher = new RegExp(`^${rule?.source}$`);
+    expect(matcher.test("/checkout")).toBe(false);
+    expect(matcher.test("/checkout/")).toBe(false);
+    expect(matcher.test("/checkoutx")).toBe(true);
+    expect(matcher.test("/search")).toBe(true);
   });
 });
