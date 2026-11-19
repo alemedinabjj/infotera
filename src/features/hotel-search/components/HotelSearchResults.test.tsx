@@ -44,8 +44,13 @@ const hotelsResponse = (items: Hotel[], total: number): Response =>
     headers: { "Content-Type": "application/json", "X-Total-Count": String(total) },
   });
 
+/** `GET /rooms` sem quartos: o card cai para o preço do hotel. */
+const roomsResponse = (_url: URL): Response =>
+  new Response("[]", { status: 200, headers: { "Content-Type": "application/json" } });
+
 /** Responde como a API: 14 hotéis, `_limit` 10 e total no header. */
 const paged: Handler = (url) => {
+  if (url.pathname === "/rooms") return roomsResponse(url);
   const page = Number(url.searchParams.get("_page") ?? "1");
   return hotelsResponse(ALL.slice((page - 1) * 10, page * 10), ALL.length);
 };
@@ -263,11 +268,12 @@ describe("HotelSearchResults: troca sem piscar (critério 18)", () => {
     await screen.findAllByRole("heading", { level: 3 });
     vi.stubGlobal(
       "fetch",
-      vi.fn(
-        () =>
-          new Promise<Response>((resolve) => {
-            release = resolve;
-          }),
+      vi.fn((input: string) =>
+        new URL(input).pathname === "/rooms"
+          ? Promise.resolve(roomsResponse(new URL(input)))
+          : new Promise<Response>((resolve) => {
+              release = resolve;
+            }),
       ),
     );
     await user.click(screen.getByRole("checkbox", { name: "Piscina" }));
@@ -353,6 +359,7 @@ describe("HotelSearchResults: erro e offline (critérios 21 e 23)", () => {
     let fail = true;
     stubApi(async (url) => {
       if (fail) return new Response("{}", { status: 500 });
+      if (url.pathname === "/rooms") return roomsResponse(url);
       await new Promise<void>((resolve) => {
         releases.push(resolve);
       });

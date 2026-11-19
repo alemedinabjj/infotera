@@ -1,6 +1,8 @@
 import { type QueryClient, queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
+import { fetchRoomsOfHotels } from "@/shared/api/endpoints";
 import { apiGet, apiGetPage } from "@/shared/api/http";
+import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import { queryKeys } from "@/shared/api/query-keys";
 import { type Hotel, hotelSchema } from "@/shared/api/schemas";
 import { computeCentroid, type GeoPoint, slicePage, sortByDistance } from "../model/distance";
@@ -47,6 +49,26 @@ const fetchDestinationHotels = (client: QueryClient, filterQuery: HotelsFilterQu
 const fetchCenter = async (destination: string, client: QueryClient): Promise<GeoPoint | null> =>
   computeCentroid(await fetchDestinationHotels(client, { destination }));
 
+/**
+ * Quartos dos hotéis da página/lote num ÚNICO request (`/rooms?hotelId=..&hotelId=..`), semeados no
+ * cache de `hotelRoomsQueryOptions(id)`: o card calcula o "a partir de" com eles e o detalhe do
+ * hotel abre sem pedir os quartos de novo. Acessório: se falhar, o card usa o preço do hotel.
+ */
+const seedRooms = async (client: QueryClient, hotels: readonly Hotel[]): Promise<void> => {
+  if (hotels.length === 0) return;
+  try {
+    const rooms = await fetchRoomsOfHotels(hotels.map((hotel) => hotel.id));
+    for (const { id } of hotels) {
+      client.setQueryData(
+        hotelRoomsQueryOptions(id).queryKey,
+        rooms.filter((room) => room.hotelId === id),
+      );
+    }
+  } catch {
+    // Sem quartos o card mostra o `pricePerNight` do hotel.
+  }
+};
+
 type PageContext = { client: QueryClient; signal?: AbortSignal };
 
 const fetchDistancePage = async (
@@ -60,7 +82,9 @@ const fetchDistancePage = async (
     fetchCenter(filterQuery.destination, client),
   ]);
   const sorted = sortByDistance(hotels, center);
-  return { items: slicePage(sorted, page, limit), total: sorted.length, center };
+  const items = slicePage(sorted, page, limit);
+  await seedRooms(client, items);
+  return { items, total: sorted.length, center };
 };
 
 /**
@@ -79,6 +103,7 @@ export const fetchHotelsPage = async (
         fetchHotels(request.query, context.signal),
         fetchCenter(destination, context.client).catch(() => null),
       ]);
+      await seedRooms(context.client, page.items);
       return { ...page, center };
     }
     case "distance":

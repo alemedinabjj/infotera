@@ -76,7 +76,10 @@ describe("hotelsInfiniteQueryOptions", () => {
     expect(observer.getCurrentResult().data?.pages.map((item) => item.items.length)).toEqual([
       10, 4,
     ]);
-    expect(fetchMock).toHaveBeenCalledOnce();
+    const hotelCalls = fetchMock.mock.calls.filter(
+      ([input]) => new URL(input).pathname === "/hotels",
+    );
+    expect(hotelCalls).toHaveLength(1);
     unsubscribe();
   });
 });

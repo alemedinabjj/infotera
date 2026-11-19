@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import type { Hotel } from "@/shared/api/schemas";
-import { makeHotel, makeSearchCriteria } from "@/shared/testing/fixtures";
+import { makeHotel, makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
 import { setTestUrl } from "@/shared/testing/next-navigation";
 import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
 import { HotelSearchResults } from "../components/HotelSearchResults";
@@ -30,8 +30,27 @@ export const hotelsResponse = (items: Hotel[], total: number): Response =>
     headers: { "Content-Type": "application/json", "X-Total-Count": String(total) },
   });
 
+/** `GET /rooms?hotelId=..`: um quarto por hotel, com a mesma diária do hotel. */
+export const roomsResponse = (url: URL): Response => {
+  const wanted = new Set(url.searchParams.getAll("hotelId").map(Number));
+  const rooms = ALL.filter((hotel) => wanted.has(hotel.id)).map((hotel) =>
+    makeRoom({
+      id: hotel.id,
+      hotelId: hotel.id,
+      pricePerNight: hotel.pricePerNight,
+      maxGuests: 4,
+      available: 9,
+    }),
+  );
+  return new Response(JSON.stringify(rooms), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
 /** Responde como a API: com `_page` pagina de 10 em 10 (total no header); sem, devolve tudo. */
 export const paged: Handler = (url) => {
+  if (url.pathname === "/rooms") return roomsResponse(url);
   if (!url.searchParams.has("_page")) return hotelsResponse(ALL, ALL.length);
   const page = Number(url.searchParams.get("_page"));
   return hotelsResponse(ALL.slice((page - 1) * 10, page * 10), ALL.length);
@@ -45,6 +64,10 @@ export const stubApi = (handler: Handler = paged) => {
 
 export const requestedUrls = (fetchMock: ReturnType<typeof stubApi>): URL[] =>
   fetchMock.mock.calls.map(([input]) => new URL(input));
+
+/** Só os requests de `/hotels` (os de `/rooms`, que semeiam o preço do card, ficam de fora). */
+export const hotelsUrls = (fetchMock: ReturnType<typeof stubApi>): URL[] =>
+  requestedUrls(fetchMock).filter((url) => url.pathname === "/hotels");
 
 /** Mesma regra do app: dado de 60 s não é refeito ao reativar uma query (troca de modo). */
 const makeClient = () => {

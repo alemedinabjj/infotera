@@ -5,6 +5,7 @@ import { cn } from "@/shared/lib/cn";
 import { pluralize } from "@/shared/lib/format";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { CheckIcon } from "@/shared/ui";
+import { useHotelRooms } from "../hooks/useHotelRooms";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
 import { deriveCardPricing } from "../model/card-pricing";
@@ -93,7 +94,7 @@ export const HotelCard = ({
 }: HotelCardProps) => {
   const titleId = useId();
   const prefetch = usePrefetchHotel(hotel.id);
-  const pricing = deriveCardPricing(hotel, criteria);
+  const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id));
 
   return (
     <article

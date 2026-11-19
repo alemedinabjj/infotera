@@ -2,7 +2,15 @@ import { onlineManager } from "@tanstack/react-query";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ALL, hotelsResponse, paged, requestedUrls, start, stubApi } from "../testing/harness";
+import {
+  ALL,
+  hotelsResponse,
+  hotelsUrls,
+  paged,
+  requestedUrls,
+  start,
+  stubApi,
+} from "../testing/harness";
 
 vi.mock(
   "next/navigation",
@@ -76,9 +84,8 @@ describe("HotelSearchResults: ordenação por distância (critérios 2, 3 e 5)",
     const fetchMock = stubApi();
     start("&sort=distance");
     await screen.findByText("Hotel 7");
-    const calls = fetchMock.mock.calls.length;
-    expect(calls).toBe(1);
-    const url = requestedUrls(fetchMock)[0];
+    expect(hotelsUrls(fetchMock)).toHaveLength(1);
+    const url = hotelsUrls(fetchMock)[0];
     expect(url?.searchParams.has("_sort")).toBe(false);
     expect(url?.searchParams.has("_page")).toBe(false);
     expect(url?.searchParams.has("_limit")).toBe(false);
@@ -91,7 +98,7 @@ describe("HotelSearchResults: ordenação por distância (critérios 2, 3 e 5)",
       expect(cardNames()).toEqual(["Hotel 2", "Hotel 13", "Hotel 1", "Hotel 14"]),
     );
     expect(screen.getByText("Mostrando 11–14 de 14")).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(hotelsUrls(fetchMock)).toHaveLength(1);
   });
 });
 
