@@ -1,3 +1,5 @@
+import { formatDateRange, type ISODate, nightsBetween } from "@/shared/lib/dates";
+import { formatGuests, pluralize } from "@/shared/lib/format";
 import {
   parseDestinationParam,
   parseSearchCriteria,
@@ -67,4 +69,20 @@ export const searchPageDestination = (page: SearchPage): string | null => {
       return unreachable;
     }
   }
+};
+
+type StayCriteria = Extract<SearchPage, { kind: "stay" }>["criteria"];
+
+/**
+ * Resumo sob o título: `12–15 dez · 3 noites · 2 adultos · 1 quarto` (o ano só aparece quando a
+ * estadia não é no ano de `today`). Sem datas: `Datas não definidas`.
+ */
+export const describeSearchSummary = (criteria: StayCriteria | null, today: ISODate): string => {
+  if (!criteria) return "Datas não definidas";
+  const nights = nightsBetween(criteria.checkIn, criteria.checkOut);
+  return [
+    formatDateRange(criteria.checkIn, criteria.checkOut, today),
+    pluralize(nights, "noite", "noites"),
+    formatGuests(criteria),
+  ].join(" · ");
 };

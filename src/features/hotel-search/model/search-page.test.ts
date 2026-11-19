@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { makeSearchCriteria } from "@/shared/testing/fixtures";
-import { hotelHref, parseSearchPage, searchPageDestination, searchPageTitle } from "./search-page";
+import {
+  describeSearchSummary,
+  hotelHref,
+  parseSearchPage,
+  searchPageDestination,
+  searchPageTitle,
+} from "./search-page";
 
 const CRITERIA =
   "destination=Rio+de+Janeiro%2C+RJ&checkIn=2026-12-12&checkOut=2026-12-15&rooms=1&adults=2&children=0";
@@ -79,5 +85,34 @@ describe("searchPageTitle / searchPageDestination", () => {
     expect(searchPageDestination(stay)).toBe("Rio de Janeiro, RJ");
     expect(searchPageDestination(browse)).toBe("Bonito, MS");
     expect(searchPageDestination(missing)).toBeNull();
+  });
+});
+
+describe("describeSearchSummary", () => {
+  const stay = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" });
+
+  it("stay: datas, noites e hóspedes", () => {
+    expect(describeSearchSummary(stay, "2026-11-01")).toBe(
+      "12–15 dez · 3 noites · 2 adultos · 1 quarto",
+    );
+  });
+
+  it("crianças e vários quartos", () => {
+    expect(describeSearchSummary({ ...stay, rooms: 2, adults: 3, children: 1 }, "2026-11-01")).toBe(
+      "12–15 dez · 3 noites · 3 adultos, 1 criança · 2 quartos",
+    );
+  });
+
+  it("1 noite no singular e ano quando a estadia é em outro ano", () => {
+    const summary = describeSearchSummary(
+      { ...stay, checkIn: "2027-01-10", checkOut: "2027-01-11" },
+      "2026-11-01",
+    );
+    expect(summary).toContain("1 noite");
+    expect(summary).toContain("2027");
+  });
+
+  it("browse: datas não definidas", () => {
+    expect(describeSearchSummary(null, "2026-11-01")).toBe("Datas não definidas");
   });
 });
