@@ -70,9 +70,11 @@ test.describe("passo 1", () => {
     const country = page.getByLabel("País do telefone");
     await country.focus();
     await country.selectOption("US");
-    await expect(phone).toHaveValue("(119) 876-5432");
+    await expect(phone).toHaveValue("(119) 876-54321"); // sem truncar: excesso vira erro
     await expect(page.getByText("Como (201) 555-0123.", { exact: true })).toBeVisible();
     await expect(country).toBeFocused();
+    await country.selectOption("BR");
+    await expect(phone).toHaveValue("(11) 98765-4321");
   });
 
   test("apagar no meio do telefone não faz o cursor pular", async ({ page }) => {
