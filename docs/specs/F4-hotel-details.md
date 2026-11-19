@@ -115,11 +115,13 @@ função pura em `model/`.
 
 7. **Seleção do quarto por função pura `roomSelectability(room, criteria)`** (union discriminada,
    `switch` exaustivo no componente). Precedência:
-   `sold-out` (available 0) → `needs-dates` (sem critérios) → `too-small`
+   `sold-out` (available 0) → `needs-dates` (sem critérios) → `past-dates` (check-in anterior a hoje,
+   em `America/Sao_Paulo`; `roomSelectability(room, criteria, pastDates)`) → `too-small`
    (`guestsPerRoom(criteria) > room.maxGuests`, de `shared/lib/search-params`) → `insufficient`
    (`available < criteria.rooms`) → `selectable { scarce: N | null }` (`scarce` quando ≤ 2).
    Botão: `selectable` → "Selecionar quarto" (primário); `needs-dates` → "Escolher datas"
-   (secundário); `sold-out`/`too-small`/`insufficient` → botão com `aria-disabled` e o motivo em
+   (secundário; `past-dates` também: abre o painel "Alterar datas e hóspedes" se estiver fechado e foca o
+   Check-in); `sold-out`/`too-small`/`insufficient` → botão com `aria-disabled` e o motivo em
    texto ligado por `aria-describedby` (nunca `disabled`: mantém o foco e o leitor lê o motivo; o
    texto do motivo fica sempre montado, nada se move). Hotel com `availableRooms === 0` (19, 48) →
    `Alert warning` no topo de "Quartos" com link para `#similares`.
@@ -816,12 +818,14 @@ quarto` / `1 tipo de quarto`. Anunciador `sr-only aria-live="polite"` separado c
 | `selectable` | — | **R$ 3.600,00** / `total · 3 noites · 1 quarto` / `R$ 1.200 por noite` | — | `primary` "Selecionar quarto" |
 | `selectable` + `scarce` | `Badge warning` `Apenas 1 quarto!` | igual | — | igual |
 | `needs-dates` | — | **R$ 1.200** / `por noite` | — | `secondary` "Escolher datas" (`CalendarIcon`) |
+| `past-dates` | — | `R$ 1.200 por noite` (`text-sm text-fg-subtle`, sem total) | `InfoIcon` + `As datas desta busca já passaram.` | `secondary` "Escolher datas" (`CalendarIcon`); abre o painel e foca o Check-in |
 | `too-small` | — | `R$ 1.200 por noite` (`text-sm text-fg-subtle`, sem total) | `InfoIcon` + `Acomoda até 2 hóspedes. Sua busca tem 3 por quarto. Escolha outro quarto ou altere os hóspedes.` (`text-fg-muted`) | "Selecionar quarto" `aria-disabled` (visual disabled) |
 | `insufficient` | `Badge warning` `Só 2 disponíveis` | `R$ 1.200 por noite` (sem total) | `Sua busca pede 3 quartos. Diminua a quantidade de quartos ou escolha outro tipo.` | "Selecionar quarto" `aria-disabled` |
 | `sold-out` | `Badge danger` `Esgotado` | `R$ 1.200 por noite` (sem total) | `Sem quartos disponíveis para estas datas.` (sem critérios: `…no momento.`) | "Esgotado" `aria-disabled`; foto `grayscale opacity-70` |
 | selecionando | igual ao `selectable` | igual | — | `loading` "Selecionando…"; card `selected` (`ring-1 ring-primary`, sem mudar tamanho) |
 
-- Nome acessível do botão: rótulo visível + `<span class="sr-only">: {nome do quarto}</span>` →
+- Nome acessível do botão: `aria-label="{rótulo visível}: {nome do quarto}"` (um texto só, sem espaço
+  antes do ":"; no "Selecionando…" o rótulo visível é o nome) →
   "Selecionar quarto: Suíte Deluxe Ocean View" / "Esgotado: Quarto Standard" / "Escolher datas: …".
 - O motivo é renderizado com o card (não aparece no clique); clicar no botão bloqueado não faz nada e
   o foco fica nele. Enquanto um quarto está "Selecionando…", cliques nos outros botões são ignorados.
@@ -972,7 +976,8 @@ quarto` / `1 tipo de quarto`. Anunciador `sr-only aria-live="polite"` separado c
 | Preço do quarto | `R$ 3.600,00` · `total · 3 noites · 1 quarto` · `R$ 1.200 por noite` · sem datas `R$ 1.200` / `por noite` |
 | Disponibilidade | `Apenas 1 quarto!` · `Apenas 2 quartos!` · `Só 2 disponíveis` · `Esgotado` · `Sem quartos disponíveis para estas datas.` · `Sem quartos disponíveis no momento.` |
 | Motivos | `Acomoda até 2 hóspedes. Sua busca tem 3 por quarto. Escolha outro quarto ou altere os hóspedes.` (1 → `Acomoda 1 hóspede.`) · `Sua busca pede 3 quartos. Diminua a quantidade de quartos ou escolha outro tipo.` |
-| Botões do quarto | `Selecionar quarto` / `Selecionando…` · `Escolher datas` · `Esgotado` (sr-only `: {nome do quarto}` em todos) |
+| Datas passadas no quarto | motivo visível `As datas desta busca já passaram.` · alerta com aspas tipográficas: `Use “Alterar datas e hóspedes” para escolher novas datas.` |
+| Botões do quarto | `Selecionar quarto` / `Selecionando…` · `Escolher datas` · `Esgotado` (`aria-label` "rótulo: nome do quarto" em todos) |
 | Comparação | `Comparar quartos (4)` · `Mostrar só diferenças` · `Linhas marcadas mudam entre os quartos.` · `Arraste para o lado para ver todos.` · caption `Comparar quartos` · sr `Característica` · sr `, diferente entre os quartos` · linhas `Preço por noite` `Tamanho` `Hóspedes` `Camas` `Disponibilidade` + comodidades · `Sim` / `Não` · `8 disponíveis` / `1 disponível` / `Esgotado` · `Mostrando 6 de 12 características` · `Mostrando todas as 12 características` · `Os quartos têm as mesmas características.` |
 | Comodidades de quarto | `Vista para o mar` · `Vista para a cidade` · `Vista para o jardim` · `Varanda` · `Terraço` · `Banheira` · `Frigobar` · `Cofre` · `Ar-condicionado` · `Mesa de trabalho` · `Cozinha` · `Sala de estar` · `Sistema de som` · `Mordomo` · `Acesso à piscina` · `Jardim privativo` · `Acesso ao lounge` |
 | Camas (1 / n) | `cama de solteiro` / `camas de solteiro` · `cama de casal` / `camas de casal` · `cama queen` / `camas queen` · `cama king` / `camas king` · `cama twin` / `camas twin` · `sofá-cama` / `sofás-camas`; junção `1 cama king e 1 sofá-cama` (3+: `1 …, 2 … e 1 …`) |
@@ -1219,3 +1224,30 @@ divide-border`.
 | organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4) |
 | feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, PriceBreakdown, StepIndicator | F3–F5, compondo os acima |
 ```
+
+## Ajustes pós-revisão (rodada de correções)
+
+- **Foco depois de enviar datas**: o formulário marca o destino com `markFocusAfterNavigation(href)`
+  (`shared/lib/focus-after-navigation`) **só no envio válido** (dentro de `getSubmitHref`); a página consome o
+  sinal em toda montagem/mudança de critérios e só foca o h2 "Quartos" se `pathname+search` já é o destino.
+  Critérios idênticos não marcam. A hotel-search tem o padrão antigo (`pendingEdit`) e migra depois.
+- **`todayISO()`** usa sempre `America/Sao_Paulo` (o servidor roda em UTC).
+- **Datas passadas**: estado `past-dates` em `roomSelectability` (ver Decisão 7). O painel de datas é
+  controlado por `StayEditProvider` (barra da estadia e botões dos quartos compartilham o estado).
+- **Clique fantasma**: ao fechar o painel por envio, cliques em "Alterar datas e hóspedes" nos 600 ms
+  seguintes são ignorados (o conteúdo sobe sob o ponteiro e um 2º clique não reabre o painel).
+- **Hotel esgotado** (`availableRooms === 0`): o `Alert` vem **antes** do formulário de datas (RSC); o de
+  "todos os quartos esgotados" segue em `RoomsSection`. Motivos `too-small`/`insufficient` só sugerem "outro
+  quarto/tipo" se o hotel tem mais de um tipo.
+- **Avaliações**: erro após trocar de página foca "Tentar de novo"; offline = só o aviso, depois da paginação
+  (sem spinner nem opacidade); ao voltar online o foco só vai ao h2 se ainda estiver dentro da seção.
+- **Cold start**: o aviso "Está demorando mais que o normal…" do `loading.tsx` está no HTML (região
+  `role="status"`) e é revelado por CSS (`animate-slow-notice`, 5 s), sem depender de hidratação.
+- **Mapa**: tiles invisíveis até `onLoad` (`MapTile`); falha deixa o fundo cinza com o marcador.
+- **Comparação**: `ComparisonTable` extraída; se **todas** as linhas diferem, só o marcador (sem faixa);
+  hífen sem quebra nos rótulos ("Ar‑condicionado").
+- **Lightbox**: arrastar na horizontal (≥ 50 px) troca a foto (`useSwipe`/`swipeAction`); setas e teclado
+  seguem. A troca é instantânea (nada a reduzir em `prefers-reduced-motion`).
+- **Mobile 320 px**: "Ver quartos" não quebra; "Copiar link" vira só ícone abaixo de ~360 px; a barra de
+  seções esmaece na borda direita; o separador de `RatingScore` fica com o item anterior.
+- **Similares**: cards com altura uniforme na linha. **Schema**: `latitude` ∈ [-90, 90], `longitude` ∈ [-180, 180].

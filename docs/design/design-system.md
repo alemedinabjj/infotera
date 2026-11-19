@@ -869,7 +869,7 @@ São da feature (F3/F4), mas devem compor: `Card interactive` + imagem `aspect-[
   Ordem: foto (`alt=""`) → h3 nome → descrição → fatos (`45 m²` · `Até 3 hóspedes` · camas, ícones
   `size-4`) → até 4 comodidades + `<details>` "+N comodidades" → linha de cancelamento → bloco de
   preço (total grande, diária exata) → motivo de bloqueio (se houver) → botão (`fullWidth`, `sm:w-56
-  sm:ml-auto`). Estados de botão: "Selecionar quarto" (primary), "Escolher datas" (secondary),
+  sm:ml-auto`). Estados de botão: "Selecionar quarto" (primary), "Escolher datas" (secondary; sem datas **ou** com datas já passadas, motivo `As datas desta busca já passaram.`),
   "Esgotado"/bloqueado (`aria-disabled` + motivo). Nome acessível do botão inclui o quarto
   (`sr-only` ": {nome}"). Selecionando: `selected` (`ring-1 ring-primary`) + `loading`.
 - **SimilarHotelCard (F4)**: `Card interactive` compacto; `< sm` horizontal (foto `w-24

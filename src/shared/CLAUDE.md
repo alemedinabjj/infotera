@@ -69,6 +69,12 @@ Unitário obrigatório para tudo em `lib/` e para os schemas (casos válidos e i
   `reviewCount` opcional (nota solta de um comentário) e `size`.
 - **CSP (F5)**: `img-src` precisa de `images.unsplash.com`, `i.pravatar.cc` e `tile.openstreetmap.org` (mapa do detalhe).
 
+- `lib/focus-after-navigation`: `markFocusAfterNavigation(href)` no envio **válido** + `consumeFocusAfterNavigation()`
+  em toda montagem (zera sempre; `true` só se `pathname+search === href`). Usado pela F4. **TODO hotel-search**:
+  `useFocusAfterEdit` ainda usa o `pendingEdit` de módulo (marca antes de validar e sobrevive a envio inválido);
+  migrar para este utilitário.
+- `todayISO()` é sempre do fuso `America/Sao_Paulo` (servidor em UTC).
+
 ## Pendentes para features
 Componentes do design system que a F1 não entrega; nascem na feature que os usa primeiro e sobem
 para `shared/` quando aparecer o segundo uso.

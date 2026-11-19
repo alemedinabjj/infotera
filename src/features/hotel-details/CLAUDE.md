@@ -12,10 +12,10 @@ model/                   hotel-id (parseHotelId) · metadata · from-price · ro
                          room-comparison · gallery · static-map (Web Mercator) · cancellation · breadcrumb ·
                          sections (HOTEL_SECTIONS, ids) · reviews
 hooks/                   useSelectRoom · useSectionRetry · useReviewsPage (+ useFocusOnNewPage) · useLightbox ·
-                         useFocusAfterDates · focus-heading · focus-dates
+                         useFocusAfterDates · useSwipe · focus-heading · focus-dates
 components/              HotelDetailsView (RSC) · HotelHeader · Breadcrumb · SectionNav · Section · Gallery/Lightbox ·
                          HotelOverview/Policies/LocationMap (RSC) · HotelStayBar · RoomsSection/RoomList/RoomCard ·
-                         RoomComparison · ReviewsSection · SimilarHotels (RSC async) · SectionBoundary/SectionError ·
+                         StayEditContext (painel de datas) · RoomComparison/ComparisonTable · MapTile · ReviewsSection · SimilarHotels (RSC async) · SectionBoundary/SectionError ·
                          HotelDetailsSkeleton · HotelNotFound
 index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, loadHotel, parseHotelId, hotelPageTitle,
                          STAY_EDIT_TITLE_ID
@@ -45,7 +45,12 @@ index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, 
 - **Regra de import**: `app/hotel/[hotelId]/error.tsx` é client e usa só `@/shared/ui` (o `index.ts` leva
   `loadHotel` ao bundle do cliente). Constantes usadas por RSC (`STAY_EDIT_TITLE_ID`) ficam em `model/`, nunca em
   arquivo `"use client"`.
-- **Sem barra de âncoras sticky, scrollspy, barra de ação fixa nem swipe** (ver "Fora" da spec).
+- **Foco após enviar datas**: `markFocusAfterNavigation(href)` (shared) é chamado em `HotelDatesForm` só no
+  envio válido; `useFocusAfterDates` consome o sinal. Nada de sinal de módulo próprio.
+- **Painel de datas**: `StayEditProvider` (client) liga `HotelStayBar` e os botões "Escolher datas" dos quartos
+  (sem datas ou datas passadas = `needs-dates`/`past-dates`). Nome acessível do botão do quarto é `aria-label`.
+- **Aviso de demora no `loading.tsx`**: CSS (`animate-slow-notice`) numa região `role="status"`; sem hook.
+- **Sem barra de âncoras sticky, scrollspy nem barra de ação fixa.** O lightbox aceita swipe horizontal.
 
 ## Testes
 Unit em `model/` e `api/` (seeds reais via `shared/testing/seed`); componente por seção; E2E em
