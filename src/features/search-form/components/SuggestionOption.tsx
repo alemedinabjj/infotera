@@ -3,13 +3,7 @@
 import { type ComponentProps, Fragment, useEffect, useRef } from "react";
 import type { Suggestion } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
-import {
-  BuildingIcon,
-  PalmTreeIcon,
-  TreesIcon,
-  UmbrellaIcon,
-  VisuallyHidden,
-} from "@/shared/ui";
+import { BuildingIcon, PalmTreeIcon, TreesIcon, UmbrellaIcon, VisuallyHidden } from "@/shared/ui";
 import { highlightMatch } from "../model/suggestion-text";
 
 type SuggestionType = Suggestion["type"];
@@ -73,11 +67,11 @@ export const SuggestionOption = ({
       <span className="min-w-0 flex-1 text-base text-fg">
         {highlightMatch(suggestion.name, query).map((segment) =>
           segment.match ? (
-            <mark key={`m-${segment.text}`} className="bg-transparent font-semibold text-inherit">
+            <mark key={`m-${segment.offset}`} className="bg-transparent font-semibold text-inherit">
               {segment.text}
             </mark>
           ) : (
-            <Fragment key={`t-${segment.text}`}>{segment.text}</Fragment>
+            <Fragment key={`t-${segment.offset}`}>{segment.text}</Fragment>
           ),
         )}
       </span>
