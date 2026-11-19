@@ -15,6 +15,9 @@ export const queryKeys = {
   reviews: {
     byHotel: (hotelId: number, page: number) => ["reviews", hotelId, page] as const,
   },
+  coupons: {
+    detail: (code: string) => ["coupons", "detail", code] as const,
+  },
   bookings: {
     detail: (id: number | string) => ["bookings", "detail", id] as const,
   },
