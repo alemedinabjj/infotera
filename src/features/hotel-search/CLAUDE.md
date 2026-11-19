@@ -80,12 +80,13 @@ index.ts                  API pública usada por app/search
 ## F3b: distância, rolagem contínua e virtualização
 - **Centro = centroide (média de lat/long) de TODOS os hotéis do destino, sem filtros** (a mock-api não tem
   coordenada de destino). `computeCentroid` devolve `null` com < 2 hotéis: sem linha de distância e
-  `sort=distance` cai para `id`. Distância em linha reta (haversine); formato em `formatDistanceFromCenter`
+  `sort=distance` cai para `id`. Distância em linha reta (haversine); formato em `formatDistanceFromCenter` (`a 2,3 km do ponto central`; `title` + ", em linha reta" no card)
   (50 m < 1 km; 1 casa até 10 km; inteiro depois; a unidade é escolhida depois de arredondar).
 - **`sort=distance`**: busca a lista inteira com os filtros de servidor (sem `_sort/_page/_limit`) e ordena/pagina no
   cliente; página 2 e lote 2 saem do cache. Nas ordenações de API o centroide vem em paralelo e é OPCIONAL
-  (falha → sem distância, sem retry para não atrasar a lista); em `distance` é obrigatório (erro + retry).
-  O centroide e a lista sem filtros têm a MESMA chave: um request só. `fetchQuery` interno não herda o `signal`.
+  (falha → sem distância); em `distance` é obrigatório (erro + retry). **Retry só na query externa**: os `fetchQuery`
+  internos (lista inteira e centroide) têm `retry: false`; senão o retry se multiplicava (9 requests, ~15 s até o
+  erro). O centroide e a lista sem filtros têm a MESMA chave: um request só. `fetchQuery` interno não herda o `signal`.
 - **`view=infinite` na URL** (padrão `pages` omitido): preferência de exibição, não conta em "Filtros (n)", `clear`
   mantém `sort` e `view`, trocar volta à página 1; no feed `page` é ignorado/omitido.
 - **Dois hooks sempre montados** (`useHotelResults` e `useHotelFeed`, só um com `enabled`) para a toolbar e o foco
@@ -95,9 +96,16 @@ index.ts                  API pública usada por app/search
   presente. Erro no lote nunca re-dispara sozinho. O botão é O MESMO elemento em `more`/`loading-more`/`error-more`
   (vira "Tentar de novo"/"Tentando…"): o foco não se perde e nada se move sob o clique. Foco no 1º card novo quando
   o lote chega e o foco estava no botão: a decisão é tomada ao PEDIR o lote (com cache o lote chega antes de
-  qualquer render intermediário, e no último o botão sai do DOM junto com a chegada dos cards).
+  qualquer render intermediário, e no último o botão sai do DOM junto com a chegada dos cards). O pedido de foco
+  é cancelado por erro no lote e por troca de filtro (`FeedState.queryKey`): só o crescimento vindo de
+  `fetchNextPage` move o foco. Lote com itens na tela tenta 1 vez a mais (`nextBatchRetry`), não 2.
+  A mensagem de erro do lote (e erro/offline da lista) é trazida à vista com `revealNearest` (`RevealOnMount`),
+  sem mover o foco. Com troca de filtro em andamento o rodapé fica `invisible` e sem carregamento automático.
+  O anúncio "Mais N hotéis carregados" só vale quando o nº de lotes cresce na MESMA consulta; durante o lote
+  o anunciador geral fica mudo (o botão já diz "Carregando mais hotéis…").
 - **Padrão ARIA `feed`**: `role="feed"` rotulado pelo h2, `article` com `aria-posinset/setsize/labelledby` e
-  `tabIndex=-1`; PageDown/PageUp, Ctrl+End (rodapé) e Ctrl+Home (h2) por `addEventListener` no feed (delegação).
+  `tabIndex=-1`; PageDown/PageUp, Ctrl+End (rodapé) e Ctrl+Home (h2) por `addEventListener` num contêiner que envolve feed + rodapé
+  (Ctrl+Home vale a partir do rodapé); `scrollPaddingEnd` de 24 px evita o anel de foco cortado no PageDown.
 - **Virtualização** (`@tanstack/react-virtual@3.14.26`, `useWindowVirtualizer`): rolagem da janela, `scrollMargin`
   medido (ResizeObserver no `body`), `scrollPaddingStart` = `scroll-padding-top` do `html`, card com foco sempre
   montado (`withPinnedIndex` no `rangeExtractor`), cada `article` posicionado por `transform` (sem `div` extra entre
@@ -113,7 +121,9 @@ index.ts                  API pública usada por app/search
 ### Notas para o README
 - "Centro" é o ponto médio dos hotéis cadastrados, não o centro oficial da cidade (Florianópolis: o Costão do
   Santinho puxa o centroide e fica a 20 km). Melhoria: mediana/medoide (mais robusta a outlier).
-- A virtualização é demonstração do requisito (14 hotéis/destino); o padrão continua sendo a paginação.
+- A virtualização é demonstração do requisito (14 hotéis/destino); o padrão continua sendo a paginação. A
+  complexidade do feed virtualizado (geometria, foco fixado, teclado) é INTENCIONAL: demonstra a técnica com ≤ 14
+  itens; num produto real com esse volume bastaria a paginação.
 - Teto conhecido: com backend maior, a ordenação por distância viraria endpoint no servidor.
 
 ## Acessibilidade

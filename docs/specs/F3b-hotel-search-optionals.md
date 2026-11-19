@@ -15,7 +15,7 @@ verdade (`sort=distance`, `view=infinite`).
 **Entra (avançados da seção 2 ainda não cobertos)**
 - Ordenação **"Distância do centro"** (`sort=distance`): centroide de lat/long de **todos** os hotéis
   do destino (sem filtros), distância em linha reta (haversine), ordenação + paginação no cliente.
-- **Distância no card** em qualquer ordenação: `2,3 km do centro` (com ícone `MapPinIcon`).
+- **Distância no card** em qualquer ordenação: `a 2,3 km do ponto central` (com ícone `MapPinIcon`).
 - **Modo "Rolagem contínua"** (`view=infinite`): `useInfiniteQuery`, carregamento automático perto
   do fim + botão "Carregar mais hotéis" (fallback de teclado/leitor de tela), padrão ARIA **feed**.
 - **Virtualização** do feed com `@tanstack/react-virtual@3.14.26` (`useWindowVirtualizer`, rolagem
@@ -58,8 +58,8 @@ blur. O card do feed é o mesmo `HotelCard` (prefetch e blur valem nos dois modo
    o usuário decidiu implementar todos os opcionais e o texto da UI deixa a aproximação explícita.
 
 2. **Distância: haversine (R = 6.371 km), linha reta.** Formato (`formatDistanceFromCenter`):
-   arredonda para 50 m; `< 100 m` → `a menos de 100 m do centro`; `< 1 km` → `500 m do centro`;
-   `< 10 km` → uma casa (`2,3 km do centro`); `≥ 10 km` → inteiro (`20 km do centro`). A unidade e
+   arredonda para 50 m; `< 100 m` → `a menos de 1a 00 m do ponto central`; `< 1 km` → `a 500 m do ponto central`;
+   `< 10 km` → uma casa (`a 2,3 km do ponto central`); `≥ 10 km` → inteiro (`a 20 km do ponto central`). A unidade e
    o número de casas são escolhidos **depois** de arredondar (0,975 km → `1,0 km`; 9,96 km → `10 km`).
    `Intl.NumberFormat("pt-BR")`. Descartado: distância por rota (exige API de mapas e chave).
 
@@ -219,18 +219,18 @@ feedKeyTarget({ key, ctrlKey, current, count }): FeedKeyTarget;
 
 **Verificado no seed** (centroide do destino inteiro, haversine):
 - Rio (14): ordem por distância `18, 13, 11, 15, 12, 1, 16, 7, 9, 19 | 14, 10, 2, 17`;
-  hotel 18 "Hotel Leblon Prime" 2,04 km → `2,0 km do centro`; 13 2,10 → `2,1 km`; 11 2,31 →
+  hotel 18 "Hotel Leblon Prime" 2,04 km → `a 2,0 km do ponto central`; 13 2,10 → `2,1 km`; 11 2,31 →
   `2,3 km`; 17 "Pousada Vista Corcovado" 4,89 → `4,9 km`.
 - Rio + Piscina + Spa (ids 1, 7, 9, 11): ordem `11, 1, 7, 9`, distâncias iguais às sem filtro.
-- Florianópolis: hotel 4 a 20,22 km → `20 km do centro`. Gramado: hotel 43 a 0,48 km →
-  `500 m do centro`. Noronha: 47 a 0,41 km → `400 m do centro`. Jericoacoara: 59 e 60 empatados
+- Florianópolis: hotel 4 a 20,22 km → `a 20 km do ponto central`. Gramado: hotel 43 a 0,48 km →
+  `a 500 m do ponto central`. Noronha: 47 a 0,41 km → `a 400 m do ponto central`. Jericoacoara: 59 e 60 empatados
   (1,64 km) → desempate por `id`.
 
 ## Critérios de aceite
 
 Distância
 1. Dado Rio em qualquer ordenação, cada card mostra, abaixo de `Tipo · destino`, a linha
-   `MapPinIcon` (`aria-hidden`) + `{distância} do centro` (hotel 17: `4,9 km do centro`), sem
+   `MapPinIcon` (`aria-hidden`) + `a {distância} do ponto central` (hotel 17: `a 4,9 km do ponto central`), sem
    deslocar o layout depois que a lista aparece (chega junto com a lista).
 2. Quando "Ordenar por" = "Distância do centro", a URL ganha `sort=distance`, a página volta para 1,
    o foco fica no select, e a ordem é `Hotel Leblon Prime (2,0 km)`, `Pousada Jardim Botânico
@@ -239,13 +239,13 @@ Distância
 3. Com `sort=distance`, aparece abaixo da toolbar o texto de ajuda `Distância em linha reta até o
    ponto médio dos hotéis de Rio de Janeiro, RJ.` ligado ao select por `aria-describedby`; nas outras
    ordenações ele não aparece.
-4. Rio + Piscina + Spa + `sort=distance` mostra 11, 1, 7, 9, e o hotel 11 continua `2,3 km do centro`
+4. Rio + Piscina + Spa + `sort=distance` mostra 11, 1, 7, 9, e o hotel 11 continua `a 2,3 km do ponto central`
    (centro calculado sem filtros).
 5. Em `sort=distance`, nenhum request à API leva `_sort`, `_page` ou `_limit`; sem filtros, sai **um**
    `GET /hotels?destination=…` só.
 6. Se o request do centroide falhar numa ordenação de API, a lista aparece normalmente sem a linha de
    distância; com `sort=distance`, a falha leva ao `ErrorState` da F3 e "Tentar de novo" recupera.
-7. Florianópolis mostra `20 km do centro` no hotel 4; Gramado mostra `500 m do centro` no hotel 43.
+7. Florianópolis mostra `a 20 km do ponto central` no hotel 4; Gramado mostra `a 500 m do ponto central` no hotel 43.
 
 Modo de exibição
 8. A toolbar tem o select "Exibir" (`Em páginas` · `Rolagem contínua`) com rótulo visível. Escolher
@@ -274,7 +274,9 @@ Feed (rolagem contínua)
     até ele sair da tela **não** tira o foco dele (o `document.activeElement` continua o card).
 16. Falha no 2º lote (500 após as tentativas automáticas): os 10 cards continuam; o rodapé mostra
     `Alert danger` `Não foi possível carregar mais hotéis.` (`role="alert"`) com `Tentar de novo`; o
-    carregamento automático não repete sozinho; `Tentar de novo` carrega o lote.
+    carregamento automático não repete sozinho; `Tentar de novo` carrega o lote. O botão não sai do
+    lugar; ao chegar, o `Alert` é trazido à vista (`scrollIntoView({ block: "nearest" })`, `auto` com
+    movimento reduzido) sem mover o foco. O lote tenta 1 vez a mais (os itens anteriores seguem na tela).
 17. Trocar filtro/ordenação no feed volta para o 1º lote (lista anterior esmaecida com
     `Atualizando resultados…`, como na F3); vazio, erro inicial e offline são os mesmos da F3.
 18. Abrir um card do 2º lote e voltar (Voltar do navegador) mostra o feed com os 14 já carregados
@@ -429,14 +431,15 @@ componente novo de `shared/ui`; o `ui-designer` registra no design system os tr�
 - `26rem` a `< sm`: `grid-cols-2` — `Filtros (n)` `col-span-2 justify-self-start`; `Ordenar por` |
   `Exibir` lado a lado.
 - `sm` a `< lg`: `grid-cols-[auto_1fr_1fr] items-end` — os três numa linha.
-- `lg` a `< xl`: h2/status numa linha; abaixo, `flex flex-wrap gap-4` com os dois selects (label
-  inline, `Ordenar por` `w-56`, `Exibir` `w-44`). `≥ xl`: tudo numa linha (`justify-between`).
+- `≥ lg` (inclusive `xl`): h2/status numa linha (`lg:whitespace-nowrap`); abaixo, `flex flex-wrap
+  gap-4` com os dois selects (label inline, `Ordenar por` `w-56`, `Exibir` `w-52`: cabe
+  "Rolagem contínua" sem corte). Decisão da revisão: o `xl` mantém o layout do `lg`.
 - Texto de ajuda da distância (`DistanceHelp`): `p.text-sm.text-fg-muted` em largura total logo
   abaixo da toolbar, só com `sort=distance`.
 
 **Card** (ambos os modos): nova linha após `Tipo · destino`:
 `<p class="flex items-center gap-1 text-sm text-fg-muted"><MapPinIcon class="size-4 shrink-0
-text-fg-subtle" aria-hidden/>2,0 km do centro</p>`. Skeleton ganha `line h-5 w-32` na mesma posição.
+text-fg-subtle" aria-hidden/>a 2,0 km do ponto central</p>`. Skeleton ganha `line h-5 w-32` na mesma posição.
 
 **Feed (`view=infinite`)**
 ```
@@ -479,7 +482,7 @@ Com 1 lote só (≤ 10 resultados) o rodapé já é `end`. `prefers-reduced-moti
 |---|---|
 | Opção de ordenação | `Distância do centro` |
 | Ajuda da distância | `Distância em linha reta até o ponto médio dos hotéis de {destino}.` |
-| Card | `a menos de 100 m do centro` · `500 m do centro` · `2,3 km do centro` · `20 km do centro` |
+| Card | `a menos de 100 m do ponto central` · `a 500 m do ponto central` · `a 2,3 km do ponto central` · `a 20 km do ponto central` |
 | Select de exibição | label `Exibir` · `Em páginas` · `Rolagem contínua` |
 | Linha de status (feed) | `Mostrando 10 de 14` (e `Atualizando resultados…`/`Carregando hotéis…` da F3) |
 | Rodapé | `Carregar mais hotéis` · `Carregando mais hotéis…` · `Você viu todos os 14 hotéis.` (1: `Você viu o único hotel.`) · `Voltar ao topo` |
@@ -493,7 +496,7 @@ Com 1 lote só (≤ 10 resultados) o rodapé já é `end`. `prefers-reduced-moti
   `aria-setsize`, `aria-labelledby` (h3), `tabIndex=-1` e anel de foco
   (`focus-visible:outline-2 outline-offset-2 outline-focus`). O link do nome continua o único item
   tabulável dentro do card.
-- Leitura do card (os dois modos): "… · Pousada · Rio de Janeiro, RJ · 4,9 km do centro · Nota 4,8 de
+- Leitura do card (os dois modos): "… · Pousada · Rio de Janeiro, RJ · a 4,9 km do ponto central · Nota 4,8 de
   5…".
 - Select "Exibir" e "Ordenar por" nativos com `<label>`; ajuda por `aria-describedby`.
 - O anunciador `aria-live` da F3 é o mesmo (com o sheet aberto continua mudo); o erro do lote é

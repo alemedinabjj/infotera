@@ -392,7 +392,9 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 14 hotéis encontrados                 ← h2 text-xl font-semibold min-h-7, tabIndex=-1 (alvo de foco)
 Mostrando 1–10 de 14                  ← linha de status min-h-5 text-sm text-fg-muted tabular-nums
 [⚲ Filtros (2)] [Mais populares ▾]    ← < lg: grid-cols-[auto_1fr] gap-3 items-end; ≥ lg: Filtros some,
-                                         "Ordenar por" vira label inline à direita (select w-56)
+                                         "Ordenar por" vira label inline (select w-56) e "Exibir" (select w-52,
+                                         cabe "Rolagem contínua"). O h2 fica numa linha (lg:whitespace-nowrap)
+                                         e os selects ficam ABAIXO dele, também no xl (sem "tudo numa linha")
 ```
 - A **linha de status** troca de texto, nunca de altura: `Mostrando 1–10 de 14` ↔ `Spinner` +
   `Atualizando resultados…` ↔ `Carregando hotéis…` ↔ `Está demorando mais que o normal…`.
@@ -803,7 +805,8 @@ São da feature (F3/F4), mas devem compor: `Card interactive` + imagem `aspect-[
   `border-t` e 3 linhas à direita).
 - Linha de distância (após `Tipo · destino`, ambos os modos de listagem): `p.flex.items-center.gap-1
   .text-sm.text-fg-muted` com `MapPinIcon size-4 shrink-0 text-fg-subtle` (`aria-hidden`) e o texto
-  `2,3 km do centro`. Omitida quando o centro não existe; no skeleton vira uma linha `h-5 w-32` na
+  `a 2,3 km do ponto central` (+ `title` com a explicação e, só para leitor de tela, `, em linha reta`: a
+  linha aparece em qualquer ordenação; o texto de ajuda da toolbar, só com `sort=distance`). Omitida quando o centro não existe; no skeleton vira uma linha `h-5 w-32` na
   mesma posição (nada se move quando a lista chega).
 
 #### Rodapé do feed (rolagem contínua)
@@ -815,6 +818,9 @@ items-center gap-2`. Quatro estados (o rodapé só troca de conteúdo, nunca de 
 - `error-more`: `Alert danger` em largura total (`role="alert"`) `Não foi possível carregar mais
   hotéis.` / `Os hotéis já carregados continuam aqui.` + `Button secondary sm` `Tentar de novo`
   (`Tentando…`); os cards já carregados continuam. O carregamento automático não repete sozinho.
+  O botão fica no lugar e o `Alert` entra abaixo dele; quando chega, é trazido à vista com
+  `scrollIntoView({ block: "nearest" })` (`behavior: "auto"` com `prefers-reduced-motion`) SEM mover o
+  foco. Com troca de filtro em andamento (lista esmaecida) o rodapé antigo fica `invisible`.
 - `end`: `p tabIndex=-1` `Você viu todos os 14 hotéis.` (1: `Você viu o único hotel.`) + `Button ghost sm`
   `Voltar ao topo` (alvo mínimo 44 px). Com um lote só, o rodapé já nasce em `end`.
 Card do feed: `article` com anel de foco `focus-visible:outline-2 outline-offset-2 outline-focus`.
@@ -919,7 +925,7 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | Linha de status | `Mostrando 1–10 de 14` · `Carregando hotéis…` · `Atualizando resultados…` |
 | Ordenar | `Ordenar por`: `Mais populares` · `Menor preço` · `Maior avaliação` · `Distância do centro` |
 | Ajuda da distância | `Distância em linha reta até o ponto médio dos hotéis de {destino}.` |
-| Distância no card | `a menos de 100 m do centro` · `500 m do centro` · `2,3 km do centro` · `20 km do centro` |
+| Distância no card | `a menos de 100 m do ponto central` · `a 500 m do ponto central` · `a 2,3 km do ponto central` · `a 20 km do ponto central` |
 | Exibir | `Exibir`: `Em páginas` · `Rolagem contínua` · status do feed `Mostrando 10 de 14` |
 | Rodapé do feed | `Carregar mais hotéis` · `Carregando mais hotéis…` · `Você viu todos os 14 hotéis.` · `Voltar ao topo` |
 | Erro do lote | `Não foi possível carregar mais hotéis.` · `Os hotéis já carregados continuam aqui.` · `Tentar de novo` / `Tentando…` |
