@@ -122,6 +122,15 @@ describe("createBooking", () => {
     expect(await createBooking(request, NOW)).toEqual({ status: "created", bookingId: ID });
   });
 
+  it("POST 500 + id existente de outro pedido → failed", async () => {
+    stubFetch({
+      ...okRoutes,
+      "POST /bookings": () => json({ error: "x" }, 500),
+      [`GET /bookings/${ID}`]: () => json({ ...stored, totalPrice: stored.totalPrice + 1 }),
+    });
+    expect(await createBooking(request, NOW)).toEqual({ status: "failed", kind: "http" });
+  });
+
   it("POST 500 + GET 404 → failed", async () => {
     stubFetch({
       ...okRoutes,

@@ -1,6 +1,7 @@
 import { type ApiErrorKind, apiGet, apiPost, isApiError } from "@/shared/api/http";
 import { bookingSchema, hotelSchema, roomSchema } from "@/shared/api/schemas";
 import { todayISO } from "@/shared/lib/dates";
+import { bookingMatchesInput } from "../model/booking-match";
 import { bookingRequestSchema } from "../model/booking-request";
 import type { CheckoutFieldPath } from "../model/checkout.schema";
 import type { CreateBookingResult } from "../model/create-booking-result";
@@ -41,10 +42,11 @@ const isAmbiguousFailure = (error: unknown): boolean =>
     error.kind === "timeout" ||
     (error.kind === "http" && error.status !== null && error.status >= 500));
 
-const bookingExists = async (id: string): Promise<boolean> => {
+/** A reserva com este id existe **e** é a deste pedido (não a de outro com o mesmo id). */
+const bookingCreated = async (body: ReturnType<typeof toBookingInput>): Promise<boolean> => {
   try {
-    await apiGet(`/bookings/${id}`, bookingSchema);
-    return true;
+    const stored = await apiGet(`/bookings/${body.id}`, bookingSchema);
+    return bookingMatchesInput(stored, body);
   } catch {
     return false;
   }
@@ -84,7 +86,7 @@ export const createBooking = async (
     await apiPost("/bookings", body, bookingSchema);
     return { status: "created", bookingId: body.id };
   } catch (error) {
-    if (isAmbiguousFailure(error) && (await bookingExists(body.id))) {
+    if (isAmbiguousFailure(error) && (await bookingCreated(body))) {
       return { status: "created", bookingId: body.id };
     }
     return { status: "failed", kind: logFailure("create-booking:post", error) };

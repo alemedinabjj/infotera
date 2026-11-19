@@ -94,6 +94,12 @@ describe("bookingRequestSchema", () => {
     expect(parse({ companions }).success).toBe(false);
   });
 
+  it("o caminho do erro de idade usa o índice real do acompanhante", () => {
+    const companions = valid.companions.map((c) => (c.kind === "child" ? { ...c, age: null } : c));
+    const result = bookingRequestSchema.safeParse({ ...valid, companions });
+    expect(result.error?.issues.map((issue) => issue.path.join("."))).toEqual(["companions.1.age"]);
+  });
+
   it("rejeita cupom mal formatado, últimos 4 errados e total negativo", () => {
     expect(parse({ couponCode: "a b" }).success).toBe(false);
     expect(parse({ cardLast4: "12345" }).success).toBe(false);
