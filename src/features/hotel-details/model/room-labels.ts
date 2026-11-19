@@ -49,3 +49,7 @@ export const roomCapacityLabel = (maxGuests: number): string =>
 
 /** `45 m²` (o tamanho pode ter decimais: `32,5 m²`). */
 export const roomSizeLabel = (size: number): string => `${size.toLocaleString("pt-BR")} m²`;
+
+/** `1 tipo de quarto` / `2 tipos de quarto`. */
+export const roomTypesLabel = (count: number): string =>
+  `${count} ${count === 1 ? "tipo" : "tipos"} de quarto`;

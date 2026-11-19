@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { type Bed, roomAmenitySchema } from "@/shared/api/schemas";
-import { bedsLabel, roomAmenityLabel, roomCapacityLabel, roomSizeLabel } from "./room-labels";
+import {
+  bedsLabel,
+  roomAmenityLabel,
+  roomCapacityLabel,
+  roomSizeLabel,
+  roomTypesLabel,
+} from "./room-labels";
 
 describe("roomAmenityLabel", () => {
   it("toda comodidade de quarto tem rótulo pt-BR único", () => {
@@ -53,5 +59,12 @@ describe("capacidade e tamanho", () => {
   it("metros quadrados", () => {
     expect(roomSizeLabel(45)).toBe("45 m²");
     expect(roomSizeLabel(32.5)).toBe("32,5 m²");
+  });
+});
+
+describe("roomTypesLabel", () => {
+  it("singular e plural", () => {
+    expect(roomTypesLabel(1)).toBe("1 tipo de quarto");
+    expect(roomTypesLabel(4)).toBe("4 tipos de quarto");
   });
 });
