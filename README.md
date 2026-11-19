@@ -40,3 +40,10 @@
 - **Documento (CPF/Passaporte)**: CPF com dígito verificador; passaporte pelo formato do ICAO 9303 (não há
   dígito verificador público do número fora da MRZ).
 - Com crianças, recarregar a página volta ao passo 1 (a idade nunca é persistida).
+
+### Confirmação da reserva (F6)
+- **A mock-api zera as reservas a cada restart**: um link `/confirmation/<id>` antigo vira "Reserva não encontrada".
+- A página lê a reserva no servidor a cada request (`no-store`, `noindex`); o id precisa ser UUID v4 (o id numérico do
+  `curl` da mock-api não abre, para não enumerar reservas). O histórico local (`infotera:booking-history`) guarda só ids.
+- Limite dos E2E: hotel e quarto são buscados pelo servidor do Next, então `_delay`/`_fail` não passam pelo `page.route`;
+  esses cenários ficam em unit e teste de componente. Cancelar/alterar, imprimir/PDF e compartilhar o link ficam como evolução.
