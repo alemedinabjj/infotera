@@ -16,7 +16,7 @@ model/price-range.ts      limite entre os dois sliders, aria-valuetext, resumo �
 api/hotels.ts             hotelsQueryOptions(destination, filters) → { items, total } + keepPreviousIfSameDestination
 hooks/useSearchFilters    lê (useSearchParams) e grava (history.replaceState) · useHotelResults · usePrefetchHotel
 hooks/usePriceDraft       sliders locais, commit 400 ms, ressincroniza com a URL · useFocusOnPageChange · useSlowLoading
-hooks/useCopyLink · useCloseOnDesktop · useFocusAfterEdit
+hooks/useCloseOnDesktop · useFocusAfterEdit
 components/               HotelSearchResults (cliente) · ResultsToolbar/Section/List/Skeleton/Empty/Error · HotelCard(+Footer,
                           Image, Skeleton) · RatingScore · PriceTag · FiltersPanel/Fields/Drawer + um componente por filtro ·
                           SearchHeader · MissingDestination

@@ -5,8 +5,8 @@ import { useToday } from "@/shared/hooks/useToday";
 import { cn } from "@/shared/lib/cn";
 import { type ISODate, isBeforeToday } from "@/shared/lib/dates";
 import { Alert, Button, ChevronDownIcon, LinkIcon } from "@/shared/ui";
-import { useCopyLink } from "../hooks/useCopyLink";
 import { markEditSubmitted, useFocusAfterEdit } from "../hooks/useFocusAfterEdit";
+import { copyCurrentUrl } from "./copyCurrentUrl";
 
 /** `id` do `h2` do painel: o formulário o usa como `labelledBy`. */
 export const SEARCH_EDIT_HEADING_ID = "search-edit-heading";
@@ -50,7 +50,6 @@ export const SearchHeader = ({
   const [open, setOpen] = useState(mode === "browse");
   const headingRef = useRef<HTMLHeadingElement>(null);
   const today = useToday();
-  const { copy } = useCopyLink();
   useFocusAfterEdit(headingRef);
   const pastDates = today !== null && checkIn !== null && isBeforeToday(checkIn, today);
 
@@ -82,7 +81,7 @@ export const SearchHeader = ({
             variant="ghost"
             size="sm"
             leftIcon={<LinkIcon className="size-4" />}
-            onClick={copy}
+            onClick={copyCurrentUrl}
           >
             Copiar link
           </Button>
