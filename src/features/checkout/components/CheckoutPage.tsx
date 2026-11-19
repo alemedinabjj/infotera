@@ -22,7 +22,11 @@ const CheckoutRoute = ({
   onLeaving: (selection: RoomSelection) => void;
 }) => {
   const { hotel, room, eligibility } = useCheckoutQueries(selection);
-  if (isBlocked(eligibility)) {
+  // O bloqueio vale só na entrada: depois de admitida, mudar a quantidade de quartos (optimistic)
+  // ou um refetch do quarto não pode derrubar o formulário; o envio devolve `unavailable`.
+  const [admitted, setAdmitted] = useState(false);
+  if (eligibility === "ready" && !admitted) setAdmitted(true);
+  if (!admitted && isBlocked(eligibility)) {
     return <BlockedCheckout reason={eligibility} selection={selection} room={room.data} />;
   }
   return <CheckoutReady selection={selection} hotel={hotel} room={room} onLeaving={onLeaving} />;
