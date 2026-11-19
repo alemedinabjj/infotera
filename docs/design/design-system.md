@@ -1068,7 +1068,7 @@ Loading: `Confirmando reserva…` · `Calculando total…` · `Aplicando…`.
 | Total indisponível no envio | Alert danger: `Não foi possível calcular o total` · `Carregue o preço do quarto de novo para confirmar a reserva.` | `Tentar de novo` |
 | Seções do checkout | `Não foi possível carregar os dados do hotel.` / `Não foi possível carregar o preço.` · `Verifique sua conexão e tente de novo.` | `Tentar de novo` |
 | Confirmação de quartos falhou | hint: `Não foi possível confirmar a disponibilidade. Tente de novo.` (valor volta) | — |
-| Ambiente de demonstração (checkout) | Alert info no topo do formulário: `Ambiente de demonstração` · `Não use dados reais.` (a API é pública e sem autenticação) | — |
+| Ambiente de demonstração (checkout) | Alert info no topo do formulário, em todos os passos: `Ambiente de demonstração — não use dados reais.` (a API é pública e sem autenticação) | — |
 
 Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem status HTTP ao usuário.
 

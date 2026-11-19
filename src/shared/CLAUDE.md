@@ -9,12 +9,13 @@ feature só fica na feature; promova para cá quando aparecer o segundo uso.
 shared/
   api/        env · http · errors · schemas · query-keys · endpoints · queries
               query-client · server-query-client (só para Server Components)
-  hooks/      useToday · useDebouncedValue · useOnline (F2) · useSlowLoading (F3)
+  hooks/      useToday · useDebouncedValue · useOnline (F2) · useSlowLoading (F3) · useDeferredBlur (promovido da F2 na F5)
   lib/        cn · dates · currency · format · search-params · storage · pagination · image · pricing · availability
-              labels · links (`hotelHref`) · stay-summary (`describeStay`)
+              labels · links (`hotelHref`) · stay-summary (`describeStay`) · csp (`buildCsp`, `BASELINE_DIRECTIVES`, `IMAGE_HOSTS`) ·
+              navigation (`assignLocation`: carga de documento) · cancellation (`cancellationDetails`, promovido da F4)
   ui/         atoms/ (Button (+button-styles), IconButton, Input, Select, Checkbox, Radio, Skeleton, Spinner,
                        Badge, Stars, VisuallyHidden)
-              molecules/ (Field, QuantityStepper, Pagination, EmptyState, ErrorState, Alert, Dialog, RatingScore, PriceTag, card-styles)
+              molecules/ (Field, QuantityStepper, ErrorSummary (promovido da F2), Pagination, EmptyState, ErrorState, Alert, Dialog, RatingScore, PriceTag, card-styles)
                        atoms/RemoteImage (`next/image` + loader Unsplash + blur + fallback)
               ErrorBoundary (classe, `fallback({ error, reset })`, `resetKeys`)
               toast/ (toast-store, Toaster, copyCurrentUrl) · layout/ (SiteHeader, SkipLink) · icons.tsx · index.ts
@@ -80,3 +81,13 @@ Componentes do design system que a F1 não entrega; nascem na feature que os usa
 para `shared/` quando aparecer o segundo uso.
 - **Breadcrumb** (hoje em `hotel-details`) e a **tabela de comparação**: sobem quando a F5/F6 usar.
 - **Avatar** (`ReviewAvatar`, em `hotel-details`) e **Combobox/DateRange** (`search-form`): promover no segundo uso.
+
+## F5 (checkout)
+- `booking-draft.setRoomCount(rooms): boolean` valida os critérios resultantes com `searchCriteriaSchema` (inválido ou
+  sem seleção não muda e devolve `false`).
+- `bookingGuestSchema` tem contato opcional (só o titular), `kind` e `age`; `bookingInputSchema` aceita
+  `priceBreakdown?` (centavos). `queryKeys.coupons.detail(code)`.
+- `Dialog focusableBody` (corpo rolável vira região focável com foco inicial), `QuantityStepper locked`
+  (`aria-disabled` nos dois botões), `Toaster data-toaster`, ícones `credit-card`/`lock`/`tag`, e o CSS da barra de
+  ação fixa (`[data-action-bar]`) em `globals.css`.
+- `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`) e exporta `describeErrorCount`.

@@ -19,8 +19,8 @@ model/suggestions-view.ts   deriveSuggestionsView (idle/loading/results/empty/er
 hooks/useCombobox.ts        ARIA 1.2 + teclado (genérico) · useDestinationField.ts: texto, seleção, debounce, query
 hooks/useSearchForm.ts      useForm + submit (recente + transition + push) + restaurar recente
 hooks/useRecentSearches.ts   useSyncExternalStore (recentes = string crua + parse memoizado). `useToday`, `useDebouncedValue` e `useOnline` vivem em `shared/hooks`
-hooks/useDeferredBlur.ts    adia a validação do blur enquanto um botão é pressionado
-components/                 SearchForm · DestinationCombobox · SuggestionList/Option · DateRangeFields · GuestsPicker · ErrorSummary · RecentSearches
+hooks/useDeferredBlur      (movido para `shared/hooks` na F5) adia a validação do blur enquanto um botão é pressionado
+components/                 SearchForm · DestinationCombobox · SuggestionList/Option · DateRangeFields · GuestsPicker · RecentSearches (o `ErrorSummary` é de `shared/ui`)
 index.ts                    export { SearchForm }
                             props: `initialCriteria?: Partial<SearchCriteria>` (destino presente conta como escolhido), `showRecentSearches` (padrão true), `labelledBy`,
                             F4: `fixedDestination` (destino em texto, sem combobox), `getSubmitHref(criteria)` (envio para outra rota,

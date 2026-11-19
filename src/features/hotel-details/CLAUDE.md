@@ -50,6 +50,8 @@ index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, 
 - **Painel de datas**: `StayEditProvider` (client) liga `HotelStayBar` e os botões "Escolher datas" dos quartos
   (sem datas ou datas passadas = `needs-dates`/`past-dates`). Nome acessível do botão do quarto é `aria-label`.
 - **Aviso de demora no `loading.tsx`**: CSS (`animate-slow-notice`) numa região `role="status"`; sem hook.
+- **"Selecionar quarto" entra no checkout com carga de documento** (`assignLocation("/checkout")`; a CSP com nonce é do
+  documento); `pageshow` persistido zera o "Selecionando…". `cancellationDetails` vive em `shared/lib/cancellation`.
 - **Sem barra de âncoras sticky, scrollspy nem barra de ação fixa.** O lightbox aceita swipe horizontal.
 
 ## Testes
