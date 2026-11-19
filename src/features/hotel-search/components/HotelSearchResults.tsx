@@ -38,7 +38,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
     view,
     slow: results.slow,
     total: results.total,
-    page: filters.page,
+    listing: { mode: "pages", page: filters.page },
   });
   const announcement = describeAnnouncement({
     view,
