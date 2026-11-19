@@ -104,3 +104,60 @@ export const describeAnnouncement = ({
     }
   }
 };
+
+export type ToolbarHeading =
+  | { kind: "skeleton" }
+  | { kind: "text"; text: string; srSuffix: string };
+export type ToolbarStatus =
+  | { kind: "none" }
+  | { kind: "text"; text: string }
+  | { kind: "spinner"; text: string };
+
+type ToolbarInput = { view: ResultsView; slow: boolean; total: number; page: number };
+
+/** Título (h2, alvo de foco) e linha de status da toolbar para cada visão. */
+export const describeToolbar = ({
+  view,
+  slow,
+  total,
+  page,
+}: ToolbarInput): { heading: ToolbarHeading; status: ToolbarStatus } => {
+  switch (view.kind) {
+    case "loading":
+    case "out-of-range":
+      return {
+        heading: { kind: "skeleton" },
+        status: {
+          kind: "spinner",
+          text: slow ? "Está demorando mais que o normal…" : "Carregando hotéis…",
+        },
+      };
+    case "results":
+      return {
+        heading: {
+          kind: "text",
+          text: describeResultCount(total),
+          srSuffix: describePageSuffix(page, total),
+        },
+        status: view.stale
+          ? { kind: "spinner", text: "Atualizando resultados…" }
+          : { kind: "text", text: describeVisibleRange(page, total) },
+      };
+    case "empty-destination":
+    case "empty-filters":
+      return {
+        heading: { kind: "text", text: "Nenhum hotel encontrado", srSuffix: "" },
+        status: { kind: "none" },
+      };
+    case "error":
+    case "offline":
+      return {
+        heading: { kind: "text", text: "Resultados indisponíveis", srSuffix: "" },
+        status: { kind: "none" },
+      };
+    default: {
+      const unreachable: never = view;
+      return unreachable;
+    }
+  }
+};

@@ -4,6 +4,7 @@ import {
   describeAnnouncement,
   describePageSuffix,
   describeResultCount,
+  describeToolbar,
   describeVisibleRange,
   outOfRangePage,
   type ResultsView,
@@ -111,5 +112,46 @@ describe("textos", () => {
     expect(announce({ kind: "error" })).toBe("");
     expect(announce({ kind: "offline" })).toBe("");
     expect(announce({ kind: "out-of-range", lastPage: 2 })).toBe("");
+  });
+});
+
+describe("describeToolbar", () => {
+  const toolbar = (v: ResultsView, slow = false, total = 14, page = 1) =>
+    describeToolbar({ view: v, slow, total, page });
+
+  it("carregando: skeleton + spinner, e 'demorando' depois de 5 s", () => {
+    expect(toolbar({ kind: "loading" })).toEqual({
+      heading: { kind: "skeleton" },
+      status: { kind: "spinner", text: "Carregando hotéis…" },
+    });
+    expect(toolbar({ kind: "loading" }, true).status).toEqual({
+      kind: "spinner",
+      text: "Está demorando mais que o normal…",
+    });
+  });
+
+  it("resultados: contagem, sufixo de página e faixa", () => {
+    expect(
+      toolbar({ kind: "results", stale: false, offlineWithData: false }, false, 14, 2),
+    ).toEqual({
+      heading: { kind: "text", text: "14 hotéis encontrados", srSuffix: ", página 2 de 2" },
+      status: { kind: "text", text: "Mostrando 11–14 de 14" },
+    });
+  });
+
+  it("stale: mantém a contagem anterior e mostra Atualizando", () => {
+    expect(toolbar({ kind: "results", stale: true, offlineWithData: false }).status).toEqual({
+      kind: "spinner",
+      text: "Atualizando resultados…",
+    });
+  });
+
+  it("vazios e erro/offline", () => {
+    expect(toolbar({ kind: "empty-filters" })).toMatchObject({
+      heading: { text: "Nenhum hotel encontrado" },
+      status: { kind: "none" },
+    });
+    expect(toolbar({ kind: "error" }).heading).toMatchObject({ text: "Resultados indisponíveis" });
+    expect(toolbar({ kind: "offline" }).status).toEqual({ kind: "none" });
   });
 });
