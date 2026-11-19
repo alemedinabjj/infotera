@@ -145,7 +145,10 @@ const errorTitleOf = (hotel: HotelView, room: RoomView): string | null => {
   return null;
 };
 
-const checkTimes = (hotel: Settled<Hotel>): Pick<StayView, "checkInTime" | "checkOutTime"> => {
+/** Horários de check-in/out do hotel (ou o aviso quando ele não carregou). */
+export const checkTimes = (
+  hotel: Settled<Hotel>,
+): Pick<StayView, "checkInTime" | "checkOutTime"> => {
   switch (hotel.status) {
     case "ok":
       return {

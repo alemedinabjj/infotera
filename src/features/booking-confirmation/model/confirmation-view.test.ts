@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { makeBooking, makeHotel, makeRoom } from "@/shared/testing/fixtures";
-import { toBookingView, toStayView } from "./confirmation-view";
+import { checkTimes, toBookingView, toStayView } from "./confirmation-view";
 import type { Settled } from "./load-result";
 
 const TODAY = "2026-11-19";
@@ -176,5 +176,15 @@ describe("toStayView", () => {
 
   it("quarto ok e hotel ok não repetem o preço nem dados da reserva", () => {
     expect(plain(JSON.stringify(toStayView(booking, ok(hotel), ok(room))))).not.toContain("Ana");
+  });
+});
+
+describe("checkTimes", () => {
+  it.each<[string, Settled<Hotel>, string, string]>([
+    ["ok", ok(makeHotel()), "A partir de 15:00", "Até 12:00"],
+    ["missing", { status: "missing" }, "Confirme com o hotel", "Confirme com o hotel"],
+    ["error", { status: "error" }, "Indisponível no momento", "Indisponível no momento"],
+  ])("hotel %s", (_name, hotel, checkIn, checkOut) => {
+    expect(checkTimes(hotel)).toEqual({ checkInTime: checkIn, checkOutTime: checkOut });
   });
 });

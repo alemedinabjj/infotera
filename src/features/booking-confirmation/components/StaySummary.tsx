@@ -1,19 +1,17 @@
 import { Suspense } from "react";
-import type { Booking } from "@/shared/api/schemas";
 import { Skeleton } from "@/shared/ui";
 import type { StayDetails } from "../api/confirmation.server";
 import type { BookingView } from "../model/confirmation-view";
 import { CheckTimes } from "./CheckTimes";
 
 type StaySummaryProps = {
-  booking: Booking;
   view: BookingView;
   details: Promise<StayDetails>;
 };
 
 type DateCellProps = StaySummaryProps & { which: "check-in" | "check-out" };
 
-const DateCell = ({ booking, view, details, which }: DateCellProps) => (
+const DateCell = ({ view, details, which }: DateCellProps) => (
   <div>
     <dt className="text-sm text-fg-muted">{which === "check-in" ? "Check-in" : "Check-out"}</dt>
     <dd className="text-base font-semibold text-fg tabular-nums">
@@ -21,7 +19,7 @@ const DateCell = ({ booking, view, details, which }: DateCellProps) => (
     </dd>
     <dd className="min-h-5 text-sm text-fg-muted">
       <Suspense fallback={<Skeleton className="h-5 w-28" />}>
-        <CheckTimes booking={booking} details={details} which={which} />
+        <CheckTimes details={details} which={which} />
       </Suspense>
     </dd>
   </div>

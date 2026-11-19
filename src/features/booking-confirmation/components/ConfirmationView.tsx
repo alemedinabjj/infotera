@@ -41,7 +41,7 @@ export const ConfirmationView = ({ booking, details, today }: ConfirmationViewPr
         <Suspense fallback={<StayDetailsSkeleton />}>
           <StayDetailsSection booking={booking} details={details} />
         </Suspense>
-        <StaySummary booking={booking} view={view} details={details} />
+        <StaySummary view={view} details={details} />
       </ReceiptSection>
       {view.guests.lines.length > 0 ? <GuestList guests={view.guests.lines} /> : null}
       <PaymentSummary cardLast4={view.cardLast4} price={view.price} />

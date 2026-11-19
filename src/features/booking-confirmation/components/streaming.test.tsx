@@ -177,14 +177,13 @@ describe("CheckTimes e skeleton (critério 6)", () => {
     ["check-in", "A partir de 15:00"],
     ["check-out", "Até 12:00"],
   ] as const)("%s com hotel ok", async (which, text) => {
-    render(await CheckTimes({ booking, details: Promise.resolve(OK), which }));
+    render(await CheckTimes({ details: Promise.resolve(OK), which }));
     expect(screen.getByText(text)).toBeVisible();
   });
 
   it("hotel missing: Confirme com o hotel", async () => {
     render(
       await CheckTimes({
-        booking,
         details: Promise.resolve({ ...OK, hotel: { status: "missing" } }),
         which: "check-in",
       }),
@@ -195,7 +194,6 @@ describe("CheckTimes e skeleton (critério 6)", () => {
   it("hotel com erro: Indisponível no momento", async () => {
     render(
       await CheckTimes({
-        booking,
         details: Promise.resolve({ ...OK, hotel: { status: "error" } }),
         which: "check-out",
       }),
