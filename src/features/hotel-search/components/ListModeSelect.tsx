@@ -16,7 +16,7 @@ export const ListModeSelect = ({ value, onChange }: ListModeSelectProps) => {
       <Select
         id={id}
         value={value}
-        className="lg:w-44"
+        className="lg:w-52"
         onChange={(event) => {
           const next = LIST_MODES.find((option) => option === event.currentTarget.value);
           if (next) onChange(next);

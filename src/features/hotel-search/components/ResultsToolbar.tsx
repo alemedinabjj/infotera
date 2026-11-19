@@ -59,13 +59,13 @@ export const ResultsToolbar = ({
   sort,
   listMode,
 }: ResultsToolbarProps) => (
-  <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between xl:gap-4">
+  <div className="flex flex-col gap-3">
     <div>
       <h2
         id={headingId}
         ref={headingRef}
         tabIndex={-1}
-        className="min-h-7 text-xl font-semibold text-fg"
+        className="min-h-7 text-xl font-semibold text-fg lg:whitespace-nowrap"
       >
         <Heading heading={heading} />
       </h2>
