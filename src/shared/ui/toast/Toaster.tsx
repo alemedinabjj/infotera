@@ -29,27 +29,25 @@ const ToneIcon = ({ tone }: { tone: ToastTone }) => {
 };
 
 /** Conta o tempo restante e o pausa enquanto `paused` (hover/foco). */
-const useAutoDismiss = (duration: number, paused: boolean, onDone: () => void) => {
+const useAutoDismiss = (id: number, duration: number, paused: boolean) => {
   const remaining = useRef(duration);
-  const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
 
   useEffect(() => {
     if (paused) return;
     const startedAt = Date.now();
-    const timer = setTimeout(() => onDoneRef.current(), remaining.current);
+    const timer = setTimeout(() => toast.dismiss(id), remaining.current);
     return () => {
       clearTimeout(timer);
       remaining.current = Math.max(0, remaining.current - (Date.now() - startedAt));
     };
-  }, [paused]);
+  }, [paused, id]);
 };
 
 const ToastItem = ({ item }: { item: ToastItemData }) => {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const close = () => toast.dismiss(item.id);
-  useAutoDismiss(item.duration, hovered || focused, close);
+  useAutoDismiss(item.id, item.duration, hovered || focused);
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: pausa passiva do timer; ações internas são botões focáveis
