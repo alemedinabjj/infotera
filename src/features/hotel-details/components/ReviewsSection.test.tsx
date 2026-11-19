@@ -46,10 +46,13 @@ const stubReviews = (override?: (page: number) => Promise<Response> | null) => {
 const renderReviews = () =>
   renderWithProviders(
     <>
-      <h2 id="avaliacoes-titulo" tabIndex={-1}>
-        Avaliações
-      </h2>
-      <ReviewsSection hotelId={45} rating={4.7} reviewCount={2000} />
+      <button type="button">Fora da seção</button>
+      <section aria-labelledby="avaliacoes-titulo">
+        <h2 id="avaliacoes-titulo" tabIndex={-1}>
+          Avaliações
+        </h2>
+        <ReviewsSection hotelId={45} rating={4.7} reviewCount={2000} />
+      </section>
     </>,
   );
 
@@ -183,6 +186,9 @@ describe("ReviewsSection: falha e offline (critério 31)", () => {
     expect(screen.queryByText("Título 1")).not.toBeInTheDocument();
     expect(document.body).not.toHaveTextContent("Falha simulada");
 
+    // O erro veio da troca de página: o foco já está em "Tentar de novo".
+    expect(screen.getByRole("button", { name: "Tentar de novo" })).toHaveFocus();
+
     failing = false;
     await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
     expect(await screen.findByText("Título 6")).toBeInTheDocument();
@@ -208,6 +214,12 @@ describe("ReviewsSection: falha e offline (critério 31)", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Título 1")).toBeVisible();
     expect(pageButton(1)).toHaveAttribute("aria-current", "page");
+    // Sem spinner nem "Atualizando…" offline, e o aviso fica depois da paginação (não a empurra).
+    expect(screen.queryByText("Atualizando avaliações…")).not.toBeInTheDocument();
+    expect(
+      pageButton(1).compareDocumentPosition(screen.getByText("Você está sem internet.")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(true);
     act(() => {
@@ -216,5 +228,28 @@ describe("ReviewsSection: falha e offline (critério 31)", () => {
     });
     expect(await screen.findByText("Título 6")).toBeInTheDocument();
     expect(screen.queryByText("Você está sem internet.")).not.toBeInTheDocument();
+  });
+
+  it("ao voltar online, não rouba o foco de quem já saiu da seção", async () => {
+    const user = userEvent.setup();
+    stubReviews();
+    renderReviews();
+    await screen.findByText("Título 1");
+    vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    act(() => {
+      onlineManager.setOnline(false);
+      window.dispatchEvent(new Event("offline"));
+    });
+    await user.click(pageButton(2));
+    await screen.findByText("Você está sem internet.");
+    screen.getByRole("button", { name: "Fora da seção" }).focus();
+
+    vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(true);
+    act(() => {
+      onlineManager.setOnline(true);
+      window.dispatchEvent(new Event("online"));
+    });
+    expect(await screen.findByText("Título 6")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fora da seção" })).toHaveFocus();
   });
 });

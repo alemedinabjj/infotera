@@ -15,6 +15,8 @@ type SectionBoundaryProps<TData, TKey extends QueryKey> = {
   /** Skeleton enquanto o conteúdo suspende. */
   loading: ReactNode;
   children: ReactNode;
+  /** O erro, se vier, foi provocado por uma ação da pessoa: o foco vai ao "Tentar de novo". */
+  focusRetryOnError?: boolean;
 };
 
 /** Monta junto com o conteúdo (dentro do Suspense) e avisa que ele já está na tela. */
@@ -33,6 +35,7 @@ export const SectionBoundary = <TData, TKey extends QueryKey>({
   options,
   loading,
   children,
+  focusRetryOnError = false,
 }: SectionBoundaryProps<TData, TKey>) => {
   const recoveredByRetry = useRef(false);
 
@@ -48,6 +51,7 @@ export const SectionBoundary = <TData, TKey extends QueryKey>({
         <SectionError
           title={errorTitle}
           options={options}
+          focusRetry={focusRetryOnError}
           onFinished={(recovered) => {
             if (!recovered) return;
             recoveredByRetry.current = true;

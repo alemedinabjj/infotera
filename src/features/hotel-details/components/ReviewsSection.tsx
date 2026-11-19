@@ -51,11 +51,13 @@ const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) 
     );
   }
 
+  // Offline: só o aviso (sem spinner nem lista esmaecida: nada está carregando de fato). Ele vem
+  // **depois** da paginação para não empurrar o botão que a pessoa acabou de usar.
+  const loading = pending && online;
   return (
     <>
-      {pending && !online ? <OfflineNotice /> : null}
       <p aria-live="polite" className="flex min-h-5 items-center gap-2 text-sm text-fg-muted">
-        {pending ? (
+        {loading ? (
           <>
             <Spinner />
             Atualizando avaliações…
@@ -64,13 +66,14 @@ const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) 
           reviewsRangeLabel(page, data.total, REVIEWS_PAGE_SIZE)
         )}
       </p>
-      <ReviewList reviews={data.items} busy={pending} />
+      <ReviewList reviews={data.items} busy={loading} />
       <Pagination
         page={page}
         totalPages={getTotalPages(data.total, REVIEWS_PAGE_SIZE)}
         onPageChange={onPageChange}
         className="mt-2"
       />
+      {pending && !online ? <OfflineNotice /> : null}
     </>
   );
 };
@@ -80,7 +83,7 @@ const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) 
  * ficam fora; loading e erro (com retry no lugar) trocam só o miolo.
  */
 export const ReviewsSection = ({ hotelId, rating, reviewCount }: ReviewsSectionProps) => {
-  const { page, pending, changePage } = useReviewsPage();
+  const { page, pending, changePage, changed } = useReviewsPage();
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <RatingScore rating={rating} reviewCount={reviewCount} />
@@ -89,6 +92,7 @@ export const ReviewsSection = ({ hotelId, rating, reviewCount }: ReviewsSectionP
         errorTitle="Não foi possível carregar as avaliações."
         options={reviewsQueryOptions(hotelId, page)}
         loading={<ReviewsSkeleton />}
+        focusRetryOnError={changed}
       >
         <ReviewsContent hotelId={hotelId} page={page} pending={pending} onPageChange={changePage} />
       </SectionBoundary>
