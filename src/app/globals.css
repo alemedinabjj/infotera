@@ -141,6 +141,12 @@
     background-color: rgb(15 27 45 / 0.6);
   }
 
+  /* O painel anima a saída antes do close(): o fundo some junto (só opacidade). */
+  dialog[data-closing]::backdrop {
+    opacity: 0;
+    transition: opacity 200ms var(--ease-exit);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

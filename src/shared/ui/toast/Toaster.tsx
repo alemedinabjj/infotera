@@ -17,7 +17,6 @@ export const Toaster = () => {
   const { paused, handlers } = useRegionPause();
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: pausa passiva do timer; ações internas são botões focáveis
     <div
       data-toaster
       {...handlers}
