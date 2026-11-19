@@ -19,7 +19,7 @@ const Circle = ({ step, state }: { step: CheckoutStep; state: "done" | "current"
   <span
     aria-hidden="true"
     className={cn(
-      "flex size-8 items-center justify-center rounded-full text-sm font-semibold",
+      "relative z-10 flex size-8 items-center justify-center rounded-full text-sm font-semibold",
       state === "done" && "bg-primary text-fg-on-primary",
       state === "current" && "border-2 border-primary bg-surface text-primary",
       state === "future" && "border border-border-strong bg-surface text-fg-muted",
@@ -58,16 +58,14 @@ const StepItem = ({ step, state, first, locked, onGoTo }: StepItemProps) => {
         <button
           type="button"
           aria-disabled={locked || undefined}
+          aria-label={`${STEP_LABELS[step]}, concluído`}
           onClick={() => {
             if (!locked) onGoTo(step);
           }}
           className={cn(column, "font-medium text-primary hover:underline")}
         >
           <Circle step={step} state={state} />
-          <span>
-            {STEP_LABELS[step]}
-            <span className="sr-only">, concluído</span>
-          </span>
+          <span aria-hidden="true">{STEP_LABELS[step]}</span>
         </button>
       ) : (
         <span aria-current={state === "current" ? "step" : undefined} className={column}>
