@@ -13,6 +13,7 @@ requisitos por feature, o que escolhemos dos avançados e os detalhes da mock-ap
 - React Hook Form + Zod (formulários e validação de fronteira)
 - Biome (lint + format)
 - Vitest + Testing Library (unit/componente), Playwright (E2E)
+- Doc do Next 16 desta versão: `node_modules/next/dist/docs/` (leia antes de usar API nova)
 - Backend: **somente** a `mock-api/` (json-server 0.17). Base URL em `NEXT_PUBLIC_API_URL`, nunca `localhost` fixo no código.
 
 ## Comandos
@@ -22,10 +23,14 @@ requisitos por feature, o que escolhemos dos avançados e os detalhes da mock-ap
 ```bash
 cd mock-api && npm install && npm run server   # API em http://localhost:3333 (delay 300ms)
 npm run dev          # front em http://localhost:3000
+npm run build        # build de produção
 npm run typecheck    # tsc --noEmit
 npm run lint         # biome check
+npm run format       # biome check --write (formata e organiza imports)
 npm run test         # vitest run
+npm run test:watch   # vitest em modo watch
 npm run test:e2e     # playwright test --trace off (precisa da API e do front rodando)
+# E2E usa o Chromium do Playwright 1.63 (`npx playwright install chromium` se faltar)
 ```
 
 ## Arquitetura: por feature
