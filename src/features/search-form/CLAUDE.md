@@ -18,11 +18,13 @@ model/notices.ts            textos dos avisos automáticos
 model/suggestions-view.ts   deriveSuggestionsView (idle/loading/results/empty/error) · mensagens de erro/offline · anúncio
 hooks/useCombobox.ts        ARIA 1.2 + teclado (genérico) · useDestinationField.ts: texto, seleção, debounce, query
 hooks/useSearchForm.ts      useForm + submit (recente + transition + push) + restaurar recente
-hooks/useOnline.ts · useRecentSearches.ts   useSyncExternalStore (servidor = true / null; recentes = string crua + parse memoizado). `useToday` e `useDebouncedValue` vivem em `shared/hooks`
+hooks/useRecentSearches.ts   useSyncExternalStore (recentes = string crua + parse memoizado). `useToday`, `useDebouncedValue` e `useOnline` vivem em `shared/hooks`
 hooks/useDeferredBlur.ts    adia a validação do blur enquanto um botão é pressionado
 components/                 SearchForm · DestinationCombobox · SuggestionList/Option · DateRangeFields · GuestsPicker · ErrorSummary · RecentSearches
 index.ts                    export { SearchForm }
-                            props: `initialCriteria?: Partial<SearchCriteria>` (destino presente conta como escolhido), `showRecentSearches` (padrão true), `labelledBy`
+                            props: `initialCriteria?: Partial<SearchCriteria>` (destino presente conta como escolhido), `showRecentSearches` (padrão true), `labelledBy`,
+                            F4: `fixedDestination` (destino em texto, sem combobox), `getSubmitHref(criteria)` (envio para outra rota,
+                            `router.push(href, { scroll: false })`), `submitLabel`, `submitLoadingText`
 ```
 
 ## Decisões que valem daqui para frente
