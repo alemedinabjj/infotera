@@ -16,6 +16,18 @@ type PriceTagProps =
       nights: number;
       rooms: number;
       nightly: number;
+      /** Preço exato (de um quarto): a 3ª linha é `R$ 1.200 por noite`, sem "a partir de". */
+      exactNightly?: boolean;
+    }
+  | {
+      /** Topo do detalhe: `a partir de` **R$ 800** `por noite` numa linha que quebra. */
+      variant: "nightly-inline";
+      nightly: number;
+    }
+  | {
+      /** Quarto sem datas: **R$ 1.200** / `por noite` (preço exato). */
+      variant: "room-nightly";
+      nightly: number;
     }
   | {
       /** Quando o total não pode ser reservado: só a diária, discreta. */
@@ -47,9 +59,28 @@ export const PriceTag = (props: PriceTagProps) => {
             {pluralize(props.rooms, "quarto", "quartos")}
           </span>
           <span className="text-sm text-fg-subtle">
-            a partir de{" "}
+            {props.exactNightly ? null : "a partir de "}
             <span className="whitespace-nowrap tabular-nums">{money(props.nightly)}</span> por noite
           </span>
+        </p>
+      );
+    case "nightly-inline":
+      return (
+        <p className="flex flex-wrap items-baseline gap-x-1">
+          <span className="text-sm text-fg-subtle">a partir de</span>{" "}
+          <span className="text-2xl font-bold whitespace-nowrap text-fg tabular-nums">
+            {money(props.nightly)}
+          </span>{" "}
+          <span className="text-sm text-fg-muted">por noite</span>
+        </p>
+      );
+    case "room-nightly":
+      return (
+        <p className="flex flex-col items-end">
+          <span className="text-xl font-bold whitespace-nowrap text-fg tabular-nums">
+            {money(props.nightly)}
+          </span>
+          <span className="text-sm text-fg-muted">por noite</span>
         </p>
       );
     case "nightly-line":
