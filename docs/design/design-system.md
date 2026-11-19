@@ -335,7 +335,7 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   `share`/`link`, `arrow-left`. Comodidades: um ícone por `Amenity` com fallback `check`.
   Tipos de destino (F2, opções do combobox): `building` (city), `umbrella` (beach), `palm-tree` (island),
   `trees` (nature) — traços no estilo Lucide. `history` (relógio com seta) para "Buscas recentes".
-- **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[4/3]` no card,
+- **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[5/2]` empilhado no card do celular,
   `aspect-video` no hero da galeria), `object-cover`, `sizes` correto, `bg-surface-sunken` enquanto carrega.
   `alt` = nome do hotel + contexto ("Hotel Copacabana Palace, foto 2 de 8"). Imagem quebrada → manter o
   bloco cinza com ícone `bed` centralizado (sem layout shift).
@@ -380,7 +380,7 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 
 ### 4.4 Grid de cards de hotel
 
-- Mobile (base): lista de 1 coluna, card vertical (imagem em cima `aspect-[4/3]`).
+- Mobile (base): lista de 1 coluna, card vertical (imagem em cima `aspect-[5/2]`: 4:3 e a barra de controles empilhada empurravam nome e preço para fora da 1ª tela em 375×667; a barra usa 2 colunas a partir de 23rem).
 - `sm` a `lg`: card **horizontal** (imagem à esquerda `w-56`, conteúdo à direita) em 1 coluna — leitura de
   lista de resultados é mais rápida que grid para comparar preço.
 - Lista sempre `<ul role="list">` com `<li>` por card; contagem de resultados acima em `aria-live="polite"`.

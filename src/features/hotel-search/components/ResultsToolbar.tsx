@@ -73,7 +73,7 @@ export const ResultsToolbar = ({
         <Status status={status} />
       </p>
     </div>
-    <div className="grid grid-cols-1 gap-3 min-[26rem]:grid-cols-2 sm:grid-cols-[auto_1fr_1fr] sm:items-end lg:flex lg:flex-wrap lg:items-center lg:gap-4">
+    <div className="grid grid-cols-1 gap-3 min-[23rem]:grid-cols-[1.25fr_1fr] sm:grid-cols-[auto_1fr_1fr] sm:items-end lg:flex lg:flex-wrap lg:items-center lg:gap-4">
       {filtersTrigger}
       {sort}
       {listMode}

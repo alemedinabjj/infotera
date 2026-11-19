@@ -16,11 +16,11 @@ type HotelImageProps = {
   eager?: boolean;
 };
 
-/** Foto 4:3 do card. Imagem quebrada vira bloco cinza com ícone, do mesmo tamanho. */
+/** Foto do card (5:2 empilhada no celular, para nome e preço aparecerem na 1ª tela; ao lado a partir de `sm`). Imagem quebrada vira bloco cinza com ícone, do mesmo tamanho. */
 export const HotelImage = ({ src, alt, muted = false, eager = false }: HotelImageProps) => {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-surface-sunken sm:aspect-auto sm:min-h-42 sm:w-56">
+    <div className="relative aspect-[5/2] w-full shrink-0 overflow-hidden bg-surface-sunken sm:aspect-auto sm:min-h-42 sm:w-56">
       {failed ? (
         <span className="absolute inset-0 flex items-center justify-center">
           <BedIcon aria-hidden="true" className="size-8 text-fg-subtle" />

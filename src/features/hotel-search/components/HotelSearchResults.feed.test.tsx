@@ -19,6 +19,22 @@ afterEach(() => {
 
 const articles = () => screen.getAllByRole("article");
 
+describe("HotelSearchResults: atalho 'Pular para os resultados'", () => {
+  it("é o 1º focável, leva o foco ao h2 da contagem e não mexe na URL", async () => {
+    const user = userEvent.setup();
+    stubApi();
+    start();
+    await screen.findAllByRole("heading", { level: 3 });
+    await user.tab();
+    const skip = screen.getByRole("link", { name: "Pular para os resultados" });
+    expect(skip).toHaveFocus();
+    const before = window.location.href;
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("heading", { level: 2, name: /14 hotéis encontrados/ })).toHaveFocus();
+    expect(window.location.href).toBe(before);
+  });
+});
+
 describe("HotelSearchResults: select 'Exibir' (critérios 8 a 10)", () => {
   it("tem rótulo visível e as duas opções", async () => {
     stubApi();

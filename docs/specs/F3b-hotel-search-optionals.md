@@ -427,8 +427,8 @@ componente novo de `shared/ui`; o `ui-designer` registra no design system os tr�
 ### Layout
 
 **Toolbar** (`ResultsToolbar`): h2 + linha de status à esquerda; controles à direita.
-- `< 26rem` (320–415 px): `grid grid-cols-1 gap-3` — `Filtros (n)`, `Ordenar por`, `Exibir`.
-- `26rem` a `< sm`: `grid-cols-2` — `Filtros (n)` `col-span-2 justify-self-start`; `Ordenar por` |
+- `< 23rem` (320–367 px): `grid grid-cols-1 gap-3` — `Filtros (n)`, `Ordenar por`, `Exibir`.
+- `23rem` a `< sm`: `grid-cols-[1.25fr_1fr]` — `Filtros (n)` `col-span-2 justify-self-start`; `Ordenar por` |
   `Exibir` lado a lado.
 - `sm` a `< lg`: `grid-cols-[auto_1fr_1fr] items-end` — os três numa linha.
 - `≥ lg` (inclusive `xl`): h2/status numa linha (`lg:whitespace-nowrap`); abaixo, `flex flex-wrap

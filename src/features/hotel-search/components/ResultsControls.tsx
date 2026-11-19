@@ -40,7 +40,7 @@ export const ResultsControls = ({
       status={status}
       filtersTrigger={
         <FiltersTrigger
-          className="min-[26rem]:col-span-2 min-[26rem]:justify-self-start sm:col-span-1"
+          className="min-[23rem]:col-span-2 min-[23rem]:justify-self-start sm:col-span-1"
           activeCount={countActiveFilters(filters)}
           onClick={onOpenFilters}
         />

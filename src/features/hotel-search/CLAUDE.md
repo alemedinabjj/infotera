@@ -47,8 +47,16 @@ index.ts                  API pública usada por app/search
   Paginação usa links reais (`Pagination getHref`): empilha no histórico, Voltar funciona.
 - **Vocabulário próprio na URL** (`minPrice`, `maxPrice`, `minRating`, `type`, `amenity`, `sort`, `page`),
   parse tolerante por chave, serialização canônica (omite padrões, ordem do enum). Nova busca = filtros zerados.
-- **Preço do card = `pricePerNight` do hotel** (coerente com filtro/ordenação); "a partir de" pelos quartos é da F4.
-  Total do card = `stayTotal` em centavos, sem taxas (rótulo "total · N noites · N quartos").
+- **Preço do card = quarto mais barato que serve à busca** (`cheapestFittingRoom` em `model/card-pricing.ts`):
+  menor `pricePerNight` entre os quartos com `available >= quartos` e `maxGuests * quartos >= adultos + crianças`
+  (sem datas/`browse`: o menor com `available > 0`). O total da estadia (`stayTotal`, centavos, sem taxas) usa esse
+  quarto. Nenhum serve ao grupo: status `no-fit` ("Não comporta o grupo", sem total); esgotado/insuficiente seguem
+  pelo `availableRooms` do hotel. Os quartos da página/lote vêm num ÚNICO `GET /rooms?hotelId=..&hotelId=..` dentro
+  de `fetchHotelsPage` (`seedRooms`), semeados em `hotelRoomsQueryOptions(id)` (o card os lê com `useHotelRooms`,
+  `enabled: false`; o detalhe abre sem pedir os quartos). Acessório: se falhar, o card cai para o `pricePerNight`
+  do hotel. **Limitação conhecida**: a ordenação "Menor preço" e o filtro de preço continuam pelo `pricePerNight`
+  do hotel (API), que pode diferir do "a partir de" mostrado (o hotel 1 vale 1.200 mas o quarto mais barato é 800);
+  ordenar pelo preço do quarto exigiria buscar todos os quartos do destino e ordenar no cliente.
 - **Sliders**: dois `<input type="range">` (0–3.000, passo 50), 3.000 = sem máximo. Valor local imediato,
   URL 400 ms depois do último movimento; nunca regrava um valor debounced que ficou para trás.
 - **Foco só por navegação**: o foco vai ao h2 quando a página muda com os mesmos filtros (link, Voltar);
@@ -127,6 +135,10 @@ index.ts                  API pública usada por app/search
 - Teto conhecido: com backend maior, a ordenação por distância viraria endpoint no servidor.
 
 ## Acessibilidade
+- Atalho "Pular para os resultados" (`SkipLink` com `onClick`) antes dos filtros: foca o h2 sem mexer na URL.
+- "Limpar filtros" sem filtro ativo: `aria-disabled` com fundo transparente, texto `fg-subtle` e riscado (inequívoco).
+- Celular (< `sm`): foto do card `aspect-[5/2]`; a barra de controles usa 2 colunas a partir de 23rem (nome do 1º hotel
+  na 1ª tela em 375×667).
 - Filtros em `fieldset`/`legend`; h1 → h2 (`Alterar busca` sr-only, `Filtros`, contagem) → h3 (nomes).
 - Card: um único link (nome) com `::after` cobrindo o card; foco no `article` por `has-[a:focus-visible]`.
 - Foco programático sempre com `preventScroll` + `revealBelowHeader` (header fixo).

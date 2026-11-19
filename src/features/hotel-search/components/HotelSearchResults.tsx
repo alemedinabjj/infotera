@@ -2,7 +2,7 @@
 
 import { useCallback, useId, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { ErrorBoundary } from "@/shared/ui";
+import { ErrorBoundary, SkipLink } from "@/shared/ui";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
 import { useResultsController } from "../hooks/useResultsController";
 import { useResultsText } from "../hooks/useResultsText";
@@ -37,6 +37,14 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
 
   return (
     <div className="lg:grid lg:grid-cols-[18rem_1fr] lg:gap-8">
+      <SkipLink
+        targetId={headingId}
+        label="Pular para os resultados"
+        onClick={(event) => {
+          event.preventDefault();
+          focusResultsHeading(headingRef.current);
+        }}
+      />
       <FiltersPanel filters={filters} onChange={update} />
       <section
         ref={sectionRef}
