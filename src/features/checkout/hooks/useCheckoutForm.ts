@@ -70,15 +70,18 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     companionKinds: fields.map((field) => field.kind),
     documentType,
   });
-  const firstInvalid = useRef<CheckoutFieldPath | undefined>(undefined);
+  const wantsFocus = useRef(false);
+  // O resumo se revela ao montar (efeito do filho); o 1º campo inválido foca por último, assim que
+  // os erros chegam ao render, e vence: o foco nunca fica atrás do header nem da barra fixa.
   useEffect(() => {
-    firstInvalid.current = summaryItems[0]?.id;
+    const first = summaryItems[0]?.id;
+    if (!wantsFocus.current || !first) return;
+    wantsFocus.current = false;
+    form.setFocus(first);
+    // O campo já pode estar focado (o RHF focou antes) e o resumo acabou de rolar a página: traz o
+    // campo de volta à vista respeitando o `scroll-padding` (header em cima, barra fixa embaixo).
+    document.activeElement?.scrollIntoView?.({ block: "nearest" });
   });
-  // O resumo se revela ao montar (efeito do filho); o campo inválido foca por último e vence:
-  // o foco nunca fica atrás do header nem da barra fixa.
-  useEffect(() => {
-    if (attempts > 0 && firstInvalid.current) form.setFocus(firstInvalid.current);
-  }, [attempts, form]);
 
   const moveTo = (target: CheckoutStep) => {
     setNotice(null);
@@ -93,11 +96,16 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     setNotice({ kind: "payment-wiped", step: "payment" });
   });
 
+  const markAttempt = () => {
+    wantsFocus.current = true;
+    setAttempts((count) => count + 1);
+  };
+
   /** Valida o passo atual; se ok avança (foco no h2), se não foca o 1º campo inválido. */
   const goNext = async (): Promise<boolean> => {
     const valid = await form.trigger(STEP_FIELDS[step], { shouldFocus: true });
     if (valid) moveTo(nextStep(step));
-    else setAttempts((count) => count + 1);
+    else markAttempt();
     return valid;
   };
 
@@ -123,7 +131,7 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     goNext,
     goBack: () => moveTo(previousStep(step)),
     goTo: moveTo,
-    markAttempt: () => setAttempts((count) => count + 1),
+    markAttempt,
     showFieldError,
     clearDraft: draft.clear,
   };
