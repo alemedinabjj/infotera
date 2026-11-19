@@ -31,7 +31,9 @@ export const useHotelResults = (
   const query = useQuery(hotelsQueryOptions(destination, filters));
   const view = deriveResultsView({
     hasData: query.data !== undefined,
-    isError: query.isError,
+    // No TanStack v5 o refetch de uma query sem dados volta a `pending`: sem isto o erro sumiria
+    // (e o botão com ele) no clique de "Tentar de novo". Segue em erro até chegar dado.
+    isError: query.isError || (query.data === undefined && query.errorUpdateCount > 0),
     isPlaceholderData: query.isPlaceholderData,
     isPaused: query.fetchStatus === "paused",
     total: query.data?.total ?? 0,

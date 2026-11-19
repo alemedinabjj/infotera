@@ -306,6 +306,29 @@ describe("HotelSearchResults: erro e offline (critérios 21 e 23)", () => {
     expect(await screen.findAllByRole("heading", { level: 3 })).toHaveLength(10);
   });
 
+  it("'Tentar de novo' fica na tela com 'Tentando…' e o foco, e vai ao título quando a lista chega", async () => {
+    const user = userEvent.setup();
+    let release: () => void = () => undefined;
+    let fail = true;
+    stubApi(async (url) => {
+      if (fail) return new Response("{}", { status: 500 });
+      await new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return paged(url);
+    });
+    start();
+    const retry = await screen.findByRole("button", { name: "Tentar de novo" });
+    fail = false;
+    await user.click(retry);
+    const retrying = await screen.findByRole("button", { name: "Tentando…" });
+    expect(retrying).toHaveFocus();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    act(() => release());
+    expect(await screen.findAllByRole("heading", { level: 3 })).toHaveLength(10);
+    await waitFor(() => expect(countHeading()).toHaveFocus());
+  });
+
   it("sem rede e sem dados: aviso de sem internet", async () => {
     onlineManager.setOnline(false);
     stubApi();

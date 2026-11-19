@@ -4,6 +4,7 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useCallback, useId, useRef, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ErrorBoundary } from "@/shared/ui";
+import { useFocusAfterRetry } from "../hooks/useFocusAfterRetry";
 import { focusResultsHeading, useFocusOnPageChange } from "../hooks/useFocusOnPageChange";
 import { useHotelResults } from "../hooks/useHotelResults";
 import { useSearchFilters } from "../hooks/useSearchFilters";
@@ -40,6 +41,12 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
     filtersKey: serializeSearchFilters({ ...filters, page: 1 }).toString(),
     ready: view.kind === "results" && !view.stale,
     silent: view.kind === "out-of-range",
+  });
+
+  const markRetried = useFocusAfterRetry({
+    headingRef,
+    ready: view.kind === "results" && !view.stale,
+    failed: view.kind === "error" && !results.isFetching,
   });
 
   const toolbar = describeToolbar({
@@ -99,7 +106,10 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
                 criteria={criteria}
                 selectedAmenities={filters.amenities}
                 pageHref={pageHref}
-                onRetry={results.retry}
+                onRetry={() => {
+                  markRetried();
+                  results.retry();
+                }}
                 retrying={results.isFetching}
                 onClearFilters={() => {
                   update({ type: "clear" });
