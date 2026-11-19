@@ -15,9 +15,11 @@ type ErrorBoundaryProps = {
   onError?: (error: unknown, info: ErrorInfo) => void;
 };
 
-type ErrorBoundaryState = { failed: boolean; error: unknown };
-
-const INITIAL_STATE: ErrorBoundaryState = { failed: false, error: null };
+type ErrorBoundaryState = {
+  failed: boolean;
+  error: unknown;
+  prevResetKeys: readonly unknown[] | undefined;
+};
 
 const keysChanged = (previous: readonly unknown[] = [], next: readonly unknown[] = []): boolean =>
   previous.length !== next.length || previous.some((item, index) => !Object.is(item, next[index]));
@@ -27,25 +29,32 @@ const keysChanged = (previous: readonly unknown[] = [], next: readonly unknown[]
  * erros de render/lifecycle dos filhos; erros de request ficam no `useQuery`.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  override state: ErrorBoundaryState = INITIAL_STATE;
+  override state: ErrorBoundaryState = {
+    failed: false,
+    error: null,
+    prevResetKeys: this.props.resetKeys,
+  };
 
-  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
+  static getDerivedStateFromError(error: unknown): Partial<ErrorBoundaryState> {
     return { failed: true, error };
+  }
+
+  static getDerivedStateFromProps(
+    props: ErrorBoundaryProps,
+    state: ErrorBoundaryState,
+  ): Partial<ErrorBoundaryState> | null {
+    if (!keysChanged(state.prevResetKeys, props.resetKeys)) return null;
+    const recovered = state.failed ? { failed: false, error: null } : {};
+    return { ...recovered, prevResetKeys: props.resetKeys };
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
     this.props.onError?.(error, info);
   }
 
-  override componentDidUpdate(previous: ErrorBoundaryProps): void {
-    if (this.state.failed && keysChanged(previous.resetKeys, this.props.resetKeys)) {
-      this.setState(INITIAL_STATE);
-    }
-  }
-
   reset = (): void => {
     this.props.onReset?.();
-    this.setState(INITIAL_STATE);
+    this.setState({ failed: false, error: null });
   };
 
   override render(): ReactNode {

@@ -13,8 +13,9 @@ export const pickCardAmenities = (
   selected: readonly Amenity[],
   limit: number = CARD_AMENITY_LIMIT,
 ): PickedAmenities => {
-  const matching = hotelAmenities.filter((amenity) => selected.includes(amenity));
-  const others = hotelAmenities.filter((amenity) => !selected.includes(amenity));
+  const selectedSet = new Set(selected);
+  const matching = hotelAmenities.filter((amenity) => selectedSet.has(amenity));
+  const others = hotelAmenities.filter((amenity) => !selectedSet.has(amenity));
   const ordered = [...matching, ...others];
   return { shown: ordered.slice(0, limit), hiddenCount: Math.max(ordered.length - limit, 0) };
 };

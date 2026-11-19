@@ -1,6 +1,6 @@
 "use client";
 
-import { type RefObject, useRef } from "react";
+import { type RefObject, useEffect, useRef } from "react";
 import type { FilterChange } from "../model/filter-change";
 import { serializeSearchFilters } from "../model/search-filters";
 import { useFocusAfterRetry } from "./useFocusAfterRetry";
@@ -27,8 +27,15 @@ type UseResultsController = Omit<ReturnType<typeof useSearchFilters>, "update"> 
 export const useResultsController = (destination: string): UseResultsController => {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const { filters, update: applyChange, replacePage, pageHref } = useSearchFilters();
-  const results = useHotelResults(destination, filters, replacePage);
+  const results = useHotelResults(destination, filters);
   const { view } = results;
+  const outOfRangeTo = view.kind === "out-of-range" ? view.lastPage : null;
+
+  // Página fora do intervalo vira a última via replace (sem empilhar histórico).
+  useEffect(() => {
+    if (outOfRangeTo !== null) replacePage(outOfRangeTo);
+  }, [outOfRangeTo, replacePage]);
+
   const filtersKey = serializeSearchFilters({ ...filters, page: 1 }).toString();
   const keep = useKeepResultsHeight({ destination, page: filters.page, filtersKey });
   const ready = view.kind === "results" && !view.stale;
