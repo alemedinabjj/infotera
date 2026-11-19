@@ -206,3 +206,15 @@ export const defaultCheckoutValues: CheckoutValues = {
   },
   termsAccepted: false,
 };
+
+/**
+ * Os dados pessoais (passo 1) estão completos? Usado ao restaurar o rascunho: se não, volta para o
+ * passo 1. Criança sem idade conta como incompleto (a idade nunca é persistida).
+ */
+export const isPersonalValid = (values: CheckoutValues, today: ISODate): boolean => {
+  const result = makeCheckoutSchema(today).safeParse(values);
+  if (result.success) return true;
+  return !result.error.issues.some(
+    (issue) => issue.path[0] === "contact" || issue.path[0] === "companions",
+  );
+};

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type CheckoutValues,
   defaultCheckoutValues,
+  isPersonalValid,
   MESSAGES,
   makeCheckoutSchema,
   makePaymentSchema,
@@ -191,5 +192,22 @@ describe("passo 2: pagamento", () => {
 describe("passo 3: termos", () => {
   it("exige o aceite", () => {
     expect(errorsOf({ ...valid(), termsAccepted: false }).termsAccepted).toBe(MESSAGES.terms);
+  });
+});
+
+describe("isPersonalValid", () => {
+  it("ignora o pagamento e os termos", () => {
+    expect(
+      isPersonalValid(
+        { ...valid(), payment: defaultCheckoutValues.payment, termsAccepted: false },
+        TODAY,
+      ),
+    ).toBe(true);
+  });
+
+  it("contato incompleto ou criança sem idade é inválido", () => {
+    expect(isPersonalValid(withContact({ email: "" }), TODAY)).toBe(false);
+    const child = { kind: "child", firstName: "Clara", lastName: "Souza", age: "" } as const;
+    expect(isPersonalValid({ ...valid(), companions: [child] }, TODAY)).toBe(false);
   });
 });
