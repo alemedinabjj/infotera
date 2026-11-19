@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   useBookingDraft,
   useBookingDraftActions,
@@ -69,6 +69,32 @@ describe("booking-draft", () => {
     window.sessionStorage.setItem(KEY, raw);
     await expect(useBookingDraft.persist.rehydrate()).resolves.not.toThrow();
     expect(useBookingDraft.getState().selection).toBeNull();
+  });
+
+  it("JSON corrompido ainda marca hasHydrated e limpa a chave", async () => {
+    window.sessionStorage.setItem(KEY, "{corrompido");
+    await useBookingDraft.persist.rehydrate();
+    expect(useBookingDraft.persist.hasHydrated()).toBe(true);
+    expect(useBookingDraft.getState().selection).toBeNull();
+    expect(window.sessionStorage.getItem(KEY)).toBeNull();
+  });
+
+  it("sessionStorage inacessível não derruba rehydrate, ações nem hooks", async () => {
+    const spy = vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+      throw new DOMException("denied", "SecurityError");
+    });
+    try {
+      await expect(useBookingDraft.persist.rehydrate()).resolves.not.toThrow();
+      expect(useBookingDraft.persist.hasHydrated()).toBe(true);
+      const { result } = renderHook(() => useSelection());
+      expect(result.current).toBeNull();
+      expect(() => {
+        useBookingDraftActions().selectRoom({ hotelId: 1, roomId: 2, criteria });
+        useBookingDraftActions().clearSelection();
+      }).not.toThrow();
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("clearSelection zera estado e storage", () => {

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { searchCriteriaSchema } from "../lib/search-params";
+import { createRawStorage } from "../lib/storage";
 
 const STORAGE_KEY = "infotera:booking-draft";
 const STORAGE_VERSION = 1;
@@ -30,7 +31,7 @@ export const useBookingDraft = create<BookingDraftState>()(
   persist(() => initialState, {
     name: STORAGE_KEY,
     version: STORAGE_VERSION,
-    storage: createJSONStorage(() => sessionStorage),
+    storage: createJSONStorage(() => createRawStorage("session")),
     skipHydration: true,
     partialize: (state): BookingDraftState => ({ selection: state.selection }),
     migrate: () => initialState,

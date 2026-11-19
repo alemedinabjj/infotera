@@ -48,3 +48,47 @@ export const createStorage = (kind: StorageKind): SafeStorage => ({
     }
   },
 });
+
+/** Contrato mínimo de storage de string, compatível com o `StateStorage` do Zustand. */
+export type RawStorage = {
+  getItem: (name: string) => string | null;
+  setItem: (name: string, value: string) => void;
+  removeItem: (name: string) => void;
+};
+
+/**
+ * Storage de string que nunca lança e funciona sem `window` (SSR). Chaves usadas como vêm
+ * (sem prefixo). Valor que não é JSON válido é descartado: remove a chave e devolve `null`.
+ */
+export const createRawStorage = (kind: StorageKind): RawStorage => ({
+  getItem: (name) => {
+    try {
+      const backend = getBackend(kind);
+      const raw = backend?.getItem(name) ?? null;
+      if (raw === null) return null;
+      try {
+        JSON.parse(raw);
+      } catch {
+        backend?.removeItem(name);
+        return null;
+      }
+      return raw;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    try {
+      getBackend(kind)?.setItem(name, value);
+    } catch {
+      // Best-effort.
+    }
+  },
+  removeItem: (name) => {
+    try {
+      getBackend(kind)?.removeItem(name);
+    } catch {
+      // Best-effort.
+    }
+  },
+});
