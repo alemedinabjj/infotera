@@ -1,28 +1,27 @@
 # feature: booking-confirmation (`/confirmation/[bookingId]`) — F6
 
-Mostra a reserva criada. Tem que funcionar com reload e com o link aberto em outra aba, então a
-fonte de dados é **sempre** `GET /bookings/:id`, nunca o store.
+Recibo da reserva. Lê **sempre** `GET /bookings/:id` no servidor (reload e outra aba funcionam), nunca o store.
+Spec: `docs/specs/F6-booking-confirmation.md` (Decisões 1–12 e `## UI/UX`). `app/` importa só o `index.ts`
+(`error.tsx` importa apenas `@/shared/ui`, para não levar código de servidor ao cliente).
 
-## Escopo
-- Número da reserva em destaque, resumo completo (hotel, quarto, datas, noites, hóspedes, total),
-  botão "Nova busca" (limpa a seleção do `booking-draft` e vai para `/`).
-
-## Estrutura esperada
+## Estrutura
 ```
-api/booking.ts            bookingQueryOptions(id) — schema Booking de shared/api
-components/ConfirmationView.tsx · BookingSummaryCard.tsx · NewSearchButton.tsx ("use client")
-index.ts
+model/      booking-id (parseBookingId: UUID v4 minúsculo) · load-result (BookingLoad, Settled, classifyLoadError) ·
+            confirmation-view (toBookingView, toStayView) · guests · booked-at (America/Sao_Paulo) · metadata · booking-number
+api/        booking (bookingQueryOptions) · confirmation.server (loadBooking, loadStayDetails) · confirmation-metadata.server
+components/ BookingConfirmation (RSC) → ConfirmationView → Header/BookingNumber/StaySummary/GuestList/PaymentSummary/NextSteps
+            StayDetailsSection + CheckTimes (streaming, Suspense) · RefreshButton · ilhas: CopyBookingNumber, NewSearchLink, RememberBooking
 ```
 
-## Regras
-- Server Component busca reserva + hotel + quarto em paralelo (hotel/quarto pelos ids da reserva).
-- 404 → `notFound()` com página "Reserva não encontrada" e link para nova busca.
-- Lembrete no README: a mock-api zera as reservas a cada restart.
-- Não exibir dados sensíveis além do necessário (sem CPF completo; email pode aparecer).
-
-## Acessibilidade
-- Título "Reserva confirmada" como `h1` e recebe o foco ao carregar; número da reserva copiável.
-
-## Testes
-- Componente: renderiza a partir do dado da API; estado de não encontrada.
-- Parte do E2E do fluxo completo (F7).
+## Decisões que valem daqui para frente
+- **Rota sempre dinâmica** (`await connection()`), `no-store`, `noindex, nofollow`. **Nota para a F7:** não aplicar PPR/ISR/`use cache`
+  nesta rota (tem PII). O histórico (`shared/lib/booking-history`, `infotera:booking-history`) guarda só `{ id, savedAt }`; a F7 lista
+  com `GET /bookings/:id` por id e remove os 404 (`removeFromHistory`).
+- Id validado por `parseBookingId` antes de qualquer request; path com `encodeURIComponent` (`fetchBooking` em shared).
+- Hotel e quarto começam juntos depois da reserva; a promessa (`loadStayDetails`, nunca rejeita) vai para o RSC em `<Suspense>`.
+  `404` e quarto de outro hotel = `missing` (sem retry); o resto = `error` (um `ErrorState` e um `RefreshButton`; retry ok → foco no h2).
+- Preço nunca recalculado: `priceBreakdown` só se `isBreakdownConsistent`, senão só `totalPrice`.
+- PII mínima: sem telefone, idade nem documento na tela; título genérico; logs só `{ event, resource, kind, status }` (sem id).
+- Copiar: **sem toast** (feedback no botão + linha `aria-live` abaixo, falha visível e número selecionado).
+- `FocusOnMount` mora em `shared/ui` (usado também por `error.tsx`/`not-found.tsx`); "Está demorando…" é CSS puro (`animate-slow-notice`).
+- Reservas somem ao reiniciar a mock-api (E2E cria a sua por `POST` direto; `_delay`/`_fail` não passam pelo `page.route` do servidor).

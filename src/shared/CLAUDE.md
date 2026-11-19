@@ -90,3 +90,10 @@ para `shared/` quando aparecer o segundo uso.
   (`aria-disabled` nos dois botões), `Toaster data-toaster`, ícones `credit-card`/`lock`/`tag`, e o CSS da barra de
   ação fixa (`[data-action-bar]`) em `globals.css`.
 - `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`) e exporta `describeErrorCount`.
+
+## F6 (booking-confirmation)
+- `lib/price-breakdown` (`SERVICE_FEE_BPS`, `ISS_BPS`, `PriceLine`, `priceLineLabel/Amount`, `priceBreakdownLines`, `isBreakdownConsistent`,
+  `formatCents`), `ui/molecules/PriceBreakdown` (só apresentação; `afterStay`, `showTaxNote`), `lib/room-labels` (`bedsLabel`).
+- `api/endpoints.fetchBooking` (id com `encodeURIComponent`), `lib/clipboard.copyText` (nunca lança; `copyCurrentUrl` usa),
+  `lib/booking-history` (só ids, máx. 10, `localStorage`), `ui/FocusOnMount`, `CopyIcon`, `print:hidden` no header e no toaster.
+- `testing/fixtures`: `makeBooking`, `BOOKING_ID`.

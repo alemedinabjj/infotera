@@ -18,6 +18,9 @@ hooks/    useStrictDocument · useCheckoutGate · useCheckoutQueries · useRoomC
 components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingSummary/CheckoutForm … (ver spec)
 ```
 
+> F6: `SERVICE_FEE_BPS`/`ISS_BPS`/`PriceLine`/rótulos/`formatCents` e o `<dl>` do `PriceBreakdown` agora vivem em `shared`
+> (`lib/price-breakdown`, `ui/molecules/PriceBreakdown`); `calculatePrice` usa `priceBreakdownLines`; a reconciliação usa `fetchBooking`.
+
 ## Decisões (valem daqui para frente)
 - **Server Action recalcula tudo**: o cliente envia só referências, escolhas, `cardLast4` e `expectedTotalCents`; o
   `totalPrice` gravado nunca vem do cliente. A action não lança: devolve `CreateBookingResult` (union por `status`).
