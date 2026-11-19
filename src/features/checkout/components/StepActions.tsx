@@ -42,6 +42,7 @@ export const StepActions = ({ step, price, rooms, submitting, onBack }: StepActi
         <Button
           type="submit"
           fullWidth
+          className="min-w-56"
           loading={submitting || calculating}
           loadingText={submitting ? "Confirmando reserva…" : "Calculando total…"}
         >

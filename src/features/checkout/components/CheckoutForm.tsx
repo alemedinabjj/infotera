@@ -53,7 +53,7 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
           noValidate
           aria-labelledby={headingId}
           onSubmit={onSubmit}
-          className="flex max-w-2xl flex-col gap-5 rounded-card border border-border bg-surface p-4 shadow-card lg:col-start-1 lg:row-start-2 lg:p-5"
+          className="flex flex-col gap-5 rounded-card border border-border bg-surface p-4 shadow-card lg:col-start-1 lg:row-start-2 lg:max-w-2xl lg:p-5"
         >
           <Alert tone="info">{DEMO_NOTICE}</Alert>
           <div ref={checkout.titleRef} className="flex flex-col gap-1">
