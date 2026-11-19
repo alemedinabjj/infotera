@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import type { CancellationPolicy } from "@/shared/api/schemas";
 import type { SearchCriteria } from "@/shared/lib/search-params";
@@ -27,11 +28,21 @@ type RoomsSectionProps = {
  * Anunciador persistente (fora do Suspense, senão o texto trocaria junto com o skeleton): observa o
  * cache sem disparar request e fala "Carregando quartos…" → "2 tipos de quarto".
  */
+const subscribeNothing = (): (() => void) => () => undefined;
+
 const RoomsAnnouncer = ({ hotelId }: { hotelId: number }) => {
   const { data } = useQuery({ ...hotelRoomsQueryOptions(hotelId), enabled: false });
+  // No servidor o cache já pode ter os quartos e o cliente começa sem eles: só anuncia depois de
+  // hidratar (o 1º render dos dois lados é igual, vazio) para não gerar mismatch.
+  const hydrated = useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false,
+  );
+  const text = data ? roomTypesLabel(data.length) : "Carregando quartos…";
   return (
     <p className="sr-only" aria-live="polite">
-      {data ? roomTypesLabel(data.length) : "Carregando quartos…"}
+      {hydrated ? text : ""}
     </p>
   );
 };

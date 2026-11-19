@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 const RootLayout = ({ children }: LayoutProps<"/">) => (
-  <html lang="pt-BR" className={inter.variable}>
+  <html lang="pt-BR" className={inter.variable} data-scroll-behavior="smooth">
     <body className="min-h-dvh antialiased">
       <SkipLink />
       <AppProviders>
