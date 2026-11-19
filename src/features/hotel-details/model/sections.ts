@@ -12,5 +12,8 @@ export const HOTEL_SECTIONS = [
 
 export type HotelSectionId = (typeof HOTEL_SECTIONS)[number]["id"];
 
+/** `id` do h3 do painel de datas: o formulário o usa como `labelledBy` (nome acessível do `<form>`). */
+export const STAY_EDIT_TITLE_ID = "stay-edit-title";
+
 /** `id` do h2 de uma seção (alvo de foco programático). */
 export const sectionHeadingId = (id: HotelSectionId): string => `${id}-titulo`;

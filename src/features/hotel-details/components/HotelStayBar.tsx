@@ -5,10 +5,9 @@ import { cn } from "@/shared/lib/cn";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { Alert, Button, ChevronDownIcon, cardClassName } from "@/shared/ui";
 import { markDatesSubmitted, useFocusAfterDates } from "../hooks/useFocusAfterDates";
+import { STAY_EDIT_TITLE_ID } from "../model/sections";
 
 const PANEL_ID = "stay-edit-panel";
-/** `id` do h3 do painel: o formulário o usa como `labelledBy` (nome acessível do `<form>`). */
-export const STAY_EDIT_TITLE_ID = "stay-edit-title";
 
 type HotelStayBarProps = {
   /** `null`: acesso direto, sem datas. */
