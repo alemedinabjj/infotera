@@ -160,6 +160,11 @@
     body {
       background-color: var(--color-surface);
     }
+
+    /* O h1 recebe foco programático na página; o anel não deve sair no papel. */
+    :focus-visible {
+      outline: none;
+    }
   }
 }
 

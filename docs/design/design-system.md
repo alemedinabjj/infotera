@@ -491,7 +491,8 @@ no topo; também cobriria os toasts.
 
 Sem CSS de impressão por página: variantes `print:` do Tailwind. `print:hidden` em header global,
 `Toaster`, botões e links de navegação; cartões `print:shadow-none print:break-inside-avoid` (borda
-fica); fundo branco pela regra do §2. Conteúdo que precisa sair impresso não fica em `<details>`
+fica); fundo branco pela regra do §2. O anel de foco não é impresso (`@media print { :focus-visible
+{ outline: none } }` no `globals.css`). Conteúdo que precisa sair impresso não fica em `<details>`
 fechado. Nada aparece só na impressão.
 
 ---
