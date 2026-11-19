@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   formatDate,
+  formatDateRange,
   isBeforeToday,
   isoDateSchema,
   isValidISODate,
@@ -89,5 +90,20 @@ describe("formatDate", () => {
 
   it("long inclui dia da semana", () => {
     expect(formatDate("2026-12-12", "long")).toMatch(/sáb/i);
+  });
+});
+
+describe("formatDateRange", () => {
+  const today = "2026-11-19";
+
+  it.each([
+    ["2026-12-12", "2026-12-15", "12–15 dez"],
+    ["2026-12-30", "2027-01-02", "30 dez 2026 – 2 jan 2027"],
+    ["2026-11-28", "2026-12-02", "28 nov – 2 dez"],
+    ["2027-03-10", "2027-03-12", "10–12 mar 2027"],
+    ["2027-03-30", "2027-04-02", "30 mar – 2 abr 2027"],
+    ["2026-01-01", "2026-01-02", "1–2 jan"],
+  ])("%s a %s → %s", (checkIn, checkOut, expected) => {
+    expect(formatDateRange(checkIn, checkOut, today)).toBe(expected);
   });
 });
