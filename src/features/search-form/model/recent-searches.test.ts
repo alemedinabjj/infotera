@@ -6,6 +6,7 @@ import {
   hasExpiredDates,
   MAX_RECENT,
   parseRecentSearches,
+  parseRecentSearchesJson,
   restoreRecentSearch,
 } from "./recent-searches";
 
@@ -102,5 +103,16 @@ describe("describeRecentSearch", () => {
     expect(describeRecentSearch(make({ children: 3, rooms: 2 }), TODAY)).toBe(
       "São Paulo, SP · 12–15 dez · 2 adultos, 3 crianças · 2 quartos",
     );
+  });
+});
+
+describe("parseRecentSearchesJson", () => {
+  it("lê o JSON salvo descartando itens inválidos", () => {
+    const raw = JSON.stringify([make(), { lixo: true }, 42]);
+    expect(parseRecentSearchesJson(raw)).toEqual([make()]);
+  });
+
+  it.each([null, "", "{not json", "{}", "42", "null"])("%j vira lista vazia", (raw) => {
+    expect(parseRecentSearchesJson(raw)).toEqual([]);
   });
 });

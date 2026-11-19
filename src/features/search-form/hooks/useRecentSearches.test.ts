@@ -23,6 +23,14 @@ describe("useRecentSearches", () => {
     expect(result.current.items).toEqual([make("Gramado, RS")]);
   });
 
+  it("a lista só é reprocessada quando o valor salvo muda (referência estável)", () => {
+    localStorage.setItem(KEY, JSON.stringify([make("A, SP")]));
+    const { result, rerender } = renderHook(() => useRecentSearches());
+    const first = result.current.items;
+    rerender();
+    expect(result.current.items).toBe(first);
+  });
+
   it("add grava no topo sem duplicar", () => {
     const { result } = renderHook(() => useRecentSearches());
     act(() => result.current.add(make("A, SP")));

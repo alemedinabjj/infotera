@@ -23,6 +23,17 @@ export const parseRecentSearches = (raw: readonly unknown[]): SearchCriteria[] =
     })
     .slice(0, MAX_RECENT);
 
+/** JSON cru do storage → lista válida. Ausente, não-JSON ou que não seja array = lista vazia. */
+export const parseRecentSearchesJson = (raw: string | null): SearchCriteria[] => {
+  if (raw === null) return [];
+  try {
+    const value: unknown = JSON.parse(raw);
+    return Array.isArray(value) ? parseRecentSearches(value) : [];
+  } catch {
+    return [];
+  }
+};
+
 /** Coloca a busca no topo, remove a duplicata (mesma URL) e corta em `MAX_RECENT`. */
 export const addRecentSearch = (
   list: readonly SearchCriteria[],
