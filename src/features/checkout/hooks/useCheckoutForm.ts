@@ -64,6 +64,22 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     if (fieldFocus) form.setFocus(fieldFocus.path);
   }, [fieldFocus, form]);
 
+  const summaryItems = summarizeCheckoutErrors({
+    errors: form.formState.errors,
+    step,
+    companionKinds: fields.map((field) => field.kind),
+    documentType,
+  });
+  const firstInvalid = useRef<CheckoutFieldPath | undefined>(undefined);
+  useEffect(() => {
+    firstInvalid.current = summaryItems[0]?.id;
+  });
+  // O resumo se revela ao montar (efeito do filho); o campo inválido foca por último e vence:
+  // o foco nunca fica atrás do header nem da barra fixa.
+  useEffect(() => {
+    if (attempts > 0 && firstInvalid.current) form.setFocus(firstInvalid.current);
+  }, [attempts, form]);
+
   const moveTo = (target: CheckoutStep) => {
     setNotice(null);
     setStep(target);
@@ -93,20 +109,13 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     setFieldFocus((current) => ({ path, tick: (current?.tick ?? 0) + 1 }));
   };
 
-  const summary = summarizeCheckoutErrors({
-    errors: form.formState.errors,
-    step,
-    companionKinds: fields.map((field) => field.kind),
-    documentType,
-  });
-
   return {
     form,
     fields,
     step,
     stepIndex: CHECKOUT_STEPS.indexOf(step),
     notice: notice?.step === step ? notice : null,
-    summary: attempts > 0 ? summary : [],
+    summary: attempts > 0 ? summaryItems : [],
     attempts,
     headingRef,
     containerRef,
