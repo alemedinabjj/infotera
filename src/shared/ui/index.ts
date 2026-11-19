@@ -1,5 +1,6 @@
 export { Badge } from "./atoms/Badge";
-export { Button, buttonClassName } from "./atoms/Button";
+export { Button } from "./atoms/Button";
+export { buttonClassName } from "./atoms/button-styles";
 export { Checkbox } from "./atoms/Checkbox";
 export { IconButton } from "./atoms/IconButton";
 export { Input } from "./atoms/Input";

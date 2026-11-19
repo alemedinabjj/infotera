@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buttonClassName } from "@/shared/ui/atoms/Button";
+import { buttonClassName } from "@/shared/ui/atoms/button-styles";
 import { EmptyState } from "@/shared/ui/molecules/EmptyState";
 
 export const metadata: Metadata = { title: "Página não encontrada | Infotera Hotéis" };
