@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatGuests, formatRating, pluralize } from "./format";
+import { formatGuests, formatRating, pluralize, ratingLabel } from "./format";
 
 describe("pluralize", () => {
   it("trata 0, 1 e n", () => {
@@ -33,5 +33,20 @@ describe("formatGuests", () => {
     expect(formatGuests({ adults: 4, children: 2, rooms: 2 })).toBe(
       "4 adultos, 2 crianças · 2 quartos",
     );
+  });
+});
+
+describe("ratingLabel", () => {
+  it.each([
+    [5, "Excelente"],
+    [4.5, "Excelente"],
+    [4.49, "Muito bom"],
+    [4, "Muito bom"],
+    [3.99, "Bom"],
+    [3.5, "Bom"],
+    [3.49, "Regular"],
+    [0, "Regular"],
+  ])("nota %s é %s", (rating, label) => {
+    expect(ratingLabel(rating)).toBe(label);
   });
 });
