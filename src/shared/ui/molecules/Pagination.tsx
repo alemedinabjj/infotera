@@ -104,10 +104,9 @@ export const Pagination = ({
         {summaryLabel(page, totalPages)}
       </p>
       <ul className="hidden items-center gap-1 sm:flex">
-        {getPaginationRange({ page, totalPages }).map((item, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: reticências repetem; a posição é a identidade estável
-          <li key={`${item}-${index}`}>
-            {item === "ellipsis" ? (
+        {getPaginationRange({ page, totalPages }).map((item) => (
+          <li key={item}>
+            {typeof item === "string" ? (
               <span aria-hidden="true" className="px-2 text-fg-subtle">
                 …
               </span>

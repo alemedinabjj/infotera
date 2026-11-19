@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Pagination } from "./Pagination";
 
@@ -28,6 +29,23 @@ describe("Pagination", () => {
       "aria-disabled",
       "true",
     );
+  });
+
+  it("modo botão: o foco permanece no botão da página depois de mudar de página", async () => {
+    const Harness = () => {
+      const [page, setPage] = useState(5);
+      return <Pagination page={page} totalPages={10} onPageChange={setPage} />;
+    };
+    render(<Harness />);
+    const next = screen.getByRole("button", { name: /Próxima/ });
+    await userEvent.click(next);
+    expect(screen.getByRole("button", { name: "Página 6" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(next).toHaveFocus();
+    await userEvent.click(screen.getByRole("button", { name: "Página 7" }));
+    expect(screen.getByRole("button", { name: "Página 7" })).toHaveFocus();
   });
 
   it("modo botão: chama onPageChange e desabilita Próxima no fim", async () => {

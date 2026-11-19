@@ -20,11 +20,11 @@ describe("getPaginationRange", () => {
   it("usa reticências dos dois lados no meio", () => {
     expect(getPaginationRange({ page: 5, totalPages: 10 })).toEqual([
       1,
-      "ellipsis",
+      "ellipsis-start",
       4,
       5,
       6,
-      "ellipsis",
+      "ellipsis-end",
       10,
     ]);
   });
@@ -36,13 +36,21 @@ describe("getPaginationRange", () => {
       3,
       4,
       5,
-      "ellipsis",
+      "ellipsis-end",
       10,
     ]);
-    expect(getPaginationRange({ page: 4, totalPages: 8 })).toEqual([1, 2, 3, 4, 5, "ellipsis", 8]);
+    expect(getPaginationRange({ page: 4, totalPages: 8 })).toEqual([
+      1,
+      2,
+      3,
+      4,
+      5,
+      "ellipsis-end",
+      8,
+    ]);
     expect(getPaginationRange({ page: 10, totalPages: 10 })).toEqual([
       1,
-      "ellipsis",
+      "ellipsis-start",
       6,
       7,
       8,
@@ -51,7 +59,7 @@ describe("getPaginationRange", () => {
     ]);
     expect(getPaginationRange({ page: 7, totalPages: 10 })).toEqual([
       1,
-      "ellipsis",
+      "ellipsis-start",
       6,
       7,
       8,
@@ -63,7 +71,7 @@ describe("getPaginationRange", () => {
   it("limita página fora do intervalo", () => {
     expect(getPaginationRange({ page: 99, totalPages: 10 })).toEqual([
       1,
-      "ellipsis",
+      "ellipsis-start",
       6,
       7,
       8,
