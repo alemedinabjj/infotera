@@ -27,6 +27,7 @@ describe("toHotelsApiQuery", () => {
         types: ["hotel", "resort"],
         amenities: [],
         sort: "rating-desc",
+        view: "pages",
         page: 2,
       }),
     ).toEqual({

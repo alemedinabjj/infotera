@@ -1,5 +1,5 @@
 import type { Amenity, PropertyType } from "@/shared/api/schemas";
-import type { SortOption } from "./search-filters";
+import type { ListMode, SortOption } from "./search-filters";
 
 const AMENITY_LABELS: Record<Amenity, string> = {
   wifi: "Wi-Fi",
@@ -63,8 +63,23 @@ export const sortLabel = (sort: SortOption): string => {
       return "Menor preço";
     case "rating-desc":
       return "Maior avaliação";
+    case "distance":
+      return "Distância do centro";
     default: {
       const unreachable: never = sort;
+      return unreachable;
+    }
+  }
+};
+
+export const listModeLabel = (mode: ListMode): string => {
+  switch (mode) {
+    case "pages":
+      return "Em páginas";
+    case "infinite":
+      return "Rolagem contínua";
+    default: {
+      const unreachable: never = mode;
       return unreachable;
     }
   }

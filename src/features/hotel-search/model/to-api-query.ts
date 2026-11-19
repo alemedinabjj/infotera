@@ -1,13 +1,16 @@
 import { type Amenity, amenitySchema, propertyTypeSchema } from "@/shared/api/schemas";
 import { PAGE_SIZE, PRICE_RANGE, type SearchFilters, type SortOption } from "./search-filters";
 
+/** Ordenações que a API resolve; `distance` é feita no cliente. */
+export type ServerSort = Exclude<SortOption, "distance">;
+
 type SortParams = { _sort: string; _order: string };
 
 /**
  * Ordenação da API com desempate explícito (json-server 0.17 aceita listas em `_sort`/`_order`):
  * páginas determinísticas mesmo com empates de nota ou preço.
  */
-export const SORT_TO_API: Record<SortOption, SortParams> = {
+export const SORT_TO_API: Record<ServerSort, SortParams> = {
   popular: { _sort: "reviewCount,id", _order: "desc,asc" },
   "price-asc": { _sort: "pricePerNight,id", _order: "asc,asc" },
   "rating-desc": { _sort: "rating,reviewCount", _order: "desc,desc" },
@@ -55,7 +58,7 @@ export const toHotelsApiQuery = (destination: string, filters: SearchFilters): H
     ...(filters.amenities.length > 0
       ? { amenities_like: amenitiesPattern(filters.amenities) }
       : {}),
-    ...SORT_TO_API[filters.sort],
+    ...SORT_TO_API[filters.sort === "distance" ? "popular" : filters.sort],
     _page: filters.page,
     _limit: PAGE_SIZE,
   };

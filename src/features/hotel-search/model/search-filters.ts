@@ -11,8 +11,12 @@ export const PRICE_RANGE = { min: 0, max: 3000, step: 50 } as const;
 /** Hotéis por página (`_limit`). */
 export const PAGE_SIZE = 10;
 
-export const SORT_OPTIONS = ["popular", "price-asc", "rating-desc"] as const;
+export const SORT_OPTIONS = ["popular", "price-asc", "rating-desc", "distance"] as const;
 export type SortOption = (typeof SORT_OPTIONS)[number];
+
+/** Modo de listagem: páginas (padrão) ou rolagem contínua. Preferência de exibição, não filtro. */
+export const LIST_MODES = ["pages", "infinite"] as const;
+export type ListMode = (typeof LIST_MODES)[number];
 
 export const MIN_RATINGS = [3.5, 4, 4.5] as const;
 export type MinRating = (typeof MIN_RATINGS)[number];
@@ -28,7 +32,9 @@ export type SearchFilters = {
   /** Ordem de `amenitySchema.options`, sem duplicatas. */
   amenities: Amenity[];
   sort: SortOption;
-  /** ≥ 1. */
+  /** `pages` é o padrão (omitido na URL). */
+  view: ListMode;
+  /** ≥ 1. Sempre 1 em `view=infinite`. */
   page: number;
 };
 
@@ -39,6 +45,7 @@ export const DEFAULT_FILTERS: SearchFilters = {
   types: [],
   amenities: [],
   sort: "popular",
+  view: "pages",
   page: 1,
 };
 
@@ -50,6 +57,7 @@ export const FILTER_PARAM_KEYS = [
   "type",
   "amenity",
   "sort",
+  "view",
   "page",
 ] as const;
 
@@ -84,6 +92,9 @@ const parseMinRating = (raw: string | null): MinRating | null => {
 const parseSort = (raw: string | null): SortOption =>
   SORT_OPTIONS.find((option) => option === raw) ?? DEFAULT_FILTERS.sort;
 
+const parseView = (raw: string | null): ListMode =>
+  LIST_MODES.find((option) => option === raw) ?? DEFAULT_FILTERS.view;
+
 const parsePage = (raw: string | null): number => {
   const page = parseInteger(raw);
   return page !== null && page >= 1 ? page : DEFAULT_FILTERS.page;
@@ -97,14 +108,19 @@ const parseEnumList = <T extends string>(options: readonly T[], raw: string[]): 
  * Lê os filtros dos search params. Tolerante por chave: um valor inválido é descartado sozinho e
  * nunca derruba a página.
  */
-export const parseSearchFilters = (params: ParamsInput): SearchFilters => ({
-  ...parsePriceRange(params),
-  minRating: parseMinRating(params.get("minRating")),
-  types: parseEnumList(propertyTypeSchema.options, params.getAll("type")),
-  amenities: parseEnumList(amenitySchema.options, params.getAll("amenity")),
-  sort: parseSort(params.get("sort")),
-  page: parsePage(params.get("page")),
-});
+export const parseSearchFilters = (params: ParamsInput): SearchFilters => {
+  const view = parseView(params.get("view"));
+  return {
+    ...parsePriceRange(params),
+    minRating: parseMinRating(params.get("minRating")),
+    types: parseEnumList(propertyTypeSchema.options, params.getAll("type")),
+    amenities: parseEnumList(amenitySchema.options, params.getAll("amenity")),
+    sort: parseSort(params.get("sort")),
+    view,
+    // Na rolagem contínua não existe página: a URL canônica a ignora.
+    page: view === "infinite" ? DEFAULT_FILTERS.page : parsePage(params.get("page")),
+  };
+};
 
 /**
  * Serializa só os filtros, em ordem fixa e sem valores-padrão (URL canônica = chave de cache
@@ -122,7 +138,10 @@ export const serializeSearchFilters = (filters: SearchFilters): URLSearchParams 
     params.append("amenity", amenity);
   }
   if (filters.sort !== DEFAULT_FILTERS.sort) params.set("sort", filters.sort);
-  if (filters.page > DEFAULT_FILTERS.page) params.set("page", String(filters.page));
+  if (filters.view !== DEFAULT_FILTERS.view) params.set("view", filters.view);
+  if (filters.view === "pages" && filters.page > DEFAULT_FILTERS.page) {
+    params.set("page", String(filters.page));
+  }
   return params;
 };
 
@@ -143,7 +162,7 @@ export const withFilters = (params: URLSearchParams, filters: SearchFilters): UR
 
 /**
  * Quantos filtros estão ativos (o contador de "Filtros (3)"): faixa de preço conta 1, nota 1 e
- * cada tipo/comodidade marcado 1. Ordenação e página não são filtros.
+ * cada tipo/comodidade marcado 1. Ordenação, modo de exibição e página não são filtros.
  */
 export const countActiveFilters = (filters: SearchFilters): number => {
   const price = filters.minPrice > PRICE_RANGE.min || filters.maxPrice < PRICE_RANGE.max ? 1 : 0;

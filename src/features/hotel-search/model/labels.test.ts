@@ -3,11 +3,12 @@ import { amenitySchema, propertyTypeSchema } from "@/shared/api/schemas";
 import {
   AMENITY_DISPLAY_ORDER,
   amenityLabel,
+  listModeLabel,
   PROPERTY_TYPE_DISPLAY_ORDER,
   propertyTypeLabel,
   sortLabel,
 } from "./labels";
-import { SORT_OPTIONS } from "./search-filters";
+import { LIST_MODES, SORT_OPTIONS } from "./search-filters";
 
 describe("labels", () => {
   it("a ordem de exibição das comodidades cobre o enum inteiro, sem repetir", () => {
@@ -30,6 +31,11 @@ describe("labels", () => {
       "Mais populares",
       "Menor preço",
       "Maior avaliação",
+      "Distância do centro",
     ]);
+  });
+
+  it("modos de listagem", () => {
+    expect(LIST_MODES.map(listModeLabel)).toEqual(["Em páginas", "Rolagem contínua"]);
   });
 });
