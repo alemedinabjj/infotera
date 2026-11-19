@@ -65,6 +65,7 @@ export const useDestinationField = ({ selected, onSelect }: Options) => {
     view,
     isLoading,
     announcement,
+    errorMessage: suggestionsErrorMessage(online),
     isRetrying,
     retry: async () => {
       setIsRetrying(true);

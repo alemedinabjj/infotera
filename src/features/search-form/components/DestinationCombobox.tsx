@@ -95,6 +95,7 @@ export const DestinationCombobox = ({
             items={field.items}
             query={field.inputValue}
             combobox={combobox}
+            errorMessage={field.errorMessage}
             isRetrying={field.isRetrying}
             onRetry={retry}
           />

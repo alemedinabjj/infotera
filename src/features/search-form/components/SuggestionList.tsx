@@ -4,8 +4,7 @@ import type { MouseEvent } from "react";
 import type { Suggestion } from "@/shared/api/schemas";
 import { AlertCircleIcon, Button, Spinner } from "@/shared/ui";
 import type { useCombobox } from "../hooks/useCombobox";
-import { type SuggestionsView, suggestionsErrorMessage } from "../hooks/useDestinationField";
-import { useOnline } from "../hooks/useOnline";
+import type { SuggestionsView } from "../hooks/useDestinationField";
 import { SuggestionOption } from "./SuggestionOption";
 
 type Combobox = ReturnType<typeof useCombobox>;
@@ -15,16 +14,24 @@ type SuggestionListProps = {
   items: Suggestion[];
   query: string;
   combobox: Combobox;
+  /** Texto da linha de erro (falha de rede ou sem internet). */
+  errorMessage: string;
   isRetrying: boolean;
   onRetry: (viaKeyboard: boolean) => void;
 };
 
 const STATUS_ROW = "flex min-h-11 items-center gap-3 px-3 py-2 text-sm text-fg-muted";
 
-const ErrorRow = ({ isRetrying, onRetry }: Pick<SuggestionListProps, "isRetrying" | "onRetry">) => (
-  <div className={STATUS_ROW}>
-    <AlertCircleIcon className="size-5 shrink-0 text-danger" />
-    <p className="min-w-0 flex-1 text-fg">{suggestionsErrorMessage(useOnline())}</p>
+const ErrorRow = ({
+  message,
+  isRetrying,
+  onRetry,
+}: Pick<SuggestionListProps, "isRetrying" | "onRetry"> & { message: string }) => (
+  <div className="flex min-h-11 flex-col items-start gap-2 px-3 py-2 text-sm min-[400px]:flex-row min-[400px]:items-center min-[400px]:gap-3">
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      <AlertCircleIcon className="size-5 shrink-0 text-danger" />
+      <p className="min-w-0 text-fg">{message}</p>
+    </div>
     <Button
       variant="ghost"
       size="sm"
@@ -44,6 +51,7 @@ export const SuggestionList = ({
   items,
   query,
   combobox,
+  errorMessage,
   isRetrying,
   onRetry,
 }: SuggestionListProps) => (
@@ -74,6 +82,8 @@ export const SuggestionList = ({
         <p className="text-sm text-fg-muted">Confira a grafia ou tente o nome da cidade.</p>
       </div>
     ) : null}
-    {view === "error" ? <ErrorRow isRetrying={isRetrying} onRetry={onRetry} /> : null}
+    {view === "error" ? (
+      <ErrorRow message={errorMessage} isRetrying={isRetrying} onRetry={onRetry} />
+    ) : null}
   </div>
 );

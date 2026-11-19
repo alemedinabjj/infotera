@@ -22,6 +22,9 @@ export const suggestionsQueryOptions = (q: string) => {
     queryFn: ({ signal }) => fetchSuggestions(normalized, signal),
     enabled: normalized.length >= MIN_QUERY_LENGTH,
     staleTime: STALE_TIME_MS,
+    // Sem retry automático: a pessoa vê a falha na hora e decide em "Tentar de novo" (o padrão
+    // seria ~3 s de backoff com o popover em "Buscando…").
+    retry: 0,
     placeholderData: keepPreviousData,
   });
 };

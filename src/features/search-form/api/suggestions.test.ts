@@ -34,6 +34,10 @@ describe("suggestionsQueryOptions", () => {
     );
   });
 
+  it("não repete a requisição sozinha: falha aparece na hora", () => {
+    expect(suggestionsQueryOptions("sao").retry).toBe(0);
+  });
+
   it.each(["", " ", "s", " s ", "á"])("desabilitada para %j", (q) => {
     expect(suggestionsQueryOptions(q).enabled).toBe(false);
   });
