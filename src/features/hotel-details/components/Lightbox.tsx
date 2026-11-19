@@ -2,6 +2,7 @@
 
 import type { KeyboardEventHandler } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, Dialog, IconButton, RemoteImage } from "@/shared/ui";
+import { useSwipe } from "../hooks/useSwipe";
 import { type GalleryAction, photoAlt, photoCounter } from "../model/gallery";
 import { LightboxPhoto } from "./LightboxPhoto";
 
@@ -42,7 +43,8 @@ const Neighbors = ({ images, index }: { images: readonly string[]; index: number
 
 /**
  * Galeria em tela cheia (`Dialog size="full"`). ←/→/Home/End trocam a foto; `Esc`, foco preso e o
- * foco de volta ao botão que abriu vêm do `<dialog>`. Com 1 foto, sem setas nem contador.
+ * foco de volta ao botão que abriu vêm do `<dialog>`. Arrastar na horizontal (celular) também troca
+ * a foto. Com 1 foto, sem setas, contador nem gesto.
  */
 export const Lightbox = ({
   name,
@@ -56,6 +58,7 @@ export const Lightbox = ({
   const total = images.length;
   const src = images[index];
   const several = total > 1;
+  const swipe = useSwipe(onGo);
   return (
     <Dialog
       open={open}
@@ -89,7 +92,12 @@ export const Lightbox = ({
         ) : undefined
       }
     >
-      {src ? <LightboxPhoto key={src} src={src} alt={photoAlt(name, index, total)} /> : null}
+      {src ? (
+        // `touch-pan-y`: o gesto horizontal chega ao componente (troca de foto) sem rolar a página.
+        <div className="size-full touch-pan-y" {...(several ? swipe : {})}>
+          <LightboxPhoto key={src} src={src} alt={photoAlt(name, index, total)} />
+        </div>
+      ) : null}
       {several ? <Neighbors images={images} index={index} /> : null}
     </Dialog>
   );

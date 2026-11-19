@@ -8,6 +8,7 @@ import {
   photoAlt,
   photoCounter,
   photoOpenLabel,
+  swipeAction,
   thumbPlacement,
 } from "./gallery";
 
@@ -75,5 +76,18 @@ describe("galleryPreview e grade", () => {
     expect(thumbPlacement(3, 2)).toContain("row-span-2");
     expect(thumbPlacement(4, 2)).toBe("");
     expect(thumbPlacement(0, 0)).toBe("");
+  });
+});
+
+describe("swipeAction", () => {
+  it.each([
+    [-80, 0, "next"],
+    [80, 10, "prev"],
+    [-49, 0, null],
+    [-60, 70, null],
+    [0, 0, null],
+    [50, 0, "prev"],
+  ])("dx %i / dy %i → %s", (dx, dy, expected) => {
+    expect(swipeAction(dx, dy)).toBe(expected);
   });
 });

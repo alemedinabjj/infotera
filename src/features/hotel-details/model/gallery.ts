@@ -86,3 +86,20 @@ const THUMB_PLACEMENT: Record<number, readonly string[]> = {
 /** Posição da miniatura `position` (0-based) na grade de 4 colunas × 2 linhas, sem buracos. */
 export const thumbPlacement = (thumbCount: number, position: number): string =>
   THUMB_PLACEMENT[thumbCount]?.[position] ?? "";
+
+/** Deslocamento horizontal mínimo (px) para um arrastar valer como "trocar de foto". */
+export const SWIPE_THRESHOLD_PX = 50;
+
+/**
+ * Gesto de arrastar: dedo para a esquerda → próxima foto, para a direita → anterior. Só vale o
+ * movimento predominantemente horizontal e de pelo menos `threshold` (rolar na vertical, toques
+ * e arrastos curtos são ignorados).
+ */
+export const swipeAction = (
+  deltaX: number,
+  deltaY: number,
+  threshold = SWIPE_THRESHOLD_PX,
+): GalleryAction | null => {
+  if (Math.abs(deltaX) < threshold || Math.abs(deltaX) <= Math.abs(deltaY)) return null;
+  return deltaX < 0 ? "next" : "prev";
+};

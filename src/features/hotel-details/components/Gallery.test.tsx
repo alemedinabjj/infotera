@@ -124,3 +124,35 @@ describe("Lightbox (critério 10)", () => {
     expect(within(dialog).getByText("Foto 2 de 5")).toBeInTheDocument();
   });
 });
+
+describe("Lightbox: arrastar para trocar de foto", () => {
+  const drag = (target: Element, from: number, to: number, pointerId = 1) => {
+    fireEvent.pointerDown(target, { pointerId, isPrimary: true, clientX: from, clientY: 100 });
+    fireEvent.pointerUp(target, { pointerId, isPrimary: true, clientX: to, clientY: 104 });
+  };
+
+  it("arrastar para a esquerda avança e para a direita volta (limiar de 50px)", async () => {
+    const { dialog } = await openAll();
+    const area = within(dialog)
+      .getByRole("img", { name: `${NAME}, foto 1 de 5` })
+      .closest(".touch-pan-y");
+    if (!area) throw new Error("área de gesto ausente");
+    drag(area, 300, 200);
+    expect(within(dialog).getByText("Foto 2 de 5")).toBeInTheDocument();
+    drag(area, 100, 120);
+    expect(within(dialog).getByText("Foto 2 de 5")).toBeInTheDocument();
+    drag(area, 100, 200);
+    expect(within(dialog).getByText("Foto 1 de 5")).toBeInTheDocument();
+  });
+
+  it("com 1 foto o gesto não faz nada", async () => {
+    const user = userEvent.setup();
+    render(<Gallery name={NAME} images={photos(1)} />);
+    await user.click(screen.getByRole("button", { name: "Abrir foto 1 de 1" }));
+    const dialog = screen.getByRole("dialog", { name: `Fotos de ${NAME}` });
+    const area = within(dialog).getByRole("img").closest(".touch-pan-y");
+    if (!area) throw new Error("área de gesto ausente");
+    drag(area, 300, 100);
+    expect(within(dialog).getByRole("img", { name: `${NAME}, foto 1 de 1` })).toBeInTheDocument();
+  });
+});
