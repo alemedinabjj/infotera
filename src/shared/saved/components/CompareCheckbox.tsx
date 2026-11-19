@@ -27,12 +27,8 @@ export const CompareCheckbox = ({ hotelId, hotelName, className }: CompareCheckb
     <>
       <Checkbox
         className={className}
-        label={
-          <>
-            {MESSAGES.label}
-            <VisuallyHidden>{MESSAGES.srName(hotelName)}</VisuallyHidden>
-          </>
-        }
+        label={MESSAGES.label}
+        aria-label={MESSAGES.ariaLabel(hotelName)}
         checked={checked}
         aria-disabled={blocked ? true : undefined}
         aria-describedby={blocked ? hintId : undefined}

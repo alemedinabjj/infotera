@@ -13,7 +13,7 @@ export const SAVED_MESSAGES = {
   },
   compare: {
     label: "Comparar",
-    srName: (name: string) => `: ${name}`,
+    ariaLabel: (name: string) => `Comparar: ${name}`,
     limitHint: `Limite de ${MAX_COMPARE} hotéis na comparação.`,
     limitToast: `Você já está comparando ${MAX_COMPARE} hotéis. Remova um para adicionar outro.`,
     viewAction: "Ver comparação",
