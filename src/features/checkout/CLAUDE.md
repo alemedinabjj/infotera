@@ -36,7 +36,8 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
   `booking-draft.setRoomCount`. Seleção congelada (`leaving`) quando a reserva é criada, para o `clearSelection()` não
   disparar o redirect para `/`.
 - **Cupons locais** (`BEMVINDO10`, `FERIAS15`, `DESCONTO50`, `VERAO2024`), consulta com cache por código (`staleTime: Infinity`),
-  elegibilidade reavaliada por `buildQuote` quando os quartos mudam.
+  elegibilidade reavaliada por `buildQuote` quando os quartos mudam. A linha de desconto só aparece com
+  `discountCents > 0` (cupom inelegível ou sem cupom não mostra linha); durante a validação, só um skeleton (`afterStay`).
 - **Máscaras**: `applyMask` conta letras e dígitos antes do cursor (vale para passaporte também); sem `maxLength`.
 - **Botões nunca `disabled`**: `loading`/`aria-disabled`; blur do campo adiado com `useDeferredBlur` enquanto um botão é
   pressionado; ErrorSummary e SubmitError remontados por `key`.
