@@ -36,7 +36,7 @@ describe("HotelHeader (critério 7)", () => {
     ).toBeVisible();
     expect(container).toHaveTextContent("Hotel · Rio de Janeiro, RJ");
     expect(container).toHaveTextContent(seedHotel(1).address);
-    expect(container).toHaveTextContent("Nota 4,8 de 5,Excelente· 2.847 avaliações");
+    expect(container).toHaveTextContent("Nota 4,8 de 5,Excelente·2.847 avaliações");
     expect(container).toHaveTextContent("a partir de R$ 800 por noite");
     expect(screen.getByRole("link", { name: "Ver quartos" })).toHaveAttribute("href", "#quartos");
     expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();

@@ -45,7 +45,7 @@ export const HotelHeader = ({ hotel, stayLabel, children }: HotelHeaderProps) =>
       </div>
       <div className="flex gap-3">
         <ShareButton />
-        <a href="#quartos" className={`${buttonClassName()} flex-1 lg:flex-none`}>
+        <a href="#quartos" className={`${buttonClassName()} flex-1 whitespace-nowrap lg:flex-none`}>
           Ver quartos
           <ChevronDownIcon aria-hidden="true" className="size-5" />
         </a>

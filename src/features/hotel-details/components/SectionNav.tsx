@@ -7,7 +7,13 @@ import { HOTEL_SECTIONS } from "../model/sections";
  */
 export const SectionNav = () => (
   <nav aria-label="Seções da página" className="border-y border-border">
-    <ul className="flex gap-1 overflow-x-auto py-1">
+    <ul
+      className={
+        // Celular: a borda direita esmaece para indicar que dá para rolar; o `pr-8` deixa o último
+        // item atravessar o gradiente ao fim da rolagem.
+        "flex gap-1 overflow-x-auto py-1 max-sm:pr-8 max-sm:[mask-image:linear-gradient(to_right,black_calc(100%-2rem),transparent)]"
+      }
+    >
       {HOTEL_SECTIONS.map((section) => (
         <li key={section.id} className="shrink-0">
           <a
