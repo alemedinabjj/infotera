@@ -1,0 +1,103 @@
+# Infotera — Sistema de Reserva de Hotéis (teste técnico frontend)
+
+Solução do desafio em `docs/TEST_FRONTEND.md` (cópia fiel do enunciado). O mapa do teste —
+requisitos por feature, o que escolhemos dos avançados e os detalhes da mock-api — está em
+`docs/TEST_MAP.md`. **Leia o TEST_MAP antes de mexer em qualquer feature.**
+
+## Stack (obrigatória pelo teste)
+
+- Next.js 16, App Router, TypeScript `strict` (+ `noUncheckedIndexedAccess`)
+- Tailwind CSS
+- Zustand (estado global de cliente)
+- TanStack Query v5 (todo dado de servidor)
+- React Hook Form + Zod (formulários e validação de fronteira)
+- Biome (lint + format)
+- Vitest + Testing Library (unit/componente), Playwright (E2E)
+- Backend: **somente** a `mock-api/` (json-server 0.17). Base URL em `NEXT_PUBLIC_API_URL`, nunca `localhost` fixo no código.
+
+## Comandos
+
+> Válidos depois da feature `F0-setup`. Atualize esta seção se mudar algum script.
+
+```bash
+cd mock-api && npm install && npm run server   # API em http://localhost:3333 (delay 300ms)
+npm run dev          # front em http://localhost:3000
+npm run typecheck    # tsc --noEmit
+npm run lint         # biome check
+npm run test         # vitest run
+npm run test:e2e     # playwright test --trace off (precisa da API e do front rodando)
+```
+
+## Arquitetura: por feature
+
+```
+src/
+  app/                  rotas finas: page/layout/loading/error. Só compõem features.
+  features/
+    search-form/        página inicial (/)            — busca, autocomplete, datas, hóspedes
+    hotel-search/       /search                       — lista, filtros, ordenação, paginação
+    hotel-details/      /hotel/[hotelId]              — galeria, info, quartos, reviews
+    checkout/           /checkout                     — resumo, formulário, preço, POST /bookings
+    booking-confirmation/ /confirmation/[bookingId]   — GET /bookings/:id
+  shared/               código usado por 2+ features (api client, ui, lib, stores)
+mock-api/               API mockada fornecida pelo teste (não é código nosso)
+docs/                   enunciado, mapa do teste, specs por feature
+.claude/agents/         agentes do time de IA
+```
+
+Estrutura interna de cada feature (crie só as pastas que usar):
+
+```
+features/<nome>/
+  CLAUDE.md      instruções da feature para a IA (leia antes de editar)
+  index.ts       API pública — a ÚNICA coisa que app/ pode importar
+  api/           query keys, queryOptions, mutations (TanStack Query)
+  model/         schemas Zod, tipos e lógica pura (sem React) — 100% testável
+  hooks/         hooks que ligam model + api + store
+  components/    componentes da feature (apresentação)
+  store/         slice Zustand local da feature, se precisar
+```
+
+### Regras de dependência
+
+- `app → features → shared`. Nunca o contrário.
+- Uma feature **não importa** outra feature. Estado ou tipo que duas features precisam vai para `shared/`.
+- `app/` importa features só pelo `index.ts` (`@/features/checkout`), nunca deep import.
+- Server Components por padrão. `"use client"` só no componente que tem interação, o mais folha possível.
+
+## Regras de código (avaliadas pelo teste)
+
+- Zero `any`, zero `as` para silenciar o compilador, zero `@ts-ignore`. Use `unknown` + Zod na fronteira.
+- Toda resposta da API passa por um schema Zod em `shared/api/schemas.ts`; os tipos saem de `z.infer`.
+- `type` em vez de `interface`; unions literais em vez de `enum`; `switch` exaustivo com `never`.
+- Named exports. Componentes como `const Nome = (...) => ...`.
+- Lógica (datas, preço, filtros ↔ URL) fica em `model/` como função pura, nunca dentro do componente.
+- JSDoc nos componentes e hooks exportados que não forem óbvios.
+- Acessibilidade não é opcional: label em todo input, foco visível, navegação por teclado, `aria-live` para loading/erro, contraste AA, nada quebrado no mobile (320px).
+- Toda tela com dado remoto tem os 4 estados: loading (skeleton), erro (com retry), vazio, sucesso.
+- Identificadores e código em inglês; textos da UI e documentação em pt-BR.
+- Não commitar `node_modules`, `.env`, `mock-api/db.json`.
+
+## Fluxo de trabalho com os agentes
+
+Desenvolvemos **uma feature por vez**, em ordem (veja o roadmap em `docs/TEST_MAP.md`).
+O comando `/feature <id>` roda o pipeline inteiro. Manualmente, a ordem é:
+
+| # | Agente | Modelo | Papel |
+|---|---|---|---|
+| 1 | `planner` | Opus 5.5 | Escreve `docs/specs/<feature>.md`: escopo, critérios de aceite, arquivos, plano de testes |
+| 2 | `developer` | Sonnet 5.5 | Implementa a spec (TDD na lógica pura), deixa typecheck/lint/test verdes |
+| 3 | `qa` | Sonnet 5.5 | Escreve testes de componente/E2E, testa a11y e os cenários `_delay`/`_fail` da API |
+| 4 | `reviewer` | Opus 5.5 | Revisa qualidade, arquitetura e aderência à spec. Só lê |
+| 5 | `security` | Opus 5.5 | Revisa segurança e privacidade (PII, XSS, env, deps). Só lê |
+
+`reviewer` e `security` rodam em paralelo. Achado bloqueante volta para o `developer`; o ciclo
+repete até os dois aprovarem (no máximo 3 voltas; depois disso, pare e pergunte ao usuário).
+
+### Definição de pronto (por feature)
+
+1. Critérios de aceite da spec atendidos.
+2. `npm run typecheck && npm run lint && npm run test` verdes.
+3. `reviewer` e `security` sem achado bloqueante.
+4. `CLAUDE.md` da feature atualizado se alguma decisão mudou.
+5. Commits atômicos em Conventional Commits (`feat(hotel-search): ...`, `test(checkout): ...`, `fix: ...`).
