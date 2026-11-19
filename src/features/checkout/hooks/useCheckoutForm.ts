@@ -80,7 +80,8 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     form.setFocus(first);
     // O campo já pode estar focado (o RHF focou antes) e o resumo acabou de rolar a página: traz o
     // campo de volta à vista respeitando o `scroll-padding` (header em cima, barra fixa embaixo).
-    document.activeElement?.scrollIntoView?.({ block: "nearest" });
+    // Adiado um frame: em desenvolvimento o StrictMode reexecuta o efeito do resumo logo depois.
+    requestAnimationFrame(() => document.activeElement?.scrollIntoView?.({ block: "nearest" }));
   });
 
   const moveTo = (target: CheckoutStep) => {

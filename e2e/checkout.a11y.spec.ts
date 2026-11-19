@@ -140,10 +140,15 @@ test.describe("320 px", () => {
     await clickPrimary(page, "Confirmar reserva");
     const checkbox = page.getByRole("checkbox", { name: /Li e aceito os termos/ });
     await expect(checkbox).toBeFocused();
-    const bar = await page
-      .locator("[data-action-bar]")
-      .evaluate((el) => el.getBoundingClientRect().top);
-    const bottom = await checkbox.evaluate((el) => el.getBoundingClientRect().bottom);
-    expect(bottom).toBeLessThanOrEqual(bar);
+    // O foco do campo vem depois do resumo de erros: espera a rolagem assentar.
+    await expect
+      .poll(async () => {
+        const bar = await page
+          .locator("[data-action-bar]")
+          .evaluate((el) => el.getBoundingClientRect().top);
+        const bottom = await checkbox.evaluate((el) => el.getBoundingClientRect().bottom);
+        return bottom <= bar;
+      })
+      .toBe(true);
   });
 });
