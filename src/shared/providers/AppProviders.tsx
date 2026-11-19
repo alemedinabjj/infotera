@@ -5,12 +5,15 @@ import type { ReactNode } from "react";
 import { getQueryClient } from "../api/query-client";
 import { Toaster } from "../ui/toast/Toaster";
 import { BookingDraftHydrator } from "./BookingDraftHydrator";
+import { MotionProvider } from "./MotionProvider";
 
-/** Providers globais: TanStack Query, reidratação do rascunho da reserva e Toaster. */
+/** Providers globais: TanStack Query, Motion, reidratação do rascunho da reserva e Toaster. */
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={getQueryClient()}>
-    {children}
-    <BookingDraftHydrator />
-    <Toaster />
+    <MotionProvider>
+      {children}
+      <BookingDraftHydrator />
+      <Toaster />
+    </MotionProvider>
   </QueryClientProvider>
 );
