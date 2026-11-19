@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { Suggestion } from "@/shared/api/schemas";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { suggestionsQueryOptions } from "../api/suggestions";
 import { normalizeQuery } from "../model/suggestion-text";
 import {
@@ -8,7 +9,6 @@ import {
   describeSuggestionsAnnouncement,
   suggestionsErrorMessage,
 } from "../model/suggestions-view";
-import { useDebouncedValue } from "./useDebouncedValue";
 import { useOnline } from "./useOnline";
 
 const MIN_QUERY_LENGTH = 2;

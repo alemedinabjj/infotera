@@ -1,9 +1,9 @@
 "use client";
 
 import { Controller, useFormContext, useWatch } from "react-hook-form";
+import { useToday } from "@/shared/hooks/useToday";
 import { formatDate } from "@/shared/lib/dates";
 import { CalendarIcon, Field, InfoIcon, Input } from "@/shared/ui";
-import { useToday } from "../hooks/useToday";
 import { type DateNotice, formatCheckOutAdjusted } from "../model/notices";
 import type { SearchFormValues } from "../model/search-form.schema";
 import { adjustCheckOut, dateBounds, stayNights } from "../model/stay-dates";

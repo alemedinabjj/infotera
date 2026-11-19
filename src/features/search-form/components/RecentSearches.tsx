@@ -1,9 +1,9 @@
 "use client";
 
 import { useId } from "react";
+import { useToday } from "@/shared/hooks/useToday";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { Badge, Button, HistoryIcon, VisuallyHidden } from "@/shared/ui";
-import { useToday } from "../hooks/useToday";
 import {
   describeRecentDetails,
   describeRecentSearch,
