@@ -22,5 +22,5 @@ export const FAVORITES_MESSAGES = {
   },
   removed: "Removido dos favoritos.",
   undo: "Desfazer",
-  removedFor: (name: string) => `: ${name}`,
+  undoLabel: (name: string) => `Desfazer: ${name}`,
 } as const;

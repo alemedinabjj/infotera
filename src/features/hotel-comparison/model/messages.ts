@@ -16,7 +16,7 @@ export const COMPARISON_MESSAGES = {
     return `Comparação entre ${head ? `${head} e ${last}` : last}`;
   },
   remove: "Remover",
-  removeFor: (name: string) => ` ${name} da comparação`,
+  removeLabel: (name: string) => `Remover ${name} da comparação`,
   loading: "Carregando a comparação…",
   slow: "Está demorando mais que o normal…",
   badges: { cheapest: "Menor preço", bestRated: "Melhor nota" },

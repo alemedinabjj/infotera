@@ -10,3 +10,13 @@ export const missingIds = (
   const found = new Set(returned.map((item) => item.id));
   return canonicalIds(requested).filter((id) => !found.has(id));
 };
+
+/** Itens na ordem dos ids pedidos (a API não garante a ordem); ids sem item somem. */
+export const orderByIds = <T extends { id: number }>(
+  items: readonly T[],
+  ids: readonly number[],
+): T[] =>
+  ids.flatMap((id) => {
+    const found = items.find((item) => item.id === id);
+    return found ? [found] : [];
+  });
