@@ -22,12 +22,13 @@ export const useCheckoutFocus = (
   firstInvalidId: CheckoutFieldPath | undefined,
 ) => {
   const [headingTick, setHeadingTick] = useState(0);
-  const [fieldFocus, setFieldFocus] = useState<{ path: CheckoutFieldPath; tick: number } | null>(
-    null,
-  );
+  const [fieldTick, setFieldTick] = useState(0);
+  const pendingField = useRef<CheckoutFieldPath | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const wantsFocus = useRef(false);
+  // `setFocus` do RHF tem identidade estável: um ref evita reexecutar os efeitos por causa dele.
+  const setFocus = useRef(form.setFocus);
 
   useEffect(() => {
     if (headingTick === 0) return;
@@ -36,13 +37,16 @@ export const useCheckoutFocus = (
   }, [headingTick]);
 
   useEffect(() => {
-    if (fieldFocus) form.setFocus(fieldFocus.path);
-  }, [fieldFocus, form]);
+    const path = pendingField.current;
+    if (!path) return;
+    pendingField.current = null;
+    setFocus.current(path);
+  }, [fieldTick]);
 
   useEffect(() => {
     if (!wantsFocus.current || !firstInvalidId) return;
     wantsFocus.current = false;
-    form.setFocus(firstInvalidId);
+    setFocus.current(firstInvalidId);
     // O resumo acabou de rolar a página (e em desenvolvimento o StrictMode reexecuta o efeito dele):
     // adiado um frame, traz o campo inteiro de volta à vista.
     requestAnimationFrame(() => revealBlock(blockOf(document.activeElement)));
@@ -56,7 +60,9 @@ export const useCheckoutFocus = (
     requestFieldFocus: () => {
       wantsFocus.current = true;
     },
-    focusField: (path: CheckoutFieldPath) =>
-      setFieldFocus((current) => ({ path, tick: (current?.tick ?? 0) + 1 })),
+    focusField: (path: CheckoutFieldPath) => {
+      pendingField.current = path;
+      setFieldTick((tick) => tick + 1);
+    },
   };
 };
