@@ -2,17 +2,16 @@
 
 import { useCallback, useId, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { ErrorBoundary } from "@/shared/ui";
+import { ErrorBoundary, SkipLink } from "@/shared/ui";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
 import { useResultsController } from "../hooks/useResultsController";
-import { describeAnnouncement, describeToolbar } from "../model/results-view";
-import { countActiveFilters, serializeSearchFilters } from "../model/search-filters";
-import { FiltersDrawer, FiltersTrigger } from "./FiltersDrawer";
+import { useResultsText } from "../hooks/useResultsText";
+import { serializeSearchFilters } from "../model/search-filters";
+import { FiltersDrawer } from "./FiltersDrawer";
 import { FiltersPanel } from "./FiltersPanel";
+import { ResultsControls } from "./ResultsControls";
 import { ResultsError } from "./ResultsError";
 import { ResultsSection } from "./ResultsSection";
-import { ResultsToolbar } from "./ResultsToolbar";
-import { SortSelect } from "./SortSelect";
 
 type HotelSearchResultsProps = {
   destination: string;
@@ -26,28 +25,26 @@ type HotelSearchResultsProps = {
  */
 export const HotelSearchResults = ({ destination, criteria }: HotelSearchResultsProps) => {
   const headingId = useId();
+  const distanceHelpId = useId();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const { filters, update, pageHref, results, headingRef, sectionRef, sectionMinHeight, retry } =
     useResultsController(destination);
   const { view } = results;
 
-  const toolbar = describeToolbar({
-    view,
-    slow: results.slow,
-    total: results.total,
-    page: filters.page,
-  });
-  const announcement = describeAnnouncement({
-    view,
-    slow: results.slow,
-    total: results.total,
-    destination,
-  });
+  const { toolbar, announcement } = useResultsText(results, filters.page, destination);
   const resetKey = `${destination}?${serializeSearchFilters(filters).toString()}`;
 
   return (
     <div className="lg:grid lg:grid-cols-[18rem_1fr] lg:gap-8">
+      <SkipLink
+        targetId={headingId}
+        label="Pular para os resultados"
+        onClick={(event) => {
+          event.preventDefault();
+          focusResultsHeading(headingRef.current);
+        }}
+      />
       <FiltersPanel filters={filters} onChange={update} />
       <section
         ref={sectionRef}
@@ -58,23 +55,16 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
         <p className="sr-only" aria-live="polite">
           {drawerOpen ? "" : announcement}
         </p>
-        <ResultsToolbar
+        <ResultsControls
           headingId={headingId}
+          distanceHelpId={distanceHelpId}
           headingRef={headingRef}
           heading={toolbar.heading}
           status={toolbar.status}
-          filtersTrigger={
-            <FiltersTrigger
-              activeCount={countActiveFilters(filters)}
-              onClick={() => setDrawerOpen(true)}
-            />
-          }
-          sort={
-            <SortSelect
-              value={filters.sort}
-              onChange={(value) => update({ type: "setSort", value })}
-            />
-          }
+          filters={filters}
+          destination={destination}
+          onChange={update}
+          onOpenFilters={() => setDrawerOpen(true)}
         />
         <ErrorBoundary
           resetKeys={[resetKey]}
@@ -83,8 +73,11 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
           <ResultsSection
             view={view}
             hotels={results.items}
+            center={results.center}
             total={results.total}
             page={filters.page}
+            headingId={headingId}
+            feed={results.feed}
             destination={destination}
             criteria={criteria}
             selectedAmenities={filters.amenities}

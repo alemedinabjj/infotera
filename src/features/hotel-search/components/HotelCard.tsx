@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { type CSSProperties, type RefCallback, useId } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import { pluralize } from "@/shared/lib/format";
@@ -6,11 +7,27 @@ import { amenityLabel, propertyTypeLabel } from "@/shared/lib/labels";
 import { hotelHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui";
+import { useHotelRooms } from "../hooks/useHotelRooms";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
 import { deriveCardPricing } from "../model/card-pricing";
+import type { GeoPoint } from "../model/distance";
 import { CARD_IMAGE_SIZES } from "../model/image";
+import { HotelCardDistance } from "./HotelCardDistance";
 import { HotelCardFooter } from "./HotelCardFooter";
+
+/** Posição do card no feed (padrão ARIA `feed`): tamanho do conjunto conhecido pelo total da API. */
+export type FeedItemProps = {
+  /** 1-based. */
+  posInSet: number;
+  setSize: number;
+  /** Índice 0-based (`data-index` do virtualizador). */
+  index: number;
+  /** Mede o card (`measureElement`). */
+  ref?: RefCallback<HTMLElement>;
+  /** Posição absoluta do item virtualizado. */
+  style?: CSSProperties;
+};
 
 type HotelCardProps = {
   hotel: Hotel;
@@ -18,8 +35,12 @@ type HotelCardProps = {
   criteria: SearchCriteria | null;
   /** Comodidades filtradas: aparecem primeiro e em destaque. */
   selectedAmenities: readonly Amenity[];
+  /** Centroide do destino (distância no card); `null` omite a linha. */
+  center: GeoPoint | null;
   /** Primeiro card da lista: foto com `loading="eager"`. */
   priority?: boolean;
+  /** Só na rolagem contínua: o `article` vira item do `feed`. */
+  feed?: FeedItemProps;
 };
 
 const AmenityList = ({
@@ -66,40 +87,55 @@ export const HotelCard = ({
   hotel,
   criteria,
   selectedAmenities,
+  center,
   priority = false,
+  feed,
 }: HotelCardProps) => {
+  const titleId = useId();
   const prefetch = usePrefetchHotel(hotel.id);
-  const pricing = deriveCardPricing(hotel, criteria);
+  const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id));
 
   return (
-    <li>
-      <article className={cardClassName({ variant: "interactive", className: "sm:flex-row" })}>
-        <RemoteImage
-          src={hotel.thumbnail}
-          alt={hotel.name}
-          sizes={CARD_IMAGE_SIZES}
-          className="aspect-[4/3] w-full shrink-0 sm:aspect-auto sm:min-h-42 sm:w-56"
-          muted={pricing.status === "sold-out"}
-          priority={priority}
-        />
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
-          <h3 className="line-clamp-2 text-lg font-semibold text-fg">
-            <Link
-              href={hotelHref(hotel.id, criteria)}
-              className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
-              {...prefetch}
-            >
-              {hotel.name}
-            </Link>
-          </h3>
-          <p className="text-sm text-fg-muted">
-            {propertyTypeLabel(hotel.propertyType)} · {hotel.destination}
-          </p>
-          <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
-          <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
-          <HotelCardFooter pricing={pricing} />
-        </div>
-      </article>
-    </li>
+    <article
+      ref={feed?.ref}
+      style={feed?.style}
+      data-index={feed?.index}
+      aria-posinset={feed?.posInSet}
+      aria-setsize={feed?.setSize}
+      aria-labelledby={feed ? titleId : undefined}
+      tabIndex={feed ? -1 : undefined}
+      className={cardClassName({
+        variant: "interactive",
+        className:
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row",
+      })}
+    >
+      <RemoteImage
+        src={hotel.thumbnail}
+        alt={hotel.name}
+        sizes={CARD_IMAGE_SIZES}
+        className="aspect-[5/2] w-full shrink-0 sm:aspect-auto sm:min-h-42 sm:w-56"
+        muted={pricing.status === "sold-out"}
+        priority={priority}
+      />
+      <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
+        <h3 id={titleId} className="line-clamp-2 text-lg font-semibold text-fg">
+          <Link
+            href={hotelHref(hotel.id, criteria)}
+            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
+            {...prefetch}
+          >
+            {hotel.name}
+          </Link>
+        </h3>
+        <p className="text-sm text-fg-muted">
+          {propertyTypeLabel(hotel.propertyType)} · {hotel.destination}
+        </p>
+        <HotelCardDistance hotel={hotel} center={center} />
+        <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
+        <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
+        <HotelCardFooter pricing={pricing} />
+      </div>
+    </article>
   );
 };

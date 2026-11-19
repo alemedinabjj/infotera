@@ -172,6 +172,8 @@ test.describe("filtros na barra lateral", () => {
 
   test("o mínimo não passa do máximo", async ({ page }) => {
     await page.goto(searchPath("maxPrice=500"));
+    // Só mexe no slider depois da hidratação (a lista chegando prova que o cliente está de pé).
+    await expect(cards(page).first()).toBeVisible();
     const min = page.getByLabel("Mínimo");
     await min.focus();
     await page.keyboard.press("End");
@@ -190,15 +192,24 @@ test.describe("filtros na barra lateral", () => {
 });
 
 test.describe("prefetch do detalhe", () => {
-  test("mouse sobre o card prefetcha o hotel e os quartos", async ({ page, isMobile }) => {
+  test("mouse sobre o card prefetcha o hotel; os quartos já vieram com a lista (sem repetir)", async ({
+    page,
+    isMobile,
+  }) => {
     test.skip(isMobile, "toque não prefetcha (o pointerdown vem colado no clique)");
+    const roomRequests: string[] = [];
+    page.on("request", (item) => {
+      if (new URL(item.url()).pathname === "/rooms") roomRequests.push(item.url());
+    });
     await page.goto(searchPath());
     await expect(cards(page)).toHaveCount(10);
+    expect(roomRequests).toHaveLength(1);
     const hotel = page.waitForRequest(`${API_URL}/hotels/13`);
-    const rooms = page.waitForRequest(`${API_URL}/rooms?hotelId=13`);
     await cards(page).nth(6).hover();
     await hotel;
-    await rooms;
+    // O cache de quartos foi semeado pela lista: o prefetch não pede de novo.
+    await page.waitForTimeout(300);
+    expect(roomRequests).toHaveLength(1);
   });
 });
 

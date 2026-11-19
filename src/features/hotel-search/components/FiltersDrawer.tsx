@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/shared/lib/cn";
 import { Button, Dialog, FilterIcon, Spinner } from "@/shared/ui";
 import { useCloseOnDesktop } from "../hooks/useCloseOnDesktop";
 import type { FilterChange } from "../model/filter-change";
@@ -7,7 +8,7 @@ import type { ResultsView } from "../model/results-view";
 import { describeSheetAction } from "../model/results-view";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
 import { ClearFiltersButton } from "./ClearFiltersButton";
-import { FiltersFields } from "./FiltersFields";
+import { FiltersBoundary } from "./FiltersBoundary";
 
 type FiltersDrawerProps = {
   open: boolean;
@@ -66,19 +67,19 @@ export const FiltersDrawer = ({
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>
-      <FiltersFields filters={filters} onChange={onChange} />
+      <FiltersBoundary filters={filters} onChange={onChange} />
     </Dialog>
   );
 };
 
-type FiltersTriggerProps = { activeCount: number; onClick: () => void };
+type FiltersTriggerProps = { activeCount: number; onClick: () => void; className?: string };
 
 /** Gatilho do sheet (só abaixo de `lg`): `Filtros` ou `Filtros (3)`. */
-export const FiltersTrigger = ({ activeCount, onClick }: FiltersTriggerProps) => (
+export const FiltersTrigger = ({ activeCount, onClick, className }: FiltersTriggerProps) => (
   <Button
     variant="secondary"
     aria-haspopup="dialog"
-    className="lg:hidden"
+    className={cn("lg:hidden", className)}
     leftIcon={<FilterIcon className="size-5" />}
     onClick={onClick}
   >

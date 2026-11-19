@@ -12,6 +12,13 @@ export const fetchHotel = (id: number, signal?: AbortSignal): Promise<Hotel> =>
 export const fetchHotelRooms = (hotelId: number, signal?: AbortSignal): Promise<Room[]> =>
   apiGet("/rooms", roomsSchema, { query: { hotelId }, signal });
 
+/** `GET /rooms?hotelId=1&hotelId=4&...`: os quartos de vários hotéis num request só (a chave repete). */
+export const fetchRoomsOfHotels = (
+  hotelIds: readonly number[],
+  signal?: AbortSignal,
+): Promise<Room[]> =>
+  apiGet("/rooms", roomsSchema, { query: { hotelId: hotelIds.map(String) }, signal });
+
 /** `GET /rooms/:id`. */
 export const fetchRoom = (id: number, signal?: AbortSignal): Promise<Room> =>
   apiGet(`/rooms/${id}`, roomSchema, { signal });

@@ -1,48 +1,47 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { Hotel } from "@/shared/api/schemas";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { hotelsQueryOptions } from "../api/hotels";
-import { deriveResultsView, type ResultsView } from "../model/results-view";
+import { deriveResultsView } from "../model/results-view";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
-
-type UseHotelResults = {
-  view: ResultsView;
-  items: Hotel[];
-  total: number;
-  /** Está carregando demais (> 5 s). */
-  slow: boolean;
-  retry: () => void;
-  /** Um refetch está em andamento (alimenta "Tentando…" e o botão do sheet). */
-  isFetching: boolean;
-};
+import { hasFailed, type ResultsModel } from "./results-model";
 
 /**
- * Query da lista + visão derivada. Troca de filtro/página mantém a lista anterior (só do mesmo
- * destino). A correção de página fora do intervalo fica no controller.
+ * Query da lista paginada + visão derivada. Troca de filtro/página mantém a lista anterior (só do
+ * mesmo destino). A correção de página fora do intervalo fica no controller. `enabled` desliga a
+ * busca quando o modo ativo é a rolagem contínua (o hook continua montado).
  */
-export const useHotelResults = (destination: string, filters: SearchFilters): UseHotelResults => {
-  const query = useQuery(hotelsQueryOptions(destination, filters));
+export const useHotelResults = (
+  destination: string,
+  filters: SearchFilters,
+  enabled: boolean,
+): ResultsModel => {
+  const query = useQuery({ ...hotelsQueryOptions(destination, filters), enabled });
+  const hasData = query.data !== undefined;
   const view = deriveResultsView({
-    hasData: query.data !== undefined,
-    // No TanStack v5 o refetch de uma query sem dados volta a `pending`: sem isto o erro sumiria
-    // (e o botão com ele) no clique de "Tentar de novo". Segue em erro até chegar dado.
-    isError: query.isError || (query.data === undefined && query.errorUpdateCount > 0),
+    hasData,
+    isError: hasFailed({
+      hasData,
+      isError: query.isError,
+      errorUpdateCount: query.errorUpdateCount,
+    }),
     isPlaceholderData: query.isPlaceholderData,
     isPaused: query.fetchStatus === "paused",
     total: query.data?.total ?? 0,
     page: filters.page,
     hasActiveFilters: hasActiveFilters(filters),
   });
-  const slow = useSlowLoading(view.kind === "loading");
+  const slow = useSlowLoading(enabled && view.kind === "loading");
 
   return {
     view,
     items: query.data?.items ?? [],
     total: query.data?.total ?? 0,
+    center: query.data?.center ?? null,
     slow,
     retry: () => void query.refetch(),
     isFetching: query.isFetching,
+    feed: null,
   };
 };
