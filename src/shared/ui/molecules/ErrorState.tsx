@@ -14,6 +14,8 @@ type ErrorStateProps = {
   variant?: "inline" | "page";
   /** Ações extras ao lado do retry. */
   action?: ReactNode;
+  /** Nível do título; use 1 quando o estado ocupa a página inteira. */
+  headingLevel?: 1 | 2 | 3;
   className?: string;
 };
 
@@ -26,30 +28,34 @@ export const ErrorState = ({
   retryLabel = "Tentar de novo",
   variant = "inline",
   action,
+  headingLevel = 2,
   className,
-}: ErrorStateProps) => (
-  <div
-    role="alert"
-    className={cn(
-      "flex flex-col items-center gap-3 text-center",
-      variant === "page" ? "py-16" : "py-8",
-      className,
-    )}
-  >
-    <span className="flex size-16 items-center justify-center rounded-full bg-danger-soft text-danger">
-      <AlertCircleIcon className="size-8" />
-    </span>
-    <h2 className="text-lg font-semibold text-fg">{title}</h2>
-    {description ? <p className="max-w-prose text-fg-muted">{description}</p> : null}
-    {onRetry || action ? (
-      <div className="mt-2 flex flex-wrap justify-center gap-3">
-        {onRetry ? (
-          <Button variant="secondary" onClick={onRetry} loading={retrying}>
-            {retryLabel}
-          </Button>
-        ) : null}
-        {action}
-      </div>
-    ) : null}
-  </div>
-);
+}: ErrorStateProps) => {
+  const Heading = `h${headingLevel}` as const;
+  return (
+    <div
+      role="alert"
+      className={cn(
+        "flex flex-col items-center gap-3 text-center",
+        variant === "page" ? "py-16" : "py-8",
+        className,
+      )}
+    >
+      <span className="flex size-16 items-center justify-center rounded-full bg-danger-soft text-danger">
+        <AlertCircleIcon className="size-8" />
+      </span>
+      <Heading className="text-lg font-semibold text-fg">{title}</Heading>
+      {description ? <p className="max-w-prose text-fg-muted">{description}</p> : null}
+      {onRetry || action ? (
+        <div className="mt-2 flex flex-wrap justify-center gap-3">
+          {onRetry ? (
+            <Button variant="secondary" onClick={onRetry} loading={retrying}>
+              {retryLabel}
+            </Button>
+          ) : null}
+          {action}
+        </div>
+      ) : null}
+    </div>
+  );
+};

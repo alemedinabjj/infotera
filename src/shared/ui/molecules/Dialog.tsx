@@ -1,3 +1,5 @@
+"use client";
+
 import { type ReactNode, type RefObject, useEffect, useId, useRef } from "react";
 import { cn } from "../../lib/cn";
 import { IconButton } from "../atoms/IconButton";
