@@ -3,11 +3,15 @@ node_modules/
 out/
 coverage/
 playwright-report/
+/blob-report/
+/playwright/.cache/
 test-results/
-.env
-.env*.local
+.env*
+!.env.example
 *.log
 .DS_Store
 next-env.d.ts
 *.tsbuildinfo
 mock-api/db.json
+.vercel
+*.pem
