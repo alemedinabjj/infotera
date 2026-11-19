@@ -16,7 +16,10 @@ Fonte: `docs/TEST_FRONTEND.md` e `mock-api/README.md` (repo `ygor-infotera/test-
 
 ## Roadmap por feature
 
-Legenda: ✅ escolhido · ⏭️ fora do escopo (justificar no README) · ❓ decidir na spec.
+Legenda: ✅ escolhido · ❓ decidir na spec.
+
+> **Decisão do usuário (escopo): implementar TODOS os requisitos opcionais do enunciado.**
+> Nenhum item fica fora; onde a mock-api não tem o dado, a spec decide a solução e documenta.
 
 | ID | Feature | Pasta | Depende de |
 |---|---|---|---|
@@ -27,7 +30,8 @@ Legenda: ✅ escolhido · ⏭️ fora do escopo (justificar no README) · ❓ de
 | F4 | hotel-details | `src/features/hotel-details` | F1 |
 | F5 | checkout | `src/features/checkout` | F1, F4 (seleção) |
 | F6 | booking-confirmation | `src/features/booking-confirmation` | F1, F5 |
-| F7 | delivery | README, E2E, deploy | todas |
+| F7 | extras | features transversais (seção 6 do enunciado) | F1–F6 |
+| F8 | delivery | README, E2E completo, deploy | todas |
 
 ### F0 — setup
 - Next 16 + TS strict + `noUncheckedIndexedAccess`, Tailwind, Biome, Vitest, Playwright, alias `@/`.
@@ -69,8 +73,10 @@ Avançado
 - ✅ Retry + error boundary da seção de resultados.
 - ✅ Prefetch do detalhe no hover/focus do card.
 - ✅ `next/image` com placeholder blur.
-- ⏭️ Virtualização: no máximo 14 hotéis por destino e paginação de 10 — não há lista longa.
-- ❓ Ordenação por distância: a API não tem coordenadas do destino; só faria com centroide dos hotéis.
+- ✅ Virtualização (react-virtual) + modo infinite scroll como alternativa à paginação.
+- ✅ Ordenação por distância: centro do destino = centroide dos hotéis do destino (documentar).
+- ✅ Image optimization com blur placeholders.
+> Itens desta lista que não couberem na entrega inicial da F3 entram num incremento F3b.
 
 ### F4 — hotel-details (`/hotel/[hotelId]`)
 Básico
@@ -84,8 +90,10 @@ Avançado
 - ✅ Lightbox com teclado (←/→/Esc, foco preso).
 - ✅ Reviews paginadas (`_page`, `_limit=5`, `_sort=date&_order=desc`).
 - ✅ Política de cancelamento expansível, breadcrumb, copiar link.
-- ❓ Hotéis similares (mesmo destino, exclui o atual) — barato, decidir na spec.
-- ⏭️ Mapa interativo.
+- ✅ Hotéis similares (mesmo destino, exclui o atual).
+- ✅ Comparação de quartos (tabela de comodidades com destaque de diferenças).
+- ✅ Mapa de localização (estático aqui; interativo na F7).
+- ✅ Share button, scroll to section (âncoras), thumbnails com lazy loading.
 
 ### F5 — checkout (`/checkout`)
 Básico
@@ -100,17 +108,29 @@ Avançado
 - ✅ Termos (checkbox obrigatório + modal), erros por campo + erro global + retry do submit.
 - ✅ Persistência do form com debounce — **nunca persistir dados de cartão nem CPF**.
 - ✅ CSP completa (script-src com nonce, img-src, connect-src) antes de coletar dados de pagamento.
-- ❓ Múltiplos hóspedes / múltiplos quartos / cupom.
+- ✅ Múltiplos hóspedes (form dinâmico por hóspede) e múltiplos quartos na mesma reserva.
+- ✅ Código de desconto com validação e feedback visual.
+- ✅ Loading por seção, skeleton nos cálculos, optimistic update no preço, validação assíncrona.
 
 ### F6 — booking-confirmation (`/confirmation/[bookingId]`)
 - `GET /bookings/:id` no servidor (funciona com reload), número da reserva, resumo, botão "Nova busca".
 - 404 → página de "reserva não encontrada".
 
-### F7 — delivery
-- ✅ Testes unitários (datas, preço, schemas, CPF/Luhn, URL params) · componente nos forms ·
-  1 E2E do fluxo completo + checagem axe.
-- README completo, `.env.example`, deploy (Vercel + Render).
-- ⏭️ PWA, i18n, Framer Motion, mapas, Parallel Routes, Edge Runtime — justificar no README.
+### F7 — extras (seção 6 do enunciado)
+Features
+- ✅ Favoritos persistidos · Comparação de hotéis (até 3) · Histórico de reservas.
+- ✅ Notificações (toast system — já existe na F1; estender).
+- ✅ Animações com Framer Motion (`motion`), respeitando `prefers-reduced-motion`.
+- ✅ Mapas interativos (Leaflet + OpenStreetMap, sem chave de API).
+- ✅ Modo offline (cache de buscas persistido) e PWA (manifest, service worker, ícones).
+- ✅ i18n pt-BR + en-US.
+Next.js
+- ✅ Partial Prerendering · Server Actions para mutations · Parallel Routes para modals ·
+  ISR · Edge Runtime onde apropriado.
+
+### F8 — delivery
+- ✅ Testes unitários, de componente e E2E do fluxo completo (Playwright) + axe.
+- README completo (decisões, trade-offs, uso de IA), `.env.example`, deploy (Vercel + Render).
 
 ## Mock API — o que importa saber
 
