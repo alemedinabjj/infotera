@@ -20,6 +20,7 @@ export { cardClassName } from "./molecules/card-styles";
 export { Dialog } from "./molecules/Dialog";
 export { EmptyState } from "./molecules/EmptyState";
 export { ErrorState } from "./molecules/ErrorState";
+export { ErrorSummary, type ErrorSummaryItem } from "./molecules/ErrorSummary";
 export { Field, type FieldControlProps } from "./molecules/Field";
 export { Pagination } from "./molecules/Pagination";
 export { PriceTag } from "./molecules/PriceTag";
