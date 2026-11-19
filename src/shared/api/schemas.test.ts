@@ -104,4 +104,56 @@ describe("bookingInputSchema / bookingSchema", () => {
     expect(withString.guests[0]).toEqual(guest);
     expect(bookingSchema.safeParse({ ...curlBody, id: 12 }).success).toBe(true);
   });
+
+  describe("hóspedes e detalhamento (F5)", () => {
+    const holder = {
+      firstName: "Ana",
+      lastName: "Souza",
+      email: "ana@exemplo.com",
+      phone: "+5511987654321",
+      kind: "adult",
+    };
+
+    it("titular com contato e acompanhante sem contato", () => {
+      const guests = [holder, { firstName: "Bruno", lastName: "Souza", kind: "adult" }];
+      expect(bookingInputSchema.safeParse({ ...curlBody, guests }).success).toBe(true);
+    });
+
+    it("criança com idade de 0 a 17; fora disso falha", () => {
+      const child = (age: number) => ({ firstName: "C", lastName: "S", kind: "child", age });
+      expect(bookingInputSchema.safeParse({ ...curlBody, guests: [child(0)] }).success).toBe(true);
+      expect(bookingInputSchema.safeParse({ ...curlBody, guests: [child(17)] }).success).toBe(true);
+      expect(bookingInputSchema.safeParse({ ...curlBody, guests: [child(18)] }).success).toBe(
+        false,
+      );
+      expect(bookingInputSchema.safeParse({ ...curlBody, guests: [child(-1)] }).success).toBe(
+        false,
+      );
+    });
+
+    it("priceBreakdown é opcional e valida centavos inteiros", () => {
+      const priceBreakdown = {
+        nightlyCents: 120000,
+        nights: 3,
+        rooms: 1,
+        subtotalCents: 360000,
+        discountCents: 0,
+        serviceFeeCents: 36000,
+        taxCents: 18000,
+        totalCents: 414000,
+      };
+      expect(bookingInputSchema.safeParse({ ...curlBody, priceBreakdown }).success).toBe(true);
+      expect(
+        bookingInputSchema.safeParse({
+          ...curlBody,
+          priceBreakdown: { ...priceBreakdown, totalCents: 10.5 },
+        }).success,
+      ).toBe(false);
+    });
+
+    it("aceita id UUID", () => {
+      const id = "8b0e4d2a-6f3c-4a1b-9c7d-2e5f8a1b3c4d";
+      expect(bookingSchema.parse({ ...curlBody, id }).id).toBe(id);
+    });
+  });
 });
