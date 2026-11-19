@@ -1,6 +1,6 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { addDays, todayISO } from "../src/shared/lib/dates";
+import { analyzeAccessibility } from "./helpers/axe";
 
 const checkIn = addDays(todayISO(), 7);
 const checkOut = addDays(todayISO(), 10);
@@ -92,13 +92,13 @@ test("falha da API mostra erro e 'Tentar de novo' recupera", async ({ page }) =>
 test("axe: sem violações com o popover aberto e com erros visíveis", async ({ page }) => {
   await typeDestination(page, "sao");
   await expect(page.getByRole("option", { name: /São Paulo, SP/ })).toBeVisible();
-  let results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  let results = await analyzeAccessibility(page);
   expect(results.violations).toEqual([]);
 
   await page.keyboard.press("Escape");
   await submit(page).press("Enter");
   await expect(page.getByRole("alert").filter({ hasText: "Corrija" })).toBeVisible();
-  results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  results = await analyzeAccessibility(page);
   expect(results.violations).toEqual([]);
 });
 

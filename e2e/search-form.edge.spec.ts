@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { analyzeAccessibility } from "./helpers/axe";
 
 const destination = (page: Page) => page.getByRole("combobox", { name: /Destino/ });
 const submit = (page: Page) => page.getByRole("button", { name: "Buscar hotéis" });
@@ -153,7 +153,7 @@ for (const width of [320, 375]) {
       await type(page, "sao");
       await expect(page.getByRole("option", { name: /São Paulo, SP/ })).toBeVisible();
       expect(await hasHorizontalScroll(page)).toBe(false);
-      const open = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+      const open = await analyzeAccessibility(page);
       expect(open.violations).toEqual([]);
 
       await page.keyboard.press("ArrowDown");
@@ -188,7 +188,7 @@ for (const width of [320, 375]) {
       await submit(page).click();
       await expect(summary(page)).toBeVisible();
       expect(await hasHorizontalScroll(page)).toBe(false);
-      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+      const results = await analyzeAccessibility(page);
       expect(results.violations).toEqual([]);
       // Item do resumo foca o campo só por teclado.
       await page
