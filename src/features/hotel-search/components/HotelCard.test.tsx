@@ -7,6 +7,11 @@ import { renderWithProviders } from "@/shared/testing/render";
 import { HotelCard } from "./HotelCard";
 import { HotelCardSkeleton } from "./HotelCardSkeleton";
 
+vi.mock(
+  "next/navigation",
+  async () => (await import("@/shared/testing/next-navigation")).navigationMock,
+);
+
 const criteria = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15", rooms: 1 });
 
 const cardClient = () =>
@@ -232,5 +237,37 @@ describe("HotelCardSkeleton", () => {
     );
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
+  });
+});
+
+describe("HotelCard: favoritar e comparar (critério 2)", () => {
+  it("ordem de Tab: nome, coração, Comparar; coração com nome acessível e aria-pressed", async () => {
+    const user = userEvent.setup();
+    renderCard();
+    await user.tab();
+    expect(screen.getByRole("link", { name: "Pousada Vista Corcovado" })).toHaveFocus();
+    await user.tab();
+    const heart = screen.getByRole("button", {
+      name: "Salvar nos favoritos: Pousada Vista Corcovado",
+    });
+    expect(heart).toHaveFocus();
+    expect(heart).toHaveAttribute("aria-pressed", "false");
+    await user.tab();
+    expect(
+      screen.getByRole("checkbox", { name: "Comparar: Pousada Vista Corcovado" }),
+    ).toHaveFocus();
+  });
+
+  it("os controles ficam fora do link e acima do ::after (relative z-10 / z-10)", () => {
+    renderCard();
+    const heart = screen.getByRole("button", { name: /Salvar nos favoritos/ });
+    expect(heart.closest("a")).toBeNull();
+    expect(heart.parentElement).toHaveClass("z-10");
+    expect(screen.getByRole("checkbox").closest("div")).toHaveClass("relative", "z-10", "min-h-11");
+  });
+
+  it("o skeleton ganha a linha do Comparar", () => {
+    const { container } = renderWithProviders(<HotelCardSkeleton />);
+    expect(container.querySelector(".min-h-11")).not.toBeNull();
   });
 });

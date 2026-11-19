@@ -6,6 +6,7 @@ import { pluralize } from "@/shared/lib/format";
 import { amenityLabel, propertyTypeLabel } from "@/shared/lib/labels";
 import { hotelHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
+import { CompareCheckbox, FavoriteButton } from "@/shared/saved";
 import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui";
 import { useHotelRooms } from "../hooks/useHotelRooms";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
@@ -128,6 +129,10 @@ export const HotelCard = ({
             {hotel.name}
           </Link>
         </h3>
+        {/* Controle secundário: depois do link no DOM, acima do ::after; sobre a foto (w-56 em sm+). */}
+        <div className="absolute top-2 right-2 z-10 sm:right-auto sm:left-[10.75rem]">
+          <FavoriteButton hotelId={hotel.id} hotelName={hotel.name} variant="overlay" />
+        </div>
         <p className="text-sm text-fg-muted">
           {propertyTypeLabel(hotel.propertyType)} · {hotel.destination}
         </p>
@@ -135,6 +140,9 @@ export const HotelCard = ({
         <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
         <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
         <HotelCardFooter pricing={pricing} />
+        <div className="relative z-10 flex min-h-11 items-center">
+          <CompareCheckbox hotelId={hotel.id} hotelName={hotel.name} className="min-h-11" />
+        </div>
       </div>
     </article>
   );
