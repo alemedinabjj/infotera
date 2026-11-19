@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stayTotal } from "./stay-price";
+import { stayTotal } from "./pricing";
 
 describe("stayTotal", () => {
   it("diária × noites × quartos (critério 3)", () => {

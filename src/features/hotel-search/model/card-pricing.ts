@@ -1,13 +1,13 @@
 import type { Hotel } from "@/shared/api/schemas";
-import { nightsBetween } from "@/shared/lib/dates";
-import type { SearchCriteria } from "@/shared/lib/search-params";
 import {
   type AvailabilityDescription,
   type AvailabilityStatus,
   availabilityStatus,
   describeAvailability,
-} from "./availability";
-import { stayTotal } from "./stay-price";
+} from "@/shared/lib/availability";
+import { nightsBetween } from "@/shared/lib/dates";
+import { stayTotal } from "@/shared/lib/pricing";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 
 export type CardPricing = {
   status: AvailabilityStatus;

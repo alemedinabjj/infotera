@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/shared/lib/cn";
+import { BLUR_DATA_URL, unsplashLoader } from "@/shared/lib/image";
 import { BedIcon } from "@/shared/ui";
-import { BLUR_DATA_URL, CARD_IMAGE_SIZES, unsplashLoader } from "../model/image";
+import { CARD_IMAGE_SIZES } from "../model/image";
 
 type HotelImageProps = {
   src: string;

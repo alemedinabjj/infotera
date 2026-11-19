@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { makeSearchCriteria } from "@/shared/testing/fixtures";
 import {
   describeSearchSummary,
-  hotelHref,
   parseSearchPage,
   searchPageDestination,
   searchPageKey,
@@ -56,18 +55,6 @@ describe("parseSearchPage", () => {
       kind: "browse",
       destination: "Gramado, RS",
     });
-  });
-});
-
-describe("hotelHref", () => {
-  it("stay: critérios na ordem da F1", () => {
-    expect(
-      hotelHref(13, makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" })),
-    ).toBe(`/hotel/13?${CRITERIA}`);
-  });
-
-  it("browse: sem critérios", () => {
-    expect(hotelHref(13, null)).toBe("/hotel/13");
   });
 });
 

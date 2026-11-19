@@ -33,10 +33,6 @@ export const parseSearchPage = (input: SearchPageInput): SearchPage => {
     : { kind: "browse", destination };
 };
 
-/** Link do card para o detalhe: com os critérios no modo `stay`, sem nada no `browse`. */
-export const hotelHref = (hotelId: number, criteria: SearchCriteria | null): string =>
-  criteria ? `/hotel/${hotelId}?${searchCriteriaToQueryString(criteria)}` : `/hotel/${hotelId}`;
-
 const SITE = "Infotera Hotéis";
 
 /** `<title>` da página: `Hotéis em Rio de Janeiro, RJ | Infotera Hotéis`. */
