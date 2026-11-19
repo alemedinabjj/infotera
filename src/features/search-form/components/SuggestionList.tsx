@@ -14,7 +14,6 @@ type SuggestionListProps = {
   view: SuggestionsView;
   items: Suggestion[];
   query: string;
-  selectedName: string;
   combobox: Combobox;
   isRetrying: boolean;
   onRetry: (viaKeyboard: boolean) => void;
@@ -44,7 +43,6 @@ export const SuggestionList = ({
   view,
   items,
   query,
-  selectedName,
   combobox,
   isRetrying,
   onRetry,
@@ -60,7 +58,6 @@ export const SuggestionList = ({
           suggestion={suggestion}
           query={query}
           active={index === combobox.activeIndex}
-          chosen={suggestion.name === selectedName}
           {...combobox.getOptionProps(index)}
         />
       ))}

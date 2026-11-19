@@ -45,8 +45,7 @@ index.ts                    export { SearchForm }
 - **Recentes**: `createStorage("local")`, chave `infotera:recent-searches`, lidas via
   `useSyncExternalStore` (servidor = lista vazia). Clicar preenche o form (não envia). Gravadas só no
   submit válido; storage indisponível = lista vazia e nada quebra (a busca não é persistida).
-- **Não implementado**: o ícone de "selecionado" (`CheckIcon`) existe na opção, mas nunca aparece, pois
-  ↓ com o texto igual ao destino escolhido não reabre o popover (a query fica desligada, Decisão 6).
+- **Sem marca de "selecionado" na opção**: com o destino escolhido o popover não reabre (query desligada).
 - Submit cai no 404 até a F3 existir; o E2E só confere a URL.
 - E2E: inputs de data do Chromium têm segmentos que consomem Tab (não dá para "Tab até" o botão a partir
   deles); clicar em "Buscar hotéis" logo após digitar um destino inválido pode errar o clique, porque o

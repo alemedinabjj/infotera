@@ -94,7 +94,6 @@ export const DestinationCombobox = ({
             view={field.view}
             items={field.items}
             query={field.inputValue}
-            selectedName={value}
             combobox={combobox}
             isRetrying={field.isRetrying}
             onRetry={retry}

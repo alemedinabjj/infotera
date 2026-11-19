@@ -5,7 +5,6 @@ import type { Suggestion } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import {
   BuildingIcon,
-  CheckIcon,
   PalmTreeIcon,
   TreesIcon,
   UmbrellaIcon,
@@ -43,7 +42,6 @@ type SuggestionOptionProps = Omit<ComponentProps<"li">, "children"> & {
   suggestion: Suggestion;
   query: string;
   active: boolean;
-  chosen: boolean;
 };
 
 /** Opção do listbox: ícone do tipo, nome com o trecho digitado realçado e tipo à direita. */
@@ -51,7 +49,6 @@ export const SuggestionOption = ({
   suggestion,
   query,
   active,
-  chosen,
   className,
   ...rest
 }: SuggestionOptionProps) => {
@@ -88,7 +85,6 @@ export const SuggestionOption = ({
         <VisuallyHidden>, </VisuallyHidden>
         {TYPE_LABELS[suggestion.type]}
       </span>
-      {chosen ? <CheckIcon className="size-5 shrink-0 text-primary" /> : null}
     </li>
   );
 };

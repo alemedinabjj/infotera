@@ -473,8 +473,8 @@ Wrapper `relative` (o `focusout` do DS é medido nele).
 **Opção:** ícone por tipo (`city` `BuildingIcon` "Cidade" · `beach` `UmbrellaIcon` "Praia" · `island`
 `PalmTreeIcon` "Ilha" · `nature` `TreesIcon` "Natureza"), nome com `highlightMatch` (`<mark>` sem fundo,
 `font-semibold`), tipo à direita `text-sm text-fg-subtle` com `", "` `sr-only` antes. Nenhuma opção
-começa ativa: a primeira ↓ ativa a primeira. A opção do destino atualmente selecionado (se o popover
-reabrir) mostra `CheckIcon` `text-primary` à direita do tipo.
+começa ativa: a primeira ↓ ativa a primeira. Sem marca de "selecionado": com o destino escolhido o
+popover não reabre (a query fica desligada), então a marca nunca apareceria.
 
 **Teclado** (no input): ↓/↑ move (circular, abre se fechado) · Enter com ativa = seleciona, sem
 submeter · Enter sem ativa = submit nativo · Esc com popover aberto = fecha · Esc com fechado = limpa
