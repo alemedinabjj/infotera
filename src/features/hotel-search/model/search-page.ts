@@ -1,11 +1,11 @@
-import { formatDateRange, type ISODate, nightsBetween } from "@/shared/lib/dates";
-import { formatGuests, pluralize } from "@/shared/lib/format";
+import type { ISODate } from "@/shared/lib/dates";
 import {
   parseDestinationParam,
   parseSearchCriteria,
   type SearchCriteria,
   searchCriteriaToQueryString,
 } from "@/shared/lib/search-params";
+import { describeStay } from "@/shared/lib/stay-summary";
 
 /** Os três modos da página `/search`, derivados só dos critérios da URL (nunca dos filtros). */
 export type SearchPage =
@@ -73,15 +73,8 @@ type StayCriteria = Extract<SearchPage, { kind: "stay" }>["criteria"];
  * Resumo sob o título: `12–15 dez · 3 noites · 2 adultos · 1 quarto` (o ano só aparece quando a
  * estadia não é no ano de `today`). Sem datas: `Datas não definidas`.
  */
-export const describeSearchSummary = (criteria: StayCriteria | null, today: ISODate): string => {
-  if (!criteria) return "Datas não definidas";
-  const nights = nightsBetween(criteria.checkIn, criteria.checkOut);
-  return [
-    formatDateRange(criteria.checkIn, criteria.checkOut, today),
-    pluralize(nights, "noite", "noites"),
-    formatGuests(criteria),
-  ].join(" · ");
-};
+export const describeSearchSummary = (criteria: StayCriteria | null, today: ISODate): string =>
+  criteria ? describeStay(criteria, today) : "Datas não definidas";
 
 /** Chave de remontagem dos formulários/cabeçalho: muda quando os critérios mudam (nova busca). */
 export const searchPageKey = (page: SearchPage): string => {
