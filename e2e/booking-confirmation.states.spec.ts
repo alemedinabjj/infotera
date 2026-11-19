@@ -8,7 +8,7 @@ import { API_URL } from "./helpers/hotel-search";
 
 // Mock-api real. Reservas forjadas por `POST` direto (a API não valida nada): hotel inexistente,
 // quarto de outro hotel, total adulterado e corpo fora do contrato são cenários reais.
-// `_delay`/`_fail` não se aplicam: o servidor do Next faz esses requests, e `page.route` não os vê.
+// Falhas e demoras do hotel/quarto (requests do servidor) ficam em `section-error` e `layout-shift`.
 
 const expectNoViolations = async (page: Page) => {
   const results = await analyzeAccessibility(page);
