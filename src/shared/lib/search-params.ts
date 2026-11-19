@@ -70,17 +70,19 @@ export const applySearchCriteriaRules = (value: RuleValue, ctx: z.RefinementCtx)
   }
 };
 
+const destinationSchema = z
+  .string()
+  .trim()
+  .min(1, SEARCH_MESSAGES.destination)
+  .max(100, SEARCH_MESSAGES.destination);
+
 /**
  * Critérios de busca. Valida só o que não depende do relógio (formato, calendário, limites);
  * "check-in no passado" é avaliado no cliente com `isBeforeToday`.
  */
 export const searchCriteriaSchema = z
   .object({
-    destination: z
-      .string()
-      .trim()
-      .min(1, SEARCH_MESSAGES.destination)
-      .max(100, SEARCH_MESSAGES.destination),
+    destination: destinationSchema,
     checkIn: isoDateSchema,
     checkOut: isoDateSchema,
     rooms: countSchema(SEARCH_LIMITS.minRooms, SEARCH_LIMITS.maxRooms, SEARCH_MESSAGES.rooms),
@@ -142,3 +144,13 @@ export const searchCriteriaToQueryString = (criteria: SearchCriteria): string =>
 export const guestsPerRoom = (
   criteria: Pick<SearchCriteria, "adults" | "children" | "rooms">,
 ): number => Math.ceil((criteria.adults + criteria.children) / criteria.rooms);
+
+/**
+ * Destino de um param de URL (mesmas regras dos critérios: sem espaços nas pontas, 1–100
+ * caracteres). Array usa o primeiro valor. `null` quando ausente ou inválido.
+ */
+export const parseDestinationParam = (input: string | string[] | undefined): string | null => {
+  const value = Array.isArray(input) ? input[0] : input;
+  const result = destinationSchema.safeParse(value);
+  return result.success ? result.data : null;
+};
