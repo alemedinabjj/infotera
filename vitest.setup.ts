@@ -1,6 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
+import { MotionGlobalConfig } from "motion/react";
 import { afterEach, vi } from "vitest";
+
+// Animações instantâneas nos testes: `onExitComplete` dispara logo e nada depende de relógio.
+MotionGlobalConfig.skipAnimations = true;
 
 // `server-only` lança fora do bundler do Next; nos testes os módulos de servidor rodam em jsdom.
 vi.mock("server-only", () => ({}));
