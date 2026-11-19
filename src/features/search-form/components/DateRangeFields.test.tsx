@@ -4,9 +4,10 @@ import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";
 import { addDays, todayISO } from "@/shared/lib/dates";
+import type { DateNotice } from "../model/notices";
 import { searchFormResolver } from "../model/search-form.resolver";
 import { DEFAULT_SEARCH_FORM_VALUES, type SearchFormValues } from "../model/search-form.schema";
-import { type DateNotice, DateRangeFields } from "./DateRangeFields";
+import { DateRangeFields } from "./DateRangeFields";
 
 const Harness = () => {
   const form = useForm<SearchFormValues>({

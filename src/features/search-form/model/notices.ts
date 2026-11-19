@@ -8,3 +8,6 @@ export const EXPIRED_DATES_NOTICE = "As datas dessa busca já passaram. Escolha 
 
 export const formatRestored = (destination: string): string =>
   `Busca preenchida: ${destination}. Confira e busque hotéis.`;
+
+/** Aviso visível sob um dos campos de data. */
+export type DateNotice = { field: "checkIn" | "checkOut"; text: string };

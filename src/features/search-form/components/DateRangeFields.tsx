@@ -4,11 +4,9 @@ import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { formatDate } from "@/shared/lib/dates";
 import { CalendarIcon, Field, InfoIcon, Input } from "@/shared/ui";
 import { useToday } from "../hooks/useToday";
-import { formatCheckOutAdjusted } from "../model/notices";
+import { type DateNotice, formatCheckOutAdjusted } from "../model/notices";
 import type { SearchFormValues } from "../model/search-form.schema";
 import { adjustCheckOut, dateBounds, stayNights } from "../model/stay-dates";
-
-export type DateNotice = { field: "checkIn" | "checkOut"; text: string };
 
 type DateRangeFieldsProps = {
   /** Aviso visível (ajuste automático / datas passadas) mostrado como `description` do campo. */
