@@ -327,8 +327,24 @@ falha.
 | Peer do `@axe-core/playwright` puxar `playwright-core` latest e quebrar tipos (`Page` incompatível) | `overrides.playwright-core = 1.63.0` (erro reproduzido e corrigido no protótipo). Ao subir o Playwright, subir os dois juntos. |
 | Em outra máquina/CI não há Chromium 1243 | `npx playwright install chromium` (documentar no README da F7). Não usar `executablePath` fixo no config. |
 | Node < 22.22.2 (jsdom 31) | `engines` + `.nvmrc`; Vercel usa Node 22.x recente. |
-| `noRestrictedImports` não cobre import relativo atravessando features (`../../checkout/...`) | Revisão do `reviewer`; se aparecer, adicionar padrão `**/features/*/**` relativo na F1. |
+| `noRestrictedImports` não cobre import relativo atravessando features (`../../checkout/...`) | Resolvido nos ajustes pós-revisão: padrão por nome de feature no override de `features/**`. |
 | `noDefaultExport` bloquear arquivos de convenção novos do Next (`not-found`, `opengraph-image`, `sitemap.ts`, `route.ts`…) | A lista do override cresce conforme a feature cria o arquivo; a regra continua valendo para componentes. |
 | `next build` checa tipos do projeto inteiro (incluindo `e2e/` e `tests/`) | Desejado: tudo tipado. Manter `tsconfig` cobrindo esses diretórios. |
 | `next typegen` carrega `next.config.ts` em fase de produção | Config não lê env; nada a configurar. Se a F1 validar env no config, garantir fallback ou `.env` no CI. |
 | TS 5.9 ficar defasado frente ao 7 | Decisão 3 registrada; troca é isolada (`typescript` + rodar `typecheck`). |
+
+## Ajustes pós-revisão
+
+1. `biome.json`: `features/**` bloqueia também import relativo para outra feature
+   (`**/{search-form,hotel-search,hotel-details,checkout,booking-confirmation}/**`); `shared/**`
+   bloqueia `../**/features/**` e `../**/app/**`.
+2. `noDefaultExport` liberado também para `opengraph-image`, `twitter-image`, `icon`, `apple-icon`,
+   `sitemap`, `robots`, `manifest`, `forbidden` e `unauthorized`.
+3. `tests/next-config.test.ts` verifica os valores dos headers e usa `p.hostname` direto.
+4. `next.config.ts`: header `Content-Security-Policy: frame-ancestors 'none'; object-src 'none';
+   base-uri 'self'; form-action 'self'` (sem `script-src`), coberto no teste e no smoke E2E.
+5. `playwright.config.ts`: `fullyParallel: true`; `webServer` só quando `PLAYWRIGHT_BASE_URL` não está definido.
+6. `vitest.config.mts`: `restoreMocks: true`.
+
+**Decisão**: a CSP completa (`script-src` com nonce, `img-src` com os hosts das imagens,
+`connect-src` com a origem da API) deve entrar antes ou junto com o checkout (F5).
