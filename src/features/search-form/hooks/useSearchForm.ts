@@ -52,7 +52,8 @@ export const useSearchForm = (initialCriteria?: SearchCriteria) => {
     form.reset(values);
     if (datesExpired) {
       notices.showNotice({ field: "checkIn", text: EXPIRED_DATES_NOTICE });
-      form.setFocus("checkIn");
+      // `reset` re-registra os campos no próximo render; o foco espera por ele.
+      setTimeout(() => form.setFocus("checkIn"), 0);
     } else {
       notices.showNotice(null);
       notices.announce(formatRestored(criteria.destination));

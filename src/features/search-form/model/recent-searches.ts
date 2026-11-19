@@ -56,16 +56,19 @@ export const restoreRecentSearch = (criteria: SearchCriteria, today: ISODate): R
 const plural = (count: number, one: string, many: string): string =>
   `${count} ${count === 1 ? one : many}`;
 
-/** "São Paulo, SP · 12–15 dez · 2 adultos, 1 criança · 1 quarto". */
-export const describeRecentSearch = (criteria: SearchCriteria, today: ISODate): string => {
+/** "12–15 dez · 2 adultos, 1 criança · 1 quarto" (sem o destino). */
+export const describeRecentDetails = (criteria: SearchCriteria, today: ISODate): string => {
   const guests = [
     plural(criteria.adults, "adulto", "adultos"),
     ...(criteria.children > 0 ? [plural(criteria.children, "criança", "crianças")] : []),
   ].join(", ");
   return [
-    criteria.destination,
     formatDateRange(criteria.checkIn, criteria.checkOut, today),
     guests,
     plural(criteria.rooms, "quarto", "quartos"),
   ].join(" · ");
 };
+
+/** "São Paulo, SP · 12–15 dez · 2 adultos, 1 criança · 1 quarto". */
+export const describeRecentSearch = (criteria: SearchCriteria, today: ISODate): string =>
+  `${criteria.destination} · ${describeRecentDetails(criteria, today)}`;
