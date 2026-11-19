@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Hotel } from "@/shared/api/schemas";
 import { removeFromHistory, restoreBookingHistory } from "@/shared/lib/booking-history";
 import { cn } from "@/shared/lib/cn";
+import { focusWhenReady } from "@/shared/lib/focus";
 import { motionPreset, staggerDelay } from "@/shared/lib/motion";
 import { Button } from "@/shared/ui";
 import type { HistoryRow } from "../model/history-rows";
@@ -81,11 +82,15 @@ export const HistoryRowItem = ({
   const undoRef = useRef<HTMLButtonElement>(null);
   const removeRef = useRef<HTMLButtonElement>(null);
 
+  // Só foca quando o alvo já existe e não está inerte (o storage pode chegar depois do clique).
   useEffect(() => {
-    if (focus === null) return;
-    (focus === "undo" ? undoRef : removeRef).current?.focus();
-    setFocus(null);
-  }, [focus]);
+    if (focus === null || (focus === "undo") === kept) return;
+    // O alvo acabou de sair de `invisible`/`inert`: espera o navegador deixar focar.
+    return focusWhenReady(
+      () => (focus === "undo" ? undoRef : removeRef).current,
+      () => setFocus(null),
+    );
+  }, [focus, kept]);
 
   const removeButton = (label?: string) => (
     <Button

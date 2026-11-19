@@ -4,6 +4,7 @@ import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
+import { focusWhenReady } from "@/shared/lib/focus";
 import { motionPreset, staggerDelay } from "@/shared/lib/motion";
 import {
   CompareCheckbox,
@@ -31,11 +32,15 @@ export const FavoriteCard = ({ hotel, entry, index }: FavoriteCardProps) => {
   const undoRef = useRef<HTMLButtonElement>(null);
   const heartRef = useRef<HTMLButtonElement>(null);
 
+  // Só foca quando o alvo já existe e não está inerte (o estado do store pode chegar depois do clique).
   useEffect(() => {
-    if (focus === null) return;
-    (focus === "undo" ? undoRef : heartRef).current?.focus();
-    setFocus(null);
-  }, [focus]);
+    if (focus === null || (focus === "undo") === favorite) return;
+    // O alvo acabou de sair de `invisible`/`inert`: espera o navegador deixar focar.
+    return focusWhenReady(
+      () => (focus === "undo" ? undoRef : heartRef).current,
+      () => setFocus(null),
+    );
+  }, [focus, favorite]);
 
   const undo = () => {
     if (entry) favoritesActions.restore(entry);
