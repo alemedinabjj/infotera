@@ -131,6 +131,8 @@ Next.js
   Justificar no README.
 
 ### F8 — delivery
+- ✅ Portão final: `end-user-tester` percorre TODAS as jornadas no navegador (personas celular,
+  desktop, só teclado, conexão ruim, inglês) com o build de produção; veredito `PRONTO PARA ENTREGA`.
 - ✅ Testes unitários, de componente e E2E do fluxo completo (Playwright) + axe.
 - README completo (decisões, trade-offs, uso de IA), `.env.example`, deploy (Vercel + Render).
 
