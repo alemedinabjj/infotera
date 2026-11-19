@@ -3,8 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeHotel } from "@/shared/testing/fixtures";
 import { makeTestQueryClient } from "@/shared/testing/render";
 import { DEFAULT_FILTERS } from "../model/search-filters";
-import { toHotelsApiQuery } from "../model/to-api-query";
-import { fetchHotels, hotelsQueryOptions, keepPreviousIfSameDestination } from "./hotels";
+import { toHotelsApiQuery, toHotelsRequest } from "../model/to-api-query";
+import {
+  fetchHotels,
+  fetchHotelsPage,
+  hotelsQueryOptions,
+  keepPreviousIfSameDestination,
+} from "./hotels";
 
 const stubFetch = (total: string | null = "14") => {
   const fetchMock = vi.fn(async (_url: string) => {
@@ -120,11 +125,107 @@ describe("hotelsQueryOptions", () => {
 
   it("placeholder: outro destino não herda a lista", () => {
     const keep = keepPreviousIfSameDestination("Gramado, RS");
-    const previous = { items: [makeHotel()], total: 1 };
+    const previous = { items: [makeHotel()], total: 1, center: null };
     expect(
       keep(previous, { queryKey: ["hotels", "list", { destination: "Rio de Janeiro, RJ" }] }),
     ).toBeUndefined();
     expect(keep(previous, undefined)).toBeUndefined();
     expect(keep(previous, { queryKey: ["hotels", "list"] })).toBeUndefined();
+  });
+});
+
+/** Três hotéis em linha: o centroide é o do meio; as distâncias são 0,0 / 1,0 / 2,0 graus. */
+const LINE = [
+  makeHotel({ id: 1, latitude: 0, longitude: 2 }),
+  makeHotel({ id: 2, latitude: 0, longitude: 0 }),
+  makeHotel({ id: 3, latitude: 0, longitude: 1 }),
+];
+
+type Route = (url: URL) => Response;
+
+const stubRoutes = (route: Route) => {
+  const fetchMock = vi.fn(async (input: string) => route(new URL(input)));
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+};
+
+const json = (items: unknown, total?: number): Response =>
+  new Response(JSON.stringify(items), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      ...(total === undefined ? {} : { "X-Total-Count": String(total) }),
+    },
+  });
+
+const ids = (page: { items: { id: number }[] }) => page.items.map((hotel) => hotel.id);
+
+describe("fetchHotelsPage: sort=distance", () => {
+  const filters = { ...DEFAULT_FILTERS, sort: "distance" as const };
+
+  it("ordena e fatia no cliente, sem _sort/_page/_limit, e a página 2 não faz request", async () => {
+    const fetchMock = stubRoutes(() => json(LINE));
+    const client = makeTestQueryClient();
+    const first = await client.fetchQuery(hotelsQueryOptions(RIO, filters));
+    // centro (0, 1): hotel 3 a 0 km, hotels 1 e 2 empatados (1 grau) -> por id.
+    expect(ids(first)).toEqual([3, 1, 2]);
+    expect(first.total).toBe(3);
+    expect(first.center).toEqual({ latitude: 0, longitude: 1 });
+    // Sem filtros as duas buscas têm a mesma chave: um request só.
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
+    expect([...url.searchParams.keys()]).toEqual(["destination"]);
+
+    const second = await client.fetchQuery(hotelsQueryOptions(RIO, { ...filters, page: 2 }));
+    expect(second.items).toEqual([]);
+    expect(second.total).toBe(3);
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("com filtro: a lista filtrada e o centro do destino inteiro (2 requests)", async () => {
+    const fetchMock = stubRoutes((url) =>
+      json(url.searchParams.has("rating_gte") ? [LINE[0]] : LINE),
+    );
+    const client = makeTestQueryClient();
+    const page = await client.fetchQuery(hotelsQueryOptions(RIO, { ...filters, minRating: 4 }));
+    expect(ids(page)).toEqual([1]);
+    expect(page.center).toEqual({ latitude: 0, longitude: 1 });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("falha do centroide derruba a página", async () => {
+    stubRoutes(() => new Response("{}", { status: 500 }));
+    await expect(
+      makeTestQueryClient().fetchQuery(hotelsQueryOptions(RIO, filters)),
+    ).rejects.toMatchObject({ status: 500 });
+  });
+});
+
+describe("fetchHotelsPage: ordenação de API", () => {
+  const request = toHotelsRequest(RIO, DEFAULT_FILTERS);
+
+  it("traz a lista da API e o centroide do destino", async () => {
+    stubRoutes((url) => (url.searchParams.has("_page") ? json([LINE[2]], 3) : json(LINE)));
+    const page = await fetchHotelsPage(request, { client: makeTestQueryClient() });
+    expect(ids(page)).toEqual([3]);
+    expect(page.total).toBe(3);
+    expect(page.center).toEqual({ latitude: 0, longitude: 1 });
+  });
+
+  it("falha do centroide não derruba a lista: só some a distância", async () => {
+    stubRoutes((url) =>
+      url.searchParams.has("_page") ? json([LINE[2]], 3) : new Response("{}", { status: 500 }),
+    );
+    const page = await fetchHotelsPage(request, { client: makeTestQueryClient() });
+    expect(ids(page)).toEqual([3]);
+    expect(page.center).toBeNull();
+  });
+});
+
+describe("keepPreviousIfSameDestination é genérico", () => {
+  it("serve a qualquer formato de dado", () => {
+    const keep = keepPreviousIfSameDestination(RIO);
+    expect(keep(["x"], { queryKey: ["hotels", "infinite", { destination: RIO }] })).toEqual(["x"]);
+    expect(keep(["x"], { queryKey: ["hotels", "infinite", { destination: "Y" }] })).toBeUndefined();
   });
 });

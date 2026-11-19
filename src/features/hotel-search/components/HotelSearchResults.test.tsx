@@ -348,12 +348,13 @@ describe("HotelSearchResults: erro e offline (critérios 21 e 23)", () => {
 
   it("'Tentar de novo' fica na tela com 'Tentando…' e o foco, e vai ao título quando a lista chega", async () => {
     const user = userEvent.setup();
-    let release: () => void = () => undefined;
+    // A lista e o centroide são dois requests: libera todos os pendentes.
+    const releases: Array<() => void> = [];
     let fail = true;
     stubApi(async (url) => {
       if (fail) return new Response("{}", { status: 500 });
       await new Promise<void>((resolve) => {
-        release = resolve;
+        releases.push(resolve);
       });
       return paged(url);
     });
@@ -364,7 +365,9 @@ describe("HotelSearchResults: erro e offline (critérios 21 e 23)", () => {
     const retrying = await screen.findByRole("button", { name: "Tentando…" });
     expect(retrying).toHaveFocus();
     expect(screen.getByRole("alert")).toBeInTheDocument();
-    act(() => release());
+    act(() => {
+      for (const release of releases) release();
+    });
     expect(await screen.findAllByRole("heading", { level: 3 })).toHaveLength(10);
     await waitFor(() => expect(countHeading()).toHaveFocus());
   });
