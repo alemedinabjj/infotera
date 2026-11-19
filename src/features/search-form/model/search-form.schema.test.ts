@@ -105,6 +105,14 @@ describe("toFormValues / defaults", () => {
     expect(toFormValues(valid)).toEqual(valid);
   });
 
+  it("critérios parciais: o que falta vem dos padrões", () => {
+    expect(toFormValues({ destination: "Gramado, RS" })).toEqual({
+      ...DEFAULT_SEARCH_FORM_VALUES,
+      destination: "Gramado, RS",
+    });
+    expect(toFormValues({})).toEqual(DEFAULT_SEARCH_FORM_VALUES);
+  });
+
   it("defaults: sem destino nem datas, 2 adultos em 1 quarto", () => {
     expect(DEFAULT_SEARCH_FORM_VALUES).toEqual({
       destination: "",

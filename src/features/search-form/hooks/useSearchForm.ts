@@ -21,7 +21,7 @@ import { useRecentSearches } from "./useRecentSearches";
  * Liga RHF + schema + navegação. Submit válido: grava a busca nas recentes e vai para
  * `/search?...` dentro de uma transition (o botão fica "Buscando…" até a rota trocar).
  */
-export const useSearchForm = (initialCriteria?: SearchCriteria) => {
+export const useSearchForm = (initialCriteria?: Partial<SearchCriteria>) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [attempts, setAttempts] = useState(0);

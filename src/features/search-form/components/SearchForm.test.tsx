@@ -152,6 +152,39 @@ describe("SearchForm: initialCriteria", () => {
   });
 });
 
+describe("SearchForm: initialCriteria parcial e buscas recentes", () => {
+  it("só destino: destino escolhido, datas vazias e hóspedes padrão", () => {
+    renderWithProviders(<SearchForm initialCriteria={{ destination: "Bonito, MS" }} />);
+    expect(destinationInput()).toHaveValue("Bonito, MS");
+    expect(screen.getByLabelText(/Check-in/)).toHaveValue("");
+    expect(screen.getByLabelText(/Check-out/)).toHaveValue("");
+    expect(screen.getByRole("group", { name: "Adultos" })).toHaveTextContent("2");
+    expect(screen.getByRole("group", { name: "Quartos" })).toHaveTextContent("1");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("showRecentSearches={false} esconde a lista de recentes", () => {
+    localStorage.setItem(
+      "infotera:recent-searches",
+      JSON.stringify([
+        {
+          destination: "Gramado, RS",
+          checkIn: addDays(todayISO(), 4),
+          checkOut: addDays(todayISO(), 6),
+          rooms: 1,
+          adults: 2,
+          children: 0,
+        },
+      ]),
+    );
+    const { unmount } = renderWithProviders(<SearchForm />);
+    expect(screen.getByRole("heading", { name: "Buscas recentes" })).toBeInTheDocument();
+    unmount();
+    renderWithProviders(<SearchForm showRecentSearches={false} />);
+    expect(screen.queryByRole("heading", { name: "Buscas recentes" })).not.toBeInTheDocument();
+  });
+});
+
 describe("SearchForm: clique em botão com o destino digitado e não escolhido", () => {
   const DESTINATION_ERROR = "Escolha um destino da lista.";
   const KEY = "infotera:recent-searches";
