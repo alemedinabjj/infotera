@@ -60,7 +60,11 @@ afterEach(() => {
 describe("HotelDetailsView: fetch paralelo (critério 5)", () => {
   it("hotel, quartos e a 1ª página de avaliações saem juntos, antes de o hotel resolver", async () => {
     const { fetchMock, hotel } = stubApi();
-    const rendering = HotelDetailsView({ hotelId: 1, criteria: null, datesForm: <p>form</p> });
+    const rendering = HotelDetailsView({
+      hotelId: 1,
+      criteria: null,
+      renderDatesForm: () => <p>form</p>,
+    });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     const started = urls(fetchMock);
@@ -85,7 +89,7 @@ describe("HotelDetailsView: fetch paralelo (critério 5)", () => {
       ),
     );
     await expect(
-      HotelDetailsView({ hotelId: 999, criteria: null, datesForm: null }),
+      HotelDetailsView({ hotelId: 999, criteria: null, renderDatesForm: () => null }),
     ).rejects.toMatchObject({ digest: expect.stringContaining("404") });
   });
 
@@ -95,7 +99,7 @@ describe("HotelDetailsView: fetch paralelo (critério 5)", () => {
       vi.fn(async () => new Response("{}", { status: 500 })),
     );
     await expect(
-      HotelDetailsView({ hotelId: 1, criteria: null, datesForm: null }),
+      HotelDetailsView({ hotelId: 1, criteria: null, renderDatesForm: () => null }),
     ).rejects.toMatchObject({ status: 500 });
   });
 });
@@ -106,7 +110,7 @@ describe("HotelDetailsView: composição", () => {
     const rendering = HotelDetailsView({
       hotelId: 1,
       criteria,
-      datesForm: <p>formulário de datas</p>,
+      renderDatesForm: () => <p>formulário de datas</p>,
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
     hotel.resolve(json(seedHotel(1)));

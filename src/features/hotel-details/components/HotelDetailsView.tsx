@@ -28,8 +28,11 @@ type HotelDetailsViewProps = {
   hotelId: number;
   /** `null`: acesso direto, sem datas. */
   criteria: SearchCriteria | null;
-  /** O `SearchForm` da F2 (destino fixo), montado por `app/`: feature não importa feature. */
-  datesForm: ReactNode;
+  /**
+   * Monta o `SearchForm` da F2 (destino fixo) com o destino do hotel; vem de `app/` (feature não
+   * importa feature). Função servidor→servidor: o destino só se conhece depois de carregar o hotel.
+   */
+  renderDatesForm: (destination: string) => ReactNode;
 };
 
 /**
@@ -38,7 +41,11 @@ type HotelDetailsViewProps = {
  * servidor. As promessas pendentes seguem no `HydrationBoundary`: as ilhas cliente leem as mesmas
  * chaves com `useSuspenseQuery` (streaming por seção). Hotel inexistente → `notFound()`.
  */
-export const HotelDetailsView = async ({ hotelId, criteria, datesForm }: HotelDetailsViewProps) => {
+export const HotelDetailsView = async ({
+  hotelId,
+  criteria,
+  renderDatesForm,
+}: HotelDetailsViewProps) => {
   const queryClient = getServerQueryClient();
   void queryClient.prefetchQuery(hotelRoomsQueryOptions(hotelId));
   void queryClient.prefetchQuery(reviewsQueryOptions(hotelId, 1));
@@ -67,7 +74,7 @@ export const HotelDetailsView = async ({ hotelId, criteria, datesForm }: HotelDe
             criteria={criteria}
             summary={summary}
             pastDates={criteria ? isBeforeToday(criteria.checkIn, today) : false}
-            datesForm={datesForm}
+            datesForm={renderDatesForm(hotel.destination)}
           />
           <RoomsSection
             hotelId={hotel.id}

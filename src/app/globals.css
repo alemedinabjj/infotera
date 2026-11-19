@@ -97,6 +97,13 @@
     scroll-padding-top: 4.5rem;
   }
 
+  /* Âncoras (barra de seções do hotel) rolam suavemente; sem movimento para quem prefere menos. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
   @media (min-width: 64rem) {
     html {
       scroll-padding-top: 5rem;
