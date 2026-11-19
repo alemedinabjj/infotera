@@ -124,6 +124,17 @@ describe("revealBlock", () => {
     expect(scrollBy).toHaveBeenCalledOnce();
   });
 
+  it("a bandeja de comparação (data-bottom-bar) também limita a área útil", () => {
+    setup(null);
+    const tray = document.createElement("div");
+    tray.setAttribute("data-bottom-bar", "");
+    tray.style.position = "fixed";
+    tray.getBoundingClientRect = () => new DOMRect(0, 700, 100, 100);
+    document.body.append(tray);
+    revealBlock(makeElement(600));
+    expect(scrollBy).toHaveBeenCalledWith({ top: 8, behavior: "instant" });
+  });
+
   it("rola para cima quando o topo está sob o header", () => {
     setup(700);
     revealBlock(makeElement(20));

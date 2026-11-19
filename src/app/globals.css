@@ -105,6 +105,8 @@
    */
   html {
     scroll-padding-top: 4.5rem;
+    /* Bandeja de comparação: a variável é gravada pela bandeja (0px sem ela). */
+    scroll-padding-bottom: var(--bottom-bar-height, 0px);
   }
 
   /* Âncoras (barra de seções do hotel) rolam suavemente; sem movimento para quem prefere menos. */

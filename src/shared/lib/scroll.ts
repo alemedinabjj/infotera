@@ -53,11 +53,15 @@ const scrollPaddingTop = (): number => {
   return Number.isNaN(padding) ? 0 : padding;
 };
 
-/** Fim da área útil: o topo da barra de ação fixa (`[data-action-bar]`) ou o fim da janela. */
+/** Barras fixas no rodapé: a de ação do checkout (`data-action-bar`) e a bandeja (`data-bottom-bar`). */
+const FIXED_BARS = "[data-action-bar], [data-bottom-bar]";
+
+/** Fim da área útil: o topo da barra fixa mais alta (ação ou bandeja) ou o fim da janela. */
 const usableBottom = (): number => {
-  const bar = document.querySelector("[data-action-bar]");
-  if (!bar || getComputedStyle(bar).position !== "fixed") return window.innerHeight;
-  return bar.getBoundingClientRect().top - ACTION_BAR_GAP;
+  const tops = Array.from(document.querySelectorAll(FIXED_BARS))
+    .filter((bar) => getComputedStyle(bar).position === "fixed")
+    .map((bar) => bar.getBoundingClientRect().top - ACTION_BAR_GAP);
+  return tops.length > 0 ? Math.min(window.innerHeight, ...tops) : window.innerHeight;
 };
 
 /**
