@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useDeferredBlur } from "@/shared/hooks/useDeferredBlur";
-import { revealBelowHeader } from "@/shared/lib/scroll";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { checkoutResolver } from "../model/checkout.resolver";
 import type { CheckoutFieldPath, CheckoutValues } from "../model/checkout.schema";
@@ -17,6 +16,7 @@ import {
 } from "../model/steps";
 import { type CheckoutNotice, loadInitialCheckout } from "./checkout-initial";
 import { useCheckoutDraft } from "./useCheckoutDraft";
+import { useCheckoutFocus } from "./useCheckoutFocus";
 import { usePaymentWipe } from "./usePaymentWipe";
 
 export const INVALID_FIELD_MESSAGE = "Confira este dado e tente de novo.";
@@ -40,12 +40,7 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
   const [step, setStep] = useState<CheckoutStep>(initial.step);
   const [notice, setNotice] = useState<CheckoutNotice | null>(initial.notice);
   const [attempts, setAttempts] = useState(0);
-  const [focusTick, setFocusTick] = useState(0);
-  const [fieldFocus, setFieldFocus] = useState<{ path: CheckoutFieldPath; tick: number } | null>(
-    null,
-  );
   const stepRef = useRef(step);
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const containerRef = useRef<HTMLFormElement>(null);
   const blur = useDeferredBlur(containerRef);
   const draft = useCheckoutDraft(form, step);
@@ -54,40 +49,18 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     stepRef.current = step;
   }, [step]);
 
-  useEffect(() => {
-    if (focusTick === 0) return;
-    headingRef.current?.focus({ preventScroll: true });
-    revealBelowHeader(headingRef.current);
-  }, [focusTick]);
-
-  useEffect(() => {
-    if (fieldFocus) form.setFocus(fieldFocus.path);
-  }, [fieldFocus, form]);
-
   const summaryItems = summarizeCheckoutErrors({
     errors: form.formState.errors,
     step,
     companionKinds: fields.map((field) => field.kind),
     documentType,
   });
-  const wantsFocus = useRef(false);
-  // O resumo se revela ao montar (efeito do filho); o 1º campo inválido foca por último, assim que
-  // os erros chegam ao render, e vence: o foco nunca fica atrás do header nem da barra fixa.
-  useEffect(() => {
-    const first = summaryItems[0]?.id;
-    if (!wantsFocus.current || !first) return;
-    wantsFocus.current = false;
-    form.setFocus(first);
-    // O campo já pode estar focado (o RHF focou antes) e o resumo acabou de rolar a página: traz o
-    // campo de volta à vista respeitando o `scroll-padding` (header em cima, barra fixa embaixo).
-    // Adiado um frame: em desenvolvimento o StrictMode reexecuta o efeito do resumo logo depois.
-    requestAnimationFrame(() => document.activeElement?.scrollIntoView?.({ block: "nearest" }));
-  });
+  const focus = useCheckoutFocus(form, summaryItems[0]?.id);
 
   const moveTo = (target: CheckoutStep) => {
     setNotice(null);
     setStep(target);
-    setFocusTick((tick) => tick + 1);
+    focus.focusHeading();
   };
 
   // Volta do bfcache depois do `pagehide`: o cartão foi apagado, então a revisão não pode aparecer.
@@ -98,7 +71,7 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
   });
 
   const markAttempt = () => {
-    wantsFocus.current = true;
+    focus.requestFieldFocus();
     setAttempts((count) => count + 1);
   };
 
@@ -115,7 +88,7 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     form.setError(path, { type: "server", message: INVALID_FIELD_MESSAGE });
     moveTo(stepOfField(path));
     setAttempts((count) => count + 1);
-    setFieldFocus((current) => ({ path, tick: (current?.tick ?? 0) + 1 }));
+    focus.focusField(path);
   };
 
   return {
@@ -126,7 +99,8 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
     notice: notice?.step === step ? notice : null,
     summary: attempts > 0 ? summaryItems : [],
     attempts,
-    headingRef,
+    headingRef: focus.headingRef,
+    titleRef: focus.titleRef,
     containerRef,
     deferBlur: blur.defer,
     goNext,

@@ -33,7 +33,7 @@ export const PhoneField = () => {
   const describedBy = [`${id}-description`, error ? `${id}-error` : null].filter(Boolean).join(" ");
 
   return (
-    <fieldset className="flex min-w-0 flex-col gap-1.5">
+    <fieldset data-reveal-block className="flex min-w-0 flex-col gap-1.5">
       <legend className="mb-1.5 text-sm font-medium text-fg">Telefone</legend>
       <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
         <Select

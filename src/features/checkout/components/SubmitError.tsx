@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { revealBelowHeader } from "@/shared/lib/scroll";
+import { revealBlock } from "@/shared/lib/scroll";
 import { Alert, Button, buttonClassName } from "@/shared/ui";
 import type { SubmitState } from "../hooks/useSubmitBooking";
 
@@ -17,7 +17,7 @@ type SubmitErrorProps = {
 
 /**
  * Alerta global do envio (falha, preço mudou, esgotou, cupom, sem preço). Remontado a cada
- * resultado (`key`): recebe o foco ao montar, sem rolar para baixo do header nem da barra fixa.
+ * resultado (`key`): recebe o foco ao montar, e é revelado por inteiro entre o header e a barra fixa.
  */
 export const SubmitError = ({
   state,
@@ -30,7 +30,9 @@ export const SubmitError = ({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.focus({ preventScroll: true });
-    revealBelowHeader(ref.current);
+    // Depois do commit: o alerta INTEIRO (não só o título) fica acima da barra fixa e abaixo do header.
+    const frame = requestAnimationFrame(() => revealBlock(ref.current));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   if (state.kind === "price-unavailable") {

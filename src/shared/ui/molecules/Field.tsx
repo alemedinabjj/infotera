@@ -40,7 +40,7 @@ export const Field = ({
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div data-reveal-block className={cn("flex flex-col gap-1.5", className)}>
       <label htmlFor={id} className="text-sm font-medium text-fg">
         {label}
         {required ? <span className="sr-only"> (obrigatório)</span> : null}

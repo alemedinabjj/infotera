@@ -6,6 +6,7 @@ import type { Room } from "@/shared/api/schemas";
 import { todayISO } from "@/shared/lib/dates";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
 import { buttonClassName, EmptyState } from "@/shared/ui";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { type BlockedReason, describeBlocked } from "../model/blocked";
 import { hotelBackHref } from "../model/checkout-gate";
 
@@ -30,6 +31,8 @@ export const BlockedCheckout = ({ reason, selection, room }: BlockedCheckoutProp
     today: todayISO(),
   });
 
+  useDocumentTitle(copy.title);
+
   useEffect(() => {
     if (document.activeElement !== document.body) return;
     const heading = ref.current?.querySelector("h1");
@@ -39,7 +42,6 @@ export const BlockedCheckout = ({ reason, selection, room }: BlockedCheckoutProp
 
   return (
     <div ref={ref}>
-      <title>{`${copy.title} | Infotera Hotéis`}</title>
       <EmptyState
         headingLevel={1}
         title={copy.title}

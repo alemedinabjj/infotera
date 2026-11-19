@@ -9,7 +9,7 @@ import { TermsDialog } from "./TermsDialog";
 
 /**
  * Aceite dos termos: checkbox com o rótulo completo, "Ler termos" **fora** do `<label>` e erro
- * ligado ao checkbox por `aria-describedby`. O dialog devolve o foco ao gatilho ao fechar.
+ * ligado ao checkbox por `aria-describedby`. Só valida no envio (sem `onBlur`: passar com Tab não gera erro). O dialog devolve o foco ao gatilho ao fechar.
  */
 export const TermsField = ({ sections }: { sections: TermsSection[] }) => {
   const { control, clearErrors } = useFormContext<CheckoutValues>();
@@ -19,7 +19,7 @@ export const TermsField = ({ sections }: { sections: TermsSection[] }) => {
   const error = fieldState.error?.message;
 
   return (
-    <div className="flex flex-col gap-1 border-t border-border pt-5">
+    <div data-reveal-block className="flex flex-col gap-1 border-t border-border pt-5">
       <Checkbox
         ref={field.ref}
         name={field.name}
@@ -28,7 +28,6 @@ export const TermsField = ({ sections }: { sections: TermsSection[] }) => {
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
         onChange={(event) => field.onChange(event.target.checked)}
-        onBlur={field.onBlur}
       />
       <Button variant="ghost" size="sm" className="self-start" onClick={() => setOpen(true)}>
         Ler termos e condições
