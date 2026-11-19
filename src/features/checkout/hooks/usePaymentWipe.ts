@@ -9,16 +9,22 @@ const SECRET_FIELDS = [
   "payment.expiry",
   "payment.cvv",
   "payment.document",
+  "payment.cardName",
 ] as const;
 
 /**
- * Dados de pagamento só em memória: no `pagehide` número, validade, CVV e documento são limpos (o
+ * Dados de pagamento só em memória: no `pagehide` número, nome no cartão, validade, CVV e documento são limpos (o
  * snapshot do bfcache não guarda o cartão). Se a página voltar do bfcache depois disso,
  * `onRestored` avisa (o formulário leva ao passo de pagamento com o aviso).
  */
 export const usePaymentWipe = (form: UseFormReturn<CheckoutValues>, onRestored: () => void) => {
   const wiped = useRef(false);
   const { resetField } = form;
+  // O callback muda a cada render; o ref evita reassinar os listeners (e perder o `wiped`).
+  const restored = useRef(onRestored);
+  useEffect(() => {
+    restored.current = onRestored;
+  });
 
   useEffect(() => {
     const wipe = () => {
@@ -28,7 +34,7 @@ export const usePaymentWipe = (form: UseFormReturn<CheckoutValues>, onRestored: 
     const restore = (event: PageTransitionEvent) => {
       if (!event.persisted || !wiped.current) return;
       wiped.current = false;
-      onRestored();
+      restored.current();
     };
     window.addEventListener("pagehide", wipe);
     window.addEventListener("pageshow", restore);
@@ -36,5 +42,5 @@ export const usePaymentWipe = (form: UseFormReturn<CheckoutValues>, onRestored: 
       window.removeEventListener("pagehide", wipe);
       window.removeEventListener("pageshow", restore);
     };
-  }, [resetField, onRestored]);
+  }, [resetField]);
 };
