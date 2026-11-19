@@ -4,6 +4,11 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Pagination } from "./Pagination";
 
+const PagedHarness = () => {
+  const [page, setPage] = useState(5);
+  return <Pagination page={page} totalPages={10} onPageChange={setPage} />;
+};
+
 describe("Pagination", () => {
   it("não renderiza com uma página só", () => {
     const { container } = render(<Pagination page={1} totalPages={1} getHref={() => "/"} />);
@@ -32,11 +37,7 @@ describe("Pagination", () => {
   });
 
   it("modo botão: o foco permanece no botão da página depois de mudar de página", async () => {
-    const Harness = () => {
-      const [page, setPage] = useState(5);
-      return <Pagination page={page} totalPages={10} onPageChange={setPage} />;
-    };
-    render(<Harness />);
+    render(<PagedHarness />);
     const next = screen.getByRole("button", { name: /Próxima/ });
     await userEvent.click(next);
     expect(screen.getByRole("button", { name: "Página 6" })).toHaveAttribute(

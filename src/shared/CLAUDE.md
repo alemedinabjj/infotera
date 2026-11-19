@@ -10,7 +10,7 @@ shared/
   api/        env · http · errors · schemas · query-keys · endpoints · queries
               query-client · server-query-client (só para Server Components)
   lib/        cn · dates · currency · format · search-params · storage · pagination
-  ui/         atoms/ (Button, IconButton, Input, Select, Checkbox, Radio, Skeleton, Spinner,
+  ui/         atoms/ (Button (+button-styles), IconButton, Input, Select, Checkbox, Radio, Skeleton, Spinner,
                        Badge, Stars, VisuallyHidden)
               molecules/ (Field, QuantityStepper, Pagination, EmptyState, ErrorState, Alert, Dialog)
               toast/ (toast-store, Toaster) · layout/ (SiteHeader, SkipLink) · icons.tsx · index.ts
@@ -36,7 +36,8 @@ shared/
 - **Mutations sem retry** (`POST /bookings` não é idempotente). Queries: sem retry em 4xx/parse.
 - **`<main id="main-content">` é do layout raiz**; páginas não renderizam `<main>`.
 - **Shared não tem tela de catálogo**: componentes são provados por testes de componente.
-- `Button loading` usa `disabled` + `aria-busy` (o rótulo permanece no nome acessível).
+- `Button loading` usa `aria-disabled` + `aria-busy` + guarda no clique (nunca `disabled`: mantém o foco);
+  `loadingText` troca o rótulo em `aria-live="polite"`. `QuantityStepper` usa o mesmo padrão nos limites.
 - `EmptyState`/`ErrorState` aceitam `headingLevel` (use 1 quando ocupam a página).
 
 ## ui/
@@ -51,3 +52,15 @@ shared/
 
 ## Testes
 Unitário obrigatório para tudo em `lib/` e para os schemas (casos válidos e inválidos; o seed inteiro de `mock-api/db.seed.json` deve passar).
+
+## Pendentes para features
+Componentes do design system que a F1 não entrega; nascem na feature que os usa primeiro e sobem
+para `shared/` quando aparecer o segundo uso.
+- **Drawer / `Dialog` variante `side`** (filtros no mobile): F3 (`hotel-search`).
+- **`Dialog` `size="full"`** (lightbox da galeria): F4 (`hotel-details`).
+- **Card** (hotel/quarto): F3 (`HotelCard`) e F4 (`RoomCard`); extrair para `shared/ui` no segundo uso.
+- **RatingScore** (nota + `Stars` + contagem): F3, reaproveitado na F4.
+- **PriceTag** (preço, "por noite", total): F3, reaproveitado na F4/F5.
+- **Breadcrumb**: F4 (`hotel-details`).
+- **Combobox** (autocomplete de destino): F2 (`search-form`).
+- **DateRange** (seletor de período): F2 (`search-form`).
