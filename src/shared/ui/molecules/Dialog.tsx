@@ -56,6 +56,7 @@ export const Dialog = ({
 }: DialogProps) => {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const pressStartedOnBackdrop = useRef(false);
   useDialogLifecycle(ref, open);
 
   return (
@@ -66,8 +67,19 @@ export const Dialog = ({
       onClose={() => {
         if (open) onClose();
       }}
+      onCancel={(event) => {
+        // O pai é a fonte da verdade: Esc só pede o fechamento, quem fecha é `open`.
+        event.preventDefault();
+        onClose();
+      }}
+      onPointerDown={(event) => {
+        pressStartedOnBackdrop.current = event.target === event.currentTarget;
+      }}
       onClick={(event) => {
-        if (closeOnBackdrop && event.target === event.currentTarget) onClose();
+        // Arrastar de dentro do conteúdo até o backdrop não fecha: pointerdown e click no dialog.
+        const startedOnBackdrop = pressStartedOnBackdrop.current;
+        pressStartedOnBackdrop.current = false;
+        if (closeOnBackdrop && startedOnBackdrop && event.target === event.currentTarget) onClose();
       }}
       className={cn(
         "m-auto max-h-[85dvh] w-[calc(100%-2rem)] overflow-hidden rounded-dialog bg-surface p-0 text-fg shadow-overlay",

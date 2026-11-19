@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -64,5 +64,37 @@ describe("Dialog", () => {
     expect(document.body.style.overflow).toBe("hidden");
     await userEvent.click(screen.getByRole("button", { name: "Fechar" }));
     expect(document.body.style.overflow).toBe("");
+  });
+
+  it("Esc (evento cancel) é interceptado: pede onClose e deixa o pai decidir", () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog open title="T" onClose={onClose}>
+        <p>x</p>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog");
+    const notPrevented = fireEvent(dialog, new Event("cancel", { cancelable: true }));
+    expect(notPrevented).toBe(false);
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(dialog).toHaveAttribute("open");
+  });
+
+  it("backdrop só fecha se pointerdown e click começaram no dialog", () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog open title="T" onClose={onClose} closeOnBackdrop>
+        <p>Conteúdo</p>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog");
+    // Arrasto: começou no conteúdo e terminou no backdrop.
+    fireEvent.pointerDown(screen.getByText("Conteúdo"));
+    fireEvent.click(dialog);
+    expect(onClose).not.toHaveBeenCalled();
+    // Clique real no backdrop.
+    fireEvent.pointerDown(dialog);
+    fireEvent.click(dialog);
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });
