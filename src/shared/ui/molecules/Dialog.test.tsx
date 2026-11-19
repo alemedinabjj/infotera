@@ -7,9 +7,13 @@ import { Dialog } from "./Dialog";
 const Harness = ({
   onClose = () => undefined,
   placement,
+  size,
+  footer,
 }: {
   onClose?: () => void;
   placement?: "center" | "sheet";
+  size?: "sm" | "md" | "full";
+  footer?: string;
 }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -21,6 +25,8 @@ const Harness = ({
         open={open}
         title="Termos da reserva"
         placement={placement}
+        size={size}
+        footer={footer}
         onClose={() => {
           setOpen(false);
           onClose();
@@ -156,5 +162,44 @@ describe("Dialog initialFocus", () => {
       </Dialog>,
     );
     expect(screen.getByLabelText("Primeiro")).toHaveFocus();
+  });
+
+  describe("size full", () => {
+    it("ocupa a tela toda, com fundo escuro, sem borda e sem max-h", () => {
+      render(<Harness size="full" />);
+      fireEvent.click(screen.getByRole("button", { name: "Ler termos" }));
+      const dialog = screen.getByRole("dialog", { name: "Termos da reserva" });
+      for (const expected of [
+        "inset-0",
+        "h-dvh",
+        "w-full",
+        "max-h-none",
+        "bg-fg",
+        "rounded-none",
+      ]) {
+        expect(dialog).toHaveClass(expected);
+      }
+      expect(dialog).not.toHaveClass("max-w-lg");
+    });
+
+    it("mostra o footer e fecha com Esc devolvendo o foco ao gatilho", async () => {
+      const onClose = vi.fn();
+      render(<Harness size="full" footer="Foto 1 de 5" onClose={onClose} />);
+      const trigger = screen.getByRole("button", { name: "Ler termos" });
+      trigger.focus();
+      await userEvent.click(trigger);
+      expect(screen.getByText("Foto 1 de 5")).toBeInTheDocument();
+      fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(trigger).toHaveFocus();
+    });
+
+    it("não fecha ao clicar no dialog (sem backdrop visível)", async () => {
+      const onClose = vi.fn();
+      render(<Harness size="full" onClose={onClose} />);
+      await userEvent.click(screen.getByRole("button", { name: "Ler termos" }));
+      await userEvent.click(screen.getByRole("dialog"));
+      expect(onClose).not.toHaveBeenCalled();
+    });
   });
 });

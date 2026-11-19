@@ -5,27 +5,55 @@ import { cn } from "../../lib/cn";
 import { IconButton } from "../atoms/IconButton";
 import { XIcon } from "../icons";
 
-type DialogSize = "sm" | "md";
-
-const SIZES: Record<DialogSize, string> = { sm: "max-w-sm", md: "max-w-lg" };
+type DialogSize = "sm" | "md" | "full";
 
 type DialogPlacement = "center" | "sheet";
 
-type PlacementStyle = { dialog: string; panel: string; footer: string };
+type DialogLayout = {
+  dialog: string;
+  panel: string;
+  header: string;
+  title: string;
+  body: string;
+  footer: string;
+};
 
-const PLACEMENTS: Record<DialogPlacement, PlacementStyle> = {
-  center: {
-    dialog: "m-auto max-h-[85dvh] w-[calc(100%-2rem)] rounded-dialog",
-    panel: "max-h-[85dvh]",
-    footer: "flex-col-reverse px-5 py-4 sm:flex-row sm:justify-end",
-  },
-  // Bottom-sheet: colado embaixo; a partir de `sm` continua embaixo, mas com largura de dialog.
-  sheet: {
-    dialog:
-      "mt-auto mb-0 max-h-[90dvh] w-full max-w-none animate-slide-up rounded-t-dialog rounded-b-none sm:mx-auto sm:max-w-lg",
-    panel: "max-h-[90dvh]",
-    footer: "flex-row gap-3 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
-  },
+const CENTER: DialogLayout = {
+  dialog:
+    "m-auto max-h-[85dvh] w-[calc(100%-2rem)] rounded-dialog bg-surface text-fg shadow-overlay",
+  panel: "max-h-[85dvh]",
+  header: "border-b border-border py-2 pr-2 pl-5",
+  title: "text-lg",
+  body: "overflow-y-auto px-5 py-4",
+  footer: "flex-col-reverse border-t border-border px-5 py-4 sm:flex-row sm:justify-end",
+};
+
+// Bottom-sheet: colado embaixo; a partir de `sm` continua embaixo, mas com largura de dialog.
+const SHEET: DialogLayout = {
+  ...CENTER,
+  dialog:
+    "mt-auto mb-0 max-h-[90dvh] w-full max-w-none animate-slide-up rounded-t-dialog rounded-b-none bg-surface text-fg shadow-overlay sm:mx-auto sm:max-w-lg",
+  panel: "max-h-[90dvh]",
+  footer:
+    "flex-row gap-3 border-t border-border px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
+};
+
+// Tela cheia (lightbox): fundo `fg`, anel de foco branco (o `primary` não passa 3:1 sobre `fg`).
+const FULL: DialogLayout = {
+  dialog:
+    "fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none animate-fade-in rounded-none bg-fg text-fg-on-primary [&_:focus-visible]:outline-fg-on-primary",
+  panel: "h-full",
+  header: "h-14 shrink-0 pr-2 pl-4",
+  title: "truncate text-base",
+  body: "min-h-0 flex-1",
+  footer: "h-16 shrink-0 items-center justify-between px-4 pb-[env(safe-area-inset-bottom)]",
+};
+
+const SIZE_CLASS: Record<"sm" | "md", string> = { sm: "max-w-sm", md: "max-w-lg" };
+
+const layoutFor = (size: DialogSize, placement: DialogPlacement): DialogLayout => {
+  if (size === "full") return FULL;
+  return placement === "sheet" ? SHEET : CENTER;
 };
 
 type DialogProps = {
@@ -34,6 +62,7 @@ type DialogProps = {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** `sm`/`md` (largura) ou `full`: tela cheia com fundo escuro (lightbox; `placement` é ignorado). */
   size?: DialogSize;
   /** `center` (padrão) ou `sheet` (bottom-sheet do mobile: filtros). */
   placement?: DialogPlacement;
@@ -89,7 +118,7 @@ export const Dialog = ({
   const titleId = useId();
   const pressStartedOnBackdrop = useRef(false);
   useDialogLifecycle(ref, open, initialFocus);
-  const layout = PLACEMENTS[placement];
+  const layout = layoutFor(size, placement);
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: clique no backdrop é atalho de mouse; o teclado fecha com Esc/botão
@@ -114,30 +143,27 @@ export const Dialog = ({
         if (closeOnBackdrop && startedOnBackdrop && event.target === event.currentTarget) onClose();
       }}
       className={cn(
-        "overflow-hidden bg-surface p-0 text-fg shadow-overlay",
+        "overflow-hidden p-0",
         layout.dialog,
-        placement === "center" && SIZES[size],
+        layout === CENTER && size !== "full" && SIZE_CLASS[size],
         className,
       )}
     >
       {open ? (
         <div className={cn("flex flex-col", layout.panel)}>
-          <header className="flex items-center justify-between gap-2 border-b border-border py-2 pr-2 pl-5">
-            <h2 id={titleId} className="text-lg font-semibold">
+          <header className={cn("flex items-center justify-between gap-2", layout.header)}>
+            <h2 id={titleId} className={cn("font-semibold", layout.title)}>
               {title}
             </h2>
             <IconButton
               aria-label={closeLabel}
+              variant={size === "full" ? "overlay" : "ghost"}
               icon={<XIcon className="size-6" />}
               onClick={onClose}
             />
           </header>
-          <div className="overflow-y-auto px-5 py-4">{children}</div>
-          {footer ? (
-            <footer className={cn("flex gap-3 border-t border-border", layout.footer)}>
-              {footer}
-            </footer>
-          ) : null}
+          <div className={layout.body}>{children}</div>
+          {footer ? <footer className={cn("flex gap-3", layout.footer)}>{footer}</footer> : null}
         </div>
       ) : null}
     </dialog>
