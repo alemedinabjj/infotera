@@ -1,3 +1,4 @@
+import "server-only";
 import type { Metadata } from "next";
 import { parseBookingId } from "../model/booking-id";
 import {

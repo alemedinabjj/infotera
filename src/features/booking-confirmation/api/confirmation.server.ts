@@ -1,3 +1,4 @@
+import "server-only";
 import type { QueryClient } from "@tanstack/react-query";
 import { isApiError } from "@/shared/api/http";
 import { hotelQueryOptions, roomQueryOptions } from "@/shared/api/queries";
