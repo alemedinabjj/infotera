@@ -1,11 +1,13 @@
 import { type ReactNode, useId } from "react";
 import { cn } from "../../lib/cn";
 import { IconButton } from "../atoms/IconButton";
-import { MinusIcon, PlusIcon } from "../icons";
+import { InfoIcon, MinusIcon, PlusIcon } from "../icons";
 
 type QuantityStepperProps = {
   label: ReactNode;
   description?: ReactNode;
+  /** Motivo do limite atual (texto vem da feature). Região `aria-live` sempre montada. */
+  hint?: ReactNode;
   value: number;
   min: number;
   max: number;
@@ -22,6 +24,7 @@ type QuantityStepperProps = {
 export const QuantityStepper = ({
   label,
   description,
+  hint,
   value,
   min,
   max,
@@ -32,23 +35,41 @@ export const QuantityStepper = ({
   className,
 }: QuantityStepperProps) => {
   const labelId = useId();
+  const descriptionId = useId();
+  const hintId = useId();
   const atMin = value <= min;
   const atMax = value >= max;
+  const describedBy = [description ? descriptionId : null, hint ? hintId : null]
+    .filter(Boolean)
+    .join(" ");
   return (
     <fieldset
       aria-labelledby={labelId}
       className={cn("flex min-w-0 items-center justify-between gap-4", className)}
     >
-      <div>
+      <div className="min-w-0">
         <p id={labelId} className="text-base font-medium text-fg">
           {label}
         </p>
-        {description ? <p className="text-sm text-fg-muted">{description}</p> : null}
+        {description ? (
+          <p id={descriptionId} className="text-sm text-fg-muted">
+            {description}
+          </p>
+        ) : null}
+        <div aria-live="polite">
+          {hint ? (
+            <p id={hintId} className="mt-1 flex items-start gap-1.5 text-sm text-fg-muted">
+              <InfoIcon className="mt-0.5 size-4 shrink-0" />
+              <span>{hint}</span>
+            </p>
+          ) : null}
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <IconButton
           variant="secondary"
           aria-label={decreaseLabel}
+          aria-describedby={describedBy || undefined}
           icon={<MinusIcon className="size-5" />}
           aria-disabled={atMin || undefined}
           onClick={() => {
@@ -61,6 +82,7 @@ export const QuantityStepper = ({
         <IconButton
           variant="secondary"
           aria-label={increaseLabel}
+          aria-describedby={describedBy || undefined}
           icon={<PlusIcon className="size-5" />}
           aria-disabled={atMax || undefined}
           onClick={() => {
