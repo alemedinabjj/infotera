@@ -1,5 +1,5 @@
-import { formatBRL } from "@/shared/lib/currency";
-import { pluralize } from "@/shared/lib/format";
+import { formatBRL } from "../../lib/currency";
+import { pluralize } from "../../lib/format";
 
 const money = (value: number): string => formatBRL(value, { cents: !Number.isInteger(value) });
 

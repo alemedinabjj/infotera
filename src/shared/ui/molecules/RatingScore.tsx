@@ -1,5 +1,5 @@
-import { formatRating, pluralize, ratingLabel } from "@/shared/lib/format";
-import { Stars } from "@/shared/ui";
+import { formatRating, pluralize, ratingLabel } from "../../lib/format";
+import { Stars } from "../atoms/Stars";
 
 type RatingScoreProps = {
   rating: number;
