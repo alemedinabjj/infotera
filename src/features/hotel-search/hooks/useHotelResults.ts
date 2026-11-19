@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import type { Hotel } from "@/shared/api/schemas";
 import { hotelsQueryOptions } from "../api/hotels";
 import { deriveResultsView, type ResultsView } from "../model/results-view";
@@ -21,13 +20,9 @@ type UseHotelResults = {
 
 /**
  * Query da lista + visão derivada. Troca de filtro/página mantém a lista anterior (só do mesmo
- * destino); página fora do intervalo salta para a última.
+ * destino). A correção de página fora do intervalo fica no controller.
  */
-export const useHotelResults = (
-  destination: string,
-  filters: SearchFilters,
-  replacePage: (page: number) => void,
-): UseHotelResults => {
+export const useHotelResults = (destination: string, filters: SearchFilters): UseHotelResults => {
   const query = useQuery(hotelsQueryOptions(destination, filters));
   const view = deriveResultsView({
     hasData: query.data !== undefined,
@@ -41,11 +36,6 @@ export const useHotelResults = (
     hasActiveFilters: hasActiveFilters(filters),
   });
   const slow = useSlowLoading(view.kind === "loading");
-  const lastPage = view.kind === "out-of-range" ? view.lastPage : null;
-
-  useEffect(() => {
-    if (lastPage !== null) replacePage(lastPage);
-  }, [lastPage, replacePage]);
 
   return {
     view,
