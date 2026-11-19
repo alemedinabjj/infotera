@@ -42,7 +42,7 @@ export const describeBlocked = ({
       const left = available ?? 0;
       return {
         title: `Só ${pluralize(left, "quarto disponível", "quartos disponíveis")}`,
-        description: `Sua reserva pede ${criteria.rooms} quartos de ${room}. Escolha outro quarto ou reduza a quantidade de quartos.`,
+        description: `Sua reserva pede ${criteria.rooms} quartos de ${room}. Volte ao hotel para escolher outro quarto ou reduzir a quantidade de quartos.`,
         action: "Ver quartos",
       };
     }

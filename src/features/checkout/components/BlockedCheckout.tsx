@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
 import type { Room } from "@/shared/api/schemas";
 import { todayISO } from "@/shared/lib/dates";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
@@ -18,10 +17,10 @@ type BlockedCheckoutProps = {
 
 /**
  * Estado bloqueante: substitui a página inteira (h1 próprio, o motivo e uma saída). Sem formulário
- * nem barra. Se o foco estava no formulário quando o bloqueio chegou, vai para o h1.
+ * nem barra. O bloqueio só vale na entrada, então não há foco a recuperar: nada de foco programático
+ * (e de anel de foco) no h1.
  */
 export const BlockedCheckout = ({ reason, selection, room }: BlockedCheckoutProps) => {
-  const ref = useRef<HTMLDivElement>(null);
   const copy = describeBlocked({
     reason,
     criteria: selection.criteria,
@@ -33,15 +32,8 @@ export const BlockedCheckout = ({ reason, selection, room }: BlockedCheckoutProp
 
   useDocumentTitle(copy.title);
 
-  useEffect(() => {
-    if (document.activeElement !== document.body) return;
-    const heading = ref.current?.querySelector("h1");
-    heading?.setAttribute("tabindex", "-1");
-    heading?.focus({ preventScroll: true });
-  }, []);
-
   return (
-    <div ref={ref}>
+    <div>
       <EmptyState
         headingLevel={1}
         title={copy.title}
