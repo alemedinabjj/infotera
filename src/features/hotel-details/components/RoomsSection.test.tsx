@@ -12,6 +12,7 @@ import { navigationSpies } from "@/shared/testing/next-navigation";
 import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
 import { seedRooms } from "@/shared/testing/seed";
 import { RoomsSection } from "./RoomsSection";
+import { StayEditProvider } from "./StayEditContext";
 
 vi.mock(
   "next/navigation",
@@ -48,22 +49,27 @@ const renderRooms = ({
   rooms = seedRooms(hotelId),
   search = criteria,
   hotelAvailableRooms = 12,
+  pastDates = false,
 }: {
   hotelId?: number;
   rooms?: Rooms;
   search?: typeof criteria | null;
   hotelAvailableRooms?: number;
+  pastDates?: boolean;
 } = {}) => {
   const queryClient = makeTestQueryClient();
   queryClient.setQueryData(hotelRoomsQueryOptions(hotelId).queryKey, rooms);
   return renderWithProviders(
     <NavigationGate>
-      <RoomsSection
-        hotelId={hotelId}
-        hotelAvailableRooms={hotelAvailableRooms}
-        cancellationPolicy="free"
-        criteria={search}
-      />
+      <StayEditProvider criteriaKey="a">
+        <RoomsSection
+          hotelId={hotelId}
+          hotelAvailableRooms={hotelAvailableRooms}
+          cancellationPolicy="free"
+          criteria={search}
+          pastDates={pastDates}
+        />
+      </StayEditProvider>
     </NavigationGate>,
     { queryClient },
   );
@@ -150,7 +156,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
   });
 
   it("hotel esgotado: alert com link, badge, botão 'Esgotado' aria-disabled e sem total (hotel 19)", () => {
-    renderRooms({ hotelId: 19, hotelAvailableRooms: 0 });
+    renderRooms({ hotelId: 19 });
     const alert = screen
       .getByText("Este hotel está esgotado nestas datas")
       .closest("[role]") as HTMLElement;
@@ -189,7 +195,10 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
   it("3 quartos com 2 disponíveis: badge e motivo, sem selecionar", async () => {
     const user = userEvent.setup();
     renderRooms({
-      rooms: [makeRoom({ id: 5, name: "Quarto Duplo", available: 2, maxGuests: 4 })],
+      rooms: [
+        makeRoom({ id: 5, name: "Quarto Duplo", available: 2, maxGuests: 4 }),
+        makeRoom({ id: 6, name: "Quarto Triplo", available: 9, maxGuests: 4 }),
+      ],
       search: { ...criteria, rooms: 3, adults: 3 },
     });
     const room = card("Quarto Duplo");
@@ -200,6 +209,17 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
     );
     await user.click(button);
     expect(navigationSpies.push).not.toHaveBeenCalled();
+  });
+
+  it("hotel com um só tipo de quarto não sugere 'outro tipo'", () => {
+    renderRooms({
+      rooms: [makeRoom({ id: 5, name: "Quarto Duplo", available: 2, maxGuests: 4 })],
+      search: { ...criteria, rooms: 3, adults: 3 },
+    });
+    const button = within(card("Quarto Duplo")).getByRole("button", { name: /Selecionar quarto/ });
+    expect(button).toHaveAccessibleDescription(
+      "Sua busca pede 3 quartos. Diminua a quantidade de quartos.",
+    );
   });
 });
 
@@ -229,9 +249,39 @@ describe("RoomsSection: sem critérios (critério 21)", () => {
   it("sem estoque e sem datas, o motivo diz 'no momento'", () => {
     renderRooms({ hotelId: 19, search: null, hotelAvailableRooms: 0 });
     expect(screen.getAllByText("Sem quartos disponíveis no momento.").length).toBeGreaterThan(0);
+    // O aviso do hotel esgotado fica no topo de "Quartos" (HotelDetailsView), antes do formulário.
     expect(
-      screen.getByText("Este hotel está sem quartos disponíveis no momento"),
-    ).toBeInTheDocument();
+      screen.queryByText("Este hotel está sem quartos disponíveis no momento"),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("RoomsSection: datas passadas", () => {
+  it("o botão vira 'Escolher datas' com o motivo visível e abre o formulário de datas", async () => {
+    const user = userEvent.setup();
+    renderRooms({ pastDates: true });
+    const suite = card("Suíte Deluxe Ocean View");
+    expect(within(suite).getByText("As datas desta busca já passaram.")).toBeVisible();
+    expect(within(suite).queryByRole("button", { name: /Selecionar quarto/ })).toBeNull();
+    const button = within(suite).getByRole("button", {
+      name: "Escolher datas: Suíte Deluxe Ocean View",
+    });
+    const input = document.createElement("input");
+    input.name = "checkIn";
+    document.body.append(input);
+    await user.click(button);
+    expect(input).toHaveFocus();
+    input.remove();
+    expect(navigationSpies.push).not.toHaveBeenCalled();
+  });
+});
+
+describe("RoomsSection: contagem de tipos", () => {
+  it("a linha visível é aria-hidden (o anunciador fala uma vez só)", async () => {
+    renderRooms();
+    const visible = await screen.findAllByText("2 tipos de quarto");
+    expect(visible.some((node) => node.getAttribute("aria-hidden") === "true")).toBe(true);
+    expect(visible.some((node) => node.getAttribute("aria-live") === "polite")).toBe(true);
   });
 });
 
@@ -240,12 +290,15 @@ describe("RoomsSection: estados (critérios 23–24)", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.stubGlobal("fetch", () => new Promise<Response>(() => undefined));
     const { container } = renderWithProviders(
-      <RoomsSection
-        hotelId={1}
-        hotelAvailableRooms={3}
-        cancellationPolicy="free"
-        criteria={criteria}
-      />,
+      <StayEditProvider criteriaKey="a">
+        <RoomsSection
+          hotelId={1}
+          hotelAvailableRooms={3}
+          cancellationPolicy="free"
+          criteria={criteria}
+          pastDates={false}
+        />
+      </StayEditProvider>,
     );
     expect(container.querySelector("[aria-busy='true']")).toBeInTheDocument();
     expect(screen.getAllByText("Carregando quartos…").length).toBeGreaterThan(0);
@@ -303,12 +356,15 @@ describe("RoomsSection: estados (critérios 23–24)", () => {
         <h2 id="quartos-titulo" tabIndex={-1}>
           Quartos
         </h2>
-        <RoomsSection
-          hotelId={1}
-          hotelAvailableRooms={12}
-          cancellationPolicy="free"
-          criteria={criteria}
-        />
+        <StayEditProvider criteriaKey="a">
+          <RoomsSection
+            hotelId={1}
+            hotelAvailableRooms={12}
+            cancellationPolicy="free"
+            criteria={criteria}
+            pastDates={false}
+          />
+        </StayEditProvider>
       </>,
       { queryClient },
     );

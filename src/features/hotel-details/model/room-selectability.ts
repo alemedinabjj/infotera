@@ -5,20 +5,24 @@ import { guestsPerRoom, type SearchCriteria } from "@/shared/lib/search-params";
 export type RoomSelectability =
   | { kind: "sold-out" }
   | { kind: "needs-dates" }
+  | { kind: "past-dates" }
   | { kind: "too-small"; maxGuests: number; guestsPerRoom: number }
   | { kind: "insufficient"; available: number; requested: number }
   | { kind: "selectable"; scarce: number | null };
 
 /**
- * O que a pessoa pode fazer com o quarto. Precedência: esgotado → sem datas → pequeno demais
- * para os hóspedes → menos quartos que o pedido → selecionável (`scarce` com ≤ 2 restantes).
+ * O que a pessoa pode fazer com o quarto. Precedência: esgotado → sem datas → datas já passadas
+ * (`pastDates`: check-in anterior a hoje) → pequeno demais para os hóspedes → menos quartos que o
+ * pedido → selecionável (`scarce` com ≤ 2 restantes).
  */
 export const roomSelectability = (
   room: Room,
   criteria: SearchCriteria | null,
+  pastDates = false,
 ): RoomSelectability => {
   if (room.available <= 0) return { kind: "sold-out" };
   if (criteria === null) return { kind: "needs-dates" };
+  if (pastDates) return { kind: "past-dates" };
   const perRoom = guestsPerRoom(criteria);
   if (perRoom > room.maxGuests) {
     return { kind: "too-small", maxGuests: room.maxGuests, guestsPerRoom: perRoom };
@@ -33,10 +37,14 @@ export const roomSelectability = (
 export const canSelect = (selectability: RoomSelectability): boolean =>
   selectability.kind === "selectable";
 
-/** Motivo (texto visível acima do botão) quando a ação está bloqueada; `null` quando não há. */
+/**
+ * Motivo (texto visível acima do botão) quando a ação está bloqueada; `null` quando não há.
+ * `otherRooms`: o hotel tem outro tipo de quarto (senão a mensagem não sugere "outro quarto").
+ */
 export const selectabilityMessage = (
   selectability: RoomSelectability,
   hasDates: boolean,
+  otherRooms = true,
 ): string | null => {
   switch (selectability.kind) {
     case "sold-out":
@@ -48,10 +56,17 @@ export const selectabilityMessage = (
         selectability.maxGuests === 1
           ? "Acomoda 1 hóspede."
           : `Acomoda até ${selectability.maxGuests} hóspedes.`;
-      return `${capacity} Sua busca tem ${selectability.guestsPerRoom} por quarto. Escolha outro quarto ou altere os hóspedes.`;
+      const advice = otherRooms
+        ? "Escolha outro quarto ou altere os hóspedes."
+        : "Altere os hóspedes.";
+      return `${capacity} Sua busca tem ${selectability.guestsPerRoom} por quarto. ${advice}`;
     }
-    case "insufficient":
-      return `Sua busca pede ${selectability.requested} ${selectability.requested === 1 ? "quarto" : "quartos"}. Diminua a quantidade de quartos ou escolha outro tipo.`;
+    case "insufficient": {
+      const requested = `Sua busca pede ${selectability.requested} ${selectability.requested === 1 ? "quarto" : "quartos"}.`;
+      return `${requested} ${otherRooms ? "Diminua a quantidade de quartos ou escolha outro tipo." : "Diminua a quantidade de quartos."}`;
+    }
+    case "past-dates":
+      return "As datas desta busca já passaram.";
     case "needs-dates":
     case "selectable":
       return null;
@@ -85,6 +100,7 @@ export const selectabilityBadge = (selectability: RoomSelectability): Selectabil
             text: `Apenas ${selectability.scarce} ${selectability.scarce === 1 ? "quarto" : "quartos"}!`,
           };
     case "needs-dates":
+    case "past-dates":
     case "too-small":
       return null;
     default: {

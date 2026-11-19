@@ -8,6 +8,9 @@ import { RoomAmenities, RoomCancellation, RoomFacts } from "./RoomDetails";
 type RoomCardProps = {
   room: Room;
   criteria: SearchCriteria | null;
+  pastDates: boolean;
+  /** O hotel tem outro tipo de quarto (os motivos de bloqueio só sugerem "outro" nesse caso). */
+  otherRooms: boolean;
   cancellationPolicy: CancellationPolicy;
   /** Este quarto está em "Selecionando…". */
   selecting: boolean;
@@ -23,13 +26,15 @@ const ROOM_IMAGE_SIZES = "(min-width: 640px) 14rem, 100vw";
 export const RoomCard = ({
   room,
   criteria,
+  pastDates,
+  otherRooms,
   cancellationPolicy,
   selecting,
   locked,
   onSelect,
   onPickDates,
 }: RoomCardProps) => {
-  const selectability = roomSelectability(room, criteria);
+  const selectability = roomSelectability(room, criteria, pastDates);
   const [photo] = room.images;
   return (
     <li>
@@ -58,6 +63,7 @@ export const RoomCard = ({
             room={room}
             criteria={criteria}
             selectability={selectability}
+            otherRooms={otherRooms}
             loading={selecting}
             onSelect={() => {
               if (!locked) onSelect(room.id);

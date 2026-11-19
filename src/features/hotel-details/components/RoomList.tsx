@@ -9,6 +9,7 @@ type RoomListProps = {
   hotelId: number;
   rooms: readonly Room[];
   criteria: SearchCriteria | null;
+  pastDates: boolean;
   cancellationPolicy: CancellationPolicy;
   onPickDates: () => void;
 };
@@ -18,6 +19,7 @@ export const RoomList = ({
   hotelId,
   rooms,
   criteria,
+  pastDates,
   cancellationPolicy,
   onPickDates,
 }: RoomListProps) => {
@@ -29,6 +31,8 @@ export const RoomList = ({
           key={room.id}
           room={room}
           criteria={criteria}
+          pastDates={pastDates}
+          otherRooms={rooms.length > 1}
           cancellationPolicy={cancellationPolicy}
           selecting={pendingRoomId === room.id}
           locked={pendingRoomId !== null}

@@ -6,7 +6,6 @@ import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import type { CancellationPolicy } from "@/shared/api/schemas";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { buttonClassName, EmptyState } from "@/shared/ui";
-import { focusCheckIn } from "../hooks/focus-dates";
 import { canCompare } from "../model/room-comparison";
 import { roomTypesLabel } from "../model/room-labels";
 import { sectionHeadingId } from "../model/sections";
@@ -15,6 +14,7 @@ import { RoomList } from "./RoomList";
 import { RoomsLoading } from "./RoomsLoading";
 import { SectionBoundary } from "./SectionBoundary";
 import { SoldOutAlert } from "./SoldOutAlert";
+import { useStayEdit } from "./StayEditContext";
 
 type RoomsSectionProps = {
   hotelId: number;
@@ -22,6 +22,8 @@ type RoomsSectionProps = {
   hotelAvailableRooms: number;
   cancellationPolicy: CancellationPolicy;
   criteria: SearchCriteria | null;
+  /** O check-in da busca já passou: os botões viram "Escolher datas". */
+  pastDates: boolean;
 };
 
 /**
@@ -52,8 +54,10 @@ const RoomsContent = ({
   hotelAvailableRooms,
   cancellationPolicy,
   criteria,
+  pastDates,
 }: RoomsSectionProps) => {
   const { data: rooms } = useSuspenseQuery(hotelRoomsQueryOptions(hotelId));
+  const { pickDates } = useStayEdit();
 
   if (rooms.length === 0) {
     return (
@@ -70,17 +74,22 @@ const RoomsContent = ({
     );
   }
 
-  const soldOut = hotelAvailableRooms === 0 || rooms.every((room) => room.available === 0);
+  // Hotel esgotado já foi avisado no topo de "Quartos" (antes do formulário de datas).
+  const soldOut = hotelAvailableRooms !== 0 && rooms.every((room) => room.available === 0);
   return (
     <>
       {soldOut ? <SoldOutAlert hasDates={criteria !== null} /> : null}
-      <p className="min-h-5 text-sm text-fg-muted">{roomTypesLabel(rooms.length)}</p>
+      {/* A contagem é falada pelo anunciador (`RoomsAnnouncer`): aqui só a vista, sem repetir. */}
+      <p aria-hidden="true" className="min-h-5 text-sm text-fg-muted">
+        {roomTypesLabel(rooms.length)}
+      </p>
       <RoomList
         hotelId={hotelId}
         rooms={rooms}
         criteria={criteria}
+        pastDates={pastDates}
         cancellationPolicy={cancellationPolicy}
-        onPickDates={focusCheckIn}
+        onPickDates={pickDates}
       />
       {canCompare(rooms) ? <RoomComparison rooms={rooms} /> : null}
     </>

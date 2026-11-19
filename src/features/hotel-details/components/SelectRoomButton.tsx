@@ -14,8 +14,6 @@ type SelectRoomButtonProps = {
   onPickDates: () => void;
 };
 
-const RoomName = ({ name }: { name: string }) => <span className="sr-only">: {name}</span>;
-
 const WIDTH = "sm:ml-auto sm:w-56";
 
 /**
@@ -30,31 +28,35 @@ export const SelectRoomButton = ({
   onSelect,
   onPickDates,
 }: SelectRoomButtonProps) => {
+  // Nome acessível "Ação: quarto" num texto só (um `<span class="sr-only">` separado ganharia um
+  // espaço antes do ":" na leitura). O texto visível é o início do nome (WCAG 2.5.3).
+  const label = (action: string) => `${action}: ${room.name}`;
   switch (selectability.kind) {
     case "selectable":
       return (
         <Button
           fullWidth
+          aria-label={loading ? undefined : label("Selecionar quarto")}
           className={WIDTH}
           loading={loading}
           loadingText="Selecionando…"
           onClick={onSelect}
         >
           Selecionar quarto
-          <RoomName name={room.name} />
         </Button>
       );
     case "needs-dates":
+    case "past-dates":
       return (
         <Button
           variant="secondary"
           fullWidth
+          aria-label={label("Escolher datas")}
           className={WIDTH}
           leftIcon={<CalendarIcon className="size-5" />}
           onClick={onPickDates}
         >
           Escolher datas
-          <RoomName name={room.name} />
         </Button>
       );
     case "sold-out":
@@ -63,13 +65,13 @@ export const SelectRoomButton = ({
       return (
         <Button
           fullWidth
+          aria-label={label(selectability.kind === "sold-out" ? "Esgotado" : "Selecionar quarto")}
           className={WIDTH}
           aria-disabled="true"
           aria-describedby={reasonId ?? undefined}
           onClick={(event) => event.preventDefault()}
         >
           {selectability.kind === "sold-out" ? "Esgotado" : "Selecionar quarto"}
-          <RoomName name={room.name} />
         </Button>
       );
     default: {

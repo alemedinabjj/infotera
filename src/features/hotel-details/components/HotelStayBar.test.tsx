@@ -1,8 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import { markFocusAfterNavigation } from "@/shared/lib/focus-after-navigation";
 import { makeSearchCriteria } from "@/shared/testing/fixtures";
 import { HotelStayBar } from "./HotelStayBar";
+import { StayEditProvider } from "./StayEditContext";
 
 const criteria = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" });
 const SUMMARY = "12–15 dez · 3 noites · 2 adultos · 1 quarto";
@@ -14,21 +16,26 @@ const Form = () => (
   </form>
 );
 
+const Bar = ({
+  keyOf = "a",
+  ...props
+}: Partial<Parameters<typeof HotelStayBar>[0]> & { keyOf?: string }) => (
+  <StayEditProvider criteriaKey={keyOf}>
+    <h2 id="quartos-titulo" tabIndex={-1}>
+      Quartos
+    </h2>
+    <HotelStayBar
+      criteria={criteria}
+      summary={SUMMARY}
+      pastDates={false}
+      datesForm={<Form />}
+      {...props}
+    />
+  </StayEditProvider>
+);
+
 const renderBar = (props: Partial<Parameters<typeof HotelStayBar>[0]> = {}) =>
-  render(
-    <>
-      <h2 id="quartos-titulo" tabIndex={-1}>
-        Quartos
-      </h2>
-      <HotelStayBar
-        criteria={criteria}
-        summary={SUMMARY}
-        pastDates={false}
-        datesForm={<Form />}
-        {...props}
-      />
-    </>,
-  );
+  render(<Bar {...props} />);
 
 describe("HotelStayBar: sem critérios (critério 21)", () => {
   it("aviso e formulário já abertos, sem disclosure", () => {
@@ -90,20 +97,15 @@ describe("HotelStayBar: com critérios (critério 22)", () => {
     const { rerender } = renderBar();
     await user.click(screen.getByRole("button", { name: "Alterar datas e hóspedes" }));
     await user.click(screen.getByRole("button", { name: "Ver disponibilidade" }));
+    // Envio válido: o formulário da página marca o destino antes de navegar.
+    markFocusAfterNavigation("/hotel/1?checkIn=2026-12-20");
     window.history.replaceState(null, "", "/hotel/1?checkIn=2026-12-20");
-    const next = makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" });
     rerender(
-      <>
-        <h2 id="quartos-titulo" tabIndex={-1}>
-          Quartos
-        </h2>
-        <HotelStayBar
-          criteria={next}
-          summary="20–22 dez · 2 noites · 2 adultos · 1 quarto"
-          pastDates={false}
-          datesForm={<Form />}
-        />
-      </>,
+      <Bar
+        keyOf="b"
+        criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
+        summary="20–22 dez · 2 noites · 2 adultos · 1 quarto"
+      />,
     );
     expect(screen.getByRole("button", { name: "Alterar datas e hóspedes" })).toHaveAttribute(
       "aria-expanded",
@@ -113,21 +115,49 @@ describe("HotelStayBar: com critérios (critério 22)", () => {
     window.history.replaceState(null, "", "/");
   });
 
+  it("envio inválido (sem marca) não move o foco quando os critérios mudam depois", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderBar();
+    await user.click(screen.getByRole("button", { name: "Alterar datas e hóspedes" }));
+    await user.click(screen.getByRole("button", { name: "Ver disponibilidade" }));
+    window.history.replaceState(null, "", "/hotel/1?checkIn=2026-12-20");
+    rerender(
+      <Bar
+        keyOf="b"
+        criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
+        summary="x"
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Quartos" })).not.toHaveFocus();
+    window.history.replaceState(null, "", "/");
+  });
+
   it("critérios que mudam sem envio (Voltar) não mexem no foco", () => {
     const { rerender } = renderBar();
     rerender(
-      <>
-        <h2 id="quartos-titulo" tabIndex={-1}>
-          Quartos
-        </h2>
-        <HotelStayBar
-          criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
-          summary="x"
-          pastDates={false}
-          datesForm={<Form />}
-        />
-      </>,
+      <Bar
+        keyOf="b"
+        criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
+        summary="x"
+      />,
     );
     expect(screen.getByRole("heading", { name: "Quartos" })).not.toHaveFocus();
+  });
+
+  it("clique no botão logo depois do envio fechar o painel é ignorado (não reabre)", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderBar();
+    const toggle = screen.getByRole("button", { name: "Alterar datas e hóspedes" });
+    await user.click(toggle);
+    rerender(
+      <Bar
+        keyOf="b"
+        criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
+        summary="x"
+      />,
+    );
+    const after = screen.getByRole("button", { name: "Alterar datas e hóspedes" });
+    await user.click(after);
+    expect(after).toHaveAttribute("aria-expanded", "false");
   });
 });

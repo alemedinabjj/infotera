@@ -25,6 +25,18 @@ describe("roomSelectability: precedência", () => {
     expect(roomSelectability(makeRoom({ available: 5 }), null)).toEqual({ kind: "needs-dates" });
   });
 
+  it("datas passadas pedem novas datas, depois do esgotado", () => {
+    expect(roomSelectability(makeRoom({ available: 5 }), criteria(), true)).toEqual({
+      kind: "past-dates",
+    });
+    expect(roomSelectability(makeRoom({ available: 0 }), criteria(), true)).toEqual({
+      kind: "sold-out",
+    });
+    expect(roomSelectability(makeRoom({ available: 5 }), null, true)).toEqual({
+      kind: "needs-dates",
+    });
+  });
+
   it("pequeno demais vence quartos insuficientes", () => {
     const room = makeRoom({ available: 1, maxGuests: 2 });
     expect(roomSelectability(room, criteria({ adults: 6, rooms: 2 }))).toEqual({
@@ -108,11 +120,21 @@ describe("mensagens e selos", () => {
     ["escassez 2", { kind: "selectable", scarce: 2 }, true, null, "Apenas 2 quartos!"],
     ["normal", { kind: "selectable", scarce: null }, true, null, null],
     ["sem datas", { kind: "needs-dates" }, false, null, null],
+    ["datas passadas", { kind: "past-dates" }, true, "As datas desta busca já passaram.", null],
   ];
 
   it.each(cases)("%s", (_name, selectability, hasDates, message, badge) => {
     expect(selectabilityMessage(selectability, hasDates)).toBe(message);
     expect(selectabilityBadge(selectability)?.text ?? null).toBe(badge);
+  });
+
+  it("não sugere outro quarto quando o hotel tem um só tipo", () => {
+    expect(
+      selectabilityMessage({ kind: "insufficient", available: 1, requested: 2 }, true, false),
+    ).toBe("Sua busca pede 2 quartos. Diminua a quantidade de quartos.");
+    expect(
+      selectabilityMessage({ kind: "too-small", maxGuests: 2, guestsPerRoom: 3 }, true, false),
+    ).toBe("Acomoda até 2 hóspedes. Sua busca tem 3 por quarto. Altere os hóspedes.");
   });
 
   it("tons dos selos e só 'selectable' seleciona", () => {

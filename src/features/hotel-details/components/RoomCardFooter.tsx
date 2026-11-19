@@ -13,6 +13,7 @@ type RoomCardFooterProps = {
   room: Room;
   criteria: SearchCriteria | null;
   selectability: RoomSelectability;
+  otherRooms: boolean;
   loading: boolean;
   onSelect: () => void;
   onPickDates: () => void;
@@ -26,12 +27,13 @@ export const RoomCardFooter = ({
   room,
   criteria,
   selectability,
+  otherRooms,
   loading,
   onSelect,
   onPickDates,
 }: RoomCardFooterProps) => {
   const badge = selectabilityBadge(selectability);
-  const reason = selectabilityMessage(selectability, criteria !== null);
+  const reason = selectabilityMessage(selectability, criteria !== null, otherRooms);
   const reasonId = reason ? `room-${room.id}-reason` : null;
   return (
     <div className="mt-auto flex flex-col gap-3 border-t border-border pt-3">

@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import { getServerQueryClient } from "@/shared/api/server-query-client";
 import { isBeforeToday, todayISO } from "@/shared/lib/dates";
-import type { SearchCriteria } from "@/shared/lib/search-params";
+import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { describeStay } from "@/shared/lib/stay-summary";
 import { loadHotel } from "../api/hotel.server";
 import { reviewsQueryOptions } from "../api/reviews";
@@ -23,6 +23,8 @@ import { Section } from "./Section";
 import { SectionNav } from "./SectionNav";
 import { SimilarHotels } from "./SimilarHotels";
 import { SimilarHotelsSkeleton } from "./SimilarHotelsSkeleton";
+import { SoldOutAlert } from "./SoldOutAlert";
+import { StayEditProvider } from "./StayEditContext";
 
 type HotelDetailsViewProps = {
   hotelId: number;
@@ -57,6 +59,7 @@ export const HotelDetailsView = async ({
   const today = todayISO();
   const summary = criteria ? describeStay(criteria, today) : null;
   const breadcrumb = hotelBreadcrumb(hotel, criteria);
+  const pastDates = criteria ? isBeforeToday(criteria.checkIn, today) : false;
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
@@ -70,18 +73,22 @@ export const HotelDetailsView = async ({
         </div>
         <HotelOverview hotel={hotel} />
         <Section id="quartos" title="Quartos">
-          <HotelStayBar
-            criteria={criteria}
-            summary={summary}
-            pastDates={criteria ? isBeforeToday(criteria.checkIn, today) : false}
-            datesForm={renderDatesForm(hotel.destination)}
-          />
-          <RoomsSection
-            hotelId={hotel.id}
-            hotelAvailableRooms={hotel.availableRooms}
-            cancellationPolicy={hotel.cancellationPolicy}
-            criteria={criteria}
-          />
+          {hotel.availableRooms === 0 ? <SoldOutAlert hasDates={criteria !== null} /> : null}
+          <StayEditProvider criteriaKey={criteria ? searchCriteriaToQueryString(criteria) : "none"}>
+            <HotelStayBar
+              criteria={criteria}
+              summary={summary}
+              pastDates={pastDates}
+              datesForm={renderDatesForm(hotel.destination)}
+            />
+            <RoomsSection
+              hotelId={hotel.id}
+              hotelAvailableRooms={hotel.availableRooms}
+              cancellationPolicy={hotel.cancellationPolicy}
+              criteria={criteria}
+              pastDates={pastDates}
+            />
+          </StayEditProvider>
         </Section>
         <LocationMap hotel={hotel} />
         <HotelPolicies hotel={hotel} />

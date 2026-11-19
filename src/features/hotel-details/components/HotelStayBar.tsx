@@ -1,11 +1,12 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/cn";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { Alert, Button, ChevronDownIcon, cardClassName } from "@/shared/ui";
-import { markDatesSubmitted, useFocusAfterDates } from "../hooks/useFocusAfterDates";
+import { useFocusAfterDates } from "../hooks/useFocusAfterDates";
 import { STAY_EDIT_TITLE_ID } from "../model/sections";
+import { useStayEdit } from "./StayEditContext";
 
 const PANEL_ID = "stay-edit-panel";
 
@@ -21,7 +22,7 @@ type HotelStayBarProps = {
 };
 
 const Panel = ({ children }: { children: ReactNode }) => (
-  <div id={PANEL_ID} onSubmitCapture={markDatesSubmitted}>
+  <div id={PANEL_ID}>
     <h3 id={STAY_EDIT_TITLE_ID} className="sr-only">
       Alterar datas e hóspedes
     </h3>
@@ -45,12 +46,10 @@ const MissingDates = ({ datesForm }: { datesForm: ReactNode }) => (
  */
 export const HotelStayBar = ({ criteria, summary, pastDates, datesForm }: HotelStayBarProps) => {
   const key = criteria ? searchCriteriaToQueryString(criteria) : "none";
-  // O painel vale só para os critérios em que foi aberto: critérios novos o fecham sozinho.
-  const [openFor, setOpenFor] = useState<string | null>(null);
+  const { open, toggle } = useStayEdit();
   useFocusAfterDates(key);
 
   if (criteria === null) return <MissingDates datesForm={datesForm} />;
-  const open = openFor === key;
 
   return (
     <div className="flex flex-col gap-4">
@@ -71,7 +70,7 @@ export const HotelStayBar = ({ criteria, summary, pastDates, datesForm }: HotelS
           rightIcon={
             <ChevronDownIcon className={cn("size-4 transition-transform", open && "rotate-180")} />
           }
-          onClick={() => setOpenFor(open ? null : key)}
+          onClick={toggle}
         >
           Alterar datas e hóspedes
         </Button>
@@ -79,7 +78,7 @@ export const HotelStayBar = ({ criteria, summary, pastDates, datesForm }: HotelS
       {open ? <Panel>{datesForm}</Panel> : null}
       {pastDates ? (
         <Alert tone="warning" title="As datas desta busca já passaram">
-          Preços e disponibilidade podem ter mudado. Use "Alterar datas e hóspedes" para escolher
+          Preços e disponibilidade podem ter mudado. Use “Alterar datas e hóspedes” para escolher
           novas datas.
         </Alert>
       ) : null}

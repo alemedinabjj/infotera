@@ -105,7 +105,10 @@ describe("HotelDetailsView: fetch paralelo (critério 5)", () => {
 });
 
 describe("HotelDetailsView: composição", () => {
-  const renderView = async (criteria: ReturnType<typeof makeSearchCriteria> | null) => {
+  const renderView = async (
+    criteria: ReturnType<typeof makeSearchCriteria> | null,
+    availableRooms?: number,
+  ) => {
     const { hotel } = stubApi();
     const rendering = HotelDetailsView({
       hotelId: 1,
@@ -113,7 +116,9 @@ describe("HotelDetailsView: composição", () => {
       renderDatesForm: () => <p>formulário de datas</p>,
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
-    hotel.resolve(json(seedHotel(1)));
+    hotel.resolve(
+      json({ ...seedHotel(1), availableRooms: availableRooms ?? seedHotel(1).availableRooms }),
+    );
     const view = await rendering;
     const queryClient = makeTestQueryClient();
     return {
@@ -156,6 +161,13 @@ describe("HotelDetailsView: composição", () => {
     await renderView(makeSearchCriteria({ checkIn: "2099-12-12", checkOut: "2099-12-15" }));
     expect(screen.getAllByText(/3 noites · 2 adultos · 1 quarto/).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Alterar datas e hóspedes" })).toBeInTheDocument();
+  });
+
+  it("hotel esgotado sem datas: o aviso vem antes do formulário de datas", async () => {
+    await renderView(null, 0);
+    const alert = screen.getByText("Este hotel está sem quartos disponíveis no momento");
+    const form = screen.getByText("formulário de datas");
+    expect(alert.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("o hotel e as consultas pendentes vão para o cache do cliente (hidratação)", async () => {
