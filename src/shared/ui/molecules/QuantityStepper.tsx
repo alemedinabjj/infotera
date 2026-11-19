@@ -17,6 +17,8 @@ type QuantityStepperProps = {
   decreaseLabel: string;
   /** Nome acessível do botão "+" (ex.: "Adicionar adulto"). */
   increaseLabel: string;
+  /** Bloqueia os dois botões com `aria-disabled` (mantém o foco), ex.: durante um envio. */
+  locked?: boolean;
   className?: string;
 };
 
@@ -32,13 +34,14 @@ export const QuantityStepper = ({
   onChange,
   decreaseLabel,
   increaseLabel,
+  locked = false,
   className,
 }: QuantityStepperProps) => {
   const labelId = useId();
   const descriptionId = useId();
   const hintId = useId();
-  const atMin = value <= min;
-  const atMax = value >= max;
+  const atMin = locked || value <= min;
+  const atMax = locked || value >= max;
   const describedBy = [description ? descriptionId : null, hint ? hintId : null]
     .filter(Boolean)
     .join(" ");

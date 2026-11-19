@@ -1,6 +1,6 @@
 import type { CancellationPolicy, Room } from "@/shared/api/schemas";
+import { cancellationDetails } from "@/shared/lib/cancellation";
 import { BedIcon, CheckIcon, ChevronDownIcon, InfoIcon, UserIcon } from "@/shared/ui";
-import { cancellationDetails } from "../model/cancellation";
 import {
   bedsLabel,
   roomAmenityLabel,

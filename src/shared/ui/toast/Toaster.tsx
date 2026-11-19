@@ -96,7 +96,10 @@ export const Toaster = () => {
   const regionClass = "flex flex-col gap-3";
 
   return (
-    <div className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col gap-3 sm:right-6 sm:bottom-6 sm:left-auto sm:w-96">
+    <div
+      data-toaster
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col gap-3 sm:right-6 sm:bottom-6 sm:left-auto sm:w-96"
+    >
       <div role="status" aria-live="polite" className={regionClass}>
         {toasts
           .filter((item) => item.tone !== "error")

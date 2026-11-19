@@ -156,3 +156,27 @@
     }
   }
 }
+
+/*
+ * Barra de ação fixa do checkout (abaixo de `lg`): foco e toasts ficam acima dela. Fora de
+ * `@layer` para vencer os utilitários (`bottom-4`).
+ */
+@media (width < 40rem) {
+  html:has([data-action-bar]) {
+    scroll-padding-bottom: calc(9rem + env(safe-area-inset-bottom));
+  }
+
+  html:has([data-action-bar]) [data-toaster] {
+    bottom: calc(9rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (40rem <= width < 64rem) {
+  html:has([data-action-bar]) {
+    scroll-padding-bottom: 6rem;
+  }
+
+  html:has([data-action-bar]) [data-toaster] {
+    bottom: 6rem;
+  }
+}

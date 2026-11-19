@@ -203,3 +203,25 @@ describe("Dialog initialFocus", () => {
     });
   });
 });
+
+describe("Dialog focusableBody", () => {
+  it("o corpo vira região focável nomeada pelo título e recebe o foco inicial", async () => {
+    render(
+      <Dialog open title="Termos" onClose={() => undefined} focusableBody>
+        <p>Texto longo</p>
+      </Dialog>,
+    );
+    const region = screen.getByRole("region", { name: "Termos" });
+    expect(region).toHaveAttribute("tabindex", "0");
+    expect(region).toHaveFocus();
+  });
+
+  it("sem a prop, o corpo não é região nem focável", () => {
+    render(
+      <Dialog open title="Termos" onClose={() => undefined}>
+        <p>Texto</p>
+      </Dialog>,
+    );
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+  });
+});

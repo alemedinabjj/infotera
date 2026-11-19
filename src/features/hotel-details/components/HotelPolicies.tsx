@@ -1,6 +1,6 @@
 import type { Hotel } from "@/shared/api/schemas";
+import { cancellationDetails } from "@/shared/lib/cancellation";
 import { Badge, ChevronDownIcon } from "@/shared/ui";
-import { cancellationDetails } from "../model/cancellation";
 import { Section } from "./Section";
 
 const Time = ({ label, value }: { label: string; value: string }) => (
