@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { z } from "zod";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { createStorage } from "@/shared/lib/storage";
@@ -10,6 +10,25 @@ import {
 
 const storage = createStorage("local");
 const rawListSchema = z.array(z.unknown());
+const listeners = new Set<() => void>();
+
+const notify = () => {
+  for (const listener of listeners) listener();
+};
+
+const subscribe = (listener: () => void): (() => void) => {
+  listeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+};
+
+// O snapshot é o JSON (string): estável por valor, como o `useSyncExternalStore` exige.
+const getSnapshot = (): string =>
+  JSON.stringify(storage.read(RECENT_SEARCHES_KEY, rawListSchema, []));
+const getServerSnapshot = (): string => "[]";
 
 const readList = (): SearchCriteria[] =>
   parseRecentSearches(storage.read(RECENT_SEARCHES_KEY, rawListSchema, []));
@@ -21,25 +40,24 @@ type RecentSearches = {
 };
 
 /**
- * Últimas buscas em localStorage. O 1º render (e o servidor) é lista vazia; a leitura acontece
- * em `useEffect` para não gerar mismatch de hidratação.
+ * Últimas buscas em localStorage. No servidor e na hidratação a lista é vazia (sem mismatch);
+ * depois o valor salvo entra pelo `useSyncExternalStore`. Storage indisponível = lista vazia.
  */
 export const useRecentSearches = (): RecentSearches => {
-  const [items, setItems] = useState<SearchCriteria[]>([]);
-
-  useEffect(() => {
-    setItems(readList());
-  }, []);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const items = useMemo(
+    () => parseRecentSearches(rawListSchema.parse(JSON.parse(snapshot))),
+    [snapshot],
+  );
 
   const add = useCallback((criteria: SearchCriteria) => {
-    const next = addRecentSearch(readList(), criteria);
-    storage.write(RECENT_SEARCHES_KEY, next);
-    setItems(next);
+    storage.write(RECENT_SEARCHES_KEY, addRecentSearch(readList(), criteria));
+    notify();
   }, []);
 
   const clear = useCallback(() => {
     storage.remove(RECENT_SEARCHES_KEY);
-    setItems([]);
+    notify();
   }, []);
 
   return { items, add, clear };

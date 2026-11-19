@@ -4,9 +4,14 @@ import type { Suggestion } from "@/shared/api/schemas";
 import { suggestionsQueryOptions } from "../api/suggestions";
 import { describeResultCount, normalizeQuery } from "../model/suggestion-text";
 import { useDebouncedValue } from "./useDebouncedValue";
+import { useOnline } from "./useOnline";
 
 const MIN_QUERY_LENGTH = 2;
-export const SUGGESTIONS_ERROR_MESSAGE = "Não foi possível carregar os destinos.";
+const SUGGESTIONS_ERROR_MESSAGE = "Não foi possível carregar os destinos.";
+const OFFLINE_MESSAGE = "Você está sem internet. Assim que a conexão voltar, tente de novo.";
+
+export const suggestionsErrorMessage = (online: boolean): string =>
+  online ? SUGGESTIONS_ERROR_MESSAGE : OFFLINE_MESSAGE;
 
 export type SuggestionsView = "loading" | "results" | "empty" | "error";
 
@@ -22,6 +27,7 @@ type Options = {
  */
 export const useDestinationField = ({ selected, onSelect }: Options) => {
   const [inputValue, setInputValue] = useState(selected);
+  const online = useOnline();
   const [isRetrying, setIsRetrying] = useState(false);
   const [syncedSelected, setSyncedSelected] = useState(selected);
   if (selected !== syncedSelected) {
@@ -46,7 +52,7 @@ export const useDestinationField = ({ selected, onSelect }: Options) => {
   })();
 
   const announcement = ((): string => {
-    if (view === "error") return SUGGESTIONS_ERROR_MESSAGE;
+    if (view === "error") return suggestionsErrorMessage(online);
     return isSettled && (view === "results" || view === "empty")
       ? describeResultCount(items.length, inputValue)
       : "";

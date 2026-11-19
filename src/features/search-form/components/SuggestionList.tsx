@@ -4,7 +4,8 @@ import type { MouseEvent } from "react";
 import type { Suggestion } from "@/shared/api/schemas";
 import { AlertCircleIcon, Button, Spinner } from "@/shared/ui";
 import type { useCombobox } from "../hooks/useCombobox";
-import { SUGGESTIONS_ERROR_MESSAGE, type SuggestionsView } from "../hooks/useDestinationField";
+import { type SuggestionsView, suggestionsErrorMessage } from "../hooks/useDestinationField";
+import { useOnline } from "../hooks/useOnline";
 import { SuggestionOption } from "./SuggestionOption";
 
 type Combobox = ReturnType<typeof useCombobox>;
@@ -19,15 +20,12 @@ type SuggestionListProps = {
   onRetry: (viaKeyboard: boolean) => void;
 };
 
-const OFFLINE_MESSAGE = "Você está sem internet. Assim que a conexão voltar, tente de novo.";
 const STATUS_ROW = "flex min-h-11 items-center gap-3 px-3 py-2 text-sm text-fg-muted";
 
 const ErrorRow = ({ isRetrying, onRetry }: Pick<SuggestionListProps, "isRetrying" | "onRetry">) => (
   <div className={STATUS_ROW}>
     <AlertCircleIcon className="size-5 shrink-0 text-danger" />
-    <p className="min-w-0 flex-1 text-fg">
-      {navigator.onLine === false ? OFFLINE_MESSAGE : SUGGESTIONS_ERROR_MESSAGE}
-    </p>
+    <p className="min-w-0 flex-1 text-fg">{suggestionsErrorMessage(useOnline())}</p>
     <Button
       variant="ghost"
       size="sm"

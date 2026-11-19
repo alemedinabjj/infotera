@@ -55,7 +55,7 @@ describe("useRecentSearches", () => {
     });
     const { result } = renderHook(() => useRecentSearches());
     expect(result.current.items).toEqual([]);
-    act(() => result.current.add(make("A, SP")));
-    expect(result.current.items).toHaveLength(1);
+    expect(() => act(() => result.current.add(make("A, SP")))).not.toThrow();
+    expect(result.current.items).toEqual([]);
   });
 });
