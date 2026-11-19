@@ -2,12 +2,13 @@
 
 import { m, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type Ref, useState } from "react";
 import { motionPreset } from "../../lib/motion";
 import { IconButton } from "../../ui/atoms/IconButton";
 import { HeartIcon } from "../../ui/icons";
 import { toast } from "../../ui/toast/toast-store";
 import { SAVED_MESSAGES } from "../messages";
+import type { ToggleResult } from "../model/favorites";
 import { FAVORITES_PATH } from "../model/routes";
 import { favoritesActions, useFavoritesStore, useIsFavorite } from "../stores/favorites";
 
@@ -18,6 +19,11 @@ type FavoriteButtonProps = {
   hotelName: string;
   variant?: "overlay" | "ghost" | "secondary";
   className?: string;
+  /** `false` nas páginas pessoais (favoritos): o desfazer é inline e não há toast. */
+  notify?: boolean;
+  /** Avisa o resultado do clique (ex.: levar o foco ao "Desfazer"). */
+  onToggle?: (result: ToggleResult) => void;
+  ref?: Ref<HTMLButtonElement>;
 };
 
 /**
@@ -30,6 +36,9 @@ export const FavoriteButton = ({
   hotelName,
   variant = "ghost",
   className,
+  notify = true,
+  onToggle,
+  ref,
 }: FavoriteButtonProps) => {
   const favorite = useIsFavorite(hotelId);
   const router = useRouter();
@@ -41,8 +50,10 @@ export const FavoriteButton = ({
   const onClick = () => {
     const previous = useFavoritesStore.getState().items.find((entry) => entry.id === hotelId);
     const result = favoritesActions.toggle(hotelId);
+    if (result === "added") setPulses((count) => count + 1);
+    onToggle?.(result);
+    if (!notify) return;
     if (result === "added") {
-      setPulses((count) => count + 1);
       toast.success(MESSAGES.added, {
         key,
         action: { label: MESSAGES.viewAction, onClick: () => router.push(FAVORITES_PATH) },
@@ -59,6 +70,7 @@ export const FavoriteButton = ({
 
   return (
     <IconButton
+      ref={ref}
       variant={variant}
       aria-label={MESSAGES.label(hotelName)}
       aria-pressed={favorite}
