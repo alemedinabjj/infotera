@@ -37,6 +37,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
   useFocusOnPageChange({
     headingRef,
     page: filters.page,
+    filtersKey: serializeSearchFilters({ ...filters, page: 1 }).toString(),
     ready: view.kind === "results" && !view.stale,
     silent: view.kind === "out-of-range",
   });

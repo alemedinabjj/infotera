@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Hotel } from "@/shared/api/schemas";
@@ -152,6 +152,49 @@ describe("HotelSearchResults: paginação (critérios 7 e 8)", () => {
     act(() => window.history.pushState(null, "", `/search?${CRITERIA}&page=2`));
     await waitFor(() => expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(4));
     await waitFor(() => expect(countHeading()).toHaveFocus());
+  });
+
+  describe("filtro na página 2 não rouba o foco do controle", () => {
+    const settle = async () => {
+      await waitFor(() => expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(10));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    };
+
+    it("checkbox", async () => {
+      stubApi();
+      start("&page=2");
+      await screen.findByText("Hotel 11");
+      const pool = screen.getAllByRole("checkbox", { name: "Piscina" })[0];
+      if (!pool) throw new Error("checkbox ausente");
+      await userEvent.setup().click(pool);
+      await settle();
+      expect(pool).toHaveFocus();
+    });
+
+    it("ordenação", async () => {
+      stubApi();
+      start("&page=2");
+      await screen.findByText("Hotel 11");
+      const select = screen.getByRole("combobox", { name: "Ordenar por" });
+      await userEvent.setup().selectOptions(select, "price-asc");
+      await settle();
+      expect(select).toHaveFocus();
+    });
+
+    it("slider de preço", async () => {
+      stubApi();
+      start("&page=2");
+      await screen.findByText("Hotel 11");
+      const slider = screen.getAllByRole("slider", { name: "Mínimo" })[0];
+      if (!slider) throw new Error("slider ausente");
+      slider.focus();
+      fireEvent.change(slider, { target: { value: "500" } });
+      await waitFor(() => expect(window.location.search).toContain("minPrice=500"), {
+        timeout: 2000,
+      });
+      await settle();
+      expect(slider).toHaveFocus();
+    });
   });
 });
 
