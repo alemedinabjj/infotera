@@ -49,7 +49,7 @@
   "overrides": [
     {
       "includes": [
-        "src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route}.{ts,tsx}",
+        "src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,opengraph-image,twitter-image,icon,apple-icon,sitemap,robots,manifest,forbidden,unauthorized}.{ts,tsx}",
         "*.config.{ts,mts,mjs}"
       ],
       "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
@@ -64,7 +64,14 @@
               "options": {
                 "patterns": [
                   {
-                    "group": ["@/features", "@/features/**", "@/app", "@/app/**"],
+                    "group": [
+                      "@/features",
+                      "@/features/**",
+                      "@/app",
+                      "@/app/**",
+                      "../**/features/**",
+                      "../**/app/**"
+                    ],
                     "message": "shared não importa features nem app (app → features → shared)."
                   }
                 ]
@@ -86,6 +93,12 @@
                   {
                     "group": ["@/features", "@/features/**", "@/app", "@/app/**"],
                     "message": "Feature não importa outra feature nem app; dentro da feature use import relativo."
+                  },
+                  {
+                    "group": [
+                      "**/{search-form,hotel-search,hotel-details,checkout,booking-confirmation}/**"
+                    ],
+                    "message": "Feature não importa outra feature (nem por caminho relativo)."
                   }
                 ]
               }
