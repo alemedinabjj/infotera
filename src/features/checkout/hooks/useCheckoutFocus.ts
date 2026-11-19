@@ -37,6 +37,7 @@ export const useCheckoutFocus = (
   }, [headingTick]);
 
   useEffect(() => {
+    if (fieldTick === 0) return;
     const path = pendingField.current;
     if (!path) return;
     pendingField.current = null;
