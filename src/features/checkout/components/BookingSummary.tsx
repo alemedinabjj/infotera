@@ -49,13 +49,13 @@ const HotelIdentity = ({ hotel, room }: Pick<BookingSummaryProps, "hotel" | "roo
         sizes="96px"
         className="aspect-[4/3] w-20 shrink-0 rounded-control lg:w-24"
       />
-    ) : (
+    ) : hotel.isError ? null : (
       <Skeleton shape="block" className="aspect-[4/3] w-20 shrink-0 lg:w-24" />
     )}
     <div className="flex min-w-0 flex-col gap-1">
       {hotel.data ? (
         <p className="line-clamp-2 text-base font-semibold text-fg">{hotel.data.name}</p>
-      ) : (
+      ) : hotel.isError ? null : (
         <Skeleton className="h-6 w-3/4" />
       )}
       {room.data ? (
@@ -71,7 +71,8 @@ const HotelIdentity = ({ hotel, room }: Pick<BookingSummaryProps, "hotel" | "roo
 
 const toneClass = { success: "text-success", neutral: "text-fg", warning: "text-warning" } as const;
 
-const Cancellation = ({ hotel }: { hotel: Hotel | undefined }) => {
+const Cancellation = ({ hotel, failed }: { hotel: Hotel | undefined; failed: boolean }) => {
+  if (failed) return null;
   if (!hotel) return <Skeleton className="h-5 w-40" />;
   const details = cancellationDetails(hotel.cancellationPolicy);
   return (
@@ -80,6 +81,18 @@ const Cancellation = ({ hotel }: { hotel: Hotel | undefined }) => {
       {details.label}
     </p>
   );
+};
+
+/** Horário do hotel: skeleton enquanto carrega, nada se o hotel falhou (o erro já está no topo). */
+const HotelTime = ({
+  hotel,
+  text,
+}: {
+  hotel: UseQueryResult<Hotel>;
+  text: (hotel: Hotel) => string;
+}) => {
+  if (hotel.data) return <>{text(hotel.data)}</>;
+  return hotel.isError ? null : <Skeleton className="h-5 w-24" />;
 };
 
 const Details = ({
@@ -101,7 +114,7 @@ const Details = ({
           {describeLongDate(criteria.checkIn)}
         </dd>
         <dd className="text-sm text-fg-muted">
-          {hotel.data ? `A partir de ${hotel.data.checkInTime}` : <Skeleton className="h-5 w-24" />}
+          <HotelTime hotel={hotel} text={(data) => `A partir de ${data.checkInTime}`} />
         </dd>
       </div>
       <div>
@@ -110,7 +123,7 @@ const Details = ({
           {describeLongDate(criteria.checkOut)}
         </dd>
         <dd className="text-sm text-fg-muted">
-          {hotel.data ? `Até ${hotel.data.checkOutTime}` : <Skeleton className="h-5 w-24" />}
+          <HotelTime hotel={hotel} text={(data) => `Até ${data.checkOutTime}`} />
         </dd>
       </div>
     </dl>
@@ -155,7 +168,7 @@ export const BookingSummary = (props: BookingSummaryProps) => {
           {describeDatesAndNights(criteria, today)}
         </p>
         <p className="text-sm text-fg-muted">{describeGuestsAndRooms(criteria)}</p>
-        <Cancellation hotel={hotel.data} />
+        <Cancellation hotel={hotel.data} failed={hotel.isError} />
       </div>
       <Button
         id={SUMMARY_TOGGLE_ID}
