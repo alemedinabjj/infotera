@@ -26,9 +26,12 @@ export const SimilarHotelCard = ({ hotel, criteria }: SimilarHotelCardProps) => 
     hasDates: criteria !== null,
   });
   return (
-    <li>
+    <li className="flex">
       <article
-        className={cardClassName({ variant: "interactive", className: "flex-row sm:flex-col" })}
+        className={cardClassName({
+          variant: "interactive",
+          className: "flex-1 flex-row sm:flex-col",
+        })}
       >
         <RemoteImage
           src={hotel.thumbnail}
@@ -52,12 +55,14 @@ export const SimilarHotelCard = ({ hotel, criteria }: SimilarHotelCardProps) => 
             size="sm"
             showLabel={false}
           />
-          <PriceTag variant="nightly-line" nightly={hotel.pricePerNight} />
-          {badge ? (
-            <Badge tone={badge.tone} className="w-fit">
-              {badge.text}
-            </Badge>
-          ) : null}
+          <div className="mt-auto flex flex-col gap-1 pt-1">
+            <PriceTag variant="nightly-line" nightly={hotel.pricePerNight} />
+            {badge ? (
+              <Badge tone={badge.tone} className="w-fit">
+                {badge.text}
+              </Badge>
+            ) : null}
+          </div>
         </div>
       </article>
     </li>
