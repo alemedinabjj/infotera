@@ -135,6 +135,10 @@ Next.js
   desktop, só teclado, conexão ruim, inglês) com o build de produção; veredito `PRONTO PARA ENTREGA`.
 - ✅ Testes unitários, de componente e E2E do fluxo completo (Playwright) + axe.
 - README completo (decisões, trade-offs, uso de IA), `.env.example`, deploy (Vercel + Render).
+- Mock API publicada no Render: `https://infotera-mock-api.onrender.com` (serviço `infotera-mock-api`,
+  plano free, região Virginia; build `cd mock-api && npm install`, start `cd mock-api && npm start`).
+  Sobe hoje da branch `chore/setup-ai-workflow`; trocar para `main` depois do merge. No plano free o
+  serviço dorme após ~15 min sem uso: o primeiro request pode levar ~50 s (cold start).
 
 ## Mock API — o que importa saber
 
