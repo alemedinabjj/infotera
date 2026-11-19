@@ -127,3 +127,33 @@ export const ArrowLeftIcon = (props: IconProps) => (
     <path d="M19 12H5M12 19l-7-7 7-7" />
   </Icon>
 );
+export const BuildingIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="5" y="3" width="14" height="18" rx="1" />
+    <path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M3 21h18" />
+  </Icon>
+);
+export const UmbrellaIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M22 12a10 10 0 0 0-20 0Z" />
+    <path d="M12 12v8a2 2 0 0 0 4 0M12 2v1" />
+  </Icon>
+);
+export const PalmTreeIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 22V11" />
+    <path d="M12 11c-3 0-6-2-7-5 3 0 6 1 7 5ZM12 11c3 0 6-2 7-5-3 0-6 1-7 5ZM12 11c-1-3-.5-6 0-8 1 2 1 5 0 8Z" />
+  </Icon>
+);
+export const TreesIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0ZM7 16v6M13 19v3" />
+    <path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5" />
+  </Icon>
+);
+export const HistoryIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    <path d="M3 3v5h5M12 7v5l4 2" />
+  </Icon>
+);
