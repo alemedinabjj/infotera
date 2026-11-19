@@ -23,6 +23,7 @@ export { ErrorState } from "./molecules/ErrorState";
 export { ErrorSummary, type ErrorSummaryItem } from "./molecules/ErrorSummary";
 export { Field, type FieldControlProps } from "./molecules/Field";
 export { Pagination } from "./molecules/Pagination";
+export { PriceBreakdown } from "./molecules/PriceBreakdown";
 export { PriceTag } from "./molecules/PriceTag";
 export { QuantityStepper } from "./molecules/QuantityStepper";
 export { RatingScore } from "./molecules/RatingScore";
