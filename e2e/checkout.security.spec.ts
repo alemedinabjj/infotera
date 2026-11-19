@@ -137,6 +137,7 @@ test.describe("privacidade do navegador", () => {
     await page.goBack();
     await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
     await expect(page.getByLabel("Número do cartão")).toHaveValue("");
+    await expect(page.getByLabel("Nome impresso no cartão")).toHaveValue("");
     await expect(page.getByLabel("CVV")).toHaveValue("");
     await expect(page.getByRole("textbox", { name: "CPF" })).toHaveValue("");
     await expect(

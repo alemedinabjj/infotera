@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -30,6 +30,12 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
+
+const nth = (items: HTMLElement[]): HTMLElement => {
+  const [item] = items;
+  if (!item) throw new Error("elemento não encontrado");
+  return item;
+};
 
 const setup = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
@@ -86,6 +92,36 @@ describe("rascunho (critérios 33–35)", () => {
       await screen.findByText("Recuperamos os dados que você preencheu nesta sessão."),
     ).toBeVisible();
     expect(screen.getByLabelText("Nome")).toHaveValue("Ana");
+  });
+
+  it("recarregar com criança: passo 1 pede a idade e o passo 2 mostra o aviso do cartão", async () => {
+    await seedSelection(makeSelection({ adults: 1, children: 1 }));
+    const user = setup();
+    const first = renderCheckout();
+    await user.type(nth(await screen.findAllByLabelText("Nome")), "Ana");
+    await user.type(nth(screen.getAllByLabelText("Sobrenome")), "Souza");
+    await user.type(screen.getByLabelText("E-mail"), "ana@exemplo.com");
+    await user.type(screen.getByLabelText("Número de telefone"), "11987654321");
+    const child = screen.getByRole("group", { name: "Hóspede 2 · criança" });
+    await user.type(within(child).getByLabelText("Nome"), "Clara");
+    await user.type(within(child).getByLabelText("Sobrenome"), "Souza");
+    await user.selectOptions(within(child).getByLabelText("Idade no check-in"), "7");
+    await clickButton(user, "Continuar para pagamento");
+    await screen.findByRole("heading", { level: 2, name: "Pagamento" });
+    await act(async () => vi.advanceTimersByTimeAsync(600));
+    first.unmount();
+
+    renderCheckout();
+    expect(
+      await screen.findByText(
+        "Recuperamos os dados que você preencheu nesta sessão. Confira a idade das crianças.",
+      ),
+    ).toBeVisible();
+    const restored = screen.getByRole("group", { name: "Hóspede 2 · criança" });
+    await user.selectOptions(within(restored).getByLabelText("Idade no check-in"), "7");
+    await clickButton(user, "Continuar para pagamento");
+    expect(await screen.findByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
+    expect(screen.getByText(/os dados do cartão não ficam salvos/)).toBeVisible();
   });
 
   it("rascunho corrompido ou de versão antiga é ignorado", async () => {

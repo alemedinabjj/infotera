@@ -21,14 +21,15 @@ export const TermsDialog = ({ open, sections, onClose, onAccept }: TermsDialogPr
     closeOnBackdrop
     focusableBody
     footer={
-      <>
+      // Ordem do DOM = ordem visual em todas as larguras (sem `flex-col-reverse` do rodapé).
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose}>
           Fechar
         </Button>
         <Button variant="primary" onClick={onAccept}>
           Li e aceito
         </Button>
-      </>
+      </div>
     }
   >
     <div className="flex flex-col gap-4 px-5 py-4">

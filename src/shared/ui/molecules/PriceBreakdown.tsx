@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "../../lib/cn";
 import {
   formatCents,
   type PriceLine,
@@ -14,6 +15,8 @@ type PriceBreakdownProps = {
   afterStay?: ReactNode;
   /** `false` omite a nota de impostos (sem detalhamento confiável). Padrão: `true`. */
   showTaxNote?: boolean;
+  /** Classes extras da linha do total (ex.: sticky no aside do checkout). */
+  totalClassName?: string;
 };
 
 const Row = ({ line }: { line: PriceLine }) => (
@@ -36,6 +39,7 @@ export const PriceBreakdown = ({
   totalCents,
   afterStay = null,
   showTaxNote = true,
+  totalClassName,
 }: PriceBreakdownProps) => {
   const [stay, ...rest] = lines;
   return (
@@ -47,7 +51,11 @@ export const PriceBreakdown = ({
           <Row key={line.kind} line={line} />
         ))}
         <div
-          className={`flex items-start justify-between gap-3 ${lines.length > 0 ? "border-t border-border pt-3" : ""}`}
+          className={cn(
+            "flex items-start justify-between gap-3",
+            lines.length > 0 && "border-t border-border pt-3",
+            totalClassName,
+          )}
         >
           <dt className="text-base font-semibold text-fg">Total</dt>
           <dd className="shrink-0 text-2xl font-bold whitespace-nowrap text-fg tabular-nums">

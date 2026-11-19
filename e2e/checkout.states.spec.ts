@@ -205,6 +205,26 @@ test.describe("envio", () => {
     expect(calls).toHaveLength(1);
   });
 
+  test("dois Enter rápidos no checkbox geram uma só chamada da action", async ({ page }) => {
+    await acceptTermsViaDialog(page);
+    const calls = actionRequests(page);
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/checkout", async (route) => {
+      if (!isAction(route)) return route.fallback();
+      await gate;
+      return route.continue();
+    });
+    await page.getByRole("checkbox", { name: /Li e aceito os termos/ }).focus();
+    await Promise.all([page.keyboard.press("Enter"), page.keyboard.press("Enter")]);
+    await expect(page.getByRole("button", { name: "Confirmando reserva…" })).toBeVisible();
+    release();
+    await page.waitForURL(UUID_PATH);
+    expect(calls).toHaveLength(1);
+  });
+
   test("sem aceitar os termos: erro no checkbox e no resumo, foco no checkbox", async ({
     page,
   }) => {

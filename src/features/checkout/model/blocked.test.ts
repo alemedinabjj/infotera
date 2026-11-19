@@ -32,7 +32,7 @@ describe("describeBlocked", () => {
     expect(copy("insufficient")).toMatchObject({
       title: "Só 2 quartos disponíveis",
       description:
-        "Sua reserva pede 3 quartos de Suíte. Escolha outro quarto ou reduza a quantidade de quartos.",
+        "Sua reserva pede 3 quartos de Suíte. Volte ao hotel para escolher outro quarto ou reduzir a quantidade de quartos.",
     });
   });
 

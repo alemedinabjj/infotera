@@ -3,9 +3,11 @@
 import { type FormEvent, useId } from "react";
 import { FormProvider } from "react-hook-form";
 import { hotelHref } from "@/shared/lib/links";
-import { revealBelowHeader } from "@/shared/lib/scroll";
+import { revealBlock } from "@/shared/lib/scroll";
 import { Alert, ErrorSummary } from "@/shared/ui";
 import type { CheckoutFlow } from "../hooks/useCheckoutFlow";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { noticeText } from "../model/notices";
 import { stepCounter, stepDocumentTitle, stepTitle } from "../model/steps";
 import { SUMMARY_TOGGLE_ID } from "./BookingSummary";
 import { DeferBlurProvider } from "./blur-context";
@@ -17,12 +19,6 @@ import { SubmitError } from "./SubmitError";
 
 export const DEMO_NOTICE = "Ambiente de demonstração — não use dados reais.";
 
-const NOTICE_TEXT = {
-  restored: "Recuperamos os dados que você preencheu nesta sessão.",
-  "payment-wiped":
-    "Por segurança, os dados do cartão não ficam salvos. Preencha o pagamento de novo.",
-} as const;
-
 /**
  * `<form>` dos 3 passos: aviso de demonstração, título do passo (alvo do foco), resumo de erros,
  * passo atual, alerta do envio e ações. Um `useForm` para tudo; só o passo atual fica montado.
@@ -31,6 +27,8 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
   const { checkout, submit, price, selection, roomCount } = flow;
   const { form, step } = checkout;
   const headingId = useId();
+  const hasChildren = checkout.fields.some((field) => field.kind === "child");
+  useDocumentTitle(stepDocumentTitle(step));
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,23 +40,23 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
     void form.handleSubmit(submit.submit, (errors) => {
       if (errors.contact || errors.companions) checkout.goTo("personal");
       else if (errors.payment) checkout.goTo("payment");
-      else checkout.markAttempt();
+      // Erro de passo anterior: resumo + foco no campo do passo para onde levamos a pessoa.
+      checkout.markAttempt();
     })();
   };
 
   return (
     <FormProvider {...form}>
       <DeferBlurProvider value={checkout.deferBlur}>
-        <title>{`${stepDocumentTitle(step)} | Infotera Hotéis`}</title>
         <form
           ref={checkout.containerRef}
           noValidate
           aria-labelledby={headingId}
           onSubmit={onSubmit}
-          className="flex max-w-2xl flex-col gap-5 rounded-card border border-border bg-surface p-4 shadow-card lg:col-start-1 lg:row-start-2 lg:p-5"
+          className="flex flex-col gap-5 rounded-card border border-border bg-surface p-4 shadow-card lg:col-start-1 lg:row-start-2 lg:max-w-2xl lg:p-5"
         >
           <Alert tone="info">{DEMO_NOTICE}</Alert>
-          <div className="flex flex-col gap-1">
+          <div ref={checkout.titleRef} className="flex flex-col gap-1">
             <span className="block text-sm font-medium text-fg-muted">{stepCounter(step)}</span>
             <h2
               id={headingId}
@@ -69,7 +67,9 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
               {stepTitle(step)}
             </h2>
           </div>
-          {checkout.notice ? <Alert tone="info">{NOTICE_TEXT[checkout.notice.kind]}</Alert> : null}
+          {checkout.notice ? (
+            <Alert tone="info">{noticeText(checkout.notice.kind, hasChildren)}</Alert>
+          ) : null}
           {checkout.summary.length > 0 ? (
             <ErrorSummary
               key={checkout.attempts}
@@ -121,7 +121,7 @@ const StepBody = ({ flow }: { flow: CheckoutFlow }) => {
             flow.setSummaryOpen(true);
             const toggle = document.getElementById(SUMMARY_TOGGLE_ID);
             toggle?.focus({ preventScroll: true });
-            revealBelowHeader(toggle);
+            revealBlock(toggle);
           }}
         />
       );

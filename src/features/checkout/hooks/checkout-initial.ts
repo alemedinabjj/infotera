@@ -20,7 +20,11 @@ export type CheckoutNotice = { kind: "restored" | "payment-wiped"; step: Checkou
 export type InitialCheckout = {
   values: CheckoutValues;
   step: CheckoutStep;
+  /** Passo mais adiante já alcançado antes da restauração (vai de novo ao rascunho). */
+  reached: CheckoutStep;
   notice: CheckoutNotice | null;
+  /** Restaurou no passo 1 mas a pessoa já tinha passado dele: o aviso do cartão vem no passo 2. */
+  paymentWipePending: boolean;
 };
 
 /** Valores iniciais: rascunho válido da sessão (se houver) ou o formulário vazio. */
@@ -34,7 +38,9 @@ export const loadInitialCheckout = (criteria: SearchCriteria): InitialCheckout =
     return {
       values: { ...defaultCheckoutValues, companions: buildCompanions(criteria, []) },
       step: "personal",
+      reached: "personal",
       notice: null,
+      paymentWipePending: false,
     };
   }
   const draft = fromPersistedDraft(stored);
@@ -45,5 +51,11 @@ export const loadInitialCheckout = (criteria: SearchCriteria): InitialCheckout =
   };
   const step = restoreStep(draft.step, isPersonalValid(values, todayISO()));
   const kind = step === "personal" ? "restored" : "payment-wiped";
-  return { values, step, notice: { kind, step } };
+  return {
+    values,
+    step,
+    reached: draft.step,
+    notice: { kind, step },
+    paymentWipePending: step === "personal" && draft.step !== "personal",
+  };
 };

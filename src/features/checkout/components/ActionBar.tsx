@@ -27,16 +27,17 @@ const TotalValue = ({ price }: { price: CheckoutPrice }) => {
 };
 
 /**
- * Barra de ação fixa abaixo de `lg` (DS §4.5): total + botão do passo. No `lg+` vira estática e só
- * o botão aparece (a linha do total some). Altura estável entre os estados do total.
+ * Barra de ação fixa abaixo de `lg` (DS §4.5): total + botão do passo. No `lg+` vira um card
+ * estático no fim do formulário, com o mesmo "Total R$ X" ao lado do botão (o total não some na
+ * hora de confirmar). Altura estável entre os estados do total.
  */
 export const ActionBar = ({ price, rooms, children }: ActionBarProps) => (
   <div
     data-action-bar
-    className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-raised lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
+    className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-raised lg:static lg:z-auto lg:rounded-card lg:border lg:bg-canvas lg:p-4 lg:shadow-none"
   >
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 lg:justify-end">
-      <div className="flex items-baseline justify-between gap-3 sm:flex-col-reverse sm:items-start sm:gap-0 lg:hidden">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex items-baseline justify-between gap-3 sm:flex-col-reverse sm:items-start sm:gap-0">
         <p className="text-sm text-fg-muted">
           <span className="sm:hidden">Total · </span>
           {describeNightsAndRooms(price.nights, rooms)}

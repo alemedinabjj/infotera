@@ -44,6 +44,7 @@ export const PriceBreakdown = ({ price, couponValidating = false }: PriceBreakdo
       lines={quote.lines}
       totalCents={quote.totalCents}
       afterStay={couponValidating ? <DiscountSkeleton /> : null}
+      totalClassName="bg-surface lg:sticky lg:bottom-0 lg:-mx-4 lg:-mb-4 lg:px-4 lg:pb-4"
     />
   );
 };

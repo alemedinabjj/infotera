@@ -52,3 +52,7 @@ export const restoreStep = (step: CheckoutStep, personalValid: boolean): Checkou
   if (!personalValid) return "personal";
   return step === "review" ? "payment" : step;
 };
+
+/** O passo mais adiante entre dois (o "passo máximo alcançado" do rascunho). */
+export const furthestStep = (a: CheckoutStep, b: CheckoutStep): CheckoutStep =>
+  stepNumber(a) >= stepNumber(b) ? a : b;

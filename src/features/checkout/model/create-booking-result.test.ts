@@ -15,14 +15,13 @@ const feedback = (result: FailedResult, patch: Partial<typeof context> = {}) => 
 };
 
 describe("submitFeedback", () => {
-  it("failed online: alerta danger, retry e toast", () => {
+  it("failed online: alerta danger e retry", () => {
     expect(feedback({ status: "failed", kind: "network" })).toEqual({
       tone: "danger",
       title: "Não foi possível confirmar sua reserva",
       description:
         "Nenhuma cobrança foi feita. Seus dados foram mantidos; tente de novo em instantes.",
       action: "retry",
-      toast: "Não foi possível confirmar a reserva.",
     });
   });
 

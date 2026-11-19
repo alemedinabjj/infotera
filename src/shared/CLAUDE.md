@@ -90,6 +90,9 @@ para `shared/` quando aparecer o segundo uso.
   (`aria-disabled` nos dois botões), `Toaster data-toaster`, ícones `credit-card`/`lock`/`tag`, e o CSS da barra de
   ação fixa (`[data-action-bar]`) em `globals.css`.
 - `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`) e exporta `describeErrorCount`.
+- `lib/scroll.ts`: `revealBelowHeader` (topo acima do header), `revealNearest` e `revealBlock` (revela um
+  **bloco** entre o header e a barra fixa `[data-action-bar]` medida no DOM; usa `revealDelta`, função pura).
+  `Field` marca o contêiner com `data-reveal-block` para o foco revelar rótulo, controle e erro inteiros.
 
 ## F6 (booking-confirmation)
 - `lib/price-breakdown` (`SERVICE_FEE_BPS`, `ISS_BPS`, `PriceLine`, `priceLineLabel/Amount`, `priceBreakdownLines`, `isBreakdownConsistent`,

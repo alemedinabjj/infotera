@@ -3,7 +3,8 @@ import { env } from "@/shared/api/env";
 import { buildCsp } from "@/shared/lib/csp";
 
 /** Nonce de 128 bits por request (base64); imprevisível e nunca reutilizado. */
-const createNonce = (): string => btoa(crypto.randomUUID());
+const createNonce = (): string =>
+  btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
 
 /**
  * Política estrita com nonce só em `/checkout`: antes de coletar dados de pagamento a página não

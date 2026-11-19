@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  furthestStep,
   isStepDone,
   nextStep,
   previousStep,
@@ -22,6 +23,11 @@ describe("steps", () => {
     expect(stepCounter("payment")).toBe("Passo 2 de 3");
     expect(stepTitle("review")).toBe("Revise e confirme");
     expect(stepDocumentTitle("personal")).toBe("Passo 1 de 3: Dados dos hóspedes");
+  });
+
+  it("furthestStep", () => {
+    expect(furthestStep("personal", "review")).toBe("review");
+    expect(furthestStep("payment", "personal")).toBe("payment");
   });
 
   it("isStepDone", () => {

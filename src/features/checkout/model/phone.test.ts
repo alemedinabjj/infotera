@@ -66,7 +66,8 @@ describe("formatPhone", () => {
     ["BR", "11987654", "(11) 9876-54"],
     ["BR", "1134567890", "(11) 3456-7890"],
     ["BR", "11987654321", "(11) 98765-4321"],
-    ["BR", "119876543219999", "(11) 98765-4321"],
+    ["BR", "119876543219", "(11) 98765-43219"], // excesso não é cortado
+    ["ES", "6123456789", "612 34 56 78 9"],
     ["US", "2015550123", "(201) 555-0123"],
     ["US", "2015", "(201) 5"],
     ["PT", "912345678", "912 345 678"],
@@ -76,10 +77,16 @@ describe("formatPhone", () => {
     expect(formatPhone(country, raw)).toBe(expected);
   });
 
-  it("reaplica a máscara de outro país aos mesmos dígitos", () => {
-    const digits = phoneDigits("BR", "(11) 98765-4321");
-    expect(formatPhone("US", digits)).toBe("(119) 876-5432");
-    expect(phoneDigits("US", digits)).toBe("1198765432");
+  it("reaplica a máscara de outro país aos mesmos dígitos, sem perder nenhum (BR → US → BR)", () => {
+    const digits = phoneDigits("(11) 98765-4321");
+    expect(formatPhone("US", digits)).toBe("(119) 876-54321");
+    expect(isValidPhone("US", digits)).toMatchObject({ ok: false, reason: "length" });
+    expect(phoneDigits(formatPhone("US", digits))).toBe("11987654321");
+    expect(formatPhone("BR", phoneDigits(formatPhone("US", digits)))).toBe("(11) 98765-4321");
+  });
+
+  it("limita a digitação em 15 dígitos", () => {
+    expect(phoneDigits("1".repeat(20))).toHaveLength(15);
   });
 });
 

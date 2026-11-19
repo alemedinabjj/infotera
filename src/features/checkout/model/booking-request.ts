@@ -48,8 +48,8 @@ export const bookingRequestSchema = z
         message: "Hóspedes não batem com a busca.",
       });
     }
-    children.forEach((child, index) => {
-      if (child.age === null) {
+    request.companions.forEach((child, index) => {
+      if (child.kind === "child" && child.age === null) {
         ctx.addIssue({
           code: "custom",
           path: ["companions", index, "age"],

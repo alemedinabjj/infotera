@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
 import type { Room } from "@/shared/api/schemas";
 import { nightsBetween, todayISO } from "@/shared/lib/dates";
@@ -54,6 +54,11 @@ export const useCoupon = (roomId: number, criteria: SearchCriteria) => {
   const queryClient = useQueryClient();
   const [view, setView] = useState<CouponView>({ kind: "idle" });
   const token = useRef(0);
+  // Os critérios mudam enquanto o cupom valida (quartos otimistas): a consulta assenta com os atuais.
+  const latestCriteria = useRef(criteria);
+  useEffect(() => {
+    latestCriteria.current = criteria;
+  });
   const roomKey = roomQueryOptions(roomId).queryKey;
 
   const lookup = async (code: string): Promise<void> => {
@@ -62,7 +67,7 @@ export const useCoupon = (roomId: number, criteria: SearchCriteria) => {
     try {
       const coupon = await queryClient.fetchQuery(couponQueryOptions(code));
       const room = await queryClient.ensureQueryData(roomQueryOptions(roomId));
-      if (mine === token.current) setView(settle(code, coupon, room, criteria));
+      if (mine === token.current) setView(settle(code, coupon, room, latestCriteria.current));
     } catch {
       if (mine === token.current) {
         setView({ kind: "error", code, message: COUPON_LOOKUP_FAILED });
