@@ -1,0 +1,118 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "**/*.{ts,tsx,mts,mjs,css,json,jsonc}",
+      "!mock-api",
+      "!.claude",
+      "!**/.next",
+      "!**/node_modules",
+      "!playwright-report",
+      "!test-results",
+      "!coverage",
+      "!next-env.d.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "semicolons": "always" }
+  },
+  "css": { "parser": { "tailwindDirectives": true } },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "next": "recommended",
+      "react": "recommended",
+      "test": "recommended",
+      "playwright": "recommended"
+    },
+    "rules": {
+      "preset": "recommended",
+      "suspicious": { "noExplicitAny": "error" },
+      "style": {
+        "useConsistentTypeDefinitions": { "level": "error", "options": { "style": "type" } },
+        "noNonNullAssertion": "error",
+        "noEnum": "error",
+        "noDefaultExport": "error",
+        "useImportType": "error",
+        "useExportType": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route}.{ts,tsx}",
+        "*.config.{ts,mts,mjs}"
+      ],
+      "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
+    },
+    {
+      "includes": ["src/shared/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features", "@/features/**", "@/app", "@/app/**"],
+                    "message": "shared não importa features nem app (app → features → shared)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/features/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features", "@/features/**", "@/app", "@/app/**"],
+                    "message": "Feature não importa outra feature nem app; dentro da feature use import relativo."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/app/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features/*/**"],
+                    "message": "app importa features só pelo index.ts (@/features/<nome>)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
