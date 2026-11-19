@@ -6,7 +6,7 @@ import { cardByName, cards, countHeading, hotelName, searchPath } from "./helper
 // (sem filtros). Seed do Rio, por distância: 18 (2,0 km) · 13 (2,1) · 11 (2,3) · … · 17 (4,9 km).
 
 const HELP = "Distância em linha reta até o ponto médio dos hotéis de Rio de Janeiro, RJ.";
-const DISTANCE_LINE = /(km|m) do centro/;
+const DISTANCE_LINE = /(km|m) do ponto central/;
 
 const hotelRequests = (page: Page): Request[] => {
   const requests: Request[] = [];
@@ -41,10 +41,10 @@ test.describe("ordenação por distância", () => {
 
     const first = cards(page).nth(0);
     await expect(first).toContainText(await hotelName(request, 18));
-    await expect(first).toContainText("2,0 km do centro");
+    await expect(first).toContainText("a 2,0 km do ponto central");
     await expect(cards(page).nth(1)).toContainText(await hotelName(request, 13));
-    await expect(cards(page).nth(1)).toContainText("2,1 km do centro");
-    await expect(cards(page).nth(2)).toContainText("2,3 km do centro");
+    await expect(cards(page).nth(1)).toContainText("a 2,1 km do ponto central");
+    await expect(cards(page).nth(2)).toContainText("a 2,3 km do ponto central");
 
     await expect(page.getByText(HELP)).toBeVisible();
     await expect(page.getByLabel("Ordenar por")).toHaveAccessibleDescription(HELP);
@@ -97,7 +97,7 @@ test.describe("ordenação por distância", () => {
     for (const [index, id] of ids.entries()) {
       await expect(cards(page).nth(index)).toContainText(await hotelName(request, id));
     }
-    await expect(cards(page).first()).toContainText("2,3 km do centro");
+    await expect(cards(page).first()).toContainText("a 2,3 km do ponto central");
   });
 
   test("a distância aparece em qualquer ordenação (Mais populares: hotel 17 a 4,9 km)", async ({
@@ -106,14 +106,20 @@ test.describe("ordenação por distância", () => {
   }) => {
     await page.goto(searchPath());
     await expect(cards(page)).toHaveCount(10);
-    await expect(cardByName(page, await hotelName(request, 17))).toContainText("4,9 km do centro");
+    await expect(cardByName(page, await hotelName(request, 17))).toContainText(
+      "a 4,9 km do ponto central",
+    );
   });
 
   test("Florianópolis (20 km) e Gramado (500 m)", async ({ page, request }) => {
     await page.goto(searchPath("", "Florianópolis, SC"));
-    await expect(cardByName(page, await hotelName(request, 4))).toContainText("20 km do centro");
+    await expect(cardByName(page, await hotelName(request, 4))).toContainText(
+      "a 20 km do ponto central",
+    );
     await page.goto(searchPath("", "Gramado, RS"));
-    await expect(cardByName(page, await hotelName(request, 43))).toContainText("500 m do centro");
+    await expect(cardByName(page, await hotelName(request, 43))).toContainText(
+      "a 500 m do ponto central",
+    );
   });
 
   test("axe com a ajuda da distância visível", async ({ page }) => {
@@ -143,5 +149,35 @@ test.describe("falha do centroide (_fail)", () => {
     await page.getByRole("button", { name: "Tentar de novo" }).click();
     await expect(cards(page)).toHaveCount(10);
     await expect(cards(page).first().getByText(DISTANCE_LINE)).toBeVisible();
+  });
+
+  test("sort=distance mostra o erro no mesmo tempo que a ordenação de API (sem retry aninhado)", async ({
+    page,
+  }) => {
+    const seen: string[] = [];
+    await page.route(
+      (url) => url.pathname === "/hotels",
+      (route: Route) => {
+        seen.push(route.request().url());
+        return route.fulfill({
+          status: 500,
+          headers: { "access-control-allow-origin": "*" },
+          json: { error: "Falha simulada" },
+        });
+      },
+    );
+    const alert = page.getByRole("alert").filter({ hasText: "Não foi possível carregar" });
+    const timeToError = async (filters: string) => {
+      seen.length = 0;
+      const started = Date.now();
+      await page.goto(searchPath(filters));
+      await expect(alert).toBeVisible({ timeout: 12_000 });
+      return Date.now() - started;
+    };
+    const popular = await timeToError("sort=popular");
+    const distance = await timeToError("sort=distance");
+    // Uma tentativa = 1 request (lista e centroide compartilham a chave): 3 no total, não 9.
+    expect(seen).toHaveLength(3);
+    expect(distance).toBeLessThan(popular + 2000);
   });
 });

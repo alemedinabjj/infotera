@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, type Request } from "@playwright/test";
 import { analyzeAccessibility } from "./helpers/axe";
-import { cards, countHeading, hotelName, searchPath } from "./helpers/hotel-search";
+import { cards, countHeading, holdRequests, hotelName, searchPath } from "./helpers/hotel-search";
 import { test } from "./helpers/mock-api-server";
 
 // Rolagem contínua (view=infinite) contra a mock-api real: Rio tem 14 hotéis, lotes de 10.
@@ -199,9 +199,9 @@ test.describe("teclado", () => {
     expect(box?.y ?? 0).toBeGreaterThanOrEqual((header?.y ?? 0) + (header?.height ?? 0) - 1);
   });
 
-  test("PageDown/PageUp, Ctrl+End e Ctrl+Home", async ({ page, slowApi }) => {
-    // 2º lote lento: o botão fica na tela (com o rodapé à vista o carregamento automático o troca).
-    await redirectSecondBatch(page, slowApi.url);
+  test("PageDown/PageUp, Ctrl+End e Ctrl+Home (inclusive a partir do rodapé)", async ({ page }) => {
+    // 2º lote retido: o botão fica na tela (com o rodapé à vista o carregamento automático o troca).
+    const gate = await holdRequests(page, SECOND_BATCH);
     await page.goto(feedPath());
     await expect(cardAt(page, 1)).toBeVisible();
     await cardAt(page, 1).focus();
@@ -211,23 +211,29 @@ test.describe("teclado", () => {
     await expect(cardAt(page, 1)).toBeFocused();
     await page.keyboard.press("Control+End");
     await expect(page.getByRole("button", { name: /^Carrega(r|ndo) mais hotéis/ })).toBeFocused();
+    // Ctrl+Home direto do rodapé: o contêiner do teclado envolve o feed e o rodapé.
+    await page.keyboard.press("Control+Home");
+    await expect(countHeading(page)).toBeFocused();
     await page.evaluate(() => window.scrollTo(0, 0));
     await cardAt(page, 1).focus();
     await page.keyboard.press("Control+Home");
     await expect(countHeading(page)).toBeFocused();
+    gate.release();
   });
 });
 
 test.describe("estados do lote (_delay e _fail)", () => {
-  test("lento: aria-busy e 'Carregando mais hotéis…' até chegar", async ({ page, slowApi }) => {
-    await redirectSecondBatch(page, slowApi.url);
+  test("lento: aria-busy e 'Carregando mais hotéis…' até chegar", async ({ page }) => {
+    const gate = await holdRequests(page, SECOND_BATCH);
     await page.goto(feedPath());
     await expect(cardAt(page, 1)).toBeVisible();
     await toBottom(page);
     await expect(page.getByRole("feed")).toHaveAttribute("aria-busy", "true");
     await expect(page.getByRole("button", { name: "Carregando mais hotéis…" })).toBeVisible();
-    await expect(announcer(page)).toHaveText("Carregando mais hotéis…");
-    await expect(page.getByText(END)).toBeVisible({ timeout: 10_000 });
+    // O botão já diz "Carregando…": o anunciador geral fica mudo (sem leitura dupla).
+    await expect(announcer(page)).toHaveText("");
+    gate.release();
+    await expect(page.getByText(END)).toBeVisible();
     await expect(page.getByRole("feed")).toHaveAttribute("aria-busy", "false");
   });
 
@@ -245,6 +251,8 @@ test.describe("estados do lote (_delay e _fail)", () => {
       .filter({ hasText: "Não foi possível carregar mais hotéis." });
     await expect(alert).toBeVisible({ timeout: 15_000 });
     await expect(alert).toContainText("Os hotéis já carregados continuam aqui.");
+    // A mensagem é trazida à vista (nearest) e o foco não é movido.
+    await expect(alert).toBeInViewport();
     const attempts = requests.filter((item) => SECOND_BATCH.test(item.url())).length;
     await toBottom(page);
     await page.evaluate(() => window.scrollBy(0, -50));
