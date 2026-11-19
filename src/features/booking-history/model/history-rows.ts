@@ -7,6 +7,8 @@ export type HistoryQueryResult = {
   status: "pending" | "error" | "success";
   data: Booking | undefined;
   error: unknown;
+  /** Sem rede e sem dados: a consulta ficou em pausa (a linha mostra erro com retry). */
+  paused?: boolean;
 };
 
 export type HistoryRow =
@@ -20,6 +22,7 @@ const classify = (
   entry: BookingHistoryEntry,
   result: HistoryQueryResult | undefined,
 ): HistoryRow => {
+  if (result?.status === "pending" && result.paused) return { kind: "failed", entry };
   if (!result || result.status === "pending") return { kind: "pending", entry };
   if (result.status === "success" && result.data) {
     return { kind: "found", entry, booking: result.data };

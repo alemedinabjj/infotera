@@ -45,6 +45,16 @@ describe("classifyHistoryResults", () => {
     ).toBe("failed");
   });
 
+  it("consulta em pausa (offline) vira failed, nunca missing", () => {
+    const paused: HistoryQueryResult = {
+      status: "pending",
+      data: undefined,
+      error: null,
+      paused: true,
+    };
+    expect(classifyHistoryResults([entry(1)], [paused])[0]?.kind).toBe("failed");
+  });
+
   it("sem resultado ainda é pending", () => {
     expect(classifyHistoryResults([entry(1)], [])[0]?.kind).toBe("pending");
   });

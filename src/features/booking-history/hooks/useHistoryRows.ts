@@ -39,7 +39,15 @@ export const useHistoryRows = (): HistoryRows => {
   const results = useQueries({
     queries: entries.map((entry) => bookingQueryOptions(entry.id)),
   });
-  const all = classifyHistoryResults(entries, results);
+  const all = classifyHistoryResults(
+    entries,
+    results.map((result) => ({
+      status: result.status,
+      data: result.data,
+      error: result.error,
+      paused: result.fetchStatus === "paused",
+    })),
+  );
   const settled = all.every((row) => row.kind !== "pending");
   const hotelIds = settled
     ? [...new Set(all.flatMap((row) => (row.kind === "found" ? [row.booking.hotelId] : [])))]

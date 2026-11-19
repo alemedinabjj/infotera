@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { useOnline } from "@/shared/hooks/useOnline";
+import { focusWhenReady } from "@/shared/lib/focus";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import {
   Alert,
@@ -36,9 +37,13 @@ export const BookingHistoryView = () => {
   const online = useOnline();
   const titleRef = useRef<HTMLHeadingElement>(null);
   const hasRows = page.rows.length > 0;
+  // O botão e o dialog desmontam junto com a lista (o navegador devolve o foco ao `body`): foca no
+  // quadro seguinte, até conseguir.
   const focusTitle = () => {
-    titleRef.current?.focus({ preventScroll: true });
-    revealBelowHeader(titleRef.current);
+    focusWhenReady(
+      () => titleRef.current,
+      () => revealBelowHeader(titleRef.current),
+    );
   };
 
   return (
