@@ -30,7 +30,7 @@ test.describe("marcar e limitar", () => {
     await expect(tray(page).getByText("1 de 3 hotéis · escolha mais 1")).toBeVisible();
     const action = tray(page).getByRole("button", { name: "Comparar" });
     await expect(action).toHaveAttribute("aria-disabled", "true");
-    await action.click();
+    await action.click({ force: true });
     await expect(page.getByText("Escolha pelo menos 2 hotéis para comparar.")).toBeAttached();
     await expect(
       page
@@ -49,10 +49,12 @@ test.describe("marcar e limitar", () => {
     const box = compareBox(page, fourth);
     await expect(box).toHaveAttribute("aria-disabled", "true");
     await expect(box).toHaveAccessibleDescription("Limite de 3 hotéis na comparação.");
-    await box.click();
+    await box.click({ force: true });
     await expect(box).not.toBeChecked();
     await expect(
-      page.getByText("Você já está comparando 3 hotéis. Remova um para adicionar outro."),
+      page
+        .getByRole("status")
+        .getByText("Você já está comparando 3 hotéis. Remova um para adicionar outro."),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Ver comparação" })).toBeVisible();
   });
@@ -60,10 +62,10 @@ test.describe("marcar e limitar", () => {
   test("limpar leva o foco ao main, mostra o toast e Desfazer restaura os 3", async ({ page }) => {
     await pickFromSearch(page, 3);
     await tray(page)
-      .getByRole("button", { name: "Limpar", exact: true })
-      .or(tray(page).getByRole("button", { name: "Limpar comparação" }))
-      .first()
-      .click();
+      .getByRole("button", { name: /^Limpar/ })
+      .filter({ visible: true })
+      // No celular o indicador do `next dev` (portal) cobre o canto da bandeja: só existe em dev.
+      .dispatchEvent("click");
     await expect(tray(page)).toHaveCount(0);
     await expect(page.getByRole("main")).toBeFocused();
     await page.getByRole("status").getByRole("button", { name: "Desfazer" }).click();
@@ -77,7 +79,7 @@ test.describe("/compare", () => {
   }) => {
     const names = await pickFromSearch(page, 3);
     const requests: string[] = [];
-    page.on("request", (request) => {
+    page.on("requestfinished", (request) => {
       const url = new URL(request.url());
       if (url.pathname === "/hotels" && url.search.includes("id=")) requests.push("hotels");
       if (url.pathname === "/rooms" && url.search.includes("hotelId=")) requests.push("rooms");
@@ -191,12 +193,18 @@ test.describe("bandeja e rodapé", () => {
       await page.keyboard.press("Tab");
       const box = await page.evaluate(() => {
         const active = document.activeElement;
-        if (!active || active.closest("[data-bottom-bar]")) return null;
+        if (!active || active.closest("[data-bottom-bar]") || active.tagName === "NEXTJS-PORTAL") {
+          return null;
+        }
         const { bottom } = active.getBoundingClientRect();
-        return bottom;
+        return {
+          bottom,
+          what: `${active.tagName} ${active.getAttribute("aria-label") ?? active.textContent?.slice(0, 40)}`,
+        };
       });
       const barTop = await trayTop(page);
-      if (box !== null && barTop !== null) expect(box).toBeLessThanOrEqual(barTop + 1);
+      if (box !== null && barTop !== null)
+        expect(box.bottom, box.what).toBeLessThanOrEqual(barTop + 1);
     }
   });
 
