@@ -33,23 +33,30 @@ export type HotelsApiQuery = {
  * substring. Montada só com valores do enum `amenitySchema` (nunca texto do usuário: sem injeção
  * nem ReDoS), na ordem do enum para a chave de cache ser estável.
  */
-export const amenitiesPattern = (amenities: readonly Amenity[]): string =>
-  `^${amenitySchema.options
-    .filter((option) => amenities.includes(option))
-    .map((option) => `(?=.*\\b${option}\\b)`)
-    .join("")}`;
+export const amenitiesPattern = (amenities: readonly Amenity[]): string => {
+  const wanted = new Set(amenities);
+  const lookaheads = amenitySchema.options
+    .filter((option) => wanted.has(option))
+    .map((option) => `(?=.*\\b${option}\\b)`);
+  return `^${lookaheads.join("")}`;
+};
 
 /** Filtros da URL → query da `GET /hotels` (omite o que está no valor-padrão). */
-export const toHotelsApiQuery = (destination: string, filters: SearchFilters): HotelsApiQuery => ({
-  destination,
-  ...(filters.minPrice > PRICE_RANGE.min ? { pricePerNight_gte: filters.minPrice } : {}),
-  ...(filters.maxPrice < PRICE_RANGE.max ? { pricePerNight_lte: filters.maxPrice } : {}),
-  ...(filters.minRating !== null ? { rating_gte: filters.minRating } : {}),
-  ...(filters.types.length > 0
-    ? { propertyType: propertyTypeSchema.options.filter((type) => filters.types.includes(type)) }
-    : {}),
-  ...(filters.amenities.length > 0 ? { amenities_like: amenitiesPattern(filters.amenities) } : {}),
-  ...SORT_TO_API[filters.sort],
-  _page: filters.page,
-  _limit: PAGE_SIZE,
-});
+export const toHotelsApiQuery = (destination: string, filters: SearchFilters): HotelsApiQuery => {
+  const selectedTypes = new Set(filters.types);
+  return {
+    destination,
+    ...(filters.minPrice > PRICE_RANGE.min ? { pricePerNight_gte: filters.minPrice } : {}),
+    ...(filters.maxPrice < PRICE_RANGE.max ? { pricePerNight_lte: filters.maxPrice } : {}),
+    ...(filters.minRating !== null ? { rating_gte: filters.minRating } : {}),
+    ...(filters.types.length > 0
+      ? { propertyType: propertyTypeSchema.options.filter((type) => selectedTypes.has(type)) }
+      : {}),
+    ...(filters.amenities.length > 0
+      ? { amenities_like: amenitiesPattern(filters.amenities) }
+      : {}),
+    ...SORT_TO_API[filters.sort],
+    _page: filters.page,
+    _limit: PAGE_SIZE,
+  };
+};

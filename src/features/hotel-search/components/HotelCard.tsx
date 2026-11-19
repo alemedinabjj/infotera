@@ -31,6 +31,7 @@ const AmenityList = ({
   selected: readonly Amenity[];
 }) => {
   const { shown, hiddenCount } = pickCardAmenities(amenities, selected);
+  const selectedSet = new Set(selected);
   if (shown.length === 0) return null;
   return (
     <ul className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
@@ -39,7 +40,7 @@ const AmenityList = ({
           key={amenity}
           className={cn(
             "flex items-center gap-1",
-            selected.includes(amenity) ? "font-medium text-fg" : "text-fg-muted",
+            selectedSet.has(amenity) ? "font-medium text-fg" : "text-fg-muted",
           )}
         >
           <CheckIcon aria-hidden="true" className="size-4 shrink-0 text-success" />
