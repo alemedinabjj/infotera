@@ -43,6 +43,7 @@ export const ComparisonTableRow = ({
   differsLabel,
 }: ComparisonTableRowProps) => {
   const band = row.differs && !markerOnly;
+  const best = new Set(row.best);
   return (
     <tr className={band ? "bg-primary-soft" : undefined}>
       <th
@@ -59,7 +60,7 @@ export const ComparisonTableRow = ({
       {row.cells.map((value, index) => (
         <td key={columnIds[index]} className="px-3 py-3 align-top text-fg">
           <Cell row={row} value={value} />
-          {row.best?.includes(index) && row.bestLabel ? (
+          {best.has(index) && row.bestLabel ? (
             <Badge tone="success" className="mt-1 flex w-fit">
               {row.bestLabel}
             </Badge>

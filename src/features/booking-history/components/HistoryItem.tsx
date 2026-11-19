@@ -31,8 +31,7 @@ const Title = ({ hotel }: { hotel: HotelName }) => {
 };
 
 /** Nome para rótulos: o do hotel ou o texto de indisponível. */
-export const hotelLabel = (hotel: HotelName): string =>
-  hotel.hotel?.name ?? MESSAGES.hotelUnavailable;
+const hotelLabel = (hotel: HotelName): string => hotel.hotel?.name ?? MESSAGES.hotelUnavailable;
 
 /**
  * Linha de uma reserva encontrada: hotel, datas e noites, hóspedes, total, situação da estadia e

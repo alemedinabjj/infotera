@@ -48,8 +48,9 @@ export const favoritesActions = {
   },
   /** Tira os ids que a API não devolveu e regrava o storage já saneado. Nunca em erro de rede. */
   prune: (ids: readonly number[]): void => {
+    const removed = new Set(ids);
     useFavoritesStore.setState((state) => ({
-      items: state.items.filter((entry) => !ids.includes(entry.id)),
+      items: state.items.filter((entry) => !removed.has(entry.id)),
     }));
   },
 };

@@ -54,13 +54,12 @@ export const useHistoryRows = (): HistoryRows => {
     : [];
   const hotelsQuery = useQuery(hotelsByIdsQueryOptions(hotelIds));
 
-  const missingIds = all.flatMap((row) => (row.kind === "missing" ? [row.entry.id] : []));
+  const missingKey = all.flatMap((row) => (row.kind === "missing" ? [row.entry.id] : [])).join("|");
   const handled = useRef(new Set<string>());
   const [vanished, setVanished] = useState(0);
-  const missingKey = missingIds.join("|");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `missingKey` resume `missingIds`
   useEffect(() => {
-    const fresh = missingIds.filter((id) => !handled.current.has(id));
+    const missing = missingKey === "" ? [] : missingKey.split("|");
+    const fresh = missing.filter((id) => !handled.current.has(id));
     if (fresh.length === 0) return;
     for (const id of fresh) handled.current.add(id);
     removeManyFromHistory(fresh);

@@ -52,11 +52,11 @@ export const useFavoritesPage = (): FavoritesPage => {
   });
   const slow = useSlowLoading(view === "loading" || view === "hydrating");
 
-  const { data, dataUpdatedAt } = query;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: roda uma vez por resposta (dataUpdatedAt)
+  const { data } = query;
+  // Idempotente: a cada resposta tira do storage o que a API não devolveu (e regrava saneado).
   useEffect(() => {
     if (data) favoritesActions.prune(missingIds(ids, data));
-  }, [dataUpdatedAt]);
+  }, [data, ids]);
 
   return {
     view,
