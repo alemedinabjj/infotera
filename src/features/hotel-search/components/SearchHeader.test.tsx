@@ -132,9 +132,40 @@ describe("SearchHeader: foco depois de Alterar busca", () => {
     act(() => {
       form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     });
+    window.history.pushState(null, "", "/search?destination=Outro");
     unmount();
     renderHeader();
     expect(screen.getByRole("heading", { level: 1 })).toHaveFocus();
+  });
+
+  const submitPanel = async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderHeader();
+    await user.click(screen.getByRole("button", { name: "Alterar busca" }));
+    act(() => {
+      screen
+        .getByRole("form")
+        .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+    return unmount;
+  };
+
+  it("envio sem mudar a URL não conta como edição", async () => {
+    const unmount = await submitPanel();
+    unmount();
+    renderHeader();
+    expect(screen.getByRole("heading", { level: 1 })).not.toHaveFocus();
+  });
+
+  it("Voltar/Avançar descarta o envio pendente (sem prazo)", async () => {
+    const unmount = await submitPanel();
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    window.history.pushState(null, "", "/search?destination=Depois");
+    unmount();
+    renderHeader();
+    expect(screen.getByRole("heading", { level: 1 })).not.toHaveFocus();
   });
 
   it("carga normal não mexe no foco", () => {

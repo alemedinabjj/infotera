@@ -3,14 +3,21 @@
 import { type RefObject, useEffect } from "react";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 
-/** Janela em que um envio do painel "Alterar busca" ainda conta como a causa da remontagem. */
-const SUBMIT_WINDOW_MS = 10_000;
+/** Envio do painel "Alterar busca" que ainda espera a página remontar com a busca nova. */
+let pendingEdit: { from: string } | null = null;
 
-let lastEditSubmit = 0;
+const forgetEdit = (): void => {
+  pendingEdit = null;
+};
 
-/** Chamar no envio do formulário do painel: a próxima montagem do cabeçalho leva o foco ao h1. */
+/**
+ * Chamar no envio do formulário do painel: a próxima montagem do cabeçalho, numa URL diferente,
+ * leva o foco ao h1. O sinal guarda a URL de origem (envio sem mudança não remonta e não conta) e
+ * morre no Voltar/Avançar (`popstate`), então nunca depende de um prazo.
+ */
 export const markEditSubmitted = (): void => {
-  lastEditSubmit = Date.now();
+  pendingEdit = { from: window.location.search };
+  window.addEventListener("popstate", forgetEdit, { once: true });
 };
 
 /**
@@ -19,8 +26,9 @@ export const markEditSubmitted = (): void => {
  */
 export const useFocusAfterEdit = (headingRef: RefObject<HTMLElement | null>): void => {
   useEffect(() => {
-    if (Date.now() - lastEditSubmit > SUBMIT_WINDOW_MS) return;
-    lastEditSubmit = 0;
+    const edit = pendingEdit;
+    pendingEdit = null;
+    if (edit === null || edit.from === window.location.search) return;
     const heading = headingRef.current;
     heading?.focus({ preventScroll: true });
     revealBelowHeader(heading);
