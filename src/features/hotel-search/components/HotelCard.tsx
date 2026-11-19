@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import type { SearchCriteria } from "@/shared/lib/search-params";
+import { pluralize } from "@/shared/lib/format";
 import { CheckIcon } from "@/shared/ui";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
@@ -47,8 +48,10 @@ const AmenityList = ({
       ))}
       {hiddenCount > 0 ? (
         <li className="text-fg-subtle">
-          +{hiddenCount}
-          <span className="sr-only"> comodidades</span>
+          <span aria-hidden="true">+{hiddenCount}</span>
+          <span className="sr-only">
+            {pluralize(hiddenCount, "comodidade", "comodidades")} a mais
+          </span>
         </li>
       ) : null}
     </ul>

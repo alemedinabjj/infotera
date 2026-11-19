@@ -87,8 +87,15 @@ describe("HotelCard: conteúdo (critérios 2 a 5)", () => {
       "Bar",
       "Wi-Fi",
       "Piscina",
-      "+2 comodidades",
+      "+22 comodidades a mais",
     ]);
+  });
+
+  it("uma comodidade a mais usa o singular", () => {
+    renderCard({
+      hotel: makeHotel({ id: 13, availableRooms: 9, amenities: ["wifi", "pool", "spa", "gym"] }),
+    });
+    expect(screen.getByText("1 comodidade a mais")).toBeInTheDocument();
   });
 
   it("esgotado: selo, nota, sem total e foto em cinza (critério 4)", () => {
