@@ -1,6 +1,13 @@
 "use client";
 
-import { type ReactNode, type RefObject, useEffect, useId, useRef } from "react";
+import {
+  type KeyboardEventHandler,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useId,
+  useRef,
+} from "react";
 import { cn } from "../../lib/cn";
 import { IconButton } from "../atoms/IconButton";
 import { XIcon } from "../icons";
@@ -71,6 +78,8 @@ type DialogProps = {
   closeOnBackdrop?: boolean;
   /** Seletor CSS do controle que recebe o foco ao abrir (padrão: o 1º focável, o "Fechar"). */
   initialFocus?: string;
+  /** Teclas dentro do dialog (ex.: setas do lightbox). `Esc` e `Tab` já são nativos. */
+  onKeyDown?: KeyboardEventHandler<HTMLDialogElement>;
   className?: string;
 };
 
@@ -112,6 +121,7 @@ export const Dialog = ({
   closeLabel = "Fechar",
   closeOnBackdrop = false,
   initialFocus,
+  onKeyDown,
   className,
 }: DialogProps) => {
   const ref = useRef<HTMLDialogElement>(null);
@@ -121,10 +131,10 @@ export const Dialog = ({
   const layout = layoutFor(size, placement);
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: clique no backdrop é atalho de mouse; o teclado fecha com Esc/botão
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      onKeyDown={onKeyDown}
       onClose={() => {
         if (open) onClose();
       }}

@@ -22,6 +22,10 @@ type RemoteImageProps = {
   fit?: "cover" | "contain";
   /** Avisa que a foto terminou de carregar. */
   onLoad?: () => void;
+  /** Avisa que a foto quebrou (o `fallback` já aparece). */
+  onError?: () => void;
+  /** Placeholder borrado enquanto carrega (padrão `true`; desligue sobre fundo escuro). */
+  blur?: boolean;
   /** Conteúdo no lugar da foto quebrada (padrão: ícone `bed` centralizado). */
   fallback?: ReactNode;
 };
@@ -45,11 +49,13 @@ export const RemoteImage = ({
   priority = false,
   fit = "cover",
   onLoad,
+  onError,
+  blur = true,
   fallback,
 }: RemoteImageProps) => {
   const [failed, setFailed] = useState(false);
   return (
-    <div className={cn("relative overflow-hidden bg-surface-sunken", className)}>
+    <span className={cn("relative block overflow-hidden bg-surface-sunken", className)}>
       {failed ? (
         (fallback ?? <DefaultFallback />)
       ) : (
@@ -59,18 +65,21 @@ export const RemoteImage = ({
           alt={alt}
           fill
           sizes={sizes}
-          placeholder="blur"
-          blurDataURL={BLUR_DATA_URL}
+          placeholder={blur ? "blur" : "empty"}
+          blurDataURL={blur ? BLUR_DATA_URL : undefined}
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : "auto"}
           onLoad={onLoad}
-          onError={() => setFailed(true)}
+          onError={() => {
+            setFailed(true);
+            onError?.();
+          }}
           className={cn(
             fit === "cover" ? "object-cover" : "object-contain",
             muted && "opacity-70 grayscale",
           )}
         />
       )}
-    </div>
+    </span>
   );
 };
