@@ -125,8 +125,10 @@ Features
 - ✅ Modo offline (cache de buscas persistido) e PWA (manifest, service worker, ícones).
 - ✅ i18n pt-BR + en-US.
 Next.js
-- ✅ Partial Prerendering · Server Actions para mutations · Parallel Routes para modals ·
-  ISR · Edge Runtime onde apropriado.
+- ✅ Partial Prerendering · Server Actions para mutations · Parallel Routes para modals · ISR.
+- ⛔ Edge Runtime: avaliado e descartado (decisão do usuário). No Next 16.4 `runtime = 'edge'` está
+  deprecated e é incompatível com `cacheComponents` (PPR); PPR/ISR resolvem melhor o problema real.
+  Justificar no README.
 
 ### F8 — delivery
 - ✅ Testes unitários, de componente e E2E do fluxo completo (Playwright) + axe.
