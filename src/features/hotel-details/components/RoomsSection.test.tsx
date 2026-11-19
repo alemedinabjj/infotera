@@ -1,14 +1,12 @@
 import { hydrate } from "@tanstack/react-query";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { type ReactNode, use, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import { formatBRL } from "@/shared/lib/currency";
 import { addDays, todayISO } from "@/shared/lib/dates";
 import { useBookingDraft } from "@/shared/stores/booking-draft";
 import { makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
-import { navigationSpies } from "@/shared/testing/next-navigation";
 import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
 import { seedRooms } from "@/shared/testing/seed";
 import { RoomsSection } from "./RoomsSection";
@@ -31,18 +29,8 @@ type Rooms = ReturnType<typeof seedRooms>;
 
 const plain = (value: string) => value.replaceAll("\u00a0", " ");
 
-/**
- * Simula a navegação do Next: o `router.push` dentro da transition só termina quando a rota nova
- * chega. Aqui ela nunca chega (a transition fica pendente, como no clique real).
- */
-const NEVER = new Promise<never>(() => undefined);
-let blockNavigation: () => void = () => undefined;
-const NavigationGate = ({ children }: { children: ReactNode }) => {
-  const [blocked, setBlocked] = useState(false);
-  blockNavigation = () => setBlocked(true);
-  if (blocked) use(NEVER);
-  return children;
-};
+const assignLocation = vi.hoisted(() => vi.fn<(path: string) => void>());
+vi.mock("@/shared/lib/navigation", () => ({ assignLocation }));
 
 const renderRooms = ({
   hotelId = 1,
@@ -60,17 +48,15 @@ const renderRooms = ({
   const queryClient = makeTestQueryClient();
   queryClient.setQueryData(hotelRoomsQueryOptions(hotelId).queryKey, rooms);
   return renderWithProviders(
-    <NavigationGate>
-      <StayEditProvider criteriaKey="a">
-        <RoomsSection
-          hotelId={hotelId}
-          hotelAvailableRooms={hotelAvailableRooms}
-          cancellationPolicy="free"
-          criteria={search}
-          pastDates={pastDates}
-        />
-      </StayEditProvider>
-    </NavigationGate>,
+    <StayEditProvider criteriaKey="a">
+      <RoomsSection
+        hotelId={hotelId}
+        hotelAvailableRooms={hotelAvailableRooms}
+        cancellationPolicy="free"
+        criteria={search}
+        pastDates={pastDates}
+      />
+    </StayEditProvider>,
     { queryClient },
   );
 };
@@ -79,8 +65,7 @@ const card = (name: string) =>
   screen.getByRole("heading", { level: 3, name }).closest("article") as HTMLElement;
 
 beforeEach(() => {
-  navigationSpies.push.mockReset();
-  navigationSpies.push.mockImplementation(() => blockNavigation());
+  assignLocation.mockReset();
   sessionStorage.clear();
   useBookingDraft.setState({ selection: null });
 });
@@ -120,7 +105,8 @@ describe("RoomsSection: selecionar (critério 16)", () => {
       name: "Selecionar quarto: Suíte Deluxe Ocean View",
     });
     await user.click(button);
-    expect(navigationSpies.push).toHaveBeenCalledWith("/checkout");
+    expect(assignLocation).toHaveBeenCalledWith("/checkout");
+    // O storage já está gravado quando o documento troca.
     const stored: unknown = JSON.parse(sessionStorage.getItem("infotera:booking-draft") ?? "{}");
     expect(stored).toMatchObject({
       state: { selection: { hotelId: 1, roomId: 1, criteria } },
@@ -129,7 +115,7 @@ describe("RoomsSection: selecionar (critério 16)", () => {
     await user.click(
       within(card("Quarto Standard")).getByRole("button", { name: /Selecionar quarto/ }),
     );
-    expect(navigationSpies.push).toHaveBeenCalledTimes(1);
+    expect(assignLocation).toHaveBeenCalledTimes(1);
     expect(useBookingDraft.getState().selection?.roomId).toBe(1);
   });
 
@@ -142,6 +128,21 @@ describe("RoomsSection: selecionar (critério 16)", () => {
     const selecting = await screen.findByRole("button", { name: "Selecionando…" });
     expect(selecting).toHaveAttribute("aria-busy", "true");
     expect(card("Suíte Deluxe Ocean View").className).toContain("ring-primary");
+  });
+});
+
+describe("RoomsSection: bfcache", () => {
+  it("pageshow persistido zera o 'Selecionando…'", async () => {
+    const user = userEvent.setup();
+    renderRooms();
+    await user.click(
+      within(card("Suíte Deluxe Ocean View")).getByRole("button", { name: /Selecionar quarto/ }),
+    );
+    await screen.findByRole("button", { name: "Selecionando…" });
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+    });
+    expect(screen.queryByRole("button", { name: "Selecionando…" })).not.toBeInTheDocument();
   });
 });
 
@@ -186,7 +187,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
     button.focus();
     await user.click(button);
     expect(button).toHaveFocus();
-    expect(navigationSpies.push).not.toHaveBeenCalled();
+    expect(assignLocation).not.toHaveBeenCalled();
     expect(
       within(card("Suíte Deluxe Ocean View")).getByRole("button", { name: /Selecionar quarto/ }),
     ).not.toHaveAttribute("aria-disabled");
@@ -208,7 +209,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
       "Sua busca pede 3 quartos. Diminua a quantidade de quartos ou escolha outro tipo.",
     );
     await user.click(button);
-    expect(navigationSpies.push).not.toHaveBeenCalled();
+    expect(assignLocation).not.toHaveBeenCalled();
   });
 
   it("hotel com um só tipo de quarto não sugere 'outro tipo'", () => {
@@ -272,7 +273,7 @@ describe("RoomsSection: datas passadas", () => {
     await user.click(button);
     expect(input).toHaveFocus();
     input.remove();
-    expect(navigationSpies.push).not.toHaveBeenCalled();
+    expect(assignLocation).not.toHaveBeenCalled();
   });
 });
 
