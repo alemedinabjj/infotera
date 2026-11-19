@@ -5,16 +5,13 @@ import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ErrorBoundary } from "@/shared/ui";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
 import { useResultsController } from "../hooks/useResultsController";
-import { describeAnnouncement, describeToolbar } from "../model/results-view";
-import { countActiveFilters, serializeSearchFilters } from "../model/search-filters";
-import { DistanceHelp } from "./DistanceHelp";
-import { FiltersDrawer, FiltersTrigger } from "./FiltersDrawer";
+import { useResultsText } from "../hooks/useResultsText";
+import { serializeSearchFilters } from "../model/search-filters";
+import { FiltersDrawer } from "./FiltersDrawer";
 import { FiltersPanel } from "./FiltersPanel";
-import { ListModeSelect } from "./ListModeSelect";
+import { ResultsControls } from "./ResultsControls";
 import { ResultsError } from "./ResultsError";
 import { ResultsSection } from "./ResultsSection";
-import { ResultsToolbar } from "./ResultsToolbar";
-import { SortSelect } from "./SortSelect";
 
 type HotelSearchResultsProps = {
   destination: string;
@@ -35,20 +32,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
     useResultsController(destination);
   const { view } = results;
 
-  const toolbar = describeToolbar({
-    view,
-    slow: results.slow,
-    total: results.total,
-    listing: results.feed
-      ? { mode: "infinite", loaded: results.feed.loaded }
-      : { mode: "pages", page: filters.page },
-  });
-  const announcement = describeAnnouncement({
-    view,
-    slow: results.slow,
-    total: results.total,
-    destination,
-  });
+  const { toolbar, announcement } = useResultsText(results, filters.page, destination);
   const resetKey = `${destination}?${serializeSearchFilters(filters).toString()}`;
 
   return (
@@ -63,35 +47,17 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
         <p className="sr-only" aria-live="polite">
           {drawerOpen ? "" : announcement}
         </p>
-        <ResultsToolbar
+        <ResultsControls
           headingId={headingId}
+          distanceHelpId={distanceHelpId}
           headingRef={headingRef}
           heading={toolbar.heading}
           status={toolbar.status}
-          filtersTrigger={
-            <FiltersTrigger
-              className="min-[26rem]:col-span-2 min-[26rem]:justify-self-start sm:col-span-1"
-              activeCount={countActiveFilters(filters)}
-              onClick={() => setDrawerOpen(true)}
-            />
-          }
-          listMode={
-            <ListModeSelect
-              value={filters.view}
-              onChange={(value) => update({ type: "setView", value })}
-            />
-          }
-          sort={
-            <SortSelect
-              value={filters.sort}
-              describedBy={filters.sort === "distance" ? distanceHelpId : undefined}
-              onChange={(value) => update({ type: "setSort", value })}
-            />
-          }
+          filters={filters}
+          destination={destination}
+          onChange={update}
+          onOpenFilters={() => setDrawerOpen(true)}
         />
-        {filters.sort === "distance" ? (
-          <DistanceHelp id={distanceHelpId} destination={destination} />
-        ) : null}
         <ErrorBoundary
           resetKeys={[resetKey]}
           fallback={({ reset }) => <ResultsError onRetry={reset} retrying={false} />}

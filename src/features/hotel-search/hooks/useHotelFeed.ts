@@ -59,6 +59,7 @@ export const useHotelFeed = (
         total,
       }),
       loaded: items.length,
+      isFetchingNextPage: query.isFetchingNextPage,
       loadMore: () => void query.fetchNextPage(),
     },
   };

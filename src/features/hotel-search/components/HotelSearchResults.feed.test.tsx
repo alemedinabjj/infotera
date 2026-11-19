@@ -107,7 +107,7 @@ describe("HotelSearchResults: feed (critérios 11 e 17)", () => {
     for (const item of items)
       expect(item).toHaveAccessibleName(expect.stringMatching(/^Hotel \d+/));
     expect(screen.queryByRole("navigation", { name: "Paginação" })).not.toBeInTheDocument();
-    expect(screen.getByText("Mostrando 10 de 14")).toBeInTheDocument();
+    expect(screen.getAllByText("Mostrando 10 de 14")).toHaveLength(2);
     expect(heading).not.toHaveTextContent("página");
   });
 

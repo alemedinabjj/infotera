@@ -8,6 +8,8 @@ export type FeedState = {
   footer: FeedFooter;
   /** Hotéis carregados até agora (todos os lotes). */
   loaded: number;
+  /** Um lote está sendo buscado (inclusive o "Tentar de novo" depois de um erro). */
+  isFetchingNextPage: boolean;
   /** Pede o próximo lote (também é o "Tentar de novo" do rodapé). */
   loadMore: () => void;
 };

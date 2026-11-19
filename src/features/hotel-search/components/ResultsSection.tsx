@@ -89,8 +89,8 @@ export const ResultsSection = (props: ResultsSectionProps) => {
               criteria={props.criteria}
               selectedAmenities={props.selectedAmenities}
               center={props.center}
-              busy={view.stale}
               stale={view.stale}
+              feed={props.feed}
             />
           )}
         </>
