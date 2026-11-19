@@ -33,7 +33,11 @@ export const keepPreviousIfSameDestination =
 
 /** Query da lista. A chave é a própria query da API (filtros equivalentes = mesma chave). */
 export const hotelsQueryOptions = (destination: string, filters: SearchFilters) => {
-  const apiQuery = toHotelsApiQuery(destination, filters);
+  const apiQuery = toHotelsApiQuery(
+    destination,
+    filters,
+    filters.sort === "distance" ? "popular" : filters.sort,
+  );
   return queryOptions<HotelsPage>({
     queryKey: queryKeys.hotels.list(apiQuery),
     queryFn: ({ signal }) => fetchHotels(apiQuery, signal),

@@ -30,7 +30,11 @@ describe("fetchHotels", () => {
   it("chama a URL exata e devolve itens + total do header", async () => {
     const fetchMock = stubFetch("14");
     const result = await fetchHotels(
-      toHotelsApiQuery("Rio de Janeiro, RJ", { ...DEFAULT_FILTERS, types: ["hotel", "pousada"] }),
+      toHotelsApiQuery(
+        "Rio de Janeiro, RJ",
+        { ...DEFAULT_FILTERS, types: ["hotel", "pousada"] },
+        "popular",
+      ),
     );
     expect(fetchMock).toHaveBeenCalledOnce();
     const firstCall: unknown[] = fetchMock.mock.calls[0] ?? [];
@@ -43,7 +47,7 @@ describe("fetchHotels", () => {
 
   it("sem header cai para a quantidade de itens", async () => {
     stubFetch(null);
-    expect((await fetchHotels(toHotelsApiQuery("X", DEFAULT_FILTERS))).total).toBe(1);
+    expect((await fetchHotels(toHotelsApiQuery("X", DEFAULT_FILTERS, "popular"))).total).toBe(1);
   });
 
   it("resposta fora do contrato vira erro de parse", async () => {
@@ -51,7 +55,9 @@ describe("fetchHotels", () => {
       "fetch",
       vi.fn(async () => new Response(JSON.stringify([{ id: "x" }]))),
     );
-    await expect(fetchHotels(toHotelsApiQuery("X", DEFAULT_FILTERS))).rejects.toMatchObject({
+    await expect(
+      fetchHotels(toHotelsApiQuery("X", DEFAULT_FILTERS, "popular")),
+    ).rejects.toMatchObject({
       kind: "parse",
     });
   });
@@ -69,7 +75,11 @@ describe("hotelsQueryOptions", () => {
     });
     expect(a.queryKey).toEqual(b.queryKey);
     expect(a.queryKey[2]).toEqual(
-      toHotelsApiQuery("Rio de Janeiro, RJ", { ...DEFAULT_FILTERS, types: ["hotel", "resort"] }),
+      toHotelsApiQuery(
+        "Rio de Janeiro, RJ",
+        { ...DEFAULT_FILTERS, types: ["hotel", "resort"] },
+        "popular",
+      ),
     );
   });
 
