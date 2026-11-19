@@ -1,3 +1,4 @@
+import { m, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { type CSSProperties, type RefCallback, useId } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
@@ -5,6 +6,7 @@ import { cn } from "@/shared/lib/cn";
 import { pluralize } from "@/shared/lib/format";
 import { amenityLabel, propertyTypeLabel } from "@/shared/lib/labels";
 import { hotelHref } from "@/shared/lib/links";
+import { motionPreset } from "@/shared/lib/motion";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { CompareCheckbox, FavoriteButton } from "@/shared/saved";
 import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui";
@@ -42,6 +44,8 @@ type HotelCardProps = {
   priority?: boolean;
   /** Só na rolagem contínua: o `article` vira item do `feed`. */
   feed?: FeedItemProps;
+  /** Entrada em fade (só opacidade) no primeiro mount, com este atraso (s); `null` não anima. */
+  fade?: { delay: number } | null;
 };
 
 const AmenityList = ({
@@ -91,14 +95,19 @@ export const HotelCard = ({
   center,
   priority = false,
   feed,
+  fade = null,
 }: HotelCardProps) => {
+  const preset = motionPreset("list-item", useReducedMotion() ?? false);
   const titleId = useId();
   const prefetch = usePrefetchHotel(hotel.id);
   const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id));
 
   return (
-    <article
+    <m.article
       ref={feed?.ref}
+      initial={fade ? preset.initial : false}
+      animate={preset.animate}
+      transition={{ ...preset.transition, delay: fade?.delay ?? 0 }}
       style={feed?.style}
       data-index={feed?.index}
       aria-posinset={feed?.posInSet}
@@ -144,6 +153,6 @@ export const HotelCard = ({
           <CompareCheckbox hotelId={hotel.id} hotelName={hotel.name} className="min-h-11" />
         </div>
       </div>
-    </article>
+    </m.article>
   );
 };
