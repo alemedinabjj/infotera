@@ -172,6 +172,8 @@ test.describe("filtros na barra lateral", () => {
 
   test("o mínimo não passa do máximo", async ({ page }) => {
     await page.goto(searchPath("maxPrice=500"));
+    // Só mexe no slider depois da hidratação (a lista chegando prova que o cliente está de pé).
+    await expect(cards(page).first()).toBeVisible();
     const min = page.getByLabel("Mínimo");
     await min.focus();
     await page.keyboard.press("End");
