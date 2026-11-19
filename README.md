@@ -47,3 +47,15 @@
   (ex.: `L-nHVI_`, o das reservas criadas pelo `curl` da mock-api); id só com dígitos não abre, para não enumerar reservas. O histórico local (`infotera:booking-history`) guarda só ids.
 - Limite dos E2E: hotel e quarto são buscados pelo servidor do Next, então `_delay`/`_fail` não passam pelo `page.route`;
   esses cenários ficam em unit e teste de componente. Cancelar/alterar, imprimir/PDF e compartilhar o link ficam como evolução.
+
+## Extras de produto (F7a): decisões para registrar
+- **Favoritos, comparação e histórico são locais** (`localStorage`, só ids validados com Zod): não há autenticação e a mock-api não tem esse recurso
+  (`POST /favorites` → 404 no json-server). Uma lista no servidor seria a mesma para todo mundo; fica como evolução. `GET /bookings` (todas as
+  reservas, com PII) nunca é usado.
+- **Rotas em inglês** (`/favorites`, `/compare`, `/my-bookings`), consistentes com `/search`, `/hotel`, `/checkout`; os textos da tela são pt-BR. Os slugs
+  vivem em `shared/saved/model/routes.ts`.
+- **Motion** (`motion@14.14.0`, `LazyMotion` assíncrono e `m.*` em modo `strict`): só `opacity`/`transform`, nada que o servidor renderiza começa
+  invisível, `prefers-reduced-motion` respeitado (`MotionConfig reducedMotion="user"` + presets sem deslocamento e fade ≤ 150 ms).
+- **Costuras com a F7b/F7c**: `bookingQueryOptions` tem `meta: { sensitive: true }` (o cache offline não deve persistir PII); todo texto novo está em
+  `messages.ts` por módulo; `ComparisonView` aceita `headingLevel` e lê a URL (modal por Parallel Routes); `isTrayHiddenOn` é a condição da bandeja.
+

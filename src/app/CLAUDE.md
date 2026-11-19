@@ -19,6 +19,9 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 | `/hotel/[hotelId]` | `hotel-details` |
 | `/checkout` | `checkout` |
 | `/confirmation/[bookingId]` | `booking-confirmation` |
+| `/favorites` | `favorites` |
+| `/compare` | `hotel-comparison` |
+| `/my-bookings` | `booking-history` |
 
 ## `/checkout` (F5)
 - `page.tsx` chama `await connection()` (nonce por request exige renderização dinâmica) e `src/proxy.ts` aplica a
@@ -27,3 +30,9 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 ## `/confirmation/[bookingId]` (F6)
 - `page.tsx` chama `await connection()` (rota sempre dinâmica, `no-store`: tem PII) e valida o id com `parseBookingId` antes de
   qualquer request. `error.tsx` só importa `@/shared/ui`; `not-found.tsx` exporta `metadata` com `noindex, nofollow`.
+
+## F7a (extras)
+- `/favorites`, `/compare` e `/my-bookings` são cascas **estáticas** com ilha cliente (`metadata` com `robots: { index: false }`): nenhum dado
+  no servidor. `/compare` lê `?hotel=` no cliente dentro de `<Suspense fallback={<ComparisonFallback />}>`.
+- `layout.tsx` monta `SavedNav` (slot `actions` do `SiteHeader`) e `CompareTray`; o `<main>` reserva o fim com
+  `pb-[calc(var(--bottom-bar-height,0px)+1.5rem)]`. Importa os dois direto de `@/shared/saved/components/*` (Server Component).

@@ -62,3 +62,7 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
 Unit em `model/` e `api/` (tabelas para validadores, gate, cupons); componente por seção com `fetch` stubado e a action mockada
 (`checkout-test-utils.tsx`); `console.*` espionado; E2E em `e2e/checkout*.spec.ts` (rode também contra o build para a CSP).
 Falhas da mock-api **dentro** da action não passam pelo `page.route`: cobertas em `create-booking.server.test.ts`.
+
+## F7a (extras)
+- `AnimatedStep` envolve o passo atual: só o passo novo anima (`x` ±16 + fade, direção por `stepDirection`), sem saída, sem animar na
+  1ª renderização, com `overflow-x-clip`. O foco no `h2` do passo não mudou.

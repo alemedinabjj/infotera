@@ -8,7 +8,7 @@ no servidor e lidos no cliente. Spec: `docs/specs/F4-hotel-details.md` (inclui `
 api/hotel.server.ts      loadHotel(id, queryClient?) (404 → { kind: "not-found" }; outros erros relançados)
 api/reviews.ts           fetchReviewsPage · reviewsQueryOptions(hotelId, page) · REVIEWS_PAGE_SIZE (_sort=date,id desc)
 api/similar.ts           fetchSimilarHotels(destination, excludeId) (RSC, sem cache do cliente)
-model/                   hotel-id (parseHotelId) · metadata · from-price · room-selectability · room-labels ·
+model/                   hotel-id (parseHotelId) · metadata · room-selectability · room-labels ·
                          room-comparison · gallery · static-map (Web Mercator) · cancellation · breadcrumb ·
                          sections (HOTEL_SECTIONS, ids) · reviews
 hooks/                   useSelectRoom · useSectionRetry · useReviewsPage (+ useFocusOnNewPage) · useLightbox ·
@@ -58,3 +58,11 @@ index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, 
 Unit em `model/` e `api/` (seeds reais via `shared/testing/seed`); componente por seção; E2E em
 `e2e/hotel-details*.spec.ts`. Falhas do **servidor** (hotel, 1ª página) não passam pelo `page.route`: são provadas
 em teste de página/componente com `fetch` stubado.
+
+## F7a (extras)
+- `HotelHeader` ganhou `FavoriteButton` (ao lado do h1) e `CompareCheckbox` (na linha de ações, antes de "Copiar link"):
+  importados direto de `@/shared/saved/components/*` porque o header é Server Component (o barrel `saved/index.ts` puxa os stores).
+- Promovidos para `shared`: `lowestNightlyPrice` (`lib/pricing`), `searchHref` (`lib/links`), `makeRow`/`ComparisonRow`/`onlyDifferences`
+  (`lib/comparison`), a tabela (`ui/molecules/ComparisonTable`, com "Mostrar só diferenças", legenda e anúncio) e o card
+  compacto (`ui/molecules/CompactHotelCard`, que substituiu o `SimilarHotelCard`). Os textos da tabela de quartos ficam em
+  `ROOM_COMPARISON_MESSAGES` (`model/room-comparison.ts`).
