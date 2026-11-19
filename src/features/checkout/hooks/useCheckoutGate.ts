@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   type RoomSelection,
   useBookingDraftHydrated,
@@ -28,13 +28,16 @@ export const useCheckoutGate = (
   const document = useStrictDocument();
   const gate = selectionGate({ hydrated, selection: live, submitted: leaving !== null, document });
   const redirected = useRef(false);
+  // Só dá para saber que não há seleção depois de hidratar o `sessionStorage` (cliente): não existe
+  // alternativa de redirect no servidor. `replace` para o checkout não ficar no histórico.
+  const leaveToHome = useCallback(() => router.replace("/"), [router]);
 
   useEffect(() => {
     if (gate !== "redirect-empty" || redirected.current) return;
     redirected.current = true;
     toast.info(NO_SELECTION_MESSAGE);
-    router.replace("/");
-  }, [gate, router]);
+    leaveToHome();
+  }, [gate, leaveToHome]);
 
   return { gate, selection: leaving ?? live };
 };

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
+import { queryKeys } from "@/shared/api/query-keys";
 import { useOnline } from "@/shared/hooks/useOnline";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
 import { toast } from "@/shared/ui";
@@ -57,7 +58,11 @@ export const useSubmitBooking = ({
   const attempt = useRef<Attempt | null>(null);
   const keyRef = useRef(0);
   const [state, setState] = useState<SubmitState>({ kind: "none" });
-  const mutation = useMutation({ mutationFn: createBookingAction });
+  const mutation = useMutation({
+    mutationFn: createBookingAction,
+    // Reserva nova: qualquer leitura de reserva em cache (F6) fica desatualizada.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all }),
+  });
 
   const show = (next: (key: number) => SubmitState) => {
     keyRef.current += 1;

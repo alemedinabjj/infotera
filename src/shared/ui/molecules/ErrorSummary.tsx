@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { revealBelowHeader } from "../../lib/scroll";
 import { Alert } from "./Alert";
+import { describeErrorCount } from "./error-count";
 
 export type ErrorSummaryItem<Id extends string = string> = {
   id: Id;
@@ -14,10 +15,6 @@ type ErrorSummaryProps<Id extends string> = {
   items: ErrorSummaryItem<Id>[];
   onSelect: (id: Id) => void;
 };
-
-/** `Corrija 1 campo para continuar` / `Corrija N campos para continuar`. */
-export const describeErrorCount = (count: number): string =>
-  `Corrija ${count} ${count === 1 ? "campo" : "campos"} para continuar`;
 
 /**
  * Resumo no topo do formulário (`role="alert"`): um botão por erro que leva o foco ao campo.

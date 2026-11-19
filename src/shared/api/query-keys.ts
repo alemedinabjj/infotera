@@ -19,6 +19,7 @@ export const queryKeys = {
     detail: (code: string) => ["coupons", "detail", code] as const,
   },
   bookings: {
+    all: ["bookings"] as const,
     detail: (id: number | string) => ["bookings", "detail", id] as const,
   },
 };

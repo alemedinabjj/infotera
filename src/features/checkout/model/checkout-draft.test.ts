@@ -66,9 +66,8 @@ describe("toPersistedDraft", () => {
   });
 
   it("round-trip pelo schema devolve contato e acompanhantes (idade vazia)", () => {
-    const parsed = persistedDraftSchema.parse(
-      JSON.parse(JSON.stringify(toPersistedDraft(values, "review"))),
-    );
+    const serialized = JSON.stringify(toPersistedDraft(values, "review"));
+    const parsed = persistedDraftSchema.parse(JSON.parse(serialized));
     const restored = fromPersistedDraft(parsed);
     expect(restored.step).toBe("review");
     expect(restored.contact).toEqual(values.contact);
