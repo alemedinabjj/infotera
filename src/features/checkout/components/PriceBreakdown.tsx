@@ -61,7 +61,7 @@ export const PriceBreakdown = ({ price, couponValidating = false }: PriceBreakdo
         {rest.map((line) => (
           <Row key={line.kind} line={line} />
         ))}
-        <div className="flex items-start justify-between gap-3 border-t border-border pt-3">
+        <div className="flex items-start justify-between gap-3 border-t border-border bg-surface pt-3 lg:sticky lg:bottom-0 lg:-mx-4 lg:-mb-4 lg:px-4 lg:pb-4">
           <dt className="text-base font-semibold text-fg">Total</dt>
           <dd className="shrink-0 text-2xl font-bold whitespace-nowrap text-fg tabular-nums">
             {formatCents(quote.totalCents)}

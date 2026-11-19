@@ -694,8 +694,9 @@ no fim da spec.
    todas as larguras: o que estou comprando → meus dados. Descartado: dois resumos (um `lg:hidden`,
    outro `hidden lg:block`), porque daria estado de cupom duplicado, ids duplicados e testes ambíguos.
 2. **Barra de ação fixa abaixo de `lg`, e ela é a própria ação primária do passo.** Mostra o total e o
-   botão do passo. No `lg+` a barra some: o botão vai para o fim do card do formulário e o resumo
-   lateral não tem botão (uma primária por tela). "Voltar" nunca vai na barra: fica no fim do card,
+   botão do passo. No `lg+` a barra vira um card estático no fim do formulário com "Total R$ X" ao lado do
+   botão (o total não some na hora de confirmar); o resumo lateral não tem botão (uma primária por
+   tela) e mantém a linha do total fixa no rodapé dele (`sticky bottom-0`), rolando só o miolo. "Voltar" nunca vai na barra: fica no fim do card,
    em todas as larguras. Abaixo de `sm` a barra tem duas linhas (total em cima, botão `fullWidth`
    embaixo), porque "Continuar para pagamento" + total não cabem numa linha de 288 px.
 3. **Rótulos da ação dizem para onde ela leva** (DS §6.2): "Continuar para pagamento" → "Revisar
@@ -846,8 +847,8 @@ cujo painel fechado não fica montado (ver mudança no DS §5.2).
   o primário fica à direita (`sm:ml-auto`). Passos 2 e 3: `[Voltar]` (secondary) à esquerda e
   primário à direita. Abaixo de `lg`, "Voltar" é `fullWidth` e o primário está na barra.
 - O primário é **um só elemento**: `Button type="submit"` dentro do `<form>`. Abaixo de `lg` ele mora
-  no `ActionBar` (`fixed`, com `data-action-bar`). No `lg+` o `ActionBar` vira `lg:static lg:border-0
-  lg:shadow-none lg:p-0`, a linha do total fica `lg:hidden` e o botão aparece no fim do card. Não há
+  no `ActionBar` (`fixed`, com `data-action-bar`). No `lg+` o `ActionBar` vira `lg:static lg:rounded-card
+  lg:border lg:bg-canvas lg:p-4 lg:shadow-none`, com a linha do total visível ao lado do botão, no fim do card. Não há
   duplicação de botão.
 - `ActionBar` `≥ sm` (640–1023): uma linha `flex items-center justify-between gap-4`. À esquerda, o
   total (valor `text-xl font-bold` em cima, `3 noites · 1 quarto` `text-sm text-fg-muted` embaixo); à

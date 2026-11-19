@@ -434,8 +434,11 @@ no topo; também cobriria os toasts.
 └──────────────────────────────────────┘     └──────────────────────────────────────────────┘
 ```
 - `fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-border shadow-raised px-4 pt-3
-  pb-[max(0.75rem,env(safe-area-inset-bottom))]` com `data-action-bar`. Some em `lg:` (`lg:static`, sem
-  borda/sombra/padding; a linha do total fica `lg:hidden` e o botão aparece no fim do formulário).
+  pb-[max(0.75rem,env(safe-area-inset-bottom))]` com `data-action-bar`. No `lg+` vira um
+  card estático no fim do formulário (`lg:static lg:rounded-card lg:border lg:bg-canvas lg:p-4`,
+  sem sombra) e **mantém a linha "Total R$ X" ao lado do botão**: o total nunca some na hora de
+  confirmar. O aside de resumo mantém a linha do total fixa no rodapé dele (`lg:sticky lg:bottom-0`
+  sobre o `bg-surface`) e rola só o miolo.
 - O botão da barra **é** o submit do passo (um só elemento, dentro do `<form>`), nunca uma cópia.
   Ações secundárias ("Voltar") ficam no fim do conteúdo, não na barra.
 - `< sm`: linha 1 `flex items-baseline justify-between gap-3` (texto `text-sm text-fg-muted`, valor
