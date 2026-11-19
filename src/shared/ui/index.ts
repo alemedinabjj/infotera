@@ -12,6 +12,7 @@ export { Spinner } from "./atoms/Spinner";
 export { Stars } from "./atoms/Stars";
 export { VisuallyHidden } from "./atoms/VisuallyHidden";
 export { ErrorBoundary } from "./ErrorBoundary";
+export { FocusOnMount } from "./FocusOnMount";
 export * from "./icons";
 export { SiteHeader } from "./layout/SiteHeader";
 export { SkipLink } from "./layout/SkipLink";
