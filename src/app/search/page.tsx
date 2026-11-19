@@ -11,7 +11,7 @@ import {
   searchPageTitle,
 } from "@/features/hotel-search";
 import { SearchForm } from "@/features/search-form";
-import { todayISO } from "@/shared/lib/dates";
+import { isBeforeToday, todayISO } from "@/shared/lib/dates";
 
 export const generateMetadata = async ({
   searchParams,
@@ -37,15 +37,16 @@ const SearchPage = async ({ searchParams }: PageProps<"/search">) => {
   const stay = page.kind === "stay" ? page.criteria : null;
   const destination = stay?.destination ?? (page.kind === "browse" ? page.destination : "");
   const key = searchPageKey(page);
+  const today = todayISO();
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
       <SearchHeader
         key={key}
         destination={destination}
-        summary={describeSearchSummary(stay, todayISO())}
+        summary={describeSearchSummary(stay, today)}
         mode={stay ? "stay" : "browse"}
-        checkIn={stay?.checkIn ?? null}
+        pastDates={stay ? isBeforeToday(stay.checkIn, today) : false}
         editForm={
           <SearchForm
             key={key}

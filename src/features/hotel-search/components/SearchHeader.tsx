@@ -1,9 +1,7 @@
 "use client";
 
 import { type ReactNode, useRef, useState } from "react";
-import { useToday } from "@/shared/hooks/useToday";
 import { cn } from "@/shared/lib/cn";
-import { type ISODate, isBeforeToday } from "@/shared/lib/dates";
 import { Alert, Button, ChevronDownIcon, LinkIcon } from "@/shared/ui";
 import { markEditSubmitted, useFocusAfterEdit } from "../hooks/useFocusAfterEdit";
 import { copyCurrentUrl } from "./copyCurrentUrl";
@@ -18,8 +16,11 @@ type SearchHeaderProps = {
   summary: string;
   /** `browse`: destino sem datas válidas (painel aberto e aviso pedindo as datas). */
   mode: "stay" | "browse";
-  /** Check-in da busca (modo `stay`), para avisar quando já passou. */
-  checkIn: ISODate | null;
+  /**
+   * O check-in já passou. Calculado no servidor (`app/` tem a data de hoje): o aviso já vem no
+   * HTML e não desloca a página depois da hidratação.
+   */
+  pastDates: boolean;
   /** O `SearchForm` da F2, montado por `app/` (feature não importa feature). */
   editForm: ReactNode;
 };
@@ -44,14 +45,12 @@ export const SearchHeader = ({
   destination,
   summary,
   mode,
-  checkIn,
+  pastDates,
   editForm,
 }: SearchHeaderProps) => {
   const [open, setOpen] = useState(mode === "browse");
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const today = useToday();
   useFocusAfterEdit(headingRef);
-  const pastDates = today !== null && checkIn !== null && isBeforeToday(checkIn, today);
 
   return (
     <header className="flex flex-col gap-4">

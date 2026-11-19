@@ -1,7 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { addDays, todayISO } from "@/shared/lib/dates";
 import { Toaster } from "@/shared/ui";
 import { MissingDestination } from "./MissingDestination";
 import { SearchHeader } from "./SearchHeader";
@@ -21,7 +20,7 @@ const renderHeader = (props: Partial<Parameters<typeof SearchHeader>[0]> = {}) =
         destination="Rio de Janeiro, RJ"
         summary={SUMMARY}
         mode="stay"
-        checkIn={addDays(todayISO(), 30)}
+        pastDates={false}
         editForm={<Form />}
         {...props}
       />
@@ -68,7 +67,7 @@ describe("SearchHeader: modo stay (critério 26)", () => {
 
 describe("SearchHeader: datas passadas (critério 27)", () => {
   it("mostra o aviso quando o check-in já passou", async () => {
-    renderHeader({ checkIn: "2020-01-10" });
+    renderHeader({ pastDates: true });
     expect(await screen.findByText("As datas desta busca já passaram")).toBeInTheDocument();
     expect(screen.getByText(/Use "Alterar busca"/)).toBeInTheDocument();
   });
@@ -76,7 +75,7 @@ describe("SearchHeader: datas passadas (critério 27)", () => {
 
 describe("SearchHeader: modo browse (critério 25)", () => {
   it("painel aberto com o aviso pedindo as datas antes do formulário", () => {
-    renderHeader({ mode: "browse", summary: "Datas não definidas", checkIn: null });
+    renderHeader({ mode: "browse", summary: "Datas não definidas" });
     expect(screen.getByText("Datas não definidas")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Alterar busca" })).toHaveAttribute(
       "aria-expanded",
