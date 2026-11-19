@@ -1,3 +1,4 @@
+import { fetchBooking } from "@/shared/api/endpoints";
 import { type ApiErrorKind, apiGet, apiPost, isApiError } from "@/shared/api/http";
 import { bookingSchema, hotelSchema, roomSchema } from "@/shared/api/schemas";
 import { todayISO } from "@/shared/lib/dates";
@@ -43,7 +44,7 @@ const isAmbiguousFailure = (error: unknown): boolean =>
 
 const bookingExists = async (id: string): Promise<boolean> => {
   try {
-    await apiGet(`/bookings/${id}`, bookingSchema);
+    await fetchBooking(id);
     return true;
   } catch {
     return false;
