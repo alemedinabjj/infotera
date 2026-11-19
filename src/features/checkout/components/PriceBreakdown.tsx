@@ -1,10 +1,14 @@
 "use client";
 
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
+import {
+  formatCents,
+  type PriceLine,
+  priceLineAmount,
+  priceLineLabel,
+} from "@/shared/lib/price-breakdown";
 import { ErrorState, Skeleton } from "@/shared/ui";
 import type { CheckoutPrice } from "../hooks/checkout-price";
-import type { PriceLine } from "../model/price";
-import { formatCents, priceLineAmount, priceLineLabel } from "../model/price-labels";
 import { PriceBreakdownSkeleton } from "./PriceBreakdownSkeleton";
 
 type PriceBreakdownProps = {

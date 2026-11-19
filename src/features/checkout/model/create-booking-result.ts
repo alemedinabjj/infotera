@@ -1,9 +1,9 @@
 import type { ApiErrorKind } from "@/shared/api/http";
 import { pluralize } from "@/shared/lib/format";
+import { formatCents } from "@/shared/lib/price-breakdown";
 import type { CheckoutFieldPath } from "./checkout.schema";
 import type { CouponRejection } from "./coupons";
 import type { PriceQuote } from "./price";
-import { formatCents } from "./price-labels";
 
 /** Retorno da Server Action. A action **não lança**: o Next esconde mensagens em produção. */
 export type CreateBookingResult =
