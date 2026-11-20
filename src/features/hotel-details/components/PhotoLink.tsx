@@ -7,7 +7,7 @@ import { Dialog } from "@/shared/ui";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { usePhotoOpening } from "../hooks/usePhotoOpening";
 import { PhotoLoadingBody, PhotoLoadingFooter } from "./PhotoModalLoading";
-import { PHOTO_RETRY_SELECTOR, PhotoOpenError } from "./PhotoOpenError";
+import { PHOTO_RETRY_SELECTOR, PhotoOpenError, photoOpenStatus } from "./PhotoOpenError";
 
 type PhotoLinkProps = {
   href: string;
@@ -55,7 +55,7 @@ export const PhotoLink = ({ href, label, className, main, children }: PhotoLinkP
           {phase === "opening" ? (
             <PhotoLoadingBody />
           ) : (
-            <PhotoOpenError online={online} onRetry={retry} />
+            <PhotoOpenError status={photoOpenStatus(true, online)} onRetry={retry} />
           )}
         </Dialog>
       )}

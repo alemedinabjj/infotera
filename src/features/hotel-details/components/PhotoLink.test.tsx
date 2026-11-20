@@ -54,6 +54,23 @@ describe("PhotoLink offline (critério 18, U6)", () => {
     expect(navigationSpies.push).toHaveBeenCalledWith("/hotel/1/photos/3", { scroll: false });
   });
 
+  it("retry ainda offline anuncia 'Ainda não foi possível'; com a conexão de volta o cartão fica neutro", async () => {
+    const user = userEvent.setup();
+    renderLink();
+    setOnline(false);
+    await user.click(screen.getByRole("link", { name: "Abrir foto 3 de 5" }));
+    const dialog = await screen.findByRole("dialog", { name: "Fotos do hotel" });
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Ainda não foi possível abrir a foto. Tente de novo.",
+    );
+    setOnline(true);
+    expect(dialog).toHaveTextContent("Conexão de volta");
+    expect(dialog).toHaveTextContent("Tente de novo.");
+    expect(dialog).not.toHaveTextContent("Não foi possível abrir a foto");
+  });
+
   it("'Fechar' fecha o estado offline e devolve o foco ao link", async () => {
     const user = userEvent.setup();
     renderLink();

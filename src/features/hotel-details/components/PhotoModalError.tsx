@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useOnline } from "@/shared/hooks/useOnline";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { PhotoModalFrame } from "./PhotoModalFrame";
-import { PHOTO_RETRY_SELECTOR, PhotoOpenError } from "./PhotoOpenError";
+import { PHOTO_RETRY_SELECTOR, PhotoOpenError, photoOpenStatus } from "./PhotoOpenError";
 
 type PhotoModalErrorProps = { retry: () => void };
 
@@ -19,7 +19,7 @@ export const PhotoModalError = ({ retry }: PhotoModalErrorProps) => {
   return (
     <PhotoModalFrame title={t.modalLoadingTitle} initialFocus={PHOTO_RETRY_SELECTOR}>
       <PhotoOpenError
-        online={online}
+        status={photoOpenStatus(false, online)}
         onRetry={() => {
           retry();
           router.refresh();

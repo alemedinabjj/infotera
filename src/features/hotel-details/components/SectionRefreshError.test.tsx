@@ -51,6 +51,27 @@ describe("falha do catálogo no servidor (critério 24 da F4)", () => {
     unmount();
   });
 
+  it("o retry que falha de novo anuncia 'Ainda não foi possível' (aria-live), sem texto antes", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <RoomsSection
+        locale="pt-BR"
+        hotelId={1}
+        rooms={{ kind: "error" }}
+        hotelAvailableRooms={3}
+        cancellationPolicy="free"
+        criteria={Promise.resolve(null)}
+      />,
+    );
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    await vi.waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Ainda não foi possível carregar. Tente de novo.",
+      ),
+    );
+  });
+
   it("comentários: erro da seção, a nota agregada continua", () => {
     const { container } = renderWithProviders(
       <ReviewsSection

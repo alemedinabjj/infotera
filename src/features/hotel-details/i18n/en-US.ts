@@ -81,6 +81,9 @@ export const enUS: HotelDetailsMessages = {
     openErrorBody: "Check your connection and try again.",
     offlineTitle: "You're offline",
     offlineBody: "The photo will open once you're back online.",
+    reconnectedTitle: "Back online",
+    reconnectedBody: "Try again.",
+    stillFailing: "Still couldn't open the photo. Try again.",
   },
   build: {
     waiting: ({ attempt, total }) => `Waiting for the mock-api (attempt ${attempt}/${total})…`,
@@ -194,5 +197,6 @@ export const enUS: HotelDetailsMessages = {
   },
   errors: {
     sectionRetry: "Check your connection and try again.",
+    stillFailing: "Still couldn't load. Try again.",
   },
 };

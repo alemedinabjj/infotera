@@ -83,6 +83,9 @@ export const ptBR = {
     openErrorBody: "Verifique sua conexão e tente de novo.",
     offlineTitle: "Você está sem internet",
     offlineBody: "A foto abre assim que a conexão voltar.",
+    reconnectedTitle: "Conexão de volta",
+    reconnectedBody: "Tente de novo.",
+    stillFailing: "Ainda não foi possível abrir a foto. Tente de novo.",
   },
   build: {
     waiting: ({ attempt, total }: { attempt: number; total: number }) =>
@@ -211,6 +214,7 @@ export const ptBR = {
   },
   errors: {
     sectionRetry: "Verifique sua conexão e tente de novo.",
+    stillFailing: "Ainda não foi possível carregar. Tente de novo.",
   },
 };
 

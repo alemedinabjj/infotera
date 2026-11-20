@@ -4,6 +4,8 @@ import { useLocale } from "@/shared/i18n/client";
 import { ErrorState } from "@/shared/ui";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { useRefreshRetry } from "../hooks/useRefreshRetry";
+import { useStillFailing } from "../hooks/useStillFailing";
+import { StillFailingNotice } from "./StillFailingNotice";
 
 type SectionRefreshErrorProps = {
   /** `id` do h2 da seção: recebe o foco quando o retry traz o conteúdo de volta. */
@@ -19,6 +21,7 @@ export const SectionRefreshError = ({ headingId, title }: SectionRefreshErrorPro
   const locale = useLocale();
   const t = useHotelDetailsMessages().errors;
   const { retry, retrying, anchorRef } = useRefreshRetry(headingId);
+  const stillFailing = useStillFailing(retrying);
   return (
     <div ref={anchorRef}>
       <ErrorState
@@ -29,6 +32,7 @@ export const SectionRefreshError = ({ headingId, title }: SectionRefreshErrorPro
         onRetry={retry}
         retrying={retrying}
       />
+      <StillFailingNotice show={stillFailing} message={t.stillFailing} />
     </div>
   );
 };
