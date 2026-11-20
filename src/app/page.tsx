@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SearchForm } from "@/features/search-form";
-import { CHOOSE_ROOM_NOTICE, HOME_NOTICE_PARAM } from "@/shared/lib/links";
-import { Alert } from "@/shared/ui";
+import { HomeNotice } from "./HomeNotice";
 
 export const metadata: Metadata = {
   title: "Buscar hotéis | Infotera Hotéis",
@@ -9,13 +9,12 @@ export const metadata: Metadata = {
 
 const HEADING_ID = "search-heading";
 
-const HomePage = async ({ searchParams }: PageProps<"/">) => {
-  const notice = (await searchParams)[HOME_NOTICE_PARAM];
+const HomePage = () => {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8 lg:gap-12">
-      {notice === CHOOSE_ROOM_NOTICE ? (
-        <Alert tone="info">Escolha um quarto para continuar.</Alert>
-      ) : null}
+      <Suspense fallback={null}>
+        <HomeNotice />
+      </Suspense>
       <header>
         <h1 id={HEADING_ID} className="text-2xl font-bold text-fg lg:text-3xl">
           Encontre seu hotel

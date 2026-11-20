@@ -1,19 +1,19 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { setTestUrl } from "@/shared/testing/next-navigation";
 import { renderWithProviders } from "@/shared/testing/render";
 import HomePage, { metadata } from "./page";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock(
+  "next/navigation",
+  async () => (await import("@/shared/testing/next-navigation")).navigationMock,
+);
 
 describe("HomePage", () => {
-  const props = (notice?: string) =>
-    ({
-      params: Promise.resolve({}),
-      searchParams: Promise.resolve(notice ? { notice } : {}),
-    }) satisfies PageProps<"/">;
+  beforeEach(() => setTestUrl("/"));
 
-  it("tem título em pt-BR, um único h1 e o formulário nomeado por ele", async () => {
-    renderWithProviders(await HomePage(props()));
+  it("tem título em pt-BR, um único h1 e o formulário nomeado por ele", () => {
+    renderWithProviders(<HomePage />);
     expect(metadata.title).toBe("Buscar hotéis | Infotera Hotéis");
     const headings = screen.getAllByRole("heading", { level: 1 });
     expect(headings).toHaveLength(1);
@@ -23,13 +23,14 @@ describe("HomePage", () => {
     expect(screen.getByRole("button", { name: "Buscar hotéis" })).toBeInTheDocument();
   });
 
-  it("mostra o aviso visível quando o checkout redirecionou sem quarto", async () => {
-    renderWithProviders(await HomePage(props("choose-room")));
+  it("mostra o aviso visível quando o checkout redirecionou sem quarto", () => {
+    setTestUrl("/?notice=choose-room");
+    renderWithProviders(<HomePage />);
     expect(screen.getByText("Escolha um quarto para continuar.")).toBeVisible();
   });
 
-  it("sem o parâmetro não mostra o aviso", async () => {
-    renderWithProviders(await HomePage(props()));
+  it("sem o parâmetro não mostra o aviso", () => {
+    renderWithProviders(<HomePage />);
     expect(screen.queryByText("Escolha um quarto para continuar.")).not.toBeInTheDocument();
   });
 });
