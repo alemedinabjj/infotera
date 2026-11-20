@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/shared/i18n/client";
+import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
+import { localizePath } from "@/shared/i18n/paths";
 import { cn } from "@/shared/lib/cn";
 import { useBookingDraftActions } from "@/shared/stores/booking-draft";
 import { buttonClassName } from "@/shared/ui";
@@ -12,7 +15,7 @@ type NewSearchLinkProps = {
 };
 
 /**
- * "Fazer nova busca": um `<Link href="/">` (navegação com semântica de link, funciona sem JS)
+ * "Fazer nova busca": um `<Link href={localizePath(locale, "/")}>` (navegação com semântica de link, funciona sem JS)
  * que, com JS, limpa a seleção do `booking-draft` antes de sair: "nova busca" é recomeçar, mesmo
  * que a pessoa tenha chegado por outra aba ou pelo histórico com uma seleção antiga.
  */
@@ -21,9 +24,11 @@ export const NewSearchLink = ({
   responsiveWidth = false,
 }: NewSearchLinkProps) => {
   const { clearSelection } = useBookingDraftActions();
+  const locale = useLocale();
+  const label = useCommonMessages().routes.newSearch;
   return (
     <Link
-      href="/"
+      href={localizePath(locale, "/")}
       onClick={clearSelection}
       className={cn(
         buttonClassName({ variant }),
@@ -31,7 +36,7 @@ export const NewSearchLink = ({
         "print:hidden",
       )}
     >
-      Fazer nova busca
+      {label}
     </Link>
   );
 };

@@ -1,4 +1,6 @@
+import type { Locale } from "@/shared/i18n/config";
 import { Skeleton } from "@/shared/ui";
+import { confirmationMessages } from "../i18n/messages";
 
 // A geometria acompanha o conteúdo final (medida no navegador, com o hotel do seed): abaixo de
 // 360px o nome ocupa 3 linhas e o endereço 4; de 360 a 479px, 2 e 3; depois só 1 e 1 (a foto
@@ -69,11 +71,13 @@ const PolicySkeleton = () => (
  * conteúdo chega; o E2E de layout mede o h2 "Hóspedes"). Termina no `border-t` das datas, que já
  * estão na tela.
  */
-export const StayDetailsSkeleton = ({ announce = true }: { announce?: boolean }) => (
+type StayDetailsSkeletonProps = { locale: Locale; announce?: boolean };
+
+export const StayDetailsSkeleton = ({ locale, announce = true }: StayDetailsSkeletonProps) => (
   <div aria-busy="true" className="flex flex-col gap-4">
     {announce ? (
       <p aria-live="polite" className="sr-only">
-        Carregando dados do hotel…
+        {confirmationMessages.get(locale).loadingStay}
       </p>
     ) : null}
     <HotelSkeleton />

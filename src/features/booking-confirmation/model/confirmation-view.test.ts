@@ -188,3 +188,22 @@ describe("checkTimes", () => {
     expect(checkTimes(hotel)).toEqual({ checkInTime: checkIn, checkOutTime: checkOut });
   });
 });
+
+describe("em en-US", () => {
+  it("resumo, datas e horários no idioma", () => {
+    const view = toBookingView(makeBooking(), TODAY, "en-US");
+    expect(view.bookedAt).toBe("Nov 19, 2026, 12:04 PM");
+    expect(view.stayLabel).toBe("Dec 12–15 · 3 nights");
+    expect(view.stayDetails).toBe("3 nights · 2 adults, 1 child · 1 room");
+    expect(view.checkInDate).toMatch(/Sat, Dec 12/);
+    expect(checkTimes(ok(makeHotel()), "en-US").checkInTime).toMatch(/^From /);
+    expect(checkTimes(missing, "en-US").checkInTime).toBe("Check with the hotel");
+    expect(checkTimes(failed, "en-US").checkOutTime).toBe("Unavailable right now");
+  });
+
+  it("avisos e título de erro do hotel e do quarto", () => {
+    const view = toStayView(makeBooking(), missing, failed, "en-US");
+    expect(view.hotel).toMatchObject({ notice: "This hotel's details are no longer available." });
+    expect(view.errorTitle).toBe("We couldn't load the room details.");
+  });
+});

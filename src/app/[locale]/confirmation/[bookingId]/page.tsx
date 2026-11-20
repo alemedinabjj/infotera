@@ -6,11 +6,14 @@ import {
   generateConfirmationMetadata,
   parseBookingId,
 } from "@/features/booking-confirmation";
+import { DEFAULT_LOCALE, isLocale } from "@/shared/i18n/config";
 
 export const generateMetadata = async ({
   params,
-}: PageProps<"/[locale]/confirmation/[bookingId]">): Promise<Metadata> =>
-  generateConfirmationMetadata((await params).bookingId);
+}: PageProps<"/[locale]/confirmation/[bookingId]">): Promise<Metadata> => {
+  const { locale, bookingId } = await params;
+  return generateConfirmationMetadata(bookingId, isLocale(locale) ? locale : DEFAULT_LOCALE);
+};
 
 /**
  * `/confirmation/[bookingId]`. Sempre dinâmica (`connection()`): a página tem nome, e-mail e

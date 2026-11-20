@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getLocale } from "@/shared/i18n/server";
 import { todayISO } from "@/shared/lib/dates";
 import { loadBooking, loadStayDetails } from "../api/confirmation.server";
 import type { BookingId } from "../model/booking-id";
@@ -13,6 +14,7 @@ import { UnreadableBooking } from "./UnreadableBooking";
  */
 export const BookingConfirmation = async ({ id }: { id: BookingId }) => {
   const load = await loadBooking(id);
+  const locale = await getLocale();
   switch (load.kind) {
     case "found":
       return (
@@ -20,12 +22,13 @@ export const BookingConfirmation = async ({ id }: { id: BookingId }) => {
           booking={load.booking}
           details={loadStayDetails(load.booking)}
           today={todayISO()}
+          locale={locale}
         />
       );
     case "not-found":
       return notFound();
     case "unreadable":
-      return <UnreadableBooking />;
+      return <UnreadableBooking locale={locale} />;
     default: {
       const unreachable: never = load;
       return unreachable;

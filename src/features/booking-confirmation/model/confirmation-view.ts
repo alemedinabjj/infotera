@@ -1,8 +1,10 @@
 import type { Booking, Hotel, Room } from "@/shared/api/schemas";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { formatUnit } from "@/shared/i18n/units";
 import { type CancellationDetails, cancellationDetails } from "@/shared/lib/cancellation";
 import { reaisToCents } from "@/shared/lib/currency";
 import { formatDate, formatDateRange, type ISODate, nightsBetween } from "@/shared/lib/dates";
-import { formatGuests, pluralize } from "@/shared/lib/format";
+import { formatGuests } from "@/shared/lib/format";
 import { hotelHref } from "@/shared/lib/links";
 import {
   isBreakdownConsistent,
@@ -10,6 +12,7 @@ import {
   priceBreakdownLines,
 } from "@/shared/lib/price-breakdown";
 import { bedsLabel } from "@/shared/lib/room-labels";
+import { confirmationMessages } from "../i18n/messages";
 import { formatBookedAt } from "./booked-at";
 import { describeGuests, type GuestsView } from "./guests";
 import type { Settled } from "./load-result";
@@ -38,18 +41,22 @@ export type BookingView = {
  * Tudo o que vem **só da reserva** e aparece na hora: datas, noites, hóspedes, pagamento e preço.
  * O preço é o que foi cobrado (nunca recalculado); sem detalhamento confiável, só o `totalPrice`.
  */
-export const toBookingView = (booking: Booking, today: ISODate): BookingView => {
+export const toBookingView = (
+  booking: Booking,
+  today: ISODate,
+  locale: Locale = DEFAULT_LOCALE,
+): BookingView => {
   const nights = Math.max(nightsBetween(booking.checkIn, booking.checkOut), 0);
   const { priceBreakdown } = booking;
   const reliable = priceBreakdown && isBreakdownConsistent(priceBreakdown, booking.totalPrice);
   return {
     number: String(booking.id),
-    bookedAt: formatBookedAt(booking.createdAt),
-    stayLabel: `${formatDateRange(booking.checkIn, booking.checkOut, today)} · ${pluralize(nights, "noite", "noites")}`,
-    stayDetails: `${pluralize(nights, "noite", "noites")} · ${formatGuests(booking)}`,
-    checkInDate: formatDate(booking.checkIn, "long"),
-    checkOutDate: formatDate(booking.checkOut, "long"),
-    guests: describeGuests(booking),
+    bookedAt: formatBookedAt(booking.createdAt, locale),
+    stayLabel: `${formatDateRange(booking.checkIn, booking.checkOut, today, locale)} · ${formatUnit(nights, "night", locale)}`,
+    stayDetails: `${formatUnit(nights, "night", locale)} · ${formatGuests(booking, locale)}`,
+    checkInDate: formatDate(booking.checkIn, "long", locale),
+    checkOutDate: formatDate(booking.checkOut, "long", locale),
+    guests: describeGuests(booking, locale),
     cardLast4: booking.payment?.cardLast4 ?? null,
     price: reliable
       ? {
@@ -87,7 +94,8 @@ export type StayView = {
   checkOutTime: string;
 };
 
-const toHotelView = (booking: Booking, hotel: Settled<Hotel>): HotelView => {
+const toHotelView = (booking: Booking, hotel: Settled<Hotel>, locale: Locale): HotelView => {
+  const t = confirmationMessages.get(locale).stay;
   switch (hotel.status) {
     case "ok":
       return {
@@ -96,13 +104,13 @@ const toHotelView = (booking: Booking, hotel: Settled<Hotel>): HotelView => {
         address: hotel.data.address,
         image: hotel.data.thumbnail,
         href: hotelHref(hotel.data.id, null),
-        cancellation: cancellationDetails(hotel.data.cancellationPolicy),
+        cancellation: cancellationDetails(hotel.data.cancellationPolicy, locale),
       };
     case "missing":
       return {
         status: "missing",
-        title: `Hotel #${booking.hotelId}`,
-        notice: "Os dados deste hotel não estão mais disponíveis.",
+        title: t.hotelFallback(booking.hotelId),
+        notice: t.hotelMissing,
       };
     case "error":
       return { status: "error" };
@@ -113,17 +121,18 @@ const toHotelView = (booking: Booking, hotel: Settled<Hotel>): HotelView => {
   }
 };
 
-const toRoomView = (booking: Booking, room: Settled<Room>): RoomView => {
+const toRoomView = (booking: Booking, room: Settled<Room>, locale: Locale): RoomView => {
+  const t = confirmationMessages.get(locale).stay;
   const missing: RoomView = {
     status: "missing",
-    title: `Quarto #${booking.roomId}`,
-    notice: "Os dados deste quarto não estão mais disponíveis.",
+    title: t.roomFallback(booking.roomId),
+    notice: t.roomMissing,
   };
   switch (room.status) {
     case "ok":
       // A API não valida a reserva: um quarto de outro hotel é reserva forjada, não dado do hotel.
       return room.data.hotelId === booking.hotelId
-        ? { status: "ok", name: room.data.name, beds: bedsLabel(room.data.beds) }
+        ? { status: "ok", name: room.data.name, beds: bedsLabel(room.data.beds, locale) }
         : missing;
     case "missing":
       return missing;
@@ -136,29 +145,32 @@ const toRoomView = (booking: Booking, room: Settled<Room>): RoomView => {
   }
 };
 
-const errorTitleOf = (hotel: HotelView, room: RoomView): string | null => {
+const errorTitleOf = (hotel: HotelView, room: RoomView, locale: Locale): string | null => {
+  const t = confirmationMessages.get(locale).stay;
   const hotelFailed = hotel.status === "error";
   const roomFailed = room.status === "error";
-  if (hotelFailed && roomFailed) return "Não foi possível carregar os dados do hotel e do quarto.";
-  if (hotelFailed) return "Não foi possível carregar os dados do hotel.";
-  if (roomFailed) return "Não foi possível carregar os dados do quarto.";
+  if (hotelFailed && roomFailed) return t.errorBoth;
+  if (hotelFailed) return t.errorHotel;
+  if (roomFailed) return t.errorRoom;
   return null;
 };
 
 /** Horários de check-in/out do hotel (ou o aviso quando ele não carregou). */
 export const checkTimes = (
   hotel: Settled<Hotel>,
+  locale: Locale = DEFAULT_LOCALE,
 ): Pick<StayView, "checkInTime" | "checkOutTime"> => {
+  const t = confirmationMessages.get(locale).stay;
   switch (hotel.status) {
     case "ok":
       return {
-        checkInTime: `A partir de ${hotel.data.checkInTime}`,
-        checkOutTime: `Até ${hotel.data.checkOutTime}`,
+        checkInTime: t.checkInFrom(hotel.data.checkInTime),
+        checkOutTime: t.checkOutUntil(hotel.data.checkOutTime),
       };
     case "missing":
-      return { checkInTime: "Confirme com o hotel", checkOutTime: "Confirme com o hotel" };
+      return { checkInTime: t.askHotel, checkOutTime: t.askHotel };
     case "error":
-      return { checkInTime: "Indisponível no momento", checkOutTime: "Indisponível no momento" };
+      return { checkInTime: t.unavailable, checkOutTime: t.unavailable };
     default: {
       const unreachable: never = hotel;
       return unreachable;
@@ -171,13 +183,14 @@ export const toStayView = (
   booking: Booking,
   hotel: Settled<Hotel>,
   room: Settled<Room>,
+  locale: Locale = DEFAULT_LOCALE,
 ): StayView => {
-  const hotelView = toHotelView(booking, hotel);
-  const roomView = toRoomView(booking, room);
+  const hotelView = toHotelView(booking, hotel, locale);
+  const roomView = toRoomView(booking, room, locale);
   return {
     hotel: hotelView,
     room: roomView,
-    errorTitle: errorTitleOf(hotelView, roomView),
-    ...checkTimes(hotel),
+    errorTitle: errorTitleOf(hotelView, roomView, locale),
+    ...checkTimes(hotel, locale),
   };
 };

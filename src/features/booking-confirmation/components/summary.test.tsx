@@ -14,7 +14,13 @@ const viewOf = (overrides = {}) => toBookingView(makeBooking(overrides), "2026-1
 describe("ConfirmationHeader", () => {
   it("h1 com foco, frase do e-mail e data em horário de Brasília", () => {
     const view = viewOf();
-    render(<ConfirmationHeader email={view.guests.holderEmail} bookedAt={view.bookedAt} />);
+    render(
+      <ConfirmationHeader
+        email={view.guests.holderEmail}
+        bookedAt={view.bookedAt}
+        locale="pt-BR"
+      />,
+    );
     const heading = screen.getByRole("heading", { level: 1, name: "Reserva confirmada" });
     expect(heading).toHaveFocus();
     expect(heading).toHaveAttribute("tabindex", "-1");
@@ -27,14 +33,14 @@ describe("ConfirmationHeader", () => {
   });
 
   it("sem titular não há frase de e-mail", () => {
-    render(<ConfirmationHeader email={null} bookedAt="19/11/2026, 12:04" />);
+    render(<ConfirmationHeader email={null} bookedAt="19/11/2026, 12:04" locale="pt-BR" />);
     expect(screen.queryByText(/Enviamos os detalhes/)).not.toBeInTheDocument();
   });
 });
 
 describe("GuestList", () => {
   it("titular e acompanhantes com o tipo, sem idade nem telefone (critério 5)", () => {
-    const { container } = render(<GuestList guests={viewOf().guests.lines} />);
+    const { container } = render(<GuestList guests={viewOf().guests.lines} locale="pt-BR" />);
     expect(screen.getByRole("heading", { level: 2, name: "Hóspedes" })).toBeVisible();
     const items = screen.getAllByRole("listitem").map((item) => item.textContent);
     expect(items).toEqual(["Ana Souza · titular", "Bruno Souza · adulto", "Clara Souza · criança"]);
@@ -45,7 +51,7 @@ describe("GuestList", () => {
 describe("PaymentSummary", () => {
   it("cartão final, aviso de simulação e o detalhamento do checkout (critério 1)", () => {
     const view = viewOf();
-    render(<PaymentSummary cardLast4={view.cardLast4} price={view.price} />);
+    render(<PaymentSummary cardLast4={view.cardLast4} price={view.price} locale="pt-BR" />);
     const region = screen.getByRole("region", { name: "Pagamento" });
     const text = plain(region.textContent);
     expect(text).toContain("Cartão final 1111");
@@ -61,7 +67,7 @@ describe("PaymentSummary", () => {
 
   it("formato do README: sem cartão e só o total, sem a nota (critério 14)", () => {
     const view = viewOf({ payment: undefined, priceBreakdown: undefined, totalPrice: 4140 });
-    render(<PaymentSummary cardLast4={view.cardLast4} price={view.price} />);
+    render(<PaymentSummary cardLast4={view.cardLast4} price={view.price} locale="pt-BR" />);
     const text = plain(screen.getByRole("region", { name: "Pagamento" }).textContent);
     expect(text).not.toContain("Cartão final");
     expect(text).toContain("Pagamento simulado: nenhum valor foi cobrado.");
@@ -74,7 +80,7 @@ describe("PaymentSummary", () => {
     const { priceBreakdown } = makeBooking();
     if (!priceBreakdown) throw new Error("fixture sem breakdown");
     const view = viewOf({ priceBreakdown: { ...priceBreakdown, taxCents: 1 } });
-    render(<PaymentSummary cardLast4={view.cardLast4} price={view.price} />);
+    render(<PaymentSummary cardLast4={view.cardLast4} price={view.price} locale="pt-BR" />);
     const text = plain(screen.getByRole("region", { name: "Pagamento" }).textContent);
     expect(text).toContain("TotalR$ 3.726,00");
     expect(text).not.toContain("ISS");
@@ -83,7 +89,7 @@ describe("PaymentSummary", () => {
 
 describe("NextSteps", () => {
   it("lista ordenada com a orientação de privacidade do link", () => {
-    render(<NextSteps />);
+    render(<NextSteps locale="pt-BR" />);
     const region = screen.getByRole("region", { name: "Próximos passos" });
     const steps = within(region).getAllByRole("listitem");
     expect(steps).toHaveLength(4);
@@ -95,7 +101,7 @@ describe("NextSteps", () => {
 
 describe("UnreadableBooking (critério 11)", () => {
   it("h1, texto do design system, sem retry e com Fazer nova busca", () => {
-    render(<UnreadableBooking />);
+    render(<UnreadableBooking locale="pt-BR" />);
     expect(
       screen.getByRole("heading", { level: 1, name: "Não foi possível exibir esta reserva" }),
     ).toHaveFocus();

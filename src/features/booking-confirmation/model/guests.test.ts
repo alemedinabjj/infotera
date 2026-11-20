@@ -66,3 +66,11 @@ describe("maskEmail", () => {
     expect(maskEmail(undefined)).toBeNull();
   });
 });
+
+describe("describeGuests em en-US", () => {
+  it("papéis em inglês, e-mail mascarado igual", () => {
+    const view = describeGuests(makeBooking(), "en-US");
+    expect(view.holderEmail).toBe("a***@exemplo.com");
+    expect(view.lines.map((line) => line.roleLabel)).toEqual(["primary guest", "adult", "child"]);
+  });
+});

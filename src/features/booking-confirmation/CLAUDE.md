@@ -9,6 +9,7 @@ Spec: `docs/specs/F6-booking-confirmation.md` (Decisões 1–12 e `## UI/UX`). `
 model/      booking-id (parseBookingId: UUID v4 minúsculo ou id curto do json-server) · load-result (BookingLoad, Settled, classifyLoadError) ·
             confirmation-view (toBookingView, toStayView) · guests · booked-at (America/Sao_Paulo) · metadata · booking-number
 api/        booking (bookingQueryOptions) · confirmation.server (loadBooking, loadStayDetails) · confirmation-metadata.server
+i18n/       pt-BR · en-US · messages (`confirmationMessages`); `hooks/useConfirmationMessages` nas ilhas cliente
 components/ BookingConfirmation (RSC) → ConfirmationView → Header/BookingNumber/StaySummary/GuestList/PaymentSummary/NextSteps
             StayDetailsSection + CheckTimes (streaming, Suspense) · RefreshButton · ilhas: CopyBookingNumber, NewSearchLink, RememberBooking
 ```
@@ -30,3 +31,7 @@ components/ BookingConfirmation (RSC) → ConfirmationView → Header/BookingNum
 - Reservas somem ao reiniciar a mock-api (E2E cria a sua por `POST` direto). Hotel e quarto são requests do **servidor**: o E2E os segura/falha pelo
   control-proxy (`serverApi`, hotel exclusivo do worker via `controlledHotel`): `booking-confirmation.layout-shift.spec.ts`
   (segura, mede o skeleton, solta, mede o final) e `booking-confirmation.section-error.spec.ts` (critérios 13 e 19).
+- **i18n (F7b)**: os Server Components recebem `locale` por prop (`BookingConfirmation` lê `getLocale()` uma vez); as funções de `model/` aceitam `locale`
+  (padrão pt-BR): `toBookingView`, `toStayView`, `checkTimes`, `describeGuests`, `formatBookedAt` (sempre horário de Brasília; en-US em 12 h),
+  `confirmationTitle`. `not-found.tsx` é async e renderiza `<title>`/`<meta robots>` (só o `not-found` raiz aceita `generateMetadata`).
+  "Fazer nova busca" usa `common.routes.newSearch`; links de saída passam por `localizePath`. O e-mail mascarado e o código curto não mudam.
