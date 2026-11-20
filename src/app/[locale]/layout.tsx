@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
-import { LanguageSwitch } from "@/features/app-shell";
+import { LanguageSwitch, OfflineBanner } from "@/features/app-shell";
 import { I18nProvider } from "@/shared/i18n/client";
 import { isLocale, LOCALES } from "@/shared/i18n/config";
 import { AppProviders } from "@/shared/providers/AppProviders";
@@ -39,6 +39,7 @@ const RootLayout = async ({ children, params }: LayoutProps<"/[locale]">) => {
                 </div>
               }
             />
+            <OfflineBanner />
             <main
               id="main-content"
               tabIndex={-1}

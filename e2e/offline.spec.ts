@@ -146,3 +146,53 @@ test.describe("cache público persistido", () => {
     }
   });
 });
+
+test.describe("banner global de conexão", () => {
+  const banner = (page: Page) => page.getByRole("status").filter({ hasText: /sem internet/ });
+
+  test("aparece abaixo do cabeçalho em qualquer rota e some, com confirmação, ao voltar", async ({
+    page,
+    context,
+  }) => {
+    for (const path of ["/", searchPath(), hotelPath(1)]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await context.setOffline(true);
+      await expect(banner(page)).toBeVisible();
+      await expect(banner(page)).toHaveCount(1);
+      const header = await page.locator("header").first().boundingBox();
+      const bar = await banner(page).boundingBox();
+      expect(bar?.y).toBeGreaterThanOrEqual((header?.y ?? 0) + (header?.height ?? 0) - 1);
+      await context.setOffline(false);
+      await expect(
+        page.getByRole("status").filter({ hasText: "Conexão restabelecida." }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("status").filter({ hasText: /sem internet|Conexão/ }),
+      ).toHaveCount(0);
+    }
+  });
+
+  test("com o banner visível o foco programático continua abaixo do cabeçalho", async ({
+    page,
+    context,
+  }) => {
+    await page.goto(searchPath());
+    await expect(cards(page)).toHaveCount(10);
+    await context.setOffline(true);
+    await expect(banner(page)).toBeVisible();
+    // Rola para baixo e usa o atalho do teclado: o foco programático no título tem de ficar abaixo do cabeçalho.
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await page.getByRole("link", { name: "Pular para os resultados" }).focus();
+    await page.keyboard.press("Enter");
+    const heading = page.getByRole("heading", { level: 2, name: /encontrados/ });
+    await expect(heading).toBeFocused();
+    const headerBottom = await page
+      .locator("header")
+      .first()
+      .evaluate((node) => node.getBoundingClientRect().bottom);
+    const top = await heading.evaluate((node) => node.getBoundingClientRect().top);
+    expect(top).toBeGreaterThanOrEqual(headerBottom);
+    await context.setOffline(false);
+  });
+});
