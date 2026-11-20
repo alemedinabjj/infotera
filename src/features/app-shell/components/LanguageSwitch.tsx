@@ -57,9 +57,8 @@ export const LanguageSwitch = () => {
           e o nome completo fica só para o leitor de tela ("EN English"): label-in-name. */}
       <span lang={target} className="xs:hidden">
         {messages.targetShort}
-      </span>
+      </span>{" "}
       <span lang={target} className="sr-only xs:not-sr-only">
-        {" "}
         {messages.targetName}
       </span>
     </a>
