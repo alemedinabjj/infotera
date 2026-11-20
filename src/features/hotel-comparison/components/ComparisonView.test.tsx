@@ -167,12 +167,15 @@ describe("ComparisonView", () => {
 
   it("id que a API não devolve: coluna some e o Alert avisa", async () => {
     setTestUrl("/compare?hotel=1&hotel=4&hotel=999");
+    useComparisonStore.setState({ items: [{ id: 999, name: "Fantasma" }] });
     stub();
     renderWithProviders(<ComparisonView />);
     expect(
       await screen.findByText("1 hotel não foi encontrado e saiu da comparação."),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("columnheader")).toHaveLength(3);
+    expect(window.location.search).toBe("?hotel=1&hotel=4");
+    expect(useComparisonStore.getState().items).toEqual([]);
   });
 
   it("erro só em /rooms: um erro único e o retry refaz só /rooms", async () => {

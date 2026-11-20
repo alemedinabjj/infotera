@@ -3,13 +3,14 @@
 import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { missingIds, orderByIds } from "@/shared/api/ids";
+import { orderByIds } from "@/shared/api/ids";
 import { hotelsByIdsQueryOptions } from "@/shared/api/queries";
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { comparisonRoomsQueryOptions } from "../api/rooms";
 import { parseCompareParams } from "../model/compare-params";
 import { buildHotelComparison, type HotelComparison } from "../model/hotel-comparison";
+import { usePruneNotFound } from "./usePruneNotFound";
 
 export type ComparisonState =
   | { kind: "empty" }
@@ -29,6 +30,7 @@ const derive = (
   hotelsQuery: UseQueryResult<Hotel[]>,
   roomsQuery: UseQueryResult<Room[]>,
   slow: boolean,
+  notFound: number,
 ): ComparisonState => {
   if (ids.length === 0) return { kind: "empty" };
   const queries = [hotelsQuery, roomsQuery];
@@ -45,7 +47,7 @@ const derive = (
       kind: "success",
       hotels,
       comparison: buildHotelComparison(hotels, roomsQuery.data),
-      notFound: missingIds(ids, hotelsQuery.data).length,
+      notFound,
     };
   }
   const paused = queries.some((query) => query.fetchStatus === "paused");
@@ -69,5 +71,10 @@ export const useComparisonPage = (): Result => {
   });
   const loading = ids.length > 0 && !(hotelsQuery.isSuccess && roomsQuery.isSuccess);
   const slow = useSlowLoading(loading);
-  return { ids, state: derive(ids, hotelsQuery, roomsQuery, slow) };
+  const notFound = usePruneNotFound(
+    ids,
+    hotelsQuery.data,
+    hotelsQuery.isSuccess && !hotelsQuery.isPlaceholderData,
+  );
+  return { ids, state: derive(ids, hotelsQuery, roomsQuery, slow, notFound) };
 };

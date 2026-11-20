@@ -17,3 +17,12 @@ export const removeColumn = (ids: readonly number[], id: number): void => {
   title?.focus({ preventScroll: true });
   revealBelowHeader(title);
 };
+
+/**
+ * Tira ids que a API não devolveu: URL por `replaceState` e bandeja (o aviso "saiu da comparação"
+ * precisa ser verdade). Não mexe no foco: ninguém clicou em nada.
+ */
+export const dropMissingIds = (ids: readonly number[], missing: readonly number[]): void => {
+  window.history.replaceState(null, "", compareHref(ids.filter((id) => !missing.includes(id))));
+  for (const id of missing) comparisonActions.remove(id);
+};

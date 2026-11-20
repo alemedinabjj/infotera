@@ -1,4 +1,4 @@
-import { MAX_COMPARE } from "@/shared/saved/model/comparison";
+import { MAX_COMPARE } from "@/shared/saved/pure";
 
 const POSITIVE_INT = /^[1-9]\d{0,8}$/;
 
