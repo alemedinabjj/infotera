@@ -1,3 +1,4 @@
+import { withSerwist } from "@serwist/turbopack";
 import type { NextConfig } from "next";
 import pkg from "./package.json";
 import { BASELINE_DIRECTIVES, serializeCsp } from "./src/shared/lib/csp";
@@ -30,6 +31,8 @@ const nextConfig: NextConfig = {
   },
   headers: async () => [
     { source: "/:path*", headers: securityHeaders },
+    // O navegador não pode guardar o service worker: a versão nova tem de ser vista no próximo registro.
+    { source: "/serwist/:path*", headers: [{ key: "Cache-Control", value: "no-cache" }] },
     {
       source: BASELINE_CSP_SOURCE,
       headers: [{ key: "Content-Security-Policy", value: serializeCsp(BASELINE_DIRECTIVES) }],
@@ -37,4 +40,4 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

@@ -106,6 +106,7 @@ describe("resolveLocaleRequest", () => {
     ["/hotel/1", "en-US", redirect(307, "/en/hotel/1")],
     ["/", "en-US", redirect(307, "/en")],
     ["/checkout", "en-US", redirect(307, "/en/checkout")],
+    ["/offline", "en-US", rewrite("pt-BR", "/pt-BR/offline")],
     ["/hotel/1", "fr-FR", rewrite("pt-BR", "/pt-BR/hotel/1")],
     ["/hotel/1", "", rewrite("pt-BR", "/pt-BR/hotel/1")],
   ] as const)("%s com cookie %j", (pathname, cookie, expected) => {

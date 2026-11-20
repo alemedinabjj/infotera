@@ -1,5 +1,7 @@
 import { DEFAULT_LOCALE, LOCALE_PREFIX, type Locale } from "./config";
 
+/** Página offline (pt-BR sem prefixo): a única rota que ignora o cookie de idioma. */
+const OFFLINE_PATH = "/offline";
 const EN_PREFIX = LOCALE_PREFIX["en-US"];
 
 /** Segmentos internos (`app/[locale]`): nunca são URL pública. */
@@ -105,6 +107,9 @@ export const resolveLocaleRequest = ({ pathname, cookie }: LocaleRequest): Local
   }
   const parsed = parsePublicPath(pathname);
   if (parsed.locale === "en-US") return rewriteTo("en-US", parsed.path);
-  if (cookie === "en-US") return redirectTo(307, localizePath("en-US", pathname));
+  // A página offline é pré-cacheada pelo service worker na URL pt-BR: o cookie não a redireciona.
+  if (cookie === "en-US" && pathname !== OFFLINE_PATH) {
+    return redirectTo(307, localizePath("en-US", pathname));
+  }
   return rewriteTo("pt-BR", pathname);
 };
