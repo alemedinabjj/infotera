@@ -1,13 +1,18 @@
 import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
+import type { Locale } from "@/shared/i18n/config";
 import { addDays, todayISO } from "@/shared/lib/dates";
 import { type RoomSelection, useBookingDraft } from "@/shared/stores/booking-draft";
 import { makeHotel, makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
 import { renderWithProviders } from "@/shared/testing/render";
+import { checkoutMessages } from "../i18n/messages";
 import { CheckoutPage } from "./CheckoutPage";
 
 export const API = "http://api.test";
+
+/** Dicionário pt-BR: os testes buscam os campos pelos mesmos rótulos que a tela usa. */
+export const ptT = checkoutMessages.get("pt-BR");
 
 type Body = unknown | (() => Response | Promise<Response>);
 
@@ -22,7 +27,7 @@ export const stubApi = (routes: Record<string, Body>) => {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const path = String(input).replace(API, "").split("?")[0] ?? "";
     const handler = routes[path];
-    if (handler === undefined) throw new Error(`rota não prevista: ${path}`);
+    if (handler === undefined) throw new Error(`unexpected route: ${path}`);
     return typeof handler === "function" ? handler() : jsonResponse(handler);
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -74,7 +79,8 @@ export const happyApi = (
   hotel: Parameters<typeof makeHotel>[0] = {},
 ) => stubApi({ "/hotels/1": makeHotel(hotel), "/rooms/1": makeRoom(room) });
 
-export const renderCheckout = () => renderWithProviders(<CheckoutPage />);
+export const renderCheckout = (locale: Locale = "pt-BR") =>
+  renderWithProviders(<CheckoutPage />, { locale });
 
 export const plain = (value: string | null): string => (value ?? "").replaceAll(" ", " ");
 
@@ -82,16 +88,16 @@ export const newUser = () => userEvent.setup();
 
 /** Passo 1 (1 adulto, sem criança): titular. */
 export const fillHolder = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.type(await screen.findByLabelText("Nome"), "Ana");
-  await user.type(screen.getByLabelText("Sobrenome"), "Souza");
+  await user.type(await screen.findByLabelText(ptT.fields.firstName), "Ana");
+  await user.type(screen.getByLabelText(ptT.fields.lastName), "Souza");
   await user.type(screen.getByLabelText("E-mail"), "ana@exemplo.com");
-  await user.type(screen.getByLabelText("Número de telefone"), "11987654321");
+  await user.type(screen.getByLabelText(ptT.fields.phoneNumber), "11987654321");
 };
 
 export const fillCard = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.type(await screen.findByLabelText("Número do cartão"), "4111111111111111");
-  await user.type(screen.getByLabelText("Nome impresso no cartão"), "ANA SOUZA");
-  await user.type(screen.getByLabelText("Validade"), "1230");
+  await user.type(await screen.findByLabelText(ptT.payment.number), "4111111111111111");
+  await user.type(screen.getByLabelText(ptT.payment.name), "ANA SOUZA");
+  await user.type(screen.getByLabelText(ptT.payment.expiry), "1230");
   await user.type(screen.getByLabelText("CVV"), "123");
   await user.type(screen.getByRole("textbox", { name: "CPF" }), "52998224725");
 };
@@ -102,8 +108,8 @@ export const clickButton = (user: ReturnType<typeof userEvent.setup>, name: stri
 /** Do passo 1 até a revisão (cartão de teste). */
 export const goToReview = async (user: ReturnType<typeof userEvent.setup>) => {
   await fillHolder(user);
-  await clickButton(user, "Continuar para pagamento");
+  await clickButton(user, ptT.steps.primary.personal);
   await fillCard(user);
-  await clickButton(user, "Revisar reserva");
-  await screen.findByRole("heading", { level: 2, name: "Revise e confirme" });
+  await clickButton(user, ptT.steps.primary.payment);
+  await screen.findByRole("heading", { level: 2, name: ptT.steps.titles.review });
 };

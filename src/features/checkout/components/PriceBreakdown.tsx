@@ -3,7 +3,7 @@
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { PriceBreakdown as SharedPriceBreakdown, Skeleton } from "@/shared/ui";
 import type { CheckoutPrice } from "../hooks/checkout-price";
-import { TOTAL_NOT_LOADED } from "../model/price-labels";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import { PriceBreakdownSkeleton } from "./PriceBreakdownSkeleton";
 
 type PriceBreakdownProps = {
@@ -25,11 +25,12 @@ const DiscountSkeleton = () => (
  * anuncia é o controle que mudou o preço).
  */
 export const PriceBreakdown = ({ price, couponValidating = false }: PriceBreakdownProps) => {
+  const t = useCheckoutMessages();
   const slow = useSlowLoading(price.status === "loading");
   if (price.status === "loading") return <PriceBreakdownSkeleton slow={slow} />;
   if (price.status === "error") {
     // O "Tentar de novo" é um só e fica no topo do resumo (BookingSummary), fora deste painel.
-    return <p className="text-sm text-fg-muted">{TOTAL_NOT_LOADED}</p>;
+    return <p className="text-sm text-fg-muted">{t.price.notLoaded}</p>;
   }
   const { quote } = price.result;
   return (

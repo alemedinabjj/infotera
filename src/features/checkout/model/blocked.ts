@@ -1,6 +1,7 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import { formatDate, formatDateRange, type ISODate } from "@/shared/lib/dates";
-import { pluralize } from "@/shared/lib/format";
 import { guestsPerRoom, type SearchCriteria } from "@/shared/lib/search-params";
+import { checkoutMessages } from "../i18n/messages";
 import type { RoomEligibility } from "./checkout-gate";
 
 export type BlockedReason = Exclude<RoomEligibility, "ready" | "mismatch">;
@@ -19,6 +20,7 @@ type BlockedInput = {
   available: number | null;
   maxGuests: number | null;
   today: ISODate;
+  locale?: Locale;
 };
 
 /** Texto de cada estado bloqueante (design system §6.6). */
@@ -29,34 +31,39 @@ export const describeBlocked = ({
   available,
   maxGuests,
   today,
+  locale = DEFAULT_LOCALE,
 }: BlockedInput): BlockedCopy => {
-  const room = roomName ?? "O quarto";
+  const t = checkoutMessages.get(locale);
+  const room = roomName ?? t.blocked.roomFallback;
   switch (reason) {
     case "sold-out":
       return {
-        title: "Este quarto esgotou",
-        description: `Não há mais unidades de ${room} para ${formatDateRange(criteria.checkIn, criteria.checkOut, today)}. Escolha outro quarto no mesmo hotel.`,
-        action: "Ver quartos",
+        title: t.blocked.soldOut.title,
+        description: t.blocked.soldOut.description(
+          room,
+          formatDateRange(criteria.checkIn, criteria.checkOut, today, locale),
+        ),
+        action: t.viewRooms,
       };
-    case "insufficient": {
-      const left = available ?? 0;
+    case "insufficient":
       return {
-        title: `Só ${pluralize(left, "quarto disponível", "quartos disponíveis")}`,
-        description: `Sua reserva pede ${criteria.rooms} quartos de ${room}. Volte ao hotel para escolher outro quarto ou reduzir a quantidade de quartos.`,
-        action: "Ver quartos",
+        title: t.blocked.insufficient.title(available ?? 0),
+        description: t.blocked.insufficient.description(criteria.rooms, room),
+        action: t.viewRooms,
       };
-    }
     case "too-small":
       return {
-        title: "Este quarto não acomoda sua busca",
-        description: `${room} acomoda até ${maxGuests ?? 0} hóspedes por quarto e sua busca tem ${guestsPerRoom(criteria)}. Escolha outro quarto ou altere os hóspedes.`,
-        action: "Ver quartos",
+        title: t.blocked.tooSmall.title,
+        description: t.blocked.tooSmall.description(room, maxGuests ?? 0, guestsPerRoom(criteria)),
+        action: t.viewRooms,
       };
     case "stale-dates":
       return {
-        title: "As datas desta reserva já passaram",
-        description: `O check-in era em ${formatDate(criteria.checkIn, "short")}. Escolha novas datas para ver preço e disponibilidade.`,
-        action: "Escolher novas datas",
+        title: t.blocked.staleDates.title,
+        description: t.blocked.staleDates.description(
+          formatDate(criteria.checkIn, "short", locale),
+        ),
+        action: t.blocked.chooseDates,
       };
     default: {
       const unreachable: never = reason;

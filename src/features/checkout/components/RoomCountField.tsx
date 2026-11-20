@@ -1,5 +1,9 @@
+"use client";
+
 import type { Room } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import { QuantityStepper } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { RoomCountBounds } from "../model/room-count";
 import { describeCapacity } from "../model/summary-labels";
 
@@ -21,17 +25,21 @@ export const RoomCountField = ({
   hint,
   locked,
   onChange,
-}: RoomCountFieldProps) => (
-  <QuantityStepper
-    label="Quartos"
-    description={room ? describeCapacity(room.maxGuests) : undefined}
-    hint={hint}
-    value={rooms}
-    min={bounds?.min ?? rooms}
-    max={bounds?.max ?? rooms}
-    locked={locked || bounds === null}
-    onChange={onChange}
-    decreaseLabel="Remover quarto"
-    increaseLabel="Adicionar quarto"
-  />
-);
+}: RoomCountFieldProps) => {
+  const locale = useLocale();
+  const t = useCheckoutMessages().summary;
+  return (
+    <QuantityStepper
+      label={t.rooms}
+      description={room ? describeCapacity(room.maxGuests, locale) : undefined}
+      hint={hint}
+      value={rooms}
+      min={bounds?.min ?? rooms}
+      max={bounds?.max ?? rooms}
+      locked={locked || bounds === null}
+      onChange={onChange}
+      decreaseLabel={t.decreaseRoom}
+      increaseLabel={t.increaseRoom}
+    />
+  );
+};

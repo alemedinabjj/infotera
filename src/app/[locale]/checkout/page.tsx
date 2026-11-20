@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { CheckoutPage } from "@/features/checkout";
+import { CheckoutPage, checkoutPageTitle } from "@/features/checkout";
+import { isLocale } from "@/shared/i18n/config";
 
-export const metadata: Metadata = {
-  title: "Finalizar reserva | Infotera Hotéis",
-  robots: { index: false },
+export const generateMetadata = async ({
+  params,
+}: Pick<PageProps<"/[locale]/checkout">, "params">): Promise<Metadata> => {
+  const { locale } = await params;
+  return {
+    title: checkoutPageTitle(isLocale(locale) ? locale : "pt-BR"),
+    robots: { index: false },
+  };
 };
 
 /**
- * `/checkout`. Renderização dinâmica (`connection()`): o `proxy.ts` gera um nonce por request e a
- * CSP estrita só vale em página dinâmica. A seleção vive no cliente (`sessionStorage`).
+ * `/checkout` e `/en/checkout`. Renderização dinâmica (`connection()`): o `proxy.ts` gera um nonce
+ * por request e a CSP estrita só vale em página dinâmica. A seleção vive no cliente
+ * (`sessionStorage`).
  */
 const Page = async () => {
   await connection();

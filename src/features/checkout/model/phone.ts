@@ -2,41 +2,30 @@ export type PhoneCountry = "BR" | "US" | "PT" | "ES";
 
 export type PhoneCountryInfo = {
   dialCode: string;
-  label: string;
   maxDigits: number;
   example: string;
-  /** Texto de apoio do campo (descrição). */
-  hint: string;
 };
 
 export const PHONE_COUNTRIES: Record<PhoneCountry, PhoneCountryInfo> = {
   BR: {
     dialCode: "55",
-    label: "Brasil +55",
     maxDigits: 11,
     example: "(11) 98765-4321",
-    hint: "Com DDD, como (11) 98765-4321.",
   },
   US: {
     dialCode: "1",
-    label: "Estados Unidos +1",
     maxDigits: 10,
     example: "(201) 555-0123",
-    hint: "Como (201) 555-0123.",
   },
   PT: {
     dialCode: "351",
-    label: "Portugal +351",
     maxDigits: 9,
     example: "912 345 678",
-    hint: "Como 912 345 678.",
   },
   ES: {
     dialCode: "34",
-    label: "Espanha +34",
     maxDigits: 9,
     example: "612 34 56 78",
-    hint: "Como 612 34 56 78.",
   },
 };
 

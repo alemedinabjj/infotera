@@ -1,13 +1,10 @@
+"use client";
+
 import { Button } from "@/shared/ui";
 import type { CheckoutPrice } from "../hooks/checkout-price";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { CheckoutStep } from "../model/steps";
 import { ActionBar } from "./ActionBar";
-
-const PRIMARY_LABELS: Record<CheckoutStep, string> = {
-  personal: "Continuar para pagamento",
-  payment: "Revisar reserva",
-  review: "Confirmar reserva",
-};
 
 type StepActionsProps = {
   step: CheckoutStep;
@@ -22,6 +19,7 @@ type StepActionsProps = {
  * sempre o `submit` do formulário e **nunca `disabled`**: carregando/enviando usa `loading`.
  */
 export const StepActions = ({ step, price, rooms, submitting, onBack }: StepActionsProps) => {
+  const t = useCheckoutMessages();
   const calculating = step === "review" && price.status === "loading";
   return (
     <div className="mt-6 flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-between">
@@ -35,7 +33,7 @@ export const StepActions = ({ step, price, rooms, submitting, onBack }: StepActi
             if (!submitting) onBack();
           }}
         >
-          Voltar
+          {t.back}
         </Button>
       )}
       <ActionBar price={price} rooms={rooms}>
@@ -44,9 +42,9 @@ export const StepActions = ({ step, price, rooms, submitting, onBack }: StepActi
           fullWidth
           className="min-w-56"
           loading={submitting || calculating}
-          loadingText={submitting ? "Confirmando reserva…" : "Calculando total…"}
+          loadingText={submitting ? t.steps.confirming : t.steps.calculating}
         >
-          {PRIMARY_LABELS[step]}
+          {t.steps.primary[step]}
         </Button>
       </ActionBar>
     </div>

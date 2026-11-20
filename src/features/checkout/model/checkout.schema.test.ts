@@ -3,12 +3,13 @@ import {
   type CheckoutValues,
   defaultCheckoutValues,
   isPersonalValid,
-  MESSAGES,
   makeCheckoutSchema,
   makePaymentSchema,
+  validationMessages,
 } from "./checkout.schema";
 
 const TODAY = "2026-11-19";
+const MESSAGES = validationMessages();
 const schema = makeCheckoutSchema(TODAY);
 
 const validContact = {

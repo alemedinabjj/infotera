@@ -1,10 +1,14 @@
+"use client";
+
+import { useLocale } from "@/shared/i18n/client";
 import { cn } from "@/shared/lib/cn";
 import { CheckIcon } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import {
   CHECKOUT_STEPS,
   type CheckoutStep,
   isStepDone,
-  STEP_LABELS,
+  stepLabel,
   stepNumber,
 } from "../model/steps";
 
@@ -45,6 +49,9 @@ type StepItemProps = {
 };
 
 const StepItem = ({ step, state, first, locked, onGoTo }: StepItemProps) => {
+  const locale = useLocale();
+  const t = useCheckoutMessages().steps;
+  const label = stepLabel(step, locale);
   const link = first
     ? ""
     : cn(
@@ -58,20 +65,20 @@ const StepItem = ({ step, state, first, locked, onGoTo }: StepItemProps) => {
         <button
           type="button"
           aria-disabled={locked || undefined}
-          aria-label={`${STEP_LABELS[step]}, concluído`}
+          aria-label={t.done(label)}
           onClick={() => {
             if (!locked) onGoTo(step);
           }}
           className={cn(column, "font-medium text-primary hover:underline")}
         >
           <Circle step={step} state={state} />
-          <span aria-hidden="true">{STEP_LABELS[step]}</span>
+          <span aria-hidden="true">{label}</span>
         </button>
       ) : (
         <span aria-current={state === "current" ? "step" : undefined} className={column}>
           <Circle step={step} state={state} />
           <span className={state === "current" ? "font-semibold text-fg" : "text-fg-muted"}>
-            {STEP_LABELS[step]}
+            {label}
           </span>
         </span>
       )}
@@ -80,17 +87,20 @@ const StepItem = ({ step, state, first, locked, onGoTo }: StepItemProps) => {
 };
 
 /** `<ol>` de 3 passos: concluídos são botões, o atual leva `aria-current="step"`, futuros não clicam. */
-export const StepIndicator = ({ current, locked, onGoTo }: StepIndicatorProps) => (
-  <ol aria-label="Etapas da reserva" className="grid grid-cols-3 lg:max-w-2xl">
-    {CHECKOUT_STEPS.map((step, index) => (
-      <StepItem
-        key={step}
-        step={step}
-        state={stateOf(step, current)}
-        first={index === 0}
-        locked={locked}
-        onGoTo={onGoTo}
-      />
-    ))}
-  </ol>
-);
+export const StepIndicator = ({ current, locked, onGoTo }: StepIndicatorProps) => {
+  const t = useCheckoutMessages().steps;
+  return (
+    <ol aria-label={t.listLabel} className="grid grid-cols-3 lg:max-w-2xl">
+      {CHECKOUT_STEPS.map((step, index) => (
+        <StepItem
+          key={step}
+          step={step}
+          state={stateOf(step, current)}
+          first={index === 0}
+          locked={locked}
+          onGoTo={onGoTo}
+        />
+      ))}
+    </ol>
+  );
+};
