@@ -231,6 +231,9 @@ test.describe("bandeja e rodapé", () => {
 
   test("a bandeja no /search passa no axe", async ({ page }) => {
     await pickFromSearch(page, 2);
+    // Marcar rola a página: um card sob o header fixo vira "alvo parcialmente coberto" (WCAG 2.5.8)
+    // só por causa da posição de rolagem. Volta ao topo para medir a página em repouso.
+    await page.evaluate(() => window.scrollTo(0, 0));
     expect((await analyzeAccessibility(page)).violations).toEqual([]);
   });
 });

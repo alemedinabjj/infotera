@@ -22,31 +22,33 @@ export const HotelColumnHeader = ({ hotel, criteria, onRemove }: HotelColumnHead
   const MESSAGES = useComparisonMessages();
   const locale = useLocale();
   return (
-    <div className="flex min-w-36 flex-col gap-2 font-normal">
+    <div className="flex min-w-0 flex-col gap-2 font-normal">
       <RemoteImage
         src={hotel.thumbnail}
         alt=""
         sizes="(min-width: 1024px) 20vw, 40vw"
         className="aspect-[4/3] w-full rounded-control"
       />
-      <div className="flex items-start justify-between gap-1">
-        <Link
-          href={localizePath(locale, hotelHref(hotel.id, criteria))}
-          className="font-semibold text-fg hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          {hotel.name}
-        </Link>
-        <FavoriteButton hotelId={hotel.id} hotelName={hotel.name} className="-mt-2 -mr-2" />
-      </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-fit"
-        aria-label={MESSAGES.removeLabel(hotel.name)}
-        onClick={() => onRemove(hotel.id)}
+      <Link
+        href={localizePath(locale, hotelHref(hotel.id, criteria))}
+        className="min-w-0 font-semibold break-words text-fg hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
-        {MESSAGES.remove}
-      </Button>
+        {hotel.name}
+      </Link>
+      {/* Linha própria e com quebra: a coluna tem ~104 px em 320 px e o coração (44 px) não pode
+          cobrir o link do vizinho (WCAG 2.5.8, tamanho e espaço dos alvos). */}
+      <div className="flex flex-wrap items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          aria-label={MESSAGES.removeLabel(hotel.name)}
+          onClick={() => onRemove(hotel.id)}
+        >
+          {MESSAGES.remove}
+        </Button>
+        <FavoriteButton hotelId={hotel.id} hotelName={hotel.name} />
+      </div>
     </div>
   );
 };

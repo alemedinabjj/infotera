@@ -27,7 +27,8 @@ export const test = base.extend<{ tiles: TileLog }>({
         if (!response?.fromServiceWorker()) seen.push(request.url());
       });
       await use(log);
-      const leaked = seen.length - log.requests.length;
+      // `mode: "abort"` derruba os pedidos interceptados (não chegam a `requestfinished`): `seen` pode ser menor.
+      const leaked = Math.max(0, seen.length - log.requests.length);
       expect(
         leaked,
         `${leaked} pedido(s) a tile.openstreetmap.org escaparam da interceptação`,
