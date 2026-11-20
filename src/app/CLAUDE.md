@@ -19,3 +19,7 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 | `/hotel/[hotelId]` | `hotel-details` |
 | `/checkout` | `checkout` |
 | `/confirmation/[bookingId]` | `booking-confirmation` |
+
+## `/checkout` (F5)
+- `page.tsx` chama `await connection()` (nonce por request exige renderização dinâmica) e `src/proxy.ts` aplica a
+  CSP estrita só nesta rota. O `next.config.ts` exclui `/checkout` da CSP base (um único header).

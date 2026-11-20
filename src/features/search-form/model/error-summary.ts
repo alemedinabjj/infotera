@@ -20,6 +20,3 @@ export const summarizeErrors = (errors: FieldErrors<SearchFormValues>): SummaryI
     message ? [{ field, label, message }] : [],
   );
 };
-
-export const describeErrorCount = (count: number): string =>
-  `Corrija ${count} ${count === 1 ? "campo" : "campos"} para continuar`;

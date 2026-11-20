@@ -18,8 +18,33 @@ const FULL: SearchFilters = {
   types: ["hotel", "resort"],
   amenities: ["wifi", "pool", "spa"],
   sort: "rating-desc",
+  view: "pages",
   page: 2,
 };
+
+describe("sort=distance e view=infinite", () => {
+  it("faz round-trip pela URL", () => {
+    const filters: SearchFilters = { ...DEFAULT_FILTERS, sort: "distance", view: "infinite" };
+    const params = serializeSearchFilters(filters);
+    expect(params.toString()).toBe("sort=distance&view=infinite");
+    expect(parseSearchFilters(params)).toEqual(filters);
+  });
+
+  it("view inválido cai em pages", () => {
+    expect(parse("view=xyz").view).toBe("pages");
+    expect(parse("view=pages").view).toBe("pages");
+  });
+
+  it("page é ignorado no parse e omitido na serialização do feed", () => {
+    expect(parse("view=infinite&page=2").page).toBe(1);
+    const params = serializeSearchFilters({ ...DEFAULT_FILTERS, view: "infinite", page: 3 });
+    expect(params.has("page")).toBe(false);
+  });
+
+  it("view não conta como filtro ativo", () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, view: "infinite", sort: "distance" })).toBe(0);
+  });
+});
 
 describe("parseSearchFilters", () => {
   it("URL sem filtros vira os padrões", () => {

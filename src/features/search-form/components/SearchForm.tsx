@@ -2,11 +2,10 @@
 
 import { Controller, FormProvider } from "react-hook-form";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { Button, SearchIcon, toast } from "@/shared/ui";
+import { Button, ErrorSummary, SearchIcon, toast } from "@/shared/ui";
 import { useSearchForm } from "../hooks/useSearchForm";
 import { DateRangeFields } from "./DateRangeFields";
 import { DestinationCombobox } from "./DestinationCombobox";
-import { ErrorSummary } from "./ErrorSummary";
 import { GuestsPicker } from "./GuestsPicker";
 import { RecentSearches } from "./RecentSearches";
 
@@ -73,7 +72,11 @@ export const SearchForm = ({
           {search.summary.length > 0 ? (
             <ErrorSummary
               key={search.attempts}
-              items={search.summary}
+              items={search.summary.map(({ field, label, message }) => ({
+                id: field,
+                label,
+                message,
+              }))}
               onSelect={(field) => form.setFocus(field)}
             />
           ) : null}

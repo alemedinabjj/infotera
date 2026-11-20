@@ -1,6 +1,7 @@
 import type { Amenity, PropertyType } from "@/shared/api/schemas";
 import {
   DEFAULT_FILTERS,
+  type ListMode,
   type MinRating,
   type SearchFilters,
   type SortOption,
@@ -12,6 +13,7 @@ export type FilterChange =
   | { type: "toggleType"; value: PropertyType }
   | { type: "toggleAmenity"; value: Amenity }
   | { type: "setSort"; value: SortOption }
+  | { type: "setView"; value: ListMode }
   | { type: "clear" };
 
 const toggle = <T>(list: readonly T[], value: T): T[] =>
@@ -29,9 +31,11 @@ const applyChange = (filters: SearchFilters, change: FilterChange): SearchFilter
       return { ...filters, amenities: toggle(filters.amenities, change.value) };
     case "setSort":
       return { ...filters, sort: change.value };
+    case "setView":
+      return { ...filters, view: change.value };
     case "clear":
-      // Ordenar não é filtrar: a ordenação sobrevive.
-      return { ...DEFAULT_FILTERS, sort: filters.sort };
+      // Ordenar e escolher o modo de exibição não são filtrar: sobrevivem.
+      return { ...DEFAULT_FILTERS, sort: filters.sort, view: filters.view };
     default: {
       const unreachable: never = change;
       return unreachable;

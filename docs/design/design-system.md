@@ -340,7 +340,8 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   `share`/`link`, `arrow-left`. Comodidades: um ícone por `Amenity` com fallback `check`.
   Tipos de destino (F2, opções do combobox): `building` (city), `umbrella` (beach), `palm-tree` (island),
   `trees` (nature) — traços no estilo Lucide. `history` (relógio com seta) para "Buscas recentes".
-- **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[4/3]` no card,
+  Checkout (F5): `credit-card` (cartão), `lock` (nota de privacidade), `tag` (cupom).
+- **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[5/2]` empilhado no card do celular,
   `aspect-video` no hero da galeria), `object-cover`, `sizes` correto, `bg-surface-sunken` enquanto carrega.
   `alt` = nome do hotel + contexto ("Hotel Copacabana Palace, foto 2 de 8"). Imagem quebrada → manter o
   bloco cinza com ícone `bed` centralizado (sem layout shift).
@@ -385,12 +386,18 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 ```
 - Footer simples: `text-sm text-fg-muted`, "Projeto de demonstração. Nenhuma cobrança real é feita."
 - Página com sidebar (resultados com filtros, checkout com resumo): `lg:grid lg:grid-cols-[18rem_1fr] gap-8`
-  (filtros à esquerda) ou `lg:grid-cols-[1fr_22rem]` (resumo à direita, `lg:sticky lg:top-24`).
+  (filtros à esquerda) ou `lg:grid-cols-[1fr_22rem]` (resumo à direita).
   No mobile, a sidebar vira Drawer (filtros) ou bloco colapsável acima do formulário (resumo).
+- **Checkout (F5):** o resumo vem **antes** do formulário no DOM em todas as larguras (o que estou
+  comprando → meus dados). No `lg+` vai para a direita por `lg:col-start-2 lg:row-start-1
+  lg:row-span-2` (nunca `order-*`), com `lg:sticky lg:top-24 lg:self-start
+  lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto` (exceção de geometria permitida). Abaixo de `lg`, o
+  resumo é um cartão com identidade, datas, hóspedes e cancelamento sempre à vista e um toggle "Ver
+  detalhes da reserva" para o resto. Formulário em `max-w-2xl` dentro de um `Card static`.
 
 ### 4.4 Grid de cards de hotel
 
-- Mobile (base): lista de 1 coluna, card vertical (imagem em cima `aspect-[4/3]`).
+- Mobile (base): lista de 1 coluna, card vertical (imagem em cima `aspect-[5/2]`: 4:3 e a barra de controles empilhada empurravam nome e preço para fora da 1ª tela em 375×667; a barra usa 2 colunas a partir de 23rem).
 - `sm` a `lg`: card **horizontal** (imagem à esquerda `w-56`, conteúdo à direita) em 1 coluna — leitura de
   lista de resultados é mais rápida que grid para comparar preço.
 - Lista sempre `<ul role="list">` com `<li>` por card; contagem de resultados acima em `aria-live="polite"`.
@@ -402,7 +409,9 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 14 hotéis encontrados                 ← h2 text-xl font-semibold min-h-7, tabIndex=-1 (alvo de foco)
 Mostrando 1–10 de 14                  ← linha de status min-h-5 text-sm text-fg-muted tabular-nums
 [⚲ Filtros (2)] [Mais populares ▾]    ← < lg: grid-cols-[auto_1fr] gap-3 items-end; ≥ lg: Filtros some,
-                                         "Ordenar por" vira label inline à direita (select w-56)
+                                         "Ordenar por" vira label inline (select w-56) e "Exibir" (select w-52,
+                                         cabe "Rolagem contínua"). O h2 fica numa linha (lg:whitespace-nowrap)
+                                         e os selects ficam ABAIXO dele, também no xl (sem "tudo numa linha")
 ```
 - A **linha de status** troca de texto, nunca de altura: `Mostrando 1–10 de 14` ↔ `Spinner` +
   `Atualizando resultados…` ↔ `Carregando hotéis…` ↔ `Está demorando mais que o normal…`.
@@ -418,11 +427,37 @@ Para a ação primária do **checkout** abaixo de `lg` (F5). O detalhe do hotel 
 (F4): antes de escolher o quarto não há total para mostrar e ela só repetiria "Ver quartos", que está
 no topo; também cobriria os toasts.
 ```
-┌──────────────────────────────────────┐
-│ R$ 1.840,00  total · 3 noites  [Ação]│   fixed bottom-0 inset-x-0 z-30 bg-surface
-└──────────────────────────────────────┘   border-t shadow-raised px-4 py-3 pb-[env(safe-area-inset-bottom)]
+< sm (2 linhas)                              sm–lg (1 linha)
+┌──────────────────────────────────────┐     ┌──────────────────────────────────────────────┐
+│ Total · 3 noites · 1 quarto R$ 4.140,00│   │ R$ 4.140,00                  [Revisar reserva]│
+│ [         Revisar reserva          ] │     │ 3 noites · 1 quarto                          │
+└──────────────────────────────────────┘     └──────────────────────────────────────────────┘
 ```
-Reserve o espaço no fim do `<main>` (`pb-24`) para não cobrir conteúdo. Some em `lg:` (ação fica na sidebar).
+- `fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-border shadow-raised px-4 pt-3
+  pb-[max(0.75rem,env(safe-area-inset-bottom))]` com `data-action-bar`. No `lg+` vira um
+  card estático no fim do formulário (`lg:static lg:rounded-card lg:border lg:bg-canvas lg:p-4`,
+  sem sombra) e **mantém a linha "Total R$ X" ao lado do botão**: o total nunca some na hora de
+  confirmar. O aside de resumo mantém a linha do total fixa no rodapé dele (`lg:sticky lg:bottom-0`
+  sobre o `bg-surface`) e rola só o miolo.
+- O botão da barra **é** o submit do passo (um só elemento, dentro do `<form>`), nunca uma cópia.
+  Ações secundárias ("Voltar") ficam no fim do conteúdo, não na barra.
+- `< sm`: linha 1 `flex items-baseline justify-between gap-3` (texto `text-sm text-fg-muted`, valor
+  `text-xl font-bold tabular-nums whitespace-nowrap`), linha 2 botão `fullWidth`. `sm–lg`: uma linha,
+  botão `w-auto min-w-56`.
+- A altura não muda entre estados: valor, skeleton (`h-7 w-28`) e "Total indisponível" ocupam a mesma
+  linha (`min-h-7`).
+- Reserve o espaço no fim da página: `pb-36 sm:pb-28 lg:pb-0`.
+- Focos e toasts acima da barra (CSS global, fora de `@layer` para vencer os utilitários):
+  ```css
+  @media (width < 40rem) {
+    html:has([data-action-bar]) { scroll-padding-bottom: calc(9rem + env(safe-area-inset-bottom)); }
+    html:has([data-action-bar]) [data-toaster] { bottom: calc(9rem + env(safe-area-inset-bottom)); }
+  }
+  @media (40rem <= width < 64rem) {
+    html:has([data-action-bar]) { scroll-padding-bottom: 6rem; }
+    html:has([data-action-bar]) [data-toaster] { bottom: 6rem; }
+  }
+  ```
 
 ### 4.6 Página longa com seções (detalhe do hotel, F4)
 
@@ -497,10 +532,19 @@ Variante `overlay` para sobre imagem: `bg-surface/90 text-fg shadow-card`. **`ar
   com `pl-10`/`pr-10`.
 - Sempre `type` e `autoComplete` corretos (`email`, `tel`, `name`, `cc-number`, `cc-exp`, `cc-csc`) e
   `inputMode` (`numeric` para CPF/cartão, `tel` para telefone). Placeholder é exemplo, nunca label.
+- **Máscara** (telefone, CPF, cartão, validade): formatação a cada tecla por função pura que devolve
+  `{ value, caret }` (o cursor nunca pula ao apagar no meio; colar texto formatado funciona). Sem
+  `maxLength` (quebra o colar); o excesso de dígitos é descartado pela máscara. Placeholder = formato ou
+  exemplo (`MM/AA`, `000.000.000-00`, `(11) 98765-4321`).
+- `autoComplete` do checkout: `given-name`, `family-name`, `email`, `tel-country-code`, `tel-national`,
+  `cc-number`, `cc-name`, `cc-exp`, `cc-csc`; `off` em documento, cupom, idade e nomes de
+  acompanhantes (evita repetir o titular). CVV é `type="text" inputMode="numeric"`, nunca `password`.
 
 #### Select
 `<select>` nativo (acessível e bom no mobile) com o mesmo visual do Input, `appearance-none` e ícone
-`chevron-down` à direita (`pointer-events-none`). Uso: ordenação, nota mínima. Mesmos estados do Input.
+`chevron-down` à direita (`pointer-events-none`). Uso: ordenação, modo de exibição ("Exibir"), nota
+mínima. Mesmos estados do Input. Texto de ajuda do select (ex.: ordenação por distância) é um
+`p.text-sm.text-fg-muted` ligado por `aria-describedby`, em largura total logo abaixo da toolbar.
 
 #### Checkbox
 `<input type="checkbox">` nativo estilizado com `accent-primary` **ou** custom: caixa `size-5 rounded-sm
@@ -625,6 +669,12 @@ Descrição/ajuda             ← text-sm text-fg-muted, id="<id>-description"
 - Sem shift brusco: erro empurra o conteúdo abaixo, mas entra com `animate-fade-in`; não reserve espaço vazio fixo.
 - Opcional `optional` mostra "(opcional)" em `text-fg-subtle` em vez de marcar obrigatórios, quando a
   maioria dos campos for obrigatória (padrão do checkout).
+- **Campo composto** (F5, telefone = país + número): `<fieldset>` com `<legend>` no estilo do label
+  (`text-sm font-medium text-fg`), controles com `aria-label` ("País do telefone", "Número de
+  telefone"), descrição e erro ligados ao controle principal (número). `< sm` empilhado; `sm+`
+  `grid grid-cols-[10rem_1fr] gap-2`.
+- Descrição que muda com o valor (ex.: `Bandeira: Visa`): conteúdo dentro de um `<span
+  aria-live="polite">` sempre montado; textos alternados com o mesmo número de linhas (sem salto).
 
 #### Stepper (número +/-)
 ```
@@ -646,12 +696,23 @@ A partir de 18 anos
   montado** com `aria-live="polite"` (vazio quando não há hint). Descrição e hint ligados por
   `aria-describedby` **nos dois botões** (é o elemento que tem foco), para o leitor de tela ler o motivo ao
   focar o "+" bloqueado. Não usar `warning`: limite não é erro.
+- Valor confirmado depois (optimistic, F5 "Quartos"): o valor muda na hora; o `hint` mostra o status
+  (`Confirmando disponibilidade…`) e, se a confirmação falhar, o motivo do retorno
+  (`Só 1 quarto disponível.`). Mesma região viva, sem spinner extra.
 
 #### Alert (mensagem inline)
 Bloco `rounded-card border p-4 flex gap-3`, ícone à esquerda, título `font-semibold` + texto + ação opcional.
 Tons: `info`, `success`, `warning`, `danger` (`bg-*-soft border-*` com o texto em `text-fg` e o título no tom).
 `danger` usa `role="alert"`; demais `role="status"`. Uso: erro global do checkout, "Quarto esgotado,
 escolha outro", aviso de capacidade do quarto, aviso de modo offline.
+
+#### ErrorSummary
+Resumo de erros no topo do formulário (promovido da F2 na F5). `Alert danger` (`role="alert"`) com
+título `describeErrorCount(n)` (`Corrija 1 campo para continuar` / `Corrija N campos para continuar`)
+e `<ul>` de `<button type="button">` (`block min-h-11 w-full py-2 text-left text-primary underline`),
+um por erro, na ordem do DOM: `{Rótulo}: {mensagem}`. Itens genéricos `{ id, label, message }` +
+`onSelect(id)` (a feature foca o campo). Remontado (`key`) a cada tentativa para ser anunciado de novo;
+ao montar, `revealBelowHeader`. Atualiza enquanto o usuário corrige e some sem erros.
 
 #### Card
 `bg-surface border border-border rounded-card shadow-card overflow-hidden`. Variantes:
@@ -680,6 +741,9 @@ comodidades", "Ver regras de cancelamento"): `summary` `min-h-11 inline-flex ite
 font-medium text-primary cursor-pointer list-none [&::-webkit-details-marker]:hidden`, `ChevronDownIcon
 size-4 group-open:rotate-180 transition-transform` (`details` com `group`). Abre abaixo; foco fica no
 `summary`.
+Exceção (F5, resumo do checkout): quando o painel é a sidebar no `lg+`, ele fica **montado** e só
+escondido abaixo de `lg` (`hidden lg:flex`; toggle `lg:hidden`), para não perder estado nem regiões
+`aria-live`.
 
 #### Breadcrumb
 `<nav aria-label="Você está aqui"><ol>` com separador `chevron-right` `aria-hidden`. Último item é
@@ -810,6 +874,9 @@ ao fechar — garantir explicitamente guardando o elemento ativo).
 - `aria-labelledby` = título; `aria-describedby` opcional. Botão fechar `IconButton` "Fechar".
 - Clique no backdrop fecha só em dialogs informativos (termos, lightbox); em confirmação, não.
 - Foco inicial: no primeiro controle útil (em termos: botão "Fechar"/conteúdo rolável com `tabIndex=0`).
+- `focusableBody` (texto longo, ex.: termos): o corpo rolável recebe `tabIndex={0}`, `role="region"`,
+  `aria-labelledby` = título, e o foco inicial (setas/PageDown rolam o texto). Footer de aceite:
+  `[Fechar]` secondary + `[Li e aceito]` primary.
 
 #### Drawer
 Mesmo `<dialog>` com outra geometria. Mobile: **bottom-sheet** (`fixed inset-x-0 bottom-0 max-h-[90dvh]
@@ -844,8 +911,9 @@ separado).
 #### Toast
 Feedback **efêmero e não essencial** de uma ação (ex.: "Link copiado", "Não foi possível confirmar a
 reserva" — que também aparece inline).
-- Região fixa: mobile `bottom-4 inset-x-4` (acima da barra fixa: `bottom-24` quando ela existir),
-  ≥ `sm` `bottom-6 right-6 w-96`. Máx. 3 empilhados, mais novo embaixo.
+- Região fixa (`data-toaster`): mobile `bottom-4 inset-x-4`, ≥ `sm` `bottom-6 right-6 w-96`. Com a barra
+  de ação fixa na tela (`[data-action-bar]`, abaixo de `lg`), a região sobe acima dela pela regra CSS da
+  §4.5. Máx. 3 empilhados, mais novo embaixo.
 - Visual: `bg-surface border border-border rounded-card shadow-overlay p-4 flex gap-3`, barra/ícone do tom
   à esquerda (`success`, `danger`, `info`), texto `text-sm text-fg`, `IconButton` "Fechar notificação".
 - Duração: 5s (`success`/`info`), 8s (`danger`); pausa no hover e no foco. Ação opcional de 1 botão ghost
@@ -875,6 +943,57 @@ São da feature (F3/F4), mas devem compor: `Card interactive` + imagem `aspect-[
 - **SimilarHotelCard (F4)**: `Card interactive` compacto; `< sm` horizontal (foto `w-24
   aspect-square`), `sm+` vertical (foto `aspect-[4/3]`); nome `text-base line-clamp-2`, `RatingScore
   sm` sem rótulo, `PriceTag nightly-line`, badge de disponibilidade.
+- Linha de distância (após `Tipo · destino`, ambos os modos de listagem): `p.flex.items-center.gap-1
+  .text-sm.text-fg-muted` com `MapPinIcon size-4 shrink-0 text-fg-subtle` (`aria-hidden`) e o texto
+  `a 2,3 km do ponto central` (+ `title` com a explicação e, só para leitor de tela, `, em linha reta`: a
+  linha aparece em qualquer ordenação; o texto de ajuda da toolbar, só com `sort=distance`). Omitida quando o centro não existe; no skeleton vira uma linha `h-5 w-32` na
+  mesma posição (nada se move quando a lista chega).
+
+#### Rodapé do feed (rolagem contínua)
+`role="feed"` com os cards em `gap-4 lg:gap-6`; abaixo, `FeedFooter`: `mt-6 flex min-h-11 flex-col
+items-center gap-2`. Quatro estados (o rodapé só troca de conteúdo, nunca de lugar):
+- `more`: `Button secondary md` (`w-full sm:w-auto`) `Carregar mais hotéis` + `text-sm text-fg-muted`
+  `Mostrando 10 de 14`. É o fallback de teclado/leitor de tela do carregamento automático.
+- `loading-more`: mesmo botão em `loading` (`aria-disabled`, `aria-busy`) com `Carregando mais hotéis…`.
+- `error-more`: `Alert danger` em largura total (`role="alert"`) `Não foi possível carregar mais
+  hotéis.` / `Os hotéis já carregados continuam aqui.` + `Button secondary sm` `Tentar de novo`
+  (`Tentando…`); os cards já carregados continuam. O carregamento automático não repete sozinho.
+  O botão fica no lugar e o `Alert` entra abaixo dele; quando chega, é trazido à vista com
+  `scrollIntoView({ block: "nearest" })` (`behavior: "auto"` com `prefers-reduced-motion`) SEM mover o
+  foco. Com troca de filtro em andamento (lista esmaecida) o rodapé antigo fica `invisible`.
+- `end`: `p tabIndex=-1` `Você viu todos os 14 hotéis.` (1: `Você viu o único hotel.`) + `Button ghost sm`
+  `Voltar ao topo` (alvo mínimo 44 px). Com um lote só, o rodapé já nasce em `end`.
+Card do feed: `article` com anel de foco `focus-visible:outline-2 outline-offset-2 outline-focus`.
+`prefers-reduced-motion`: rolagens sem animação.
+
+#### StepIndicator (F5)
+`<ol aria-label="Etapas da reserva" class="grid grid-cols-N">`, cada passo em coluna centralizada:
+círculo `size-8 rounded-full` + rótulo `text-sm`; ligação decorativa `h-0.5` (`bg-border`, `bg-primary`
+entre concluídos).
+- Concluído: `<button>` `min-h-11 w-full` (volta ao passo), círculo `bg-primary` com `CheckIcon` branco,
+  rótulo `text-primary font-medium` + sr `, concluído`.
+- Atual: `aria-current="step"`, círculo `border-2 border-primary text-primary` com o número, rótulo
+  `font-semibold text-fg`.
+- Futuro: texto não focável, círculo `border border-border-strong text-fg-muted`, rótulo `text-fg-muted`.
+- O h2 do passo traz `Passo N de M` (`text-sm font-medium text-fg-muted`, bloco acima do título) e é o
+  alvo de foco ao trocar de passo.
+
+#### PriceBreakdown (F5)
+`<dl class="flex flex-col gap-2">`; linha `flex items-start justify-between gap-3`, `dt min-w-0 text-sm`,
+`dd shrink-0 text-sm font-medium tabular-nums whitespace-nowrap text-right`. Ordem: estadia
+(`R$ 1.200,00 × 3 noites × 1 quarto`) → desconto (`text-success`, `−R$ 360,00`) → taxa de serviço → ISS →
+`border-t pt-3` → Total (`dt text-base font-semibold`, `dd text-2xl font-bold`) → `Impostos e taxas
+incluídos.` (`text-sm text-fg-muted`). Skeleton com as mesmas linhas, `aria-busy` + sr `Calculando o
+total…`; só a linha do desconto vira skeleton enquanto o cupom valida. O total não é região viva (quem
+anuncia é o controle que mudou o preço).
+
+#### Cupom (F5)
+Recolhido em `Button ghost sm` "Tenho um cupom de desconto" (`TagIcon`, `aria-expanded`), **acima** do
+detalhamento. Aberto: `Field` "Cupom de desconto" com `Input` `flex-1` + `Button secondary` "Aplicar"
+(`Aplicando…`). Aplicado: na mesma posição e altura, linha `min-h-11 rounded-control bg-success-soft
+px-3 text-sm text-success` com `CheckIcon` + `CÓDIGO · 10% de desconto` e `Button ghost sm` "Remover"
+(recebe o foco). Deixou de valer: mesma linha em `bg-warning-soft text-warning` com `AlertCircleIcon` +
+motivo abaixo. Erros no `Field`. Anúncios num `sr-only aria-live` próprio.
 
 ---
 
@@ -905,6 +1024,10 @@ próximo passo.
 `Confirmar reserva` · `Fazer nova busca` · `Limpar filtros` · `Tentar de novo` · `Copiar link` ·
 `Ver todas as fotos` · `Ver mais avaliações` · `Voltar` · `Fechar`.
 Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
+Checkout: `Continuar para pagamento` · `Revisar reserva` · `Confirmar reserva` · `Editar` · `Ler termos e
+condições` · `Li e aceito` · `Aplicar` · `Remover` · `Ver detalhes da reserva` · `Tenho um cupom de
+desconto` · `Escolher novas datas` · `Voltar ao hotel`.
+Loading: `Confirmando reserva…` · `Calculando total…` · `Aplicando…`.
 
 ### 6.3 Validação (erro diz como resolver)
 
@@ -926,6 +1049,16 @@ Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
 | Resumo no topo do form | Título: `Corrija 2 campos para continuar` (1 → `Corrija 1 campo para continuar`) + lista de botões com aparência de link, um por campo: `{Rótulo}: {mensagem}` |
 | Data obrigatória | `Escolha a data de check-in.` / `Escolha a data de check-out.` |
 | Destino vazio | `Escolha um destino da lista.` (mesma do digitado sem escolher: a ação é a mesma) |
+| Nome / sobrenome | `Informe o nome.` / `Informe o sobrenome.` · `Use só letras, espaços, hífen ou apóstrofo.` · `Use pelo menos 2 letras.` |
+| Telefone por país | BR: `O DDD 20 não existe. Confira o código da cidade.` · `Celular tem 9 depois do DDD, como (11) 98765-4321.` · US: `Digite um número dos EUA com 10 dígitos, como (201) 555-0123.` · PT: `Digite um número de Portugal com 9 dígitos, começando com 9 ou 2.` · ES: `Digite um número da Espanha com 9 dígitos, começando com 6, 7, 8 ou 9.` |
+| Idade da criança | `Informe a idade da criança no check-in.` |
+| Cartão incompleto | `O número do cartão está incompleto.` |
+| Mês da validade | `Mês inválido. Use de 01 a 12.` · ano > 20 anos: `Confira o ano da validade.` |
+| CVV por bandeira | `Digite os 3 números do verso do cartão.` / Amex `Digite os 4 números da frente do cartão.` |
+| Nome no cartão | `Informe o nome como está impresso no cartão.` |
+| Passaporte | `Informe o número do passaporte.` · `Passaporte inválido. Use de 6 a 9 letras e números, como FZ123456.` |
+| Cupom | formato `Use de 4 a 12 letras ou números, sem espaços.` · `Cupom não encontrado. Confira o código.` · `Este cupom expirou.` · `Válido para estadias a partir de 3 noites.` · `Válido para reservas a partir de R$ 300,00.` |
+| Item do resumo com hóspede | `Hóspede 2 — Nome: Informe o nome.` · titular `Titular — E-mail: …` |
 
 ### 6.4 Vazio
 
@@ -958,6 +1091,13 @@ Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
 | Avaliações offline na troca de página | Alert warning (`WifiOffIcon`): `Você está sem internet.` · `As avaliações aparecem assim que a conexão voltar.` | — |
 | Similares não carregaram (recomendação) | `Não foi possível carregar hotéis similares.` | link `Ver hotéis em {destino}` (sem retry) |
 | Foto do lightbox quebrada | `Não foi possível carregar esta foto.` | — (setas seguem) |
+| Envio da reserva offline | Alert warning: `Você está sem internet` · `Assim que a conexão voltar, tente de novo. Nada foi cobrado e seus dados foram mantidos.` + toast `Não foi possível confirmar a reserva.` | `Tentar de novo` |
+| Preço mudou no envio | Alert warning: `O total da reserva mudou` · `Passou de R$ 4.140,00 para R$ 4.320,00. Confira o novo valor e confirme de novo. Nada foi cobrado.` | (o próprio `Confirmar reserva`) |
+| Cupom recusado no envio | Alert warning: `O cupom BEMVINDO10 não vale mais` · `Removemos o desconto e o total agora é R$ 4.140,00. Confira e confirme de novo. Nada foi cobrado.` | — |
+| Total indisponível no envio | Alert danger: `Não foi possível calcular o total` · `Carregue o preço do quarto de novo para confirmar a reserva.` | `Tentar de novo` |
+| Seções do checkout | `Não foi possível carregar os dados do hotel.` / `Não foi possível carregar o preço.` · `Verifique sua conexão e tente de novo.` | `Tentar de novo` |
+| Confirmação de quartos falhou | hint: `Não foi possível confirmar a disponibilidade. Tente de novo.` (valor volta) | — |
+| Ambiente de demonstração (checkout) | Alert info no topo do formulário, em todos os passos: `Ambiente de demonstração — não use dados reais.` (a API é pública e sem autenticação) | — |
 
 Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem status HTTP ao usuário.
 
@@ -975,6 +1115,12 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | Esgotado sem datas na busca | Badge `danger` | nota `Sem quartos disponíveis no momento.` |
 | Disponível | — | Nada (não poluir) |
 | Quarto ficou indisponível no checkout | Alert `warning` | `Este quarto esgotou enquanto você reservava. Escolha outro quarto no mesmo hotel.` + `Ver quartos` |
+| Quarto esgotou antes do checkout (F5, página) | `EmptyState` h1 + `Ver quartos` | `Este quarto esgotou` · `Não há mais unidades de {quarto} para {12–15 dez}. Escolha outro quarto no mesmo hotel.` |
+| Menos quartos que a reserva (F5, página) | idem | `Só 2 quartos disponíveis` · `Sua reserva pede 3 quartos de {quarto}. Escolha outro quarto ou reduza a quantidade de quartos.` |
+| Quarto pequeno (F5, página) | idem | `Este quarto não acomoda sua busca` · `{quarto} acomoda até 2 hóspedes por quarto e sua busca tem 3. Escolha outro quarto ou altere os hóspedes.` |
+| Datas passadas (F5, página) | idem + `Escolher novas datas` | `As datas desta reserva já passaram` · `O check-in era em 12/12/2026. Escolha novas datas para ver preço e disponibilidade.` |
+| Esgotou durante o envio com sobra (F5) | Alert warning + `Ver quartos` | `Só 1 quarto disponível agora` · `Diminua a quantidade de quartos no resumo da reserva ou escolha outro quarto. Nada foi cobrado.` |
+| Limite de quartos no checkout (F5) | hint do Stepper | `Cada quarto precisa de pelo menos 1 adulto.` · `Máximo de 4 quartos por reserva.` · `Este quarto acomoda até 3 hóspedes: 4 hóspedes precisam de pelo menos 2 quartos.` · `Só 2 quartos disponíveis.` |
 
 ### 6.7 Resultados, filtros e ordenação (F3)
 
@@ -984,7 +1130,14 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | Resumo da busca | `12–15 dez · 3 noites · 2 adultos · 1 quarto` · sem datas: `Datas não definidas` |
 | Contagem | `Nenhum hotel encontrado` · `1 hotel encontrado` · `14 hotéis encontrados` |
 | Linha de status | `Mostrando 1–10 de 14` · `Carregando hotéis…` · `Atualizando resultados…` |
-| Ordenar | `Ordenar por`: `Mais populares` · `Menor preço` · `Maior avaliação` |
+| Ordenar | `Ordenar por`: `Mais populares` · `Menor preço` · `Maior avaliação` · `Distância do centro` |
+| Ajuda da distância | `Distância em linha reta até o ponto médio dos hotéis de {destino}.` |
+| Distância no card | `a menos de 100 m do ponto central` · `a 500 m do ponto central` · `a 2,3 km do ponto central` · `a 20 km do ponto central` |
+| Exibir | `Exibir`: `Em páginas` · `Rolagem contínua` · status do feed `Mostrando 10 de 14` |
+| Rodapé do feed | `Carregar mais hotéis` · `Carregando mais hotéis…` · `Você viu todos os 14 hotéis.` · `Voltar ao topo` |
+| Erro do lote | `Não foi possível carregar mais hotéis.` · `Os hotéis já carregados continuam aqui.` · `Tentar de novo` / `Tentando…` |
+| Anunciador do feed | `Carregando mais hotéis…` · `Mais 4 hotéis carregados. Mostrando 14 de 14.` · `Mais 1 hotel carregado. Mostrando 11 de 11.` |
+| Filtros (boundary) | `Não foi possível mostrar os filtros.` · `Tentar de novo` |
 | Filtros | `Filtros` · `Filtros (3)` · `Limpar filtros` · `Ver 14 hotéis` / `Ver 1 hotel` / `Ver resultados` |
 | Preço | `Preço por noite` · `Mínimo` / `Máximo` · `Qualquer preço` · `A partir de R$ 200` · `Até R$ 1.500` · `R$ 200 – R$ 1.500` · topo `R$ 3.000 ou mais` |
 | Nota mínima | `Qualquer nota` · `4,5 ou mais` Excelente · `4,0 ou mais` Muito bom · `3,5 ou mais` Bom (nunca "4,5+": ambíguo no leitor de tela) |
@@ -1017,6 +1170,17 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 - `aria-label`s padrão: `Fechar`, `Fechar notificação`, `Limpar destino`, `Foto anterior`, `Próxima foto`,
   `Abrir foto {n} de {total}`, `Página {n}`, `Diminuir {campo}`, `Aumentar {campo}`, `Copiar link do hotel`,
   `Paginação`, `Você está aqui`, `Seções da página`, `Fechar filtros`, `Mapa: {endereço}`.
+- Checkout (F5): passos `Hóspedes` · `Pagamento` · `Revisão`; h2 `Dados dos hóspedes` · `Pagamento` ·
+  `Revise e confirme`, cada um com `Passo N de 3`. Aviso `Pagamento simulado` · `Nenhum valor é cobrado.
+  Para testar, use o cartão 4111 1111 1111 1111, qualquer validade futura e qualquer CVV.` Privacidade:
+  `Os dados do cartão ficam só neste navegador e são apagados quando você sai da página.` Restauração:
+  `Recuperamos os dados que você preencheu nesta sessão.` · `Por segurança, os dados do cartão não ficam
+  salvos. Preencha o pagamento de novo.` Termos: `Li e aceito os termos e condições da reserva, incluindo
+  a política de cancelamento.` Cartão mascarado `Visa •••• 1111`; documento `CPF ***.982.247-**` /
+  `Passaporte ******456`. Total: `Impostos e taxas incluídos.`
+- `aria-label`s do checkout: `Etapas da reserva`, `País do telefone`, `Número de telefone`, `Remover
+  quarto`, `Adicionar quarto`; nomes com sr-only: `Aplicar cupom`, `Remover cupom`, `Editar hóspedes`,
+  `Editar pagamento`.
 
 ---
 
@@ -1042,6 +1206,6 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 |---|---|---|
 | atoms | Button (+ButtonLink), IconButton, Input, Select, Checkbox, Radio, Badge, Stars, Skeleton, Spinner, PriceTag, RemoteImage, icons | F1 (PriceTag nasce na F3; PriceTag e RemoteImage sobem na F4) |
 | atoms | Range (estilo do `input type="range"` nativo) · Avatar | F3 · F4 (na feature até o 2º uso) |
-| molecules | Field, Stepper, Alert, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação | F1 (Combobox/DateRange na F2; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso) |
-| organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4) |
-| feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, PriceBreakdown, StepIndicator | F3–F5, compondo os acima |
+| molecules | Field (+ campo composto), Stepper, Alert, ErrorSummary, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação | F1 (Combobox/DateRange na F2; ErrorSummary nasce na F2 e sobe na F5; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso) |
+| organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`, `focusableBody`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4; `focusableBody` na F5) |
+| feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, StepIndicator, PriceBreakdown, CouponForm, ActionBar (barra fixa) | F3–F5, compondo os acima (ActionBar sobe para shared no 2º uso) |

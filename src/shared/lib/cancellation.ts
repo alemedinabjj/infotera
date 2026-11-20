@@ -1,4 +1,4 @@
-import type { CancellationPolicy } from "@/shared/api/schemas";
+import type { CancellationPolicy } from "../api/schemas";
 
 export type CancellationDetails = {
   label: string;

@@ -10,6 +10,7 @@ const ON_PAGE_3: SearchFilters = {
   types: ["hotel"],
   amenities: ["pool"],
   sort: "price-asc",
+  view: "infinite",
   page: 3,
 };
 
@@ -50,10 +51,17 @@ describe("applyFilterChange", () => {
     );
   });
 
-  it("clear zera preço, nota, tipos e comodidades e mantém a ordenação", () => {
+  it("setView troca o modo de exibição", () => {
+    expect(applyFilterChange(DEFAULT_FILTERS, { type: "setView", value: "infinite" }).view).toBe(
+      "infinite",
+    );
+  });
+
+  it("clear zera preço, nota, tipos e comodidades e mantém ordenação e modo", () => {
     expect(applyFilterChange(ON_PAGE_3, { type: "clear" })).toEqual({
       ...DEFAULT_FILTERS,
       sort: "price-asc",
+      view: "infinite",
     });
   });
 
@@ -63,6 +71,7 @@ describe("applyFilterChange", () => {
     { type: "toggleType", value: "resort" },
     { type: "toggleAmenity", value: "wifi" },
     { type: "setSort", value: "popular" },
+    { type: "setView", value: "pages" },
     { type: "clear" },
   ])("toda ação volta para a página 1 ($type)", (change) => {
     expect(applyFilterChange(ON_PAGE_3, change).page).toBe(1);

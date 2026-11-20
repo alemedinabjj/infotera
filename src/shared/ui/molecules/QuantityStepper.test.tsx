@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { QuantityStepper } from "./QuantityStepper";
 
 const Harness = ({
@@ -85,5 +85,28 @@ describe("QuantityStepper", () => {
         "A partir de 18 anos Até 5 hóspedes por quarto.",
       );
     }
+  });
+});
+
+describe("QuantityStepper locked", () => {
+  it("bloqueia os dois botões com aria-disabled sem tirar o foco", async () => {
+    const onChange = vi.fn<(value: number) => void>();
+    render(
+      <QuantityStepper
+        label="Quartos"
+        value={2}
+        min={1}
+        max={4}
+        locked
+        onChange={onChange}
+        decreaseLabel="Remover quarto"
+        increaseLabel="Adicionar quarto"
+      />,
+    );
+    const plus = screen.getByRole("button", { name: "Adicionar quarto" });
+    expect(plus).toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(plus);
+    await userEvent.click(screen.getByRole("button", { name: "Remover quarto" }));
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

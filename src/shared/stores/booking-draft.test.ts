@@ -119,4 +119,33 @@ describe("booking-draft", () => {
     });
     expect(result.current).toBe(true);
   });
+
+  describe("setRoomCount", () => {
+    it("grava e persiste a nova quantidade quando os critérios continuam válidos", () => {
+      useBookingDraftActions().selectRoom({
+        hotelId: 1,
+        roomId: 2,
+        criteria: { ...criteria, adults: 3 },
+      });
+      expect(useBookingDraftActions().setRoomCount(3)).toBe(true);
+      expect(useBookingDraft.getState().selection?.criteria.rooms).toBe(3);
+      expect(readStored()).toMatchObject({ state: { selection: { criteria: { rooms: 3 } } } });
+    });
+
+    it.each([
+      ["menos adultos que quartos", { adults: 2, children: 0 }, 3],
+      ["mais de 5 hóspedes por quarto", { adults: 8, children: 3 }, 2],
+      ["mais de 4 quartos", { adults: 8, children: 0 }, 5],
+    ])("devolve false e não muda: %s", (_name, guests, rooms) => {
+      const selection = { hotelId: 1, roomId: 2, criteria: { ...criteria, ...guests, rooms: 1 } };
+      useBookingDraftActions().selectRoom(selection);
+      expect(useBookingDraftActions().setRoomCount(rooms)).toBe(false);
+      expect(useBookingDraft.getState().selection).toEqual(selection);
+    });
+
+    it("sem seleção devolve false", () => {
+      expect(useBookingDraftActions().setRoomCount(1)).toBe(false);
+      expect(useBookingDraft.getState().selection).toBeNull();
+    });
+  });
 });

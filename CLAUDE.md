@@ -31,6 +31,8 @@ npm run test         # vitest run
 npm run test:watch   # vitest em modo watch
 npm run test:e2e     # playwright test --trace off (sobe a mock-api e o front se não estiverem rodando; exige `npm install` em mock-api/)
 # E2E usa o Chromium do Playwright 1.63 (`npx playwright install chromium` se faltar)
+# CSP do checkout: rode também contra o build (`npm run build && npx next start -p 3100`, depois
+# `PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/checkout*.spec.ts`)
 npx -y react-doctor@0.9.23 . --scope changed --base main --verbose --no-telemetry
                      # saúde React: componentes gigantes/aninhados, perf, a11y (também roda em toda PR)
 ```

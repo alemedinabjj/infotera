@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { useDeferredBlur } from "@/shared/hooks/useDeferredBlur";
 import { todayISO } from "@/shared/lib/dates";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
@@ -13,7 +14,6 @@ import {
   type SearchFormValues,
   toFormValues,
 } from "../model/search-form.schema";
-import { useDeferredBlur } from "./useDeferredBlur";
 import { useFormNotices } from "./useFormNotices";
 import { useRecentSearches } from "./useRecentSearches";
 

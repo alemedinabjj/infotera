@@ -46,6 +46,18 @@ const actions = {
   selectRoom: (selection: RoomSelection): void => {
     useBookingDraft.setState({ selection });
   },
+  /**
+   * Muda a quantidade de quartos da seleção (checkout). Valida os critérios resultantes com
+   * `searchCriteriaSchema`; inválido (ou sem seleção) não muda nada e devolve `false`.
+   */
+  setRoomCount: (rooms: number): boolean => {
+    const { selection } = useBookingDraft.getState();
+    if (!selection) return false;
+    const criteria = searchCriteriaSchema.safeParse({ ...selection.criteria, rooms });
+    if (!criteria.success) return false;
+    useBookingDraft.setState({ selection: { ...selection, criteria: criteria.data } });
+    return true;
+  },
   clearSelection: (): void => {
     useBookingDraft.setState(initialState);
     useBookingDraft.persist.clearStorage();

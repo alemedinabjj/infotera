@@ -60,6 +60,10 @@ export const describeResultCount = (total: number): string => {
   return `${total.toLocaleString("pt-BR")} hotéis encontrados`;
 };
 
+/** `Mostrando 10 de 14` (feed: sem faixa nem página). */
+export const describeLoadedCount = (loaded: number, total: number): string =>
+  `Mostrando ${loaded.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")}`;
+
 /** Complemento só para leitor de tela: `, página 2 de 2` (vazio com 1 página). */
 export const describePageSuffix = (page: number, total: number): string => {
   const totalPages = getTotalPages(total, PAGE_SIZE);
@@ -113,14 +117,29 @@ export type ToolbarStatus =
   | { kind: "text"; text: string }
   | { kind: "spinner"; text: string };
 
-type ToolbarInput = { view: ResultsView; slow: boolean; total: number; page: number };
+/** Como a lista está sendo mostrada: por página, ou acumulada (feed) com `loaded` hotéis. */
+export type Listing = { mode: "pages"; page: number } | { mode: "infinite"; loaded: number };
+
+type ToolbarInput = { view: ResultsView; slow: boolean; total: number; listing: Listing };
+
+/** Sufixo de página (só leitor de tela) e linha de status do resultado, por modo. */
+const describeListing = (
+  listing: Listing,
+  total: number,
+): { srSuffix: string; statusText: string } =>
+  listing.mode === "pages"
+    ? {
+        srSuffix: describePageSuffix(listing.page, total),
+        statusText: describeVisibleRange(listing.page, total),
+      }
+    : { srSuffix: "", statusText: describeLoadedCount(listing.loaded, total) };
 
 /** Título (h2, alvo de foco) e linha de status da toolbar para cada visão. */
 export const describeToolbar = ({
   view,
   slow,
   total,
-  page,
+  listing,
 }: ToolbarInput): { heading: ToolbarHeading; status: ToolbarStatus } => {
   switch (view.kind) {
     case "loading":
@@ -132,17 +151,15 @@ export const describeToolbar = ({
           text: slow ? "Está demorando mais que o normal…" : "Carregando hotéis…",
         },
       };
-    case "results":
+    case "results": {
+      const { srSuffix, statusText } = describeListing(listing, total);
       return {
-        heading: {
-          kind: "text",
-          text: describeResultCount(total),
-          srSuffix: describePageSuffix(page, total),
-        },
+        heading: { kind: "text", text: describeResultCount(total), srSuffix },
         status: view.stale
           ? { kind: "spinner", text: "Atualizando resultados…" }
-          : { kind: "text", text: describeVisibleRange(page, total) },
+          : { kind: "text", text: statusText },
       };
+    }
     case "empty-destination":
     case "empty-filters":
       return {

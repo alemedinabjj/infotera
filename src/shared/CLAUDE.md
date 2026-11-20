@@ -9,12 +9,13 @@ feature só fica na feature; promova para cá quando aparecer o segundo uso.
 shared/
   api/        env · http · errors · schemas · query-keys · endpoints · queries
               query-client · server-query-client (só para Server Components)
-  hooks/      useToday · useDebouncedValue · useOnline (F2) · useSlowLoading (F3)
+  hooks/      useToday · useDebouncedValue · useOnline (F2) · useSlowLoading (F3) · useDeferredBlur (promovido da F2 na F5)
   lib/        cn · dates · currency · format · search-params · storage · pagination · image · pricing · availability
-              labels · links (`hotelHref`) · stay-summary (`describeStay`)
+              labels · links (`hotelHref`) · stay-summary (`describeStay`) · csp (`buildCsp`, `BASELINE_DIRECTIVES`, `IMAGE_HOSTS`) ·
+              navigation (`assignLocation`: carga de documento) · cancellation (`cancellationDetails`, promovido da F4)
   ui/         atoms/ (Button (+button-styles), IconButton, Input, Select, Checkbox, Radio, Skeleton, Spinner,
                        Badge, Stars, VisuallyHidden)
-              molecules/ (Field, QuantityStepper, Pagination, EmptyState, ErrorState, Alert, Dialog, RatingScore, PriceTag, card-styles)
+              molecules/ (Field, QuantityStepper, ErrorSummary (promovido da F2), Pagination, EmptyState, ErrorState, Alert, Dialog, RatingScore, PriceTag, card-styles)
                        atoms/RemoteImage (`next/image` + loader Unsplash + blur + fallback)
               ErrorBoundary (classe, `fallback({ error, reset })`, `resetKeys`)
               toast/ (toast-store, Toaster, copyCurrentUrl) · layout/ (SiteHeader, SkipLink) · icons.tsx · index.ts
@@ -34,7 +35,7 @@ shared/
 - **`booking-draft`**: `skipHydration` + `BookingDraftHydrator`; a F5 deve esperar
   `useBookingDraftHydrated()` antes de redirecionar "sem seleção". Guarda só ids e critérios, nunca PII.
 - **Datas são `YYYY-MM-DD`** (`ISODate`); nunca `new Date("2026-12-01")`. Use `dates.ts`.
-- **Query keys** vivem em `api/query-keys.ts`; query options só dos endpoints usados por 2+ features
+- **Query keys** vivem em `api/query-keys.ts` (`hotels.infinite` é a rolagem contínua da F3b, com `InfiniteData`); query options só dos endpoints usados por 2+ features
   (`hotelQueryOptions`, `hotelRoomsQueryOptions`, `roomQueryOptions`). O resto fica na feature dona.
 - **`http.ts`**: `apiGet`, `apiGetPage` (`X-Total-Count`, exposto via CORS pela mock-api), `apiPost`;
   falhas viram `ApiError { kind, status }`. Texto de UI vem de `toUserMessage`, nunca do corpo da API.
@@ -70,9 +71,8 @@ Unitário obrigatório para tudo em `lib/` e para os schemas (casos válidos e i
 - **CSP (F5)**: `img-src` precisa de `images.unsplash.com`, `i.pravatar.cc` e `tile.openstreetmap.org` (mapa do detalhe).
 
 - `lib/focus-after-navigation`: `markFocusAfterNavigation(href)` no envio **válido** + `consumeFocusAfterNavigation()`
-  em toda montagem (zera sempre; `true` só se `pathname+search === href`). Usado pela F4. **TODO hotel-search**:
-  `useFocusAfterEdit` ainda usa o `pendingEdit` de módulo (marca antes de validar e sobrevive a envio inválido);
-  migrar para este utilitário.
+  em toda montagem (zera sempre; `true` só se `pathname+search === href`). Usado pela F4 (`useFocusAfterDates`) e pela hotel-search
+  (`useFocusAfterEdit`, via `app/search/SearchEditForm`).
 - `todayISO()` é sempre do fuso `America/Sao_Paulo` (servidor em UTC).
 
 ## Pendentes para features
@@ -80,3 +80,16 @@ Componentes do design system que a F1 não entrega; nascem na feature que os usa
 para `shared/` quando aparecer o segundo uso.
 - **Breadcrumb** (hoje em `hotel-details`) e a **tabela de comparação**: sobem quando a F5/F6 usar.
 - **Avatar** (`ReviewAvatar`, em `hotel-details`) e **Combobox/DateRange** (`search-form`): promover no segundo uso.
+
+## F5 (checkout)
+- `booking-draft.setRoomCount(rooms): boolean` valida os critérios resultantes com `searchCriteriaSchema` (inválido ou
+  sem seleção não muda e devolve `false`).
+- `bookingGuestSchema` tem contato opcional (só o titular), `kind` e `age`; `bookingInputSchema` aceita
+  `priceBreakdown?` (centavos). `queryKeys.coupons.detail(code)`.
+- `Dialog focusableBody` (corpo rolável vira região focável com foco inicial), `QuantityStepper locked`
+  (`aria-disabled` nos dois botões), `Toaster data-toaster`, ícones `credit-card`/`lock`/`tag`, e o CSS da barra de
+  ação fixa (`[data-action-bar]`) em `globals.css`.
+- `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`) e exporta `describeErrorCount`.
+- `lib/scroll.ts`: `revealBelowHeader` (topo acima do header), `revealNearest` e `revealBlock` (revela um
+  **bloco** entre o header e a barra fixa `[data-action-bar]` medida no DOM; usa `revealDelta`, função pura).
+  `Field` marca o contêiner com `data-reveal-block` para o foco revelar rótulo, controle e erro inteiros.

@@ -78,6 +78,11 @@ type DialogProps = {
   closeOnBackdrop?: boolean;
   /** Seletor CSS do controle que recebe o foco ao abrir (padrão: o 1º focável, o "Fechar"). */
   initialFocus?: string;
+  /**
+   * Texto longo (ex.: termos): o corpo rolável vira uma região focável (`tabIndex=0`,
+   * `role="region"` nomeada pelo título) e recebe o foco inicial, para setas/PageDown rolarem.
+   */
+  focusableBody?: boolean;
   /** Teclas dentro do dialog (ex.: setas do lightbox). `Esc` e `Tab` já são nativos. */
   onKeyDown?: KeyboardEventHandler<HTMLDialogElement>;
   className?: string;
@@ -121,13 +126,14 @@ export const Dialog = ({
   closeLabel = "Fechar",
   closeOnBackdrop = false,
   initialFocus,
+  focusableBody = false,
   onKeyDown,
   className,
 }: DialogProps) => {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const pressStartedOnBackdrop = useRef(false);
-  useDialogLifecycle(ref, open, initialFocus);
+  useDialogLifecycle(ref, open, focusableBody ? "[data-dialog-body]" : initialFocus);
   const layout = layoutFor(size, placement);
 
   return (
@@ -172,7 +178,20 @@ export const Dialog = ({
               onClick={onClose}
             />
           </header>
-          <div className={layout.body}>{children}</div>
+          {focusableBody ? (
+            <section
+              data-dialog-body
+              aria-labelledby={titleId}
+              // biome-ignore lint/a11y/noNoninteractiveTabindex: região rolável nomeada; o teclado precisa rolar o texto longo
+              tabIndex={0}
+              // Contorno por dentro: o `overflow-hidden` do dialog cortaria o anel de foco externo.
+              className={cn(layout.body, "focus-visible:outline-offset-[-2px]")}
+            >
+              {children}
+            </section>
+          ) : (
+            <div className={layout.body}>{children}</div>
+          )}
           {footer ? <footer className={cn("flex gap-3", layout.footer)}>{footer}</footer> : null}
         </div>
       ) : null}

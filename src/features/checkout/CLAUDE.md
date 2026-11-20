@@ -1,56 +1,60 @@
 # feature: checkout (`/checkout`) — F5
 
-Resumo da seleção, formulário multi-step e criação da reserva (`POST /bookings`).
+Resumo da seleção, formulário de 3 passos e criação da reserva por **Server Action**.
 **Feature mais sensível do projeto: lida com PII e dados de pagamento (simulados).**
+Spec: `docs/specs/F5-checkout.md` (inclui `## UI/UX`). `app/` importa só `CheckoutPage` pelo `index.ts`.
 
-## Escopo
-- Básico: resumo hotel + quarto, redirect para `/` (ou para o hotel) sem seleção, form
-  nome/email/telefone, `POST /bookings`, redirect para `/confirmation/[id]`.
-- Avançados: multi-step (dados → pagamento → revisão), CPF com dígito verificador, telefone com
-  máscara, cartão com Luhn, validade não expirada, breakdown de preço, termos com modal, erros por
-  campo + global + retry, persistência do form com debounce.
-
-## Estrutura esperada
+## Estrutura
 ```
-model/price.ts            calculatePrice({ pricePerNight, nights, rooms }) → { base, taxes, total, lines[] }
-model/validators.ts       isValidCPF, isValidLuhn, isFutureExpiry, phone mask/parse
-model/checkout.schema.ts  um schema Zod por step + schema completo (z.infer para os tipos)
-model/to-booking.ts       form + seleção → payload Booking (função pura)
-api/create-booking.ts     useCreateBooking (useMutation)
-hooks/useCheckoutDraft.ts persistência com debounce (só campos permitidos)
-components/CheckoutPage.tsx · BookingSummary.tsx · PriceBreakdown.tsx · StepIndicator.tsx ·
-           PersonalStep.tsx · PaymentStep.tsx · ReviewStep.tsx · TermsDialog.tsx
-index.ts
+model/    price (centavos inteiros) · price-labels · quote (preço + elegibilidade do cupom) · coupons · coupon-announcement ·
+          cpf · passport · card · expiry · phone (regras por país, motivo da falha) · masked-input (cursor estável) · names ·
+          companions · checkout.schema (+ resolver, `isPersonalValid`) · steps · error-summary · checkout-draft (whitelist) ·
+          room-count (limites + reducer otimista com `seq`) · checkout-gate (`selectionGate`, `roomEligibility`) · blocked ·
+          booking-request · verify-booking · to-booking-input · create-booking-result (`submitFeedback`) ·
+          summary-labels · review-labels · terms
+api/      coupons (consulta simulada, 600 ms, abortável) · create-booking.server (orquestra) · create-booking.action ("use server")
+hooks/    useStrictDocument · useCheckoutGate · useCheckoutQueries · useRoomCount · useCoupon · usePriceQuote · useCheckoutForm ·
+          useCheckoutDraft · usePaymentWipe · useSubmitBooking · useCheckoutFlow (agrega) · checkout-initial
+components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingSummary/CheckoutForm … (ver spec)
 ```
 
-## Regras de negócio
-- Preço calculado **no cliente a partir dos dados da API** (`room.pricePerNight`), nunca de valor salvo
-  no storage. Re-busque hotel e quarto pelo id antes de mostrar o resumo.
-- Noites vêm de `shared/lib/dates`. Taxas: defina a regra na spec (ex.: 5% de taxa de serviço) e
-  mantenha numa constante nomeada.
-- Arredondamento em centavos (inteiros) para evitar erro de ponto flutuante.
-- Quarto esgotado ou critérios inválidos quando a página abre → voltar ao hotel com aviso.
-- Submit: botão desabilitado durante a mutation, sem duplo envio; erro → toast + mensagem global +
-  botão "Tentar de novo" mantendo os dados.
+## Decisões (valem daqui para frente)
+- **Server Action recalcula tudo**: o cliente envia só referências, escolhas, `cardLast4` e `expectedTotalCents`; o
+  `totalPrice` gravado nunca vem do cliente. A action não lança: devolve `CreateBookingResult` (union por `status`).
+- **Id da reserva = UUID v4 por tentativa** (`nextAttemptId` por fingerprint do pedido). Falha ambígua do `POST` →
+  `GET /bookings/:id` decide `created` ou `failed` (retry nunca duplica; ids não enumeráveis).
+- **CSP com nonce só em `/checkout`** (`src/proxy.ts`) + carga de documento ao entrar (`assignLocation` na F4 e
+  `useStrictDocument`). A página chama `connection()`.
+- **Um `useForm` para os 3 passos**; passo em estado local (não na URL); `trigger(STEP_FIELDS[step], { shouldFocus })`.
+  `useCheckoutFocus` cuida do foco: o campo inválido roda **depois** do efeito do `ErrorSummary` e revela o contêiner
+  inteiro (`data-reveal-block`) com `revealBlock`, entre o header e a barra fixa; o `h2` revela o bloco "Passo N de 3".
+  O alerta do envio (`SubmitError`) se revela inteiro (rAF pós-commit). Toast só na falha de transporte da action.
+- **Bloqueio só na entrada** (`admitted` em `CheckoutRoute`): mudar a quantidade de quartos (optimistic) ou refetch do
+  quarto não pode derrubar o formulário; o envio devolve `unavailable` com alerta e "Ver quartos".
+- **Quartos otimistas**: `useRoomCount` (reducer com `seq`; consultas simultâneas compartilham o `fetchQuery`); persiste em
+  `booking-draft.setRoomCount`. Seleção congelada (`leaving`) quando a reserva é criada, para o `clearSelection()` não
+  disparar o redirect para `/`.
+- **Cupons locais** (`BEMVINDO10`, `FERIAS15`, `DESCONTO50`, `VERAO2024`), consulta com cache por código (`staleTime: Infinity`),
+  elegibilidade reavaliada por `buildQuote` quando os quartos mudam.
+- **Telefone**: o valor guardado são os dígitos brutos (até 15); a máscara é só de exibição e o excesso por país é erro
+  de validação (BR → US → BR preserva o número).
+- **Rascunho**: `step` é o passo **máximo alcançado**; se a restauração cai no passo 1 (ex.: idade da criança), o aviso do
+  cartão apagado aparece ao chegar ao passo 2. Título do documento por efeito (`useDocumentTitle`).
+- **Desktop**: o `ActionBar` vira card estático com "Total R$ X" ao lado do botão; o total do aside é `sticky bottom-0`.
+- **Envio**: `inFlight` (ref) garante 1 request; no retry ambíguo, `bookingMatchesInput` confere que a reserva lida é a deste pedido.
+- **Máscaras**: `applyMask` conta letras e dígitos antes do cursor (vale para passaporte também); sem `maxLength`.
+- **Botões nunca `disabled`**: `loading`/`aria-disabled`; blur do campo adiado com `useDeferredBlur` enquanto um botão é
+  pressionado; ErrorSummary e SubmitError remontados por `key`.
 
 ## Segurança e privacidade (obrigatório)
-- **Nunca** persistir número do cartão, CVV, validade nem CPF (nem em localStorage, nem no Zustand persistido).
-  Persistir só nome, email, telefone e step atual. Limpar o rascunho após reserva criada.
-- O payload do `POST /bookings` **não** leva dados de cartão: só os últimos 4 dígitos, se precisar.
-- Não logar valores do formulário no console.
-- Inputs de cartão: `autocomplete="cc-number"`, `inputMode="numeric"`; CVV `autocomplete="cc-csc"`.
-
-## Acessibilidade
-- Ao trocar de step, mover o foco para o título do step. Indicador de passos com `aria-current="step"`.
-- Resumo de erros no topo com links para os campos ao tentar avançar.
+- **Nunca** persistir número do cartão, CVV, validade, documento, idade, cupom nem aceite. Rascunho = `toPersistedDraft`
+  (whitelist explícita) no `sessionStorage` (`infotera:checkout-draft`), debounce 500 ms, apagado após `created`.
+- `usePaymentWipe`: `pagehide` limpa cartão, validade, CVV e documento; volta do bfcache cai no passo de pagamento com aviso.
+- O payload do `POST /bookings` leva só `cardLast4`; o documento é validado e descartado.
+- Nada de `console.*` com valores do formulário; erros no servidor logam só `{ event, kind, status }`.
+- Aviso fixo "Ambiente de demonstração — não use dados reais." no topo do formulário (a API pública não tem autenticação).
 
 ## Testes
-- Unit: `price` (1 e 30 noites, vários quartos, arredondamento), CPF (válidos, inválidos, repetidos
-  tipo 111.111.111-11), Luhn, validade (mês atual, passado), schemas por step, `to-booking`.
-- Componente: não avança step com erro; persistência não contém dados de cartão; retry do submit.
-
-## Notas vindas da F3
-- CSP completa (F5): hoje não há `img-src`. As fotos usam o loader do Unsplash (`images.unsplash.com` direto, não só
-  `/_next/image`): libere esse host (e `i.pravatar.cc` para avatares) em `img-src`.
-- O total do card da F3 é `diária × noites × quartos` sem taxas; aqui o breakdown com taxas é a fonte da verdade
-  (o rótulo da F3 diz "total", nunca "total final").
+Unit em `model/` e `api/` (tabelas para validadores, gate, cupons); componente por seção com `fetch` stubado e a action mockada
+(`checkout-test-utils.tsx`); `console.*` espionado; E2E em `e2e/checkout*.spec.ts` (rode também contra o build para a CSP).
+Falhas da mock-api **dentro** da action não passam pelo `page.route`: cobertas em `create-booking.server.test.ts`.

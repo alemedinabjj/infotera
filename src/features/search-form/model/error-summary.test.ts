@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeErrorCount, summarizeErrors } from "./error-summary";
+import { summarizeErrors } from "./error-summary";
 
 describe("summarizeErrors", () => {
   it("sem erros devolve lista vazia", () => {
@@ -27,12 +27,5 @@ describe("summarizeErrors", () => {
         rooms: { type: "custom", message: "y" },
       }),
     ).toEqual([{ field: "adults", label: "Hóspedes", message: "x" }]);
-  });
-});
-
-describe("describeErrorCount", () => {
-  it("singular e plural", () => {
-    expect(describeErrorCount(1)).toBe("Corrija 1 campo para continuar");
-    expect(describeErrorCount(3)).toBe("Corrija 3 campos para continuar");
   });
 });

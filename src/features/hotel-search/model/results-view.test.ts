@@ -7,6 +7,7 @@ import {
   describeSheetAction,
   describeToolbar,
   describeVisibleRange,
+  type Listing,
   outOfRangePage,
   type ResultsView,
   type ResultsViewInput,
@@ -117,8 +118,12 @@ describe("textos", () => {
 });
 
 describe("describeToolbar", () => {
-  const toolbar = (v: ResultsView, slow = false, total = 14, page = 1) =>
-    describeToolbar({ view: v, slow, total, page });
+  const toolbar = (
+    v: ResultsView,
+    slow = false,
+    total = 14,
+    listing: Listing = { mode: "pages", page: 1 },
+  ) => describeToolbar({ view: v, slow, total, listing });
 
   it("carregando: skeleton + spinner, e 'demorando' depois de 5 s", () => {
     expect(toolbar({ kind: "loading" })).toEqual({
@@ -133,10 +138,25 @@ describe("describeToolbar", () => {
 
   it("resultados: contagem, sufixo de página e faixa", () => {
     expect(
-      toolbar({ kind: "results", stale: false, offlineWithData: false }, false, 14, 2),
+      toolbar({ kind: "results", stale: false, offlineWithData: false }, false, 14, {
+        mode: "pages",
+        page: 2,
+      }),
     ).toEqual({
       heading: { kind: "text", text: "14 hotéis encontrados", srSuffix: ", página 2 de 2" },
       status: { kind: "text", text: "Mostrando 11–14 de 14" },
+    });
+  });
+
+  it("feed: 'Mostrando 10 de 14' e sem sufixo de página", () => {
+    expect(
+      toolbar({ kind: "results", stale: false, offlineWithData: false }, false, 14, {
+        mode: "infinite",
+        loaded: 10,
+      }),
+    ).toEqual({
+      heading: { kind: "text", text: "14 hotéis encontrados", srSuffix: "" },
+      status: { kind: "text", text: "Mostrando 10 de 14" },
     });
   });
 

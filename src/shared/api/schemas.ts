@@ -128,14 +128,35 @@ export const reviewSchema = z.object({
 });
 export type Review = z.infer<typeof reviewSchema>;
 
-/** Hóspede da reserva. Sem CPF e sem dados de cartão: `GET /bookings/:id` é público no mock. */
+/**
+ * Hóspede da reserva. Sem CPF e sem dados de cartão: `GET /bookings/:id` é público no mock.
+ * Só o titular (`guests[0]`) tem contato; acompanhantes trazem `kind` (e `age` quando criança).
+ */
 export const bookingGuestSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
-  email: z.string(),
-  phone: z.string(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  kind: z.enum(["adult", "child"]).optional(),
+  age: z.number().int().min(0).max(17).optional(),
 });
 export type BookingGuest = z.infer<typeof bookingGuestSchema>;
+
+const cents = z.number().int().nonnegative();
+
+/** Detalhamento do preço gravado com a reserva (centavos), para a F6 mostrar sem recalcular. */
+export const priceBreakdownSchema = z.object({
+  nightlyCents: cents,
+  nights: z.number().int().positive(),
+  rooms: z.number().int().positive(),
+  subtotalCents: cents,
+  discountCents: cents,
+  serviceFeeCents: cents,
+  taxCents: cents,
+  totalCents: cents,
+  couponCode: z.string().optional(),
+});
+export type PriceBreakdown = z.infer<typeof priceBreakdownSchema>;
 
 /** Corpo de `POST /bookings` (sem `id`). */
 export const bookingInputSchema = z.object({
@@ -151,6 +172,7 @@ export const bookingInputSchema = z.object({
   payment: z
     .object({ method: z.literal("credit_card"), cardLast4: z.string().regex(/^\d{4}$/) })
     .optional(),
+  priceBreakdown: priceBreakdownSchema.optional(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 export type BookingInput = z.infer<typeof bookingInputSchema>;
