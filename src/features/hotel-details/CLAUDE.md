@@ -56,8 +56,10 @@ index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, 
 
 ## Testes
 Unit em `model/` e `api/` (seeds reais via `shared/testing/seed`); componente por seção; E2E em
-`e2e/hotel-details*.spec.ts`. Falhas do **servidor** (hotel, 1ª página) não passam pelo `page.route`: são provadas
-em teste de página/componente com `fetch` stubado.
+`e2e/hotel-details*.spec.ts`. Falhas do **servidor** (hotel, quartos e 1ª página de avaliações) passam pelo
+control-proxy do E2E: `serverApi.failServerRequests(hotelRoomsRequest(controlledHotel(parallelIndex)))` em
+`e2e/hotel-details.rooms-error.spec.ts` (falha inicial dos quartos, retry de seção, axe). Use sempre o hotel
+exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em paralelo.
 
 ## F7a (extras)
 - `HotelHeader` ganhou `FavoriteButton` (ao lado do h1) e `CompareCheckbox` (na linha de ações, antes de "Copiar link"):

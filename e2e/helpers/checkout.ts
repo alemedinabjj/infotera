@@ -46,11 +46,14 @@ export const futureExpiry = (): string => {
 
 export const fillPersonal = async (
   page: Page,
-  { companions = [] as { first: string; last: string; age?: string }[] } = {},
+  {
+    companions = [] as { first: string; last: string; age?: string }[],
+    holderLastName = "Souza",
+  } = {},
 ): Promise<void> => {
   const holder = page.getByRole("group", { name: "Hóspede 1 · titular da reserva" });
   await holder.getByLabel("Nome", { exact: true }).fill("Ana");
-  await holder.getByLabel("Sobrenome").fill("Souza");
+  await holder.getByLabel("Sobrenome").fill(holderLastName);
   await holder.getByLabel("E-mail").fill("ana@exemplo.com");
   await page.getByLabel("Número de telefone").fill("11987654321");
   for (const [index, companion] of companions.entries()) {

@@ -78,3 +78,15 @@ export const createBooking = async (
   if (!response.ok()) throw new Error(`POST /bookings falhou: ${response.status()}`);
   return id;
 };
+
+/** Reserva forjada para o hotel exclusivo do worker (veja `controlledHotel`), no 1º quarto dele. */
+export const createControlledBooking = async (
+  request: APIRequestContext,
+  hotelId: number,
+): Promise<{ id: string; hotelId: number; roomId: number }> => {
+  const response = await request.get(`${API_URL}/rooms?hotelId=${hotelId}`);
+  const rooms: unknown = await response.json();
+  const roomId = Array.isArray(rooms) && typeof rooms[0]?.id === "number" ? rooms[0].id : null;
+  if (roomId === null) throw new Error(`hotel ${hotelId} sem quartos no seed`);
+  return { id: await createBooking(request, { hotelId, roomId }), hotelId, roomId };
+};
