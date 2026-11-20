@@ -60,4 +60,20 @@ describe("SearchForm: destino fixo e envio customizado", () => {
       `/search?destination=Gramado%2C+RS&checkIn=${checkIn}&checkOut=${checkOut}&rooms=1&adults=2&children=0`,
     );
   });
+
+  it("em /en, o envio padrão fica em /en/search", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <SearchForm initialCriteria={{ destination: "Gramado, RS" }} showRecentSearches={false} />,
+      { locale: "en-US" },
+    );
+    const checkIn = addDays(todayISO(), 5);
+    const checkOut = addDays(todayISO(), 7);
+    fillDates(checkIn, checkOut);
+    await user.click(screen.getByRole("button", { name: "Search hotels" }));
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+    expect(push).toHaveBeenCalledWith(
+      `/en/search?destination=Gramado%2C+RS&checkIn=${checkIn}&checkOut=${checkOut}&rooms=1&adults=2&children=0`,
+    );
+  });
 });

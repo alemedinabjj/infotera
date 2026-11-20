@@ -3,6 +3,7 @@ import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { useDeferredBlur } from "@/shared/hooks/useDeferredBlur";
 import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { todayISO } from "@/shared/lib/dates";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
@@ -60,7 +61,7 @@ export const useSearchForm = (
       recent.add(criteria);
       startTransition(() => {
         if (getSubmitHref) router.push(getSubmitHref(criteria), { scroll: false });
-        else router.push(`/search?${searchCriteriaToQueryString(criteria)}`);
+        else router.push(localizePath(locale, `/search?${searchCriteriaToQueryString(criteria)}`));
       });
     },
     () => setAttempts((count) => count + 1),
