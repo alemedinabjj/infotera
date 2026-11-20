@@ -1,37 +1,50 @@
 import type { Page } from "@playwright/test";
 
 const PT_ACCENTS = /[ãõçáéíóúâêôà]/i;
+/**
+ * Palavras funcionais e de UI em português. Delimitadas por espaço (nunca por ponto ou hífen) e sem
+ * homógrafos do inglês: "data", "do" e o `.com` de e-mails não entram.
+ */
 const PT_WORDS =
-  /\b(de|do|da|para|com|sem|não|você|voc[êe]s|hotéis|quartos?|noites?|hóspedes?|buscar|favoritos|reservas?|datas?|preço|ver|nova|busca|tentar)\b/i;
+  /(?:^|\s)(?:de|da|para|com|sem|não|você|voc[êe]s|hotéis|quartos?|noites?|hóspedes?|buscar|favoritos|reservas?|esgotado|preço|nova|busca|tentar)(?:\s|$)/i;
+const NAME_ATTRIBUTES = ["aria-label", "alt", "title", "placeholder"];
+
+/** Textos visíveis fora de `[lang="pt-BR"]` (nós de texto, sem script/style/title). */
+const visibleTexts = (page: Page): Promise<string[]> =>
+  page.evaluate(() => {
+    const found: string[] = [];
+    const ignoredTags = ["SCRIPT", "STYLE", "TITLE"];
+    const isHidden = (element: Element): boolean =>
+      Boolean(element.closest('[lang="pt-BR"]')) ||
+      getComputedStyle(element).display === "none" ||
+      ignoredTags.includes(element.tagName);
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const parent = node.parentElement;
+      const text = node.textContent?.trim();
+      if (parent && text && !isHidden(parent)) found.push(text);
+    }
+    return found;
+  });
+
+/** Nomes acessíveis e placeholders fora de `[lang="pt-BR"]`. */
+const nameTexts = (page: Page): Promise<string[]> =>
+  page.evaluate((attributes) => {
+    const selector = attributes.map((name) => `[${name}]`).join(", ");
+    return [...document.body.querySelectorAll(selector)]
+      .filter((element) => !element.closest('[lang="pt-BR"]'))
+      .flatMap((element) => attributes.map((name) => element.getAttribute(name)))
+      .filter((value): value is string => Boolean(value));
+  }, NAME_ATTRIBUTES);
+
+const looksPortuguese = (text: string): boolean => PT_ACCENTS.test(text) || PT_WORDS.test(text);
 
 /**
  * Textos de interface visíveis (e nomes acessíveis) **fora** de blocos `[lang="pt-BR"]`, com os nomes
  * próprios vindos da API (`ignore`: hotéis, destinos, marca) removidos. Em en-US não pode sobrar português.
  */
 export const portugueseLeftovers = async (page: Page, ignore: string[]): Promise<string[]> => {
-  const texts = await page.evaluate(() => {
-    const found: string[] = [];
-    const skip = (element: Element | null): boolean => Boolean(element?.closest('[lang="pt-BR"]'));
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const parent = node.parentElement;
-      const style = parent ? getComputedStyle(parent) : null;
-      if (!parent || skip(parent) || style?.display === "none") continue;
-      if (["SCRIPT", "STYLE", "TITLE"].includes(parent.tagName)) continue;
-      const text = node.textContent?.trim();
-      if (text) found.push(text);
-    }
-    for (const element of document.body.querySelectorAll(
-      "[aria-label], [alt], [title], [placeholder]",
-    )) {
-      if (skip(element)) continue;
-      for (const name of ["aria-label", "alt", "title", "placeholder"]) {
-        const value = element.getAttribute(name);
-        if (value) found.push(value);
-      }
-    }
-    return found;
-  });
+  const texts = [...(await visibleTexts(page)), ...(await nameTexts(page))];
   const clean = (text: string) => ignore.reduce((acc, name) => acc.split(name).join(" "), text);
-  return texts.map(clean).filter((text) => PT_ACCENTS.test(text) || PT_WORDS.test(text));
+  return texts.map(clean).filter(looksPortuguese);
 };

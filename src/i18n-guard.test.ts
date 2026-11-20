@@ -26,14 +26,97 @@ const LETTERS = /[A-Za-zÀ-ÿ]/;
 const ACCENTED = /[ãõçáéíóúâêôàü]/i;
 const PT_WORDS = /(?:^|\s)(?:de|para|com|sem|em|por|do|da|dos|das|ou)\s|(?:^|\s)n[ãa]o(?:\s|$)/i;
 
+/**
+ * Palavras de UI em português **sem acento** que não existem em inglês (lista curada: nada de
+ * "data", "do", "a", "hotel", "total"). Casam por palavra inteira, sem diferenciar caixa.
+ */
+const PT_UI_WORDS = new Set([
+  "esgotado",
+  "esgotada",
+  "quarto",
+  "quartos",
+  "hospede",
+  "hospedes",
+  "noite",
+  "noites",
+  "diaria",
+  "diarias",
+  "reserva",
+  "reservas",
+  "reservar",
+  "buscar",
+  "busca",
+  "favorito",
+  "favoritos",
+  "favoritar",
+  "comparar",
+  "comparacao",
+  "historico",
+  "disponivel",
+  "indisponivel",
+  "disponiveis",
+  "preco",
+  "precos",
+  "avaliacao",
+  "avaliacoes",
+  "filtro",
+  "filtros",
+  "ordenar",
+  "limpar",
+  "voltar",
+  "proximo",
+  "proxima",
+  "anterior",
+  "confirmar",
+  "confirmacao",
+  "cancelar",
+  "cancelamento",
+  "gratis",
+  "mostrar",
+  "fechar",
+  "carregando",
+  "tentar",
+  "entrada",
+  "saida",
+  "adulto",
+  "adultos",
+  "crianca",
+  "criancas",
+  "telefone",
+  "pagamento",
+  "cartao",
+  "obrigatorio",
+  "invalido",
+  "pesquisar",
+  "destino",
+  "destinos",
+  "cidade",
+  "viagem",
+  "hoteis",
+  "comodidades",
+  "todos",
+  "nenhum",
+  "nenhuma",
+]);
+
 type Offender = { file: string; line: number; text: string; kind: "jsx" | "attribute" | "literal" };
 
 const isAllowed = (text: string): boolean => COPY_ALLOWLIST.includes(text.trim());
 
 const hasLetters = (text: string): boolean => LETTERS.test(text) && !isAllowed(text);
 
+/** Âncora/id em kebab-case minúsculo (`quartos`, `reserva-confirmada`): identificador, não copy. */
+const SLUG = /^#?[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const hasPortugueseUiWord = (text: string): boolean =>
+  !SLUG.test(text) &&
+  text
+    .toLowerCase()
+    .split(/[^a-zà-ÿ]+/)
+    .some((word) => PT_UI_WORDS.has(word));
+
 const looksPortuguese = (text: string): boolean =>
-  (ACCENTED.test(text) || PT_WORDS.test(text)) && !isAllowed(text);
+  (ACCENTED.test(text) || PT_WORDS.test(text) || hasPortugueseUiWord(text)) && !isAllowed(text);
 
 const attributeName = (node: ts.Node): string | null => {
   const parent = node.parent;
@@ -124,6 +207,16 @@ describe("scanSource", () => {
     expect(scanSource("x.ts", "export const a = `Total de \u0024{n}`;")).toHaveLength(1);
     expect(scanSource("x.ts", 'export const a = "hotel-details";')).toHaveLength(0);
     expect(scanSource("x.ts", 'import { a } from "@/shared/é";')).toHaveLength(0);
+  });
+
+  it("conta literais com palavra de UI em português sem acento", () => {
+    expect(scanSource("x.ts", 'export const a = "Esgotado";')).toHaveLength(1);
+    expect(scanSource("x.ts", 'export const a = "Quartos";')).toHaveLength(1);
+    expect(scanSource("x.ts", 'export const a = "H\u00f3spedes";')).toHaveLength(1);
+    expect(scanSource("x.ts", 'export const a = "Sold out";')).toHaveLength(0);
+    expect(scanSource("x.ts", 'export const a = "reserva-confirmada";')).toHaveLength(0);
+    expect(scanSource("x.ts", 'export const a = "data";')).toHaveLength(0);
+    expect(scanSource("x.ts", 'export const a = "do";')).toHaveLength(0);
   });
 
   it("ignora comentários e usa a linha do nó", () => {

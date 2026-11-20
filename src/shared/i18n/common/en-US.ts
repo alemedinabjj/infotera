@@ -8,6 +8,7 @@ export const enUS: CommonMessages = {
     closePopup: "Close",
     keyboardHint: "Arrow keys move the map; + and − change the zoom.",
   },
+  dialog: { close: "Close" },
   errors: {
     network: "We couldn't connect. Check your connection and try again.",
     timeout: "The server is taking longer than usual. Please try again shortly.",

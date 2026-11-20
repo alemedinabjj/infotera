@@ -8,6 +8,7 @@ export const ptBR = {
     /** Dica curta, sempre visível, de como usar o mapa pelo teclado. */
     keyboardHint: "Setas movem o mapa; + e − mudam o zoom.",
   },
+  dialog: { close: "Fechar" },
   errors: {
     network: "Não foi possível conectar. Verifique sua conexão e tente de novo.",
     timeout: "O servidor está demorando mais que o normal. Tente de novo em instantes.",
