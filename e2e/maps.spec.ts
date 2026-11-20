@@ -13,6 +13,8 @@ const openHotelMap = async (page: Page): Promise<void> => {
   // O marcador só é focável quando deixa de estar `visibility: hidden` (com movimento reduzido a
   // visibilidade do painel de marcadores volta alguns quadros depois do mapa): espera a pílula visível.
   await expect(page.locator(".leaflet-marker-icon > span")).toBeVisible();
+  // Tiles todos carregados e sem pan/zoom em curso: o axe mede um mapa parado.
+  await expect(page.locator(".leaflet-tile-loading, .leaflet-zoom-anim")).toHaveCount(0);
 };
 
 test.describe("mapa do hotel", () => {
