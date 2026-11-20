@@ -16,8 +16,7 @@ import { HotelDatesForm } from "./HotelDatesForm";
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/hotel/[hotelId]">): Promise<Metadata> => {
-  const { hotelId } = await params;
-  const locale = await localeOf(params);
+  const [{ hotelId }, locale] = await Promise.all([params, localeOf(params)]);
   const id = parseHotelId(hotelId);
   if (id === null) return { title: hotelPageTitle({ kind: "not-found" }, locale) };
   const alternates = { languages: alternatesFor(`/hotel/${id}`) };
@@ -41,8 +40,7 @@ export const generateMetadata = async ({
  * compõe a feature; o formulário de datas (F2) entra por `renderDatesForm`.
  */
 const HotelPage = async ({ params, searchParams }: PageProps<"/[locale]/hotel/[hotelId]">) => {
-  const { hotelId: rawId } = await params;
-  const locale = await localeOf(params);
+  const [{ hotelId: rawId }, locale] = await Promise.all([params, localeOf(params)]);
   const hotelId = parseHotelId(rawId);
   if (hotelId === null) notFound();
   const parsed = parseSearchCriteria(await searchParams);

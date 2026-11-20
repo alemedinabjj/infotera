@@ -11,8 +11,8 @@ import { localeOf } from "@/shared/i18n/params";
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/confirmation/[bookingId]">): Promise<Metadata> => {
-  const { bookingId } = await params;
-  return generateConfirmationMetadata(bookingId, await localeOf(params));
+  const [{ bookingId }, locale] = await Promise.all([params, localeOf(params)]);
+  return generateConfirmationMetadata(bookingId, locale);
 };
 
 /**
