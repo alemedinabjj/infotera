@@ -431,44 +431,153 @@ URL / storage / cookie:
 | `infotera:install-dismissed-at` | `localStorage` | ISO datetime |
 | `NEXT_PUBLIC_APP_VERSION` | `next.config.ts` → env | `buster` do persister e sufixo de cache do SW |
 
-## UI/UX (resumida — o `ui-designer` detalha e inclui no design system)
+## UI/UX
 
-**Componentes novos no design system**: `LanguageSwitch`, `OfflineBar`, `InstallCard`, `MapPanel`,
-`PriceMarker`, `OfflinePage`.
+Fonte dos tokens, estados e microcopy (pt e en): `docs/design/design-system.md` §9 (componentes da
+F7b), §1.6 (`xs`), §1.7 (camadas do mapa), §4.2 (header), §6.1 (horário en-US) e §6.5 (offline). Esta
+seção decide o comportamento por tela; **ela prevalece sobre as Decisões 5, 8, 10 e 13 onde divergir**
+(rótulo do botão do mapa, alvo do "Pular o mapa", variantes da página offline, toast de versão).
 
-- **Header**: à direita do logo, `LanguageSwitch` = link ghost `min-h-11` com `GlobeIcon` + "English"
-  (em pt) / "Português" (em en); ≤ 360 px mostra "EN"/"PT" visível e o nome completo em
-  `aria-label` ("Mudar idioma para English" / "Switch language to Português").
-- **OfflineBar**: logo abaixo do header, largura total, `bg-warning-soft border-b border-warning`,
-  `text-sm`, `WifiOffIcon`, uma linha no desktop e até 3 no mobile. Reconexão: `bg-success-soft`
-  "Conexão restabelecida." some em 4 s.
-- **InstallCard** (só em `/`, abaixo do formulário): `Card` com título "Instale o Infotera Hotéis",
-  texto "Abra suas buscas mais rápido, até sem internet.", botões "Instalar" (primário) e "Agora não"
-  (ghost). Some com animação curta (reduzida → sem animação).
-- **Atualização**: toast info persistente "Nova versão disponível." + ação "Atualizar".
-- **OfflinePage** (`/offline`, `/en/offline`): `EmptyState` h1 "Você está sem internet", texto
-  "Esta página ainda não foi salva para uso offline. As buscas e hotéis que você já abriu continuam
-  disponíveis.", "Tentar de novo" (recarrega) e "Ir para o início".
-- **Mapa dos resultados**: toolbar ganha botão `secondary` com `MapIcon` "Mostrar mapa"/"Ocultar
-  mapa" (`aria-pressed`, `aria-controls` do painel). Painel `rounded-card border overflow-hidden
-  isolate` acima da lista; antes dele, "Pular o mapa" (`sr-only focus:not-sr-only`). Carregando o
-  chunk: `Skeleton` do tamanho do painel + "Carregando mapa…" (região `aria-live`). Falha do chunk:
-  `Alert danger` "Não foi possível carregar o mapa." + "Tentar de novo". Offline sem tiles em cache:
-  `Alert warning` sobre o painel "O mapa precisa de internet. A lista continua disponível."
-- **PriceMarker**: pílula `bg-surface text-fg border border-border rounded-full px-2 min-h-6
-  text-xs font-semibold shadow-raised` com preço compacto por locale (`R$ 1.200` / `R$1,200`);
-  ativo (card em hover/foco ou marcador focado): `bg-primary text-fg-on-primary border-primary` e
-  acima dos demais; esgotado: `bg-surface-sunken text-fg-subtle` com texto "Esgotado". Card ativo
-  pelo mapa: `ring-2 ring-primary`. Popup: nome (h3 `text-sm font-semibold`), nota, preço por
-  noite, links "Ver hotel" (primário, leva os critérios como o card) e "Mostrar na lista".
-- **Mapa do hotel**: mesma moldura `aspect-[2/1]` da F4; atribuição e "Abrir no OpenStreetMap"
-  inalterados; controles de zoom do Leaflet restilizados com tokens (44 px de alvo).
-- **Microcopy de referência pt-BR → en-US** (glossário que o dicionário segue): Diária → Nightly
-  rate · por noite → per night · Hóspedes → Guests · Esgotado → Sold out · Apenas N quartos! →
-  Only N rooms left! · Pousada → Guesthouse (pousada) · Política de cancelamento → Cancellation
-  policy · Reserva confirmada → Booking confirmed · Tentar de novo → Try again · Você está sem
-  internet → You're offline · Mostrar mapa → Show map · Pular o mapa → Skip map · Nova versão
-  disponível → New version available · Instalar → Install · Agora não → Not now.
+### Revisão pós-UX (decisões)
+
+1. **MapToggle = opção (a)**: rótulo fixo `Mapa`/`Map`, `MapIcon` à esquerda via `leftIcon`,
+   `aria-pressed` e estilo pressionado (`bg-primary-soft` + borda de 2px por `ring-1 ring-inset`).
+   `aria-controls` só enquanto o painel existe. Painel ausente (lista carregando, vazia, com erro ou
+   offline sem dados): o botão continua pressionado, sem `aria-controls`; clicar desliga.
+2. **Dica de teclado**: sai de cima do mapa. Fica em fluxo **abaixo** da moldura, numa linha reservada
+   (`min-h-5`), visível só com foco de teclado dentro do mapa; sempre ligada por `aria-describedby`.
+   Sem `z-*` nosso dentro do Leaflet: atribuição pelo controle nativo; `z-[1000]` removido (§1.7).
+3. **Popup**: largura fixa de 224px e `autoPan` que reserva a coluna do zoom e a atribuição (cabe em
+   320px sem cobrir o "+"). Mapa do hotel com moldura `aspect-[4/3]` abaixo de `sm` (estático e
+   interativo) e popup só com o nome. Foco entra no popup a cada abertura; Tab no último item fecha e
+   vai ao próximo marcador; Shift+Tab no primeiro, Esc e "×" voltam ao marcador; Espaço = Enter no
+   marcador; "×" nosso com 44px. Sem margens de `<p>`; nota com `RatingScore size="sm"`.
+4. **"Pular o mapa"**: primeiro filho do painel; com foco aparece sobre o canto superior esquerdo do
+   mapa (`absolute`, `z-10` dentro do wrapper `isolate`), não no topo da tela e sem layout shift.
+   **Alvo ratificado: link do 1º card** (o h2 da contagem fica acima do mapa e o Tab recomeçaria
+   pela toolbar). Critério 26 atualizado.
+5. **InstallCard**: "Instalar app" vira `secondary` (a home já tem "Buscar hotéis" primário). Ao
+   dispensar ou ao terminar o prompt nativo, o foco vai para "Buscar hotéis" antes do desmonte, e
+   "Agora não" anuncia `Tudo bem. Você pode instalar depois pelo menu do navegador.`
+6. **Header até 400px** (novo breakpoint `xs` = 25rem): logo só "Infotera" (o link mantém
+   `aria-label` completo) e seletor "EN"/"PT". O seletor perde o `aria-label`; o nome sai do conteúdo
+   ("EN English"), então contém o texto visível (label-in-name).
+7. **Página offline**: três variantes (`public`, `checkout`, `bookings`) em pt e en, escolhidas pelo
+   SW pela regra da rota (sugestão: `/offline`, `/offline/checkout`, `/offline/bookings` e `/en/...`,
+   todas no precache). h1 nunca igual ao banner. Ordenação/filtro/página offline sem cache ganham
+   mensagem própria (abaixo).
+8. **Falha do chunk do mapa**: a moldura some, o painel encolhe para o `Alert danger` com
+   `A lista abaixo continua disponível.`; botão `w-full sm:w-auto`, alinhado à esquerda.
+9. **en-US**: check-in/out em 12h (`From 3:00 PM`, `Until 12:00 PM`); `Go to homepage`; microcopy
+   revisado no DS §9.
+10. **Toast de nova versão**: persistente, `Atualizar agora`/`Update now`, e **não aparece no
+    checkout** (o reload perderia o que foi digitado); fica pendente até a próxima rota.
+
+### Layout
+
+**Header** (todas as rotas)
+```
+320–399px                               ≥ 400px (xs)                    ≥1024px
+┌──────────────────────────────┐        ┌──────────────────────────────────┐  ┌────────────────────────────────────────────────────┐
+│ Infotera        ♡  ▣  (globo) EN  │        │ Infotera Hotéis   ♡  ▣  (globo) English│  │ Infotera Hotéis   ♡ Favoritos ▣ Minhas reservas (globo) English│
+├──────────────────────────────┤        └──────────────────────────────────┘  └────────────────────────────────────────────────────┘
+│ (!) Você está sem internet. …  │  ← OfflineBar em fluxo (só offline), até 3 linhas no celular
+└──────────────────────────────┘
+```
+
+**/search com mapa** (ordem de leitura = ordem de foco)
+```
+320px                                   ≥1024px (coluna de resultados, ao lado dos filtros)
+14 hotéis encontrados (h2)              14 hotéis encontrados (h2)
+[ Filtros (n)            ]              Ordenar por [▾]  Exibir [▾]  [(mapa) Mapa]
+Ordenar por [▾]                         ┌─────────────────────────────────────────────┐
+Exibir      [▾]                         │[Pular o mapa] (só com foco)                 │
+[ (mapa) Mapa                ]  pressionado  │ [+]                                          │
+┌────────────────────────┐              │ [−]      R$ 450      R$ 780                  │
+│[Pular o mapa]          │ (com foco)   │              Esgotado        R$ 800          │
+│[+]                     │              │                       © colaboradores do OSM │
+│[−]   R$ 450            │              └─────────────────────────────────────────────┘
+│        R$ 780          │              Setas movem o mapa; + e − mudam o zoom; Tab …  (só com foco)
+│     © colab. do OSM    │              [card 1] …
+└────────────────────────┘
+(dica: linha reservada)
+[card 1] …
+```
+
+**Mapa do hotel** (seção "Localização"): moldura `aspect-[4/3]` (< `sm`) / `aspect-[2/1]` (≥ `sm`) →
+linha da dica → endereço → "Abrir no OpenStreetMap".
+
+**Home**: formulário (primário "Buscar hotéis") → InstallCard (`secondary` + `ghost`) no fim do `main`.
+
+**Página offline**: header + OfflineBar + `EmptyState` de página (h1, texto, `Tentar de novo`
+primário + `Ir para o início` ghost; empilhados `w-full` no celular, lado a lado ≥ `sm`).
+
+### Estados
+
+| Tela/área | Loading | Erro | Vazio | Sucesso | Offline |
+|---|---|---|---|---|---|
+| Painel do mapa | Skeleton na altura da moldura + `Carregando mapa…` (`aria-live`); > 5 s: `Está demorando mais que o normal…` | chunk: painel encolhe para `Alert danger` + `A lista abaixo continua disponível.` + `Tentar de novo` (sucesso → foco no contêiner do mapa) | painel não aparece (botão pressionado) | marcadores = hotéis exibidos | `Alert warning` em fluxo acima da moldura; marcadores continuam |
+| Mapa do hotel | estático da F4 | estático fica, sem mensagem | — | interativo, mesma moldura | estático |
+| Lista ao trocar ordenação/filtro/página offline **sem cache** dos novos critérios | — | — | sem lista anterior: `EmptyState` warning (`WifiOffIcon`, `role="status"`) `Estes resultados ainda não estão salvos offline` · `Volte à opção anterior ou espere a conexão voltar: a lista atualiza sozinha.` / `These results aren't saved offline yet` · `Switch back to the previous option or wait for the connection: the list will update on its own.` | — | com lista anterior: ela fica visível com `Alert warning` acima `Sem internet para atualizar a lista` · `A lista abaixo ainda é da seleção anterior. Ela atualiza sozinha quando a conexão voltar.` / `Can't update the list offline` · `The list below is still from your previous selection. It will update on its own when you're back online.` (substitui o "Atualizando resultados…" infinito e o erro genérico); h2 da contagem mantém o valor anterior |
+| InstallCard | — | — | não renderiza | aparece após `beforeinstallprompt` | — |
+| Página offline | — | — | — | — | variante da rota |
+
+### Interações
+
+- **MapToggle**: clique alterna na hora (`replaceState`), foco fica no botão; ligar não move foco.
+- **Marcador**: hover/foco ativa o card (`ring-2 ring-primary`) e vice-versa; clique, Enter ou Espaço
+  abrem o popup e o foco entra nele (DS §9.9). Arrastar/zoom nunca reenquadra por hover.
+- **"Pular o mapa"** → foco no link do 1º card (páginas: 1º da página; feed: índice 0 via
+  `scrollToIndex`), `preventScroll` + `revealBelowHeader`.
+- **LanguageSwitch**: carga de documento para a mesma página no outro idioma; critérios e
+  `booking-draft` mantidos.
+- **InstallCard**: "Instalar app" abre o prompt nativo; qualquer saída do cartão move o foco para
+  "Buscar hotéis" antes do desmonte.
+- **Toast de versão**: "Atualizar agora" → `loading` "Atualizando…" → recarrega. Oculto em `/checkout`.
+- **Página offline**: "Tentar de novo" recarrega a URL original (o SW serve a página de novo se
+  continuar offline); "Ir para o início" leva à home do locale.
+
+### Acessibilidade
+
+- Alvos: botões de zoom, "×" do popup, "Pular o mapa", seletor de idioma e ações do popup ≥ 44px;
+  marcadores ≥ 24px (2.5.8).
+- `aria-pressed` só no MapToggle; marcador com `aria-haspopup="dialog"` + `aria-expanded`; popup
+  `role="dialog"` não modal com `aria-labelledby`.
+- Label-in-name: seletor de idioma sem `aria-label` (nome = conteúdo); logo com `aria-label` que
+  contém "Infotera".
+- Reduced motion: reenquadrar, `autoPan` e abrir popup sem animação; InstallCard sai sem fade.
+- Nenhum foco cai no `body`: InstallCard → "Buscar hotéis"; retry do mapa → contêiner do mapa; popup →
+  marcador.
+
+### Componentes
+
+Reusados: `Button`/`ButtonLink` (`leftIcon`, `loading`), `IconButton`, `Alert`, `EmptyState`,
+`Skeleton`, `RatingScore`, `Badge`, `Card`, `Toast`, `SkipLink` (estilo). Novos (DS §9):
+`LanguageSwitch`, `OfflineBar`, `InstallCard`, `OfflinePage` (app-shell); `MapToggle`, `MapPanel`,
+`PriceMarker`, `MapPopup` (`shared/ui/map` + hotel-search). Novo token: breakpoint `xs` (25rem).
+
+### Critérios de UI complementares (pós-revisão de UX)
+
+- U1. O MapToggle tem nome `Mapa`/`Map` nos dois estados; só `aria-pressed` muda; ícone na mesma linha.
+- U2. Com o mapa focado por teclado, a dica aparece abaixo da moldura e não cobre popup nem "+";
+  nenhum `z-[` arbitrário em `src/`.
+- U3. Em 320px, o popup dos resultados e o do hotel cabem inteiros na moldura sem cobrir o zoom; a
+  moldura do hotel é 4:3 abaixo de `sm` (estático e interativo, CLS 0).
+- U4. Abrir um popup (clique, Enter ou Espaço) põe o foco nele; Tab no último item foca o próximo
+  marcador; Shift+Tab no primeiro, Esc e "×" devolvem ao marcador.
+- U5. Home com o cartão de instalação tem um único `Button primary` visível; "Agora não" e o fim do
+  prompt nativo deixam o foco em "Buscar hotéis" (nunca no `body`).
+- U6. Em 320 e 375 (pt e en) o logo ocupa uma linha; o seletor mostra "EN"/"PT" abaixo de 400px com
+  nome acessível que começa pelo texto visível.
+- U7. Offline em `/checkout`, `/confirmation/:id` e no histórico (pt e en) mostra a variante de reserva
+  com h1 diferente de "Você está sem internet"; rota pública não salva mostra a variante `public`.
+- U8. Offline, trocar a ordenação para uma não salva mostra o aviso de "Sem internet para atualizar a
+  lista" (com a lista anterior) em vez de "Atualizando resultados…" infinito ou erro genérico.
+- U9. Falha do chunk do mapa: painel com altura do `Alert`, texto `A lista abaixo continua
+  disponível.`, botão `w-full` só abaixo de `sm`.
+- U10. Em `/en/hotel/1`, check-in `From 3:00 PM` e check-out `Until 12:00 PM`; página offline em en com
+  `Go to homepage`.
+- U11. O toast de nova versão não aparece em `/checkout`; fora dele aparece uma vez, sem expirar.
 
 ## Critérios de aceite
 
@@ -534,7 +643,9 @@ URL / storage / cookie:
 25. Dado o hotel 19 ou 48 (esgotados) na lista, então o marcador mostra "Esgotado" com o estilo
     esgotado e `aria-label` "{nome}, esgotado".
 26. Dado o teclado, a ordem de Tab é: botão do mapa → "Pular o mapa" → mapa → marcadores na ordem da
-    lista → lista; "Pular o mapa" leva o foco ao h2 da contagem.
+    lista → lista; "Pular o mapa" aparece com o foco sobre o canto superior esquerdo do mapa (não no
+    topo da tela, sem deslocar layout) e leva o foco ao link do 1º card da lista (no feed, rola até o
+    índice 0), revelado abaixo do header.
 27. Dado `map=1` com `_delay=3000`, então o painel mostra skeleton + "Carregando mapa…" e o leitor de
     tela ouve a mudança; com falha do chunk, `Alert` com "Tentar de novo" que recarrega o chunk.
 28. Dado `map=1` em estado vazio, erro ou carregando a lista, então o painel não aparece (o botão
