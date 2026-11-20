@@ -78,6 +78,20 @@ export const enUS: HotelDetailsMessages = {
     next: "Next photo",
     failed: "We couldn't load this photo.",
     loading: "Loading photo…",
+    modalLoadingTitle: "Hotel photos",
+    openError: "We couldn't open the photo",
+    openErrorBody: "Check your connection and try again.",
+    offlineTitle: "You're offline",
+    offlineBody: "The photo will open once you're back online.",
+  },
+  photoPage: {
+    back: "Back to hotel",
+    metaTitle: ({ index, total, hotel }) =>
+      `Photo ${index} of ${total} · ${hotel} | Infotera Hotéis`,
+    metaNotFound: "Photo not found | Infotera Hotéis",
+    notFoundTitle: "Photo not found",
+    notFoundBody: ({ hotel }) => `This address doesn't match any photo of ${hotel}.`,
+    viewHotel: "View hotel",
   },
   rooms: {
     emptyTitle: "No rooms to book",

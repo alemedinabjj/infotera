@@ -80,6 +80,21 @@ export const ptBR = {
     next: "Próxima foto",
     failed: "Não foi possível carregar esta foto.",
     loading: "Carregando foto…",
+    modalLoadingTitle: "Fotos do hotel",
+    openError: "Não foi possível abrir a foto",
+    openErrorBody: "Verifique sua conexão e tente de novo.",
+    offlineTitle: "Você está sem internet",
+    offlineBody: "A foto abre assim que a conexão voltar.",
+  },
+  photoPage: {
+    back: "Voltar para o hotel",
+    metaTitle: ({ index, total, hotel }: { index: number; total: number; hotel: string }) =>
+      `Foto ${index} de ${total} · ${hotel} | Infotera Hotéis`,
+    metaNotFound: "Foto não encontrada | Infotera Hotéis",
+    notFoundTitle: "Foto não encontrada",
+    notFoundBody: ({ hotel }: { hotel: string }) =>
+      `Este endereço não corresponde a nenhuma foto de ${hotel}.`,
+    viewHotel: "Ver o hotel",
   },
   rooms: {
     emptyTitle: "Nenhum quarto para reserva",
