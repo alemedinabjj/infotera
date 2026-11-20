@@ -36,6 +36,12 @@ const cachedUrls = (page: Page): Promise<string[]> =>
     return urls;
   });
 
+/** PNG 1×1 (o conteúdo não importa; o que se verifica é onde a resposta é guardada). */
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAwS2OUAAAAABJRU5ErkJggg==",
+  "base64",
+);
+
 test.describe("service worker", () => {
   test("registra /serwist/sw.js com escopo / e responde sem cache do navegador", async ({
     page,
@@ -86,12 +92,16 @@ test.describe("service worker", () => {
     await context.setOffline(true);
     await page.goto(hotelPath(7));
     await expect(
-      page.getByRole("heading", { level: 1, name: "Você está sem internet" }),
+      page.getByRole("heading", { level: 1, name: "Esta página não está disponível offline" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Tentar de novo" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ir para o início" })).toBeVisible();
     await page.goto("/en/hotel/7");
-    await expect(page.getByRole("heading", { level: 1, name: "You're offline" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "This page isn't available offline" }),
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Go to homepage" })).toBeVisible();
     await context.setOffline(false);
   });
 
@@ -115,20 +125,50 @@ test.describe("service worker", () => {
     }
     const urls = await cachedUrls(page);
     expect(urls.length).toBeGreaterThan(0);
-    for (const url of urls) {
+    // As páginas `/offline/checkout` e `/offline/bookings` são estáticas e sem dado: ficam no precache.
+    for (const url of urls.filter((entry) => !/\/offline(?:[/?]|$)/.test(entry))) {
       expect(url, "entrada de cache privada").not.toMatch(/\/(checkout|confirmation|my-bookings)/);
     }
     // Nem a API com dado pessoal passa pelo service worker.
-    expect(urls.some((url) => url.includes("/bookings"))).toBe(false);
+    expect(urls.some((url) => url.includes("/bookings") && !url.includes("/offline/"))).toBe(false);
 
     await context.setOffline(true);
+    const heading = (name: string) => page.getByRole("heading", { level: 1, name });
     await page.goto("/checkout");
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Você está sem internet" }),
-    ).toBeVisible();
+    await expect(heading("A reserva precisa de internet")).toBeVisible();
     await page.goto("/en/checkout");
-    await expect(page.getByRole("heading", { level: 1, name: "You're offline" })).toBeVisible();
+    await expect(heading("Booking needs an internet connection")).toBeVisible();
+    await page.goto(`/confirmation/${bookingId}`);
+    await expect(heading("Suas reservas precisam de internet")).toBeVisible();
+    await page.goto("/en/my-bookings");
+    await expect(heading("Your bookings need an internet connection")).toBeVisible();
     await context.setOffline(false);
+  });
+
+  test("fotos do Unsplash e tiles do OSM (pedidos com CORS) ficam nos caches de imagens e tiles", async ({
+    page,
+    context,
+  }) => {
+    const cors = { "access-control-allow-origin": "*" };
+    await context.route("https://images.unsplash.com/**", (route) =>
+      route.fulfill({ status: 200, contentType: "image/png", headers: cors, body: PNG }),
+    );
+    await context.route("https://tile.openstreetmap.org/**", (route) =>
+      route.fulfill({ status: 200, contentType: "image/png", headers: cors, body: PNG }),
+    );
+    await controlledByServiceWorker(page);
+    await page.goto(searchPath("map=1"));
+    await expect(cards(page)).toHaveCount(10);
+    await expect(page.locator(".leaflet-tile-loaded").first()).toBeAttached();
+    await expect
+      .poll(async () => {
+        const urls = await cachedUrls(page);
+        return {
+          photo: urls.some((url) => url.startsWith("https://images.unsplash.com/")),
+          tile: urls.some((url) => url.startsWith("https://tile.openstreetmap.org/")),
+        };
+      })
+      .toEqual({ photo: true, tile: true });
   });
 
   test("o checkout carregado por documento registra o service worker sem violação de CSP", async ({

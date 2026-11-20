@@ -95,9 +95,11 @@ test.describe("cartão de instalação", () => {
     await page.getByRole("button", { name: "Agora não" }).click();
     await expect(card(page)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeFocused();
-    await expect(page.getByRole("status")).toContainText(
-      "Tudo bem. Você pode instalar depois pelo menu do navegador.",
-    );
+    await expect(
+      page
+        .getByRole("status")
+        .filter({ hasText: "Tudo bem. Você pode instalar depois pelo menu do navegador." }),
+    ).toHaveCount(1);
   });
 
   test("'Instalar app' chama prompt() e appinstalled mostra o toast", async ({ page }) => {
