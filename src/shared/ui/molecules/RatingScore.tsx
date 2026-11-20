@@ -1,12 +1,11 @@
-"use client";
-
-import { useLocale } from "../../i18n/client";
-import { useCommonMessages } from "../../i18n/common/useCommonMessages";
+import { commonMessages } from "../../i18n/common/messages";
+import type { Locale } from "../../i18n/config";
 import { formatUnit } from "../../i18n/units";
 import { formatRating, ratingLabel } from "../../lib/format";
 import { Stars } from "../atoms/Stars";
 
 type RatingScoreProps = {
+  locale: Locale;
   rating: number;
   /** Omitido: nota solta (de um comentário), sem contagem nem rótulo qualitativo. */
   reviewCount?: number;
@@ -24,13 +23,13 @@ const NOTE_SIZE = { sm: "text-sm", md: "text-base" } as const;
  * Sem `reviewCount`: `5 ★★★★★` ("Nota 5 de 5", inteiros sem casa decimal).
  */
 export const RatingScore = ({
+  locale,
   rating,
   reviewCount,
   showLabel = true,
   size = "md",
 }: RatingScoreProps) => {
-  const locale = useLocale();
-  const t = useCommonMessages().rating;
+  const t = commonMessages.get(locale).rating;
   if (reviewCount === 0) return <p className="text-sm text-fg-subtle">{t.none}</p>;
   const standalone = reviewCount === undefined;
 
@@ -45,7 +44,7 @@ export const RatingScore = ({
         {t.outOf}
         {standalone ? "" : ","}
       </span>
-      <Stars value={rating} decorative />
+      <Stars locale={locale} value={rating} decorative />
       {standalone ? null : (
         <>
           {/* Rótulo, separador e contagem formam um bloco só: se não couber, o bloco inteiro desce

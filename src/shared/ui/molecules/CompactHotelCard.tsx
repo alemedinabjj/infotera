@@ -1,9 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Hotel } from "../../api/schemas";
-import { useLocale } from "../../i18n/client";
+import type { Locale } from "../../i18n/config";
 import { localizePath } from "../../i18n/paths";
 import { availabilityStatus, describeAvailability } from "../../lib/availability";
 import { cn } from "../../lib/cn";
@@ -17,6 +15,7 @@ import { PriceTag } from "./PriceTag";
 import { RatingScore } from "./RatingScore";
 
 type CompactHotelCardProps = {
+  locale: Locale;
   hotel: Hotel;
   /** Os critérios da busca seguem no link (o detalhe já abre com as datas). */
   criteria: SearchCriteria | null;
@@ -49,6 +48,7 @@ const PHOTO: Record<NonNullable<CompactHotelCardProps["layout"]>, string> = {
  * depois do link no DOM e ficam acima do `::after`.
  */
 export const CompactHotelCard = ({
+  locale,
   hotel,
   criteria,
   layout = "compact",
@@ -60,7 +60,6 @@ export const CompactHotelCard = ({
   actions,
   className,
 }: CompactHotelCardProps) => {
-  const locale = useLocale();
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const { badge } = describeAvailability({
     status: availabilityStatus(hotel.availableRooms, 1),
@@ -95,13 +94,16 @@ export const CompactHotelCard = ({
           {showDestination ? `${type} · ${hotel.destination}` : type}
         </p>
         <RatingScore
+          locale={locale}
           rating={hotel.rating}
           reviewCount={hotel.reviewCount}
           size="sm"
           showLabel={false}
         />
         <div className="mt-auto flex flex-col gap-1 pt-1">
-          {price ?? <PriceTag variant="nightly-line" nightly={hotel.pricePerNight} />}
+          {price ?? (
+            <PriceTag locale={locale} variant="nightly-line" nightly={hotel.pricePerNight} />
+          )}
           {badge ? (
             <Badge tone={badge.tone} className="w-fit">
               {badge.text}

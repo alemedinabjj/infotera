@@ -43,7 +43,7 @@ export const HotelHeader = ({ locale, hotel, stayLabel, children }: HotelHeaderP
             <MapPinIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             <span lang={contentLang(locale)}>{hotel.address}</span>
           </p>
-          <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
+          <RatingScore locale={locale} rating={hotel.rating} reviewCount={hotel.reviewCount} />
         </div>
       </div>
       {children}

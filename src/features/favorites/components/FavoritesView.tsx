@@ -38,6 +38,7 @@ const Body = ({ page }: { page: Page }) => {
     case "error":
       return (
         <ErrorState
+          locale={locale}
           title={MESSAGES.error.title}
           description={MESSAGES.error.description}
           onRetry={page.retry}

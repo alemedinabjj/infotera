@@ -69,6 +69,7 @@ const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) 
       </p>
       <ReviewList reviews={data.items} busy={loading} />
       <Pagination
+        locale={locale}
         page={page}
         totalPages={getTotalPages(data.total, REVIEWS_PAGE_SIZE)}
         onPageChange={onPageChange}
@@ -85,10 +86,11 @@ const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) 
  */
 export const ReviewsSection = ({ hotelId, rating, reviewCount }: ReviewsSectionProps) => {
   const t = useHotelDetailsMessages().reviews;
+  const locale = useLocale();
   const { page, pending, changePage, changed } = useReviewsPage();
   return (
     <div className="flex max-w-3xl flex-col gap-4">
-      <RatingScore rating={rating} reviewCount={reviewCount} />
+      <RatingScore locale={locale} rating={rating} reviewCount={reviewCount} />
       <SectionBoundary
         headingId={sectionHeadingId("avaliacoes")}
         errorTitle={t.loadError}

@@ -4,7 +4,7 @@ import { HotelDetailsSkeleton } from "./HotelDetailsSkeleton";
 
 describe("HotelDetailsSkeleton", () => {
   it("região status com o aviso de demora já no HTML, revelado por CSS (sem JS)", () => {
-    render(<HotelDetailsSkeleton />);
+    render(<HotelDetailsSkeleton locale="pt-BR" />);
     const status = screen.getByRole("status");
     expect(status).toHaveTextContent("Carregando hotel…");
     const slow = screen.getByText("Está demorando mais que o normal…");

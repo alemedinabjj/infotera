@@ -24,7 +24,9 @@ const plain = (value: string | null) => (value ?? "").replaceAll(" ", " ");
 describe("PriceBreakdown", () => {
   it("mostra linhas, desconto com sinal, total e a nota", () => {
     const { lines, totalCents } = calculateTestLines();
-    const { container } = render(<PriceBreakdown lines={lines} totalCents={totalCents} />);
+    const { container } = render(
+      <PriceBreakdown locale="pt-BR" lines={lines} totalCents={totalCents} />,
+    );
     const text = plain(container.textContent);
     expect(text).toContain("R$ 1.200,00 × 3 noites × 1 quarto");
     expect(text).toContain("Desconto (BEMVINDO10)−R$ 360,00");
@@ -36,7 +38,7 @@ describe("PriceBreakdown", () => {
 
   it("sem linhas mostra só o total e sem a nota quando pedido", () => {
     const { container } = render(
-      <PriceBreakdown lines={[]} totalCents={372600} showTaxNote={false} />,
+      <PriceBreakdown locale="pt-BR" lines={[]} totalCents={372600} showTaxNote={false} />,
     );
     expect(plain(container.textContent)).toBe("TotalR$ 3.726,00");
   });
@@ -45,6 +47,7 @@ describe("PriceBreakdown", () => {
     const { lines, totalCents } = calculateTestLines();
     render(
       <PriceBreakdown
+        locale="pt-BR"
         lines={lines}
         totalCents={totalCents}
         afterStay={<div data-testid="extra" />}

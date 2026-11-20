@@ -1,17 +1,14 @@
-"use client";
-
 import Link from "next/link";
-import { useLocale } from "@/shared/i18n/client";
-import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
+import { commonMessages } from "@/shared/i18n/common/messages";
+import type { Locale } from "@/shared/i18n/config";
 import { localizePath } from "@/shared/i18n/paths";
 import { buttonClassName, EmptyState } from "@/shared/ui";
-import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
+import { hotelDetailsMessages } from "../i18n/messages";
 
 /** Hotel inexistente ou id inválido: ocupa a página (h1) e leva a uma nova busca. */
-export const HotelNotFound = () => {
-  const t = useHotelDetailsMessages().notFound;
-  const newSearch = useCommonMessages().routes.newSearch;
-  const locale = useLocale();
+export const HotelNotFound = ({ locale }: { locale: Locale }) => {
+  const t = hotelDetailsMessages.get(locale).notFound;
+  const newSearch = commonMessages.get(locale).routes.newSearch;
   return (
     <EmptyState
       headingLevel={1}

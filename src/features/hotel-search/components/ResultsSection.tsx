@@ -1,6 +1,7 @@
 "use client";
 
 import type { Amenity, Hotel } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import { getTotalPages } from "@/shared/lib/pagination";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { Alert, Pagination, WifiOffIcon } from "@/shared/ui";
@@ -49,6 +50,7 @@ type ResultsContentProps = ResultsSectionProps & {
 /** Visão `results`: aviso offline, painel do mapa (se aberto) e a lista (páginas) ou o feed. */
 const ResultsContent = (props: ResultsContentProps) => {
   const t = useHotelSearchMessages().list;
+  const locale = useLocale();
   const { view } = props;
   usePagesReveal(props.feed === null);
   return (
@@ -73,6 +75,7 @@ const ResultsContent = (props: ResultsContentProps) => {
             stale={view.stale}
           />
           <Pagination
+            locale={locale}
             page={props.page}
             totalPages={getTotalPages(props.total, PAGE_SIZE)}
             getHref={props.pageHref}
@@ -98,6 +101,7 @@ const ResultsContent = (props: ResultsContentProps) => {
 /** Escolhe o que mostrar para cada visão (`switch` exaustivo); não decide nada além disso. */
 export const ResultsSection = (props: ResultsSectionProps) => {
   const t = useHotelSearchMessages().list;
+  const locale = useLocale();
   const { view } = props;
   switch (view.kind) {
     case "loading":

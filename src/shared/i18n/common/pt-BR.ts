@@ -129,6 +129,7 @@ export const ptBR = {
     skipToContent: "Pular para o conteúdo",
     homeLabel: "Infotera Hotéis, página inicial",
     tryAgain: "Tentar de novo",
+    retrying: "Tentando…",
     closeNotification: "Fechar notificação",
     fixFields: ({ count }: { count: number }) =>
       `Corrija ${count} ${count === 1 ? "campo" : "campos"} para continuar`,

@@ -26,6 +26,7 @@ export const StayDetailsSection = async ({ booking, details, locale }: StayDetai
     <div className="flex flex-col gap-4 [&>*+*]:border-t [&>*+*]:border-border [&>*+*]:pt-4">
       {view.errorTitle ? (
         <ErrorState
+          locale={locale}
           headingLevel={3}
           title={view.errorTitle}
           description={confirmationMessages.get(locale).stay.errorDescription}

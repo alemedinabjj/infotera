@@ -17,6 +17,7 @@ const HotelError = ({ retry }: HotelErrorProps) => {
   const locale = useLocale();
   return (
     <ErrorState
+      locale={locale}
       variant="page"
       headingLevel={1}
       title={t.hotelError}

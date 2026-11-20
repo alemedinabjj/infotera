@@ -13,13 +13,14 @@ const MUTED = "text-sm text-fg-muted";
 
 const FromPriceContent = ({ hotelId }: { hotelId: number }) => {
   const t = useHotelDetailsMessages().fromPrice;
-  const soldOut = commonMessages.get(useLocale()).availability.soldOut;
+  const locale = useLocale();
+  const soldOut = commonMessages.get(locale).availability.soldOut;
   const { data: rooms } = useSuspenseQuery(hotelRoomsQueryOptions(hotelId));
   const from = lowestNightlyPrice(rooms);
   if (from === null) return <p className={MUTED}>{t.noRooms}</p>;
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <PriceTag variant="nightly-inline" nightly={from.price} />
+      <PriceTag locale={locale} variant="nightly-inline" nightly={from.price} />
       {from.soldOut ? <Badge tone="danger">{soldOut}</Badge> : null}
     </div>
   );

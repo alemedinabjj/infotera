@@ -161,9 +161,9 @@ export const HotelCard = ({
           {propertyTypeLabel(hotel.propertyType, locale)} · {hotel.destination}
         </p>
         <HotelCardDistance hotel={hotel} center={center} />
-        <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
+        <RatingScore locale={locale} rating={hotel.rating} reviewCount={hotel.reviewCount} />
         <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
-        <HotelCardFooter pricing={pricing} />
+        <HotelCardFooter locale={locale} pricing={pricing} />
         <div className="relative z-10 flex min-h-11 items-center">
           <CompareCheckbox hotelId={hotel.id} hotelName={hotel.name} className="min-h-11" />
         </div>

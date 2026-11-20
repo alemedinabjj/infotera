@@ -31,7 +31,7 @@ export const ReviewItem = ({ review }: { review: Review }) => {
             ) : null}
           </div>
         </div>
-        <RatingScore rating={review.rating} size="sm" />
+        <RatingScore locale={locale} rating={review.rating} size="sm" />
         <h3 lang={contentLang(locale)} className="text-base font-semibold text-fg">
           {review.title}
         </h3>

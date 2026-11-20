@@ -1,6 +1,7 @@
 "use client";
 
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
+import { useLocale } from "@/shared/i18n/client";
 import { PriceBreakdown as SharedPriceBreakdown, Skeleton } from "@/shared/ui";
 import type { CheckoutPrice } from "../hooks/checkout-price";
 import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
@@ -26,6 +27,7 @@ const DiscountSkeleton = () => (
  */
 export const PriceBreakdown = ({ price, couponValidating = false }: PriceBreakdownProps) => {
   const t = useCheckoutMessages();
+  const locale = useLocale();
   const slow = useSlowLoading(price.status === "loading");
   if (price.status === "loading") return <PriceBreakdownSkeleton slow={slow} />;
   if (price.status === "error") {
@@ -35,6 +37,7 @@ export const PriceBreakdown = ({ price, couponValidating = false }: PriceBreakdo
   const { quote } = price.result;
   return (
     <SharedPriceBreakdown
+      locale={locale}
       lines={quote.lines}
       totalCents={quote.totalCents}
       afterStay={couponValidating ? <DiscountSkeleton /> : null}

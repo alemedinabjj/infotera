@@ -8,14 +8,16 @@ import { ErrorState } from "./ErrorState";
 describe("ErrorState", () => {
   it("tem role=alert e o retry chama onRetry", async () => {
     const onRetry = vi.fn();
-    render(<ErrorState title="Não foi possível carregar os hotéis" onRetry={onRetry} />);
+    render(
+      <ErrorState locale="pt-BR" title="Não foi possível carregar os hotéis" onRetry={onRetry} />,
+    );
     expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível carregar os hotéis");
     await userEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
   it("durante o retry o botão fica em loading", () => {
-    render(<ErrorState title="Erro" onRetry={() => undefined} retrying />);
+    render(<ErrorState locale="pt-BR" title="Erro" onRetry={() => undefined} retrying />);
     const button = screen.getByRole("button", { name: "Tentando…" });
     expect(button).toHaveAttribute("aria-disabled", "true");
     expect(button).toHaveAttribute("aria-busy", "true");

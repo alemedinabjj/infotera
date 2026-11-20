@@ -26,7 +26,7 @@ export const PaymentSummary = ({ cardLast4, price, locale }: PaymentSummaryProps
         <p className="text-sm text-fg-muted">{t.simulated}</p>
       </div>
       <div className="border-t border-border pt-4">
-        <BookingPrice price={price} />
+        <BookingPrice price={price} locale={locale} />
       </div>
     </ReceiptSection>
   );

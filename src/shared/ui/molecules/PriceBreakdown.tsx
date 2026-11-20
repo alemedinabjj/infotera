@@ -1,8 +1,6 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { useLocale } from "../../i18n/client";
-import { useCommonMessages } from "../../i18n/common/useCommonMessages";
+import { commonMessages } from "../../i18n/common/messages";
+import type { Locale } from "../../i18n/config";
 import { cn } from "../../lib/cn";
 import {
   formatCents,
@@ -12,6 +10,7 @@ import {
 } from "../../lib/price-breakdown";
 
 type PriceBreakdownProps = {
+  locale: Locale;
   /** Linhas na ordem de `priceBreakdownLines`. Vazio: só o total (detalhamento indisponível). */
   lines: PriceLine[];
   totalCents: number;
@@ -23,41 +22,38 @@ type PriceBreakdownProps = {
   totalClassName?: string;
 };
 
-const Row = ({ line }: { line: PriceLine }) => {
-  const locale = useLocale();
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <dt className="min-w-0 text-sm text-fg">{priceLineLabel(line, locale)}</dt>
-      <dd
-        className={`shrink-0 text-right text-sm font-medium whitespace-nowrap tabular-nums ${line.kind === "discount" ? "text-success" : "text-fg"}`}
-      >
-        {priceLineAmount(line, locale)}
-      </dd>
-    </div>
-  );
-};
+const Row = ({ line, locale }: { line: PriceLine; locale: Locale }) => (
+  <div className="flex items-start justify-between gap-3">
+    <dt className="min-w-0 text-sm text-fg">{priceLineLabel(line, locale)}</dt>
+    <dd
+      className={`shrink-0 text-right text-sm font-medium whitespace-nowrap tabular-nums ${line.kind === "discount" ? "text-success" : "text-fg"}`}
+    >
+      {priceLineAmount(line, locale)}
+    </dd>
+  </div>
+);
 
 /**
  * Detalhamento do preço em `<dl>`: estadia → desconto → taxa de serviço → ISS → total. Só
  * apresentação: sem skeleton e sem região viva (quem anuncia é o controle que mudou o preço).
  */
 export const PriceBreakdown = ({
+  locale,
   lines,
   totalCents,
   afterStay = null,
   showTaxNote = true,
   totalClassName,
 }: PriceBreakdownProps) => {
-  const locale = useLocale();
-  const t = useCommonMessages().price;
+  const t = commonMessages.get(locale).price;
   const [stay, ...rest] = lines;
   return (
     <div className="flex flex-col gap-2">
       <dl className="flex flex-col gap-2">
-        {stay ? <Row line={stay} /> : null}
+        {stay ? <Row line={stay} locale={locale} /> : null}
         {afterStay}
         {rest.map((line) => (
-          <Row key={line.kind} line={line} />
+          <Row key={line.kind} line={line} locale={locale} />
         ))}
       </dl>
       {/* Total e nota juntos: se o total é `sticky`, a nota nunca fica escondida atrás dele. */}

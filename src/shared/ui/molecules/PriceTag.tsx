@@ -1,7 +1,4 @@
-"use client";
-
-import { useLocale } from "../../i18n/client";
-import { useCommonMessages } from "../../i18n/common/useCommonMessages";
+import { commonMessages } from "../../i18n/common/messages";
 import type { Locale } from "../../i18n/config";
 import { formatUnit } from "../../i18n/units";
 import { formatBRL } from "../../lib/currency";
@@ -9,7 +6,7 @@ import { formatBRL } from "../../lib/currency";
 const money = (value: number, locale: Locale): string =>
   formatBRL(value, { cents: !Number.isInteger(value), locale });
 
-type PriceTagProps =
+type PriceTagProps = { locale: Locale } & (
   | {
       /** Sem datas: `a partir de` / **R$ 180** / `por noite`. */
       variant: "nightly";
@@ -41,12 +38,13 @@ type PriceTagProps =
       nightly: number;
       /** Preço exato (de um quarto): `R$ 1.200 por noite`, sem "a partir de". */
       exact?: boolean;
-    };
+    }
+);
 
 /** Preço do card (design system §5.1). O valor nunca quebra: `whitespace-nowrap`. */
 export const PriceTag = (props: PriceTagProps) => {
-  const locale = useLocale();
-  const t = useCommonMessages().price;
+  const { locale } = props;
+  const t = commonMessages.get(locale).price;
   switch (props.variant) {
     case "nightly":
       return (

@@ -42,7 +42,12 @@ export const RoomCardFooter = ({
       <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
         {badge ? <Badge tone={badge.tone}>{badge.text}</Badge> : null}
         <div className="ml-auto text-right">
-          <RoomPrice room={room} criteria={criteria} selectability={selectability} />
+          <RoomPrice
+            locale={locale}
+            room={room}
+            criteria={criteria}
+            selectability={selectability}
+          />
         </div>
       </div>
       {reason ? (

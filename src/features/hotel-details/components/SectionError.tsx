@@ -2,6 +2,7 @@
 
 import type { FetchQueryOptions, QueryKey } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { useLocale } from "@/shared/i18n/client";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import { ErrorState } from "@/shared/ui";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
@@ -27,6 +28,7 @@ export const SectionError = <TData, TKey extends QueryKey>({
   focusRetry = false,
 }: SectionErrorProps<TData, TKey>) => {
   const t = useHotelDetailsMessages().errors;
+  const locale = useLocale();
   const { retry, retrying } = useSectionRetry(options, { onFinished });
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -38,6 +40,7 @@ export const SectionError = <TData, TKey extends QueryKey>({
   return (
     <div ref={ref}>
       <ErrorState
+        locale={locale}
         title={title}
         description={t.sectionRetry}
         headingLevel={3}

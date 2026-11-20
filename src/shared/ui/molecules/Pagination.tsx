@@ -1,8 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useCommonMessages } from "../../i18n/common/useCommonMessages";
+import { commonMessages } from "../../i18n/common/messages";
+import type { Locale } from "../../i18n/config";
 import { cn } from "../../lib/cn";
 import { getPaginationRange } from "../../lib/pagination";
 import { ChevronLeftIcon, ChevronRightIcon } from "../icons";
@@ -12,6 +11,7 @@ type PaginationMode =
   | { onPageChange: (page: number) => void; getHref?: never };
 
 type PaginationProps = PaginationMode & {
+  locale: Locale;
   page: number;
   totalPages: number;
   /** Nome da landmark `<nav>`. */
@@ -86,6 +86,7 @@ const PageItem = ({
 
 /** Paginação em modo link (`getHref`, URL como estado) ou botão (`onPageChange`). */
 export const Pagination = ({
+  locale,
   page,
   totalPages,
   label,
@@ -95,7 +96,7 @@ export const Pagination = ({
   className,
   ...mode
 }: PaginationProps) => {
-  const t = useCommonMessages().pagination;
+  const t = commonMessages.get(locale).pagination;
   if (totalPages <= 1) return null;
   const summary = summaryLabel ?? ((current, total) => t.summary({ page: current, total }));
 

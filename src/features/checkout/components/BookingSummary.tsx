@@ -171,6 +171,7 @@ export const BookingSummary = (props: BookingSummaryProps) => {
       </h2>
       {loadFailed ? (
         <ErrorState
+          locale={locale}
           headingLevel={3}
           title={t.loadErrorTitle}
           description={t.loadErrorDescription}

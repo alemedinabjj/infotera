@@ -1,12 +1,11 @@
-"use client";
-
 import { ResultsSkeleton } from "@/features/hotel-search";
-import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
+import { commonMessages } from "@/shared/i18n/common/messages";
+import { getLocale } from "@/shared/i18n/server";
 import { Skeleton } from "@/shared/ui";
 
 /** Esqueleto da rota (raramente aparece: o servidor não espera a API). */
-const SearchLoading = () => {
-  const t = useCommonMessages().routes;
+const SearchLoading = async () => {
+  const t = commonMessages.get(await getLocale()).routes;
   return (
     <div aria-busy="true" className="flex flex-col gap-6 lg:gap-8">
       <p className="sr-only" aria-live="polite">

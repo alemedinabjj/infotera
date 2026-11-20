@@ -97,7 +97,7 @@ describe("hotel-details por idioma: componentes", () => {
       <>
         <HotelPolicies hotel={hotel} locale="en-US" />
         <SoldOutAlert hasDates locale="en-US" />
-        <HotelNotFound />
+        <HotelNotFound locale="en-US" />
       </>,
       { locale: "en-US" },
     );

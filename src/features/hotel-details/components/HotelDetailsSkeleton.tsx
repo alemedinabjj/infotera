@@ -1,17 +1,16 @@
-"use client";
-
+import type { Locale } from "@/shared/i18n/config";
 import { Skeleton } from "@/shared/ui";
-import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
+import { hotelDetailsMessages } from "../i18n/messages";
 
 /**
  * Skeleton da rota (`loading.tsx`): aparece na hora ao abrir o hotel (o cold start da API pode
- * demorar dezenas de segundos). Mesma geometria da página. Client Component renderizado no servidor (o texto vem do dicionário do idioma): o aviso "demorando"
+ * demorar dezenas de segundos). Mesma geometria da página. Server Component (o texto vem do dicionário do `locale`): o aviso "demorando"
  * já está no HTML numa região `role="status"` e é revelado por CSS (`animate-slow-notice`, 5 s),
  * então aparece mesmo sem hidratação. O atraso vale também com movimento reduzido (revelar texto
  * não é movimento).
  */
-export const HotelDetailsSkeleton = () => {
-  const t = useHotelDetailsMessages().loading;
+export const HotelDetailsSkeleton = ({ locale }: { locale: Locale }) => {
+  const t = hotelDetailsMessages.get(locale).loading;
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
       <div role="status" className="flex flex-col">

@@ -72,7 +72,7 @@ export const SimilarHotels = async ({
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
       {hotels.map((hotel) => (
         <li key={hotel.id} className="flex">
-          <CompactHotelCard hotel={hotel} criteria={criteria} />
+          <CompactHotelCard locale={locale} hotel={hotel} criteria={criteria} />
         </li>
       ))}
     </ul>

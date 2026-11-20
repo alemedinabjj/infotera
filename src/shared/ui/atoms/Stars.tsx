@@ -1,7 +1,5 @@
-"use client";
-
-import { useLocale } from "../../i18n/client";
-import { useCommonMessages } from "../../i18n/common/useCommonMessages";
+import { commonMessages } from "../../i18n/common/messages";
+import type { Locale } from "../../i18n/config";
 import { cn } from "../../lib/cn";
 import { formatRating } from "../../lib/format";
 import { StarIcon } from "../icons";
@@ -9,6 +7,7 @@ import { StarIcon } from "../icons";
 const STAR_INDEXES = [0, 1, 2, 3, 4] as const;
 
 type StarsProps = {
+  locale: Locale;
   /** Nota de 0 a 5 (aceita decimais; meia estrela por recorte). */
   value: number;
   /** Nome acessível; padrão "Avaliação 4,5 de 5" (ou "Rating 4.5 out of 5"). */
@@ -22,9 +21,8 @@ const fillPercent = (value: number, index: number): number =>
   Math.round(Math.min(Math.max(value - index, 0), 1) * 100);
 
 /** Estrelas decorativas com nome acessível único. Mostre sempre a nota em texto ao lado. */
-export const Stars = ({ value, label, decorative = false, className }: StarsProps) => {
-  const locale = useLocale();
-  const t = useCommonMessages().rating;
+export const Stars = ({ locale, value, label, decorative = false, className }: StarsProps) => {
+  const t = commonMessages.get(locale).rating;
   return (
     <span
       {...(decorative

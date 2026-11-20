@@ -8,7 +8,7 @@ describe("SkipLink + SiteHeader", () => {
   it("o skip link é o primeiro focável e aponta para #main-content", async () => {
     render(
       <>
-        <SkipLink />
+        <SkipLink locale="pt-BR" />
         <SiteHeader homeLabel="Infotera Hotéis, página inicial" homeHref="/" />
       </>,
     );

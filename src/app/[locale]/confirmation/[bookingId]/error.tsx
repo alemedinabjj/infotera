@@ -28,6 +28,7 @@ const ConfirmationError = ({ error, retry }: ConfirmationErrorProps) => {
   return (
     <div className="w-full max-w-3xl">
       <ErrorState
+        locale={locale}
         variant="page"
         headingLevel={1}
         title={t.confirmationError.title}

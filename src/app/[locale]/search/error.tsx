@@ -14,6 +14,7 @@ const SearchError = ({ retry }: SearchErrorProps) => {
   const locale = useLocale();
   return (
     <ErrorState
+      locale={locale}
       variant="page"
       headingLevel={1}
       title={t.searchError}

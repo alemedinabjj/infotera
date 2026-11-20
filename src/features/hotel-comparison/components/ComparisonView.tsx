@@ -81,6 +81,7 @@ const Body = ({ state, ids, criteria }: BodyProps) => {
     case "error":
       return (
         <ErrorState
+          locale={locale}
           title={MESSAGES.error.title}
           description={MESSAGES.error.description}
           onRetry={state.retry}

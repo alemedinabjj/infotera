@@ -37,7 +37,7 @@ const RootLayout = async ({ children, params }: LayoutProps<"/[locale]">) => {
     <html lang={locale} className={inter.variable} data-scroll-behavior="smooth">
       <body className="min-h-dvh antialiased">
         <I18nProvider locale={locale}>
-          <SkipLink />
+          <SkipLink locale={locale} />
           <AppProviders>
             <SiteHeader
               homeLabel={commonMessages.get(locale).ui.homeLabel}

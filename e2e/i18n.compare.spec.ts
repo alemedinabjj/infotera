@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "./fixtures";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { cards, searchPath } from "./helpers/hotel-search";
 
 // Comparação e favoritos em /en **sem cookie de idioma**: cada link e cada `replaceState` precisa

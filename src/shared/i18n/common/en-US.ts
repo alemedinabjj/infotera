@@ -127,6 +127,7 @@ export const enUS: CommonMessages = {
     skipToContent: "Skip to content",
     homeLabel: "Infotera Hotéis, home page",
     tryAgain: "Try again",
+    retrying: "Trying…",
     closeNotification: "Close notification",
     fixFields: ({ count }) => `Fix ${count} ${count === 1 ? "field" : "fields"} to continue`,
     linkCopied: "Link copied.",

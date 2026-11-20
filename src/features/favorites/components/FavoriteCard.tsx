@@ -3,6 +3,7 @@
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { Hotel } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import { cn } from "@/shared/lib/cn";
 import { focusWhenReady } from "@/shared/lib/focus";
 import { useLastSearch } from "@/shared/lib/last-search";
@@ -29,11 +30,12 @@ type FavoriteCardProps = {
 /** "a partir de" pelos quartos, como na busca e na comparação (o `pricePerNight` do hotel diverge). */
 const CardPrice = ({ price }: { price: PriceState }) => {
   const MESSAGES = useFavoritesMessages();
+  const locale = useLocale();
   switch (price.state) {
     case "loading":
       return <Skeleton className="h-5 w-36" />;
     case "ready":
-      return <PriceTag variant="nightly-line" nightly={price.nightly} />;
+      return <PriceTag locale={locale} variant="nightly-line" nightly={price.nightly} />;
     case "unavailable":
       return <p className="text-sm text-fg-subtle">{MESSAGES.priceUnavailable}</p>;
     default: {
@@ -51,6 +53,7 @@ type FocusTarget = "undo" | "heart" | null;
  * abaixo se move. O foco vai para "Desfazer" e, ao desfazer, volta ao coração.
  */
 export const FavoriteCard = ({ hotel, entry, index, price }: FavoriteCardProps) => {
+  const locale = useLocale();
   const favorite = useIsFavorite(hotel.id);
   const lastSearch = useLastSearch();
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
@@ -85,6 +88,7 @@ export const FavoriteCard = ({ hotel, entry, index, price }: FavoriteCardProps) 
         inert={!favorite}
       >
         <CompactHotelCard
+          locale={locale}
           hotel={hotel}
           criteria={null}
           linkCriteria={lastSearch}

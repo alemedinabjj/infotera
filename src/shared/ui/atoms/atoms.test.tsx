@@ -130,13 +130,13 @@ describe("Skeleton, Badge e Stars", () => {
   });
 
   it("Stars decorative esconde o contêiner e remove o role img", () => {
-    const { container } = render(<Stars value={4} decorative />);
+    const { container } = render(<Stars locale="pt-BR" value={4} decorative />);
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
   it("Stars tem nome acessível e estrelas aria-hidden", () => {
-    const { container } = render(<Stars value={4.5} />);
+    const { container } = render(<Stars locale="pt-BR" value={4.5} />);
     expect(screen.getByRole("img", { name: "Avaliação 4,5 de 5" })).toBeInTheDocument();
     for (const svg of container.querySelectorAll("svg")) {
       expect(svg).toHaveAttribute("aria-hidden", "true");
@@ -144,7 +144,7 @@ describe("Skeleton, Badge e Stars", () => {
   });
 
   it("Stars aceita label customizado", () => {
-    render(<Stars value={3} label="Nota do quarto: 3" />);
+    render(<Stars locale="pt-BR" value={3} label="Nota do quarto: 3" />);
     expect(screen.getByRole("img", { name: "Nota do quarto: 3" })).toBeInTheDocument();
   });
 });

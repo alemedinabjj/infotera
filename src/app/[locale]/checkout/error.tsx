@@ -12,6 +12,7 @@ const CheckoutError = ({ retry }: { error: unknown; retry: () => void }) => {
   const locale = useLocale();
   return (
     <ErrorState
+      locale={locale}
       variant="page"
       headingLevel={1}
       title={t.checkoutError.title}
