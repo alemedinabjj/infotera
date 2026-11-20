@@ -1,6 +1,7 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useHydrated } from "@/shared/hooks/useHydrated";
 import { useOnline } from "@/shared/hooks/useOnline";
 import { useLocale } from "@/shared/i18n/client";
 import { getTotalPages } from "@/shared/lib/pagination";
@@ -59,6 +60,7 @@ const ReviewsContent = ({
     ...(page === 1 ? { initialData: initialPage, initialDataUpdatedAt: fetchedAt } : {}),
   });
   const online = useOnline();
+  const hydrated = useHydrated();
   useFocusOnNewPage(page);
 
   if (data.total === 0) {
@@ -86,6 +88,7 @@ const ReviewsContent = ({
         page={page}
         totalPages={getTotalPages(data.total, REVIEWS_PAGE_SIZE)}
         onPageChange={onPageChange}
+        disabled={!hydrated}
         className="mt-2"
       />
       {pending && !online ? <OfflineNotice /> : null}
@@ -94,7 +97,9 @@ const ReviewsContent = ({
 };
 
 /**
- * Paginação das avaliações (`useSuspenseQuery` + transition na troca de página). Cliente, dentro de
+ * Paginação das avaliações. Os botões nascem `disabled` (HTML do servidor) e só habilitam depois de
+ * hidratar: o React troca o fallback pelo pager com o script inline antes do JS rodar, e um clique
+ * nesse intervalo se perderia. (`useSuspenseQuery` + transition na troca de página). Cliente, dentro de
  * `<Suspense>` (o TanStack lê `Date.now()` no render, vedado na casca): a página 1 vem do snapshot do
  * catálogo e a 2+ do cliente. Loading e erro (com retry no lugar) trocam só o miolo.
  */
