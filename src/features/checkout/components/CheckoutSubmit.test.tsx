@@ -126,6 +126,22 @@ describe("falhas e retry (critério 30)", () => {
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
   });
 
+  it("sem conexão: nem chama a action e mostra o alerta com 'Tentar de novo'", async () => {
+    const user = await toConfirm();
+    const online = vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    await clickButton(user, "Confirmar reserva");
+    expect(await screen.findByText("Você está sem conexão.")).toBeVisible();
+    expect(
+      screen.getByText("Nada foi cobrado. Tente de novo quando a conexão voltar."),
+    ).toBeVisible();
+    expect(action).not.toHaveBeenCalled();
+    action.mockResolvedValueOnce({ status: "created", bookingId: ID });
+    online.mockReturnValue(true);
+    await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    await waitFor(() => expect(navigationSpies.replace).toHaveBeenCalled());
+    online.mockRestore();
+  });
+
   it("price-changed: alerta com o total antigo e o novo e o breakdown atualizado", async () => {
     const user = await toConfirm();
     const quote = calculatePrice({ pricePerNight: 1300, nights: 3, rooms: 1 });

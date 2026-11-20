@@ -28,9 +28,8 @@ describe("submitFeedback", () => {
   it("failed offline: warning", () => {
     expect(feedback({ status: "failed", kind: "network" }, { online: false })).toMatchObject({
       tone: "warning",
-      title: "Você está sem internet",
-      description:
-        "Assim que a conexão voltar, tente de novo. Nada foi cobrado e seus dados foram mantidos.",
+      title: "Você está sem conexão.",
+      description: "Nada foi cobrado. Tente de novo quando a conexão voltar.",
       action: "retry",
     });
   });
