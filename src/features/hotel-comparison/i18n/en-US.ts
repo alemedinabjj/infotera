@@ -2,6 +2,7 @@ import { formatUnit } from "@/shared/i18n/units";
 import type { ComparisonMessages } from "./pt-BR";
 
 export const enUS: ComparisonMessages = {
+  metaTitle: "Compare hotels | Infotera Hotéis",
   title: "Compare hotels",
   legend: "Highlighted rows change between hotels.",
   onlyDifferences: "Show only differences",

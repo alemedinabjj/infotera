@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeBooking } from "@/shared/testing/fixtures";
-import { CONFIRMATION_ROBOTS, confirmationTitle, FALLBACK_CONFIRMATION_TITLE } from "./metadata";
+import { CONFIRMATION_ROBOTS, confirmationTitle, fallbackConfirmationTitle } from "./metadata";
 
 describe("confirmationTitle", () => {
   it("um título genérico por estado", () => {
@@ -24,12 +24,24 @@ describe("confirmationTitle", () => {
   });
 
   it("o título de reserva padrão serve de reserva para erro no metadata", () => {
-    expect(FALLBACK_CONFIRMATION_TITLE).toBe("Reserva confirmada | Infotera Hotéis");
+    expect(fallbackConfirmationTitle()).toBe("Reserva confirmada | Infotera Hotéis");
   });
 });
 
 describe("CONFIRMATION_ROBOTS", () => {
   it("não indexa e não segue", () => {
     expect(CONFIRMATION_ROBOTS).toEqual({ index: false, follow: false });
+  });
+});
+
+describe("títulos em en-US", () => {
+  it("um título por estado e o padrão de erro", () => {
+    expect(confirmationTitle({ kind: "not-found" }, "en-US")).toBe(
+      "Booking not found | Infotera Hotéis",
+    );
+    expect(confirmationTitle({ kind: "unreadable" }, "en-US")).toBe(
+      "Booking unavailable | Infotera Hotéis",
+    );
+    expect(fallbackConfirmationTitle("en-US")).toBe("Booking confirmed | Infotera Hotéis");
   });
 });

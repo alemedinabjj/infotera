@@ -4,10 +4,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { copyText } from "@/shared/lib/clipboard";
 import { cn } from "@/shared/lib/cn";
 import { buttonClassName, CheckIcon, CopyIcon, InfoIcon } from "@/shared/ui";
+import { useConfirmationMessages } from "../hooks/useConfirmationMessages";
 
 const COPIED_MS = 2000;
-const COPY_LABEL = "Copiar número da reserva";
-const FAILURE_TEXT = "Não foi possível copiar. Selecione o número e copie.";
 
 type CopyState = { status: "idle" | "copied" | "failed"; attempt: number };
 
@@ -33,6 +32,7 @@ type CopyBookingNumberProps = {
  * o que fazer quando a cópia falha (o número fica selecionado). O foco nunca sai do botão.
  */
 export const CopyBookingNumber = ({ value, numberId }: CopyBookingNumberProps) => {
+  const t = useConfirmationMessages().copy;
   const mounted = useMounted();
   const [state, setState] = useState<CopyState>({ status: "idle", attempt: 0 });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -82,13 +82,13 @@ export const CopyBookingNumber = ({ value, numberId }: CopyBookingNumberProps) =
                 aria-hidden={copied || undefined}
                 className={`col-start-1 row-start-1 ${copied ? "invisible" : ""}`}
               >
-                {COPY_LABEL}
+                {t.label}
               </span>
               <span
                 aria-hidden={!copied || undefined}
                 className={`col-start-1 row-start-1 ${copied ? "" : "invisible"}`}
               >
-                Copiado
+                {t.copied}
               </span>
             </span>
           </button>
@@ -97,13 +97,13 @@ export const CopyBookingNumber = ({ value, numberId }: CopyBookingNumberProps) =
       <p aria-live="polite" className="mt-2 min-h-5 text-sm text-fg-muted">
         {copied ? (
           <span key={state.attempt} className="sr-only">
-            Número da reserva copiado.
+            {t.copiedAnnounce}
           </span>
         ) : null}
         {state.status === "failed" ? (
           <span key={state.attempt} className="flex items-start gap-1.5">
             <InfoIcon className="mt-0.5 size-4 shrink-0" />
-            {FAILURE_TEXT}
+            {t.failure}
           </span>
         ) : null}
       </p>

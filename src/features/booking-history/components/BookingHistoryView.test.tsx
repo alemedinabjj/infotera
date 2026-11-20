@@ -261,3 +261,23 @@ describe("BookingHistoryView", () => {
     act(() => undefined);
   });
 });
+
+describe("BookingHistoryView em en-US", () => {
+  it("lista, datas, situação e links no idioma", async () => {
+    save([ID_A]);
+    stub();
+    const { container } = renderWithProviders(<BookingHistoryView />, { locale: "en-US" });
+    expect(
+      await screen.findByRole("heading", { level: 2, name: seedHotel(1).name }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "My bookings" })).toBeInTheDocument();
+    expect(container).toHaveTextContent("Dec 12–15 · 3 nights");
+    expect(container).toHaveTextContent("2 adults, 1 child · 1 room");
+    expect(container).toHaveTextContent("Upcoming stay");
+    expect(container).toHaveTextContent("Booked on 11/19/2026");
+    expect(
+      screen.getByRole("link", { name: `View booking at ${seedHotel(1).name}` }),
+    ).toHaveAttribute("href", `/en/confirmation/${ID_A}`);
+    expect(container).toHaveTextContent("On a shared computer, clear the history");
+  });
+});

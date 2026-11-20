@@ -1,2 +1,2 @@
 export { FavoritesView } from "./components/FavoritesView";
-export { FAVORITES_MESSAGES } from "./model/messages";
+export { favoritesMessages } from "./i18n/messages";

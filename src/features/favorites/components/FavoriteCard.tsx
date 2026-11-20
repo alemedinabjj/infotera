@@ -15,8 +15,8 @@ import {
   useIsFavorite,
 } from "@/shared/saved";
 import { CompactHotelCard, PriceTag, Skeleton } from "@/shared/ui";
+import { useFavoritesMessages } from "../hooks/useFavoritesMessages";
 import type { PriceState } from "../model/favorites-view";
-import { FAVORITES_MESSAGES } from "../model/messages";
 import { RemovedFavorite } from "./RemovedFavorite";
 
 type FavoriteCardProps = {
@@ -28,13 +28,14 @@ type FavoriteCardProps = {
 
 /** "a partir de" pelos quartos, como na busca e na comparação (o `pricePerNight` do hotel diverge). */
 const CardPrice = ({ price }: { price: PriceState }) => {
+  const MESSAGES = useFavoritesMessages();
   switch (price.state) {
     case "loading":
       return <Skeleton className="h-5 w-36" />;
     case "ready":
       return <PriceTag variant="nightly-line" nightly={price.nightly} />;
     case "unavailable":
-      return <p className="text-sm text-fg-subtle">{FAVORITES_MESSAGES.priceUnavailable}</p>;
+      return <p className="text-sm text-fg-subtle">{MESSAGES.priceUnavailable}</p>;
     default: {
       const unreachable: never = price;
       return unreachable;

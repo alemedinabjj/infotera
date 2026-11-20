@@ -154,3 +154,21 @@ describe("FavoritesView", () => {
     expect(within(card).getByRole("checkbox", { name: /^Comparar/ })).toBeInTheDocument();
   });
 });
+
+describe("FavoritesView em en-US", () => {
+  it("título, contagem, preço e link da busca no idioma, sem português", async () => {
+    await store([entry(1, 1)]);
+    stubFetch(hotelsFor);
+    const { container } = renderWithProviders(<FavoritesView />, { locale: "en-US" });
+    expect(await screen.findByText("1 saved hotel")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Favorites" })).toBeInTheDocument();
+    await waitFor(() => expect(container).toHaveTextContent(/from R\$800 per night/));
+  });
+
+  it("vazio: texto e link localizado", async () => {
+    stubFetch(hotelsFor);
+    renderWithProviders(<FavoritesView />, { locale: "en-US" });
+    expect(await screen.findByText("No saved hotels yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Search hotels" })).toHaveAttribute("href", "/en");
+  });
+});

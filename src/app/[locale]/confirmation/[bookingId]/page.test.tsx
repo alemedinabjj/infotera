@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BookingConfirmation } from "@/features/booking-confirmation";
 import { BOOKING_ID, makeBooking } from "@/shared/testing/fixtures";
 import ConfirmationError from "./error";
-import ConfirmationNotFound, { metadata as notFoundMetadata } from "./not-found";
+import ConfirmationNotFound from "./not-found";
 import ConfirmationPage, { generateMetadata } from "./page";
 
 vi.mock("next/navigation", async () => ({
@@ -16,6 +16,7 @@ vi.mock("next/navigation", async () => ({
     });
   },
 }));
+vi.mock("@/shared/i18n/server", () => ({ getLocale: vi.fn(async () => "pt-BR") }));
 vi.mock("next/server", () => ({ connection: vi.fn(async () => undefined) }));
 
 const json = (body: unknown, status = 200) =>
@@ -105,8 +106,8 @@ describe("generateMetadata (critérios 5 e 7)", () => {
 });
 
 describe("not-found.tsx (critério 7)", () => {
-  it("h1 com foco, texto do design system e Fazer nova busca", () => {
-    render(<ConfirmationNotFound />);
+  it("h1 com foco, texto do design system e Fazer nova busca", async () => {
+    render(await ConfirmationNotFound());
     expect(screen.getByRole("heading", { level: 1, name: "Reserva não encontrada" })).toHaveFocus();
     expect(
       screen.getByText(
@@ -116,8 +117,15 @@ describe("not-found.tsx (critério 7)", () => {
     expect(screen.getByRole("link", { name: "Fazer nova busca" })).toHaveAttribute("href", "/");
   });
 
-  it("metadata noindex, nofollow", () => {
-    expect(notFoundMetadata.robots).toEqual({ index: false, follow: false });
+  it("título e robots noindex, nofollow", async () => {
+    render(await ConfirmationNotFound());
+    expect(document.head.querySelector("title")?.textContent).toBe(
+      "Reserva não encontrada | Infotera Hotéis",
+    );
+    expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      "noindex, nofollow",
+    );
   });
 });
 

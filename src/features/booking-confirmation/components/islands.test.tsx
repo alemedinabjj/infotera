@@ -15,7 +15,12 @@ const stubClipboard = (writeText: () => Promise<void>) => {
 
 const renderNumber = () =>
   render(
-    <BookingNumber number={BOOKING_ID} stayLabel="12–15 dez · 3 noites" totalCents={372600} />,
+    <BookingNumber
+      number={BOOKING_ID}
+      stayLabel="12–15 dez · 3 noites"
+      totalCents={372600}
+      locale="pt-BR"
+    />,
   );
 
 beforeEach(() => {

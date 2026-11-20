@@ -2,6 +2,7 @@ import { formatUnit } from "@/shared/i18n/units";
 
 /** Microcopy da comparação (pt-BR é a fonte). */
 export const ptBR = {
+  metaTitle: "Comparar hotéis | Infotera Hotéis",
   title: "Comparar hotéis",
   legend: "Linhas marcadas mudam entre os hotéis.",
   onlyDifferences: "Mostrar só diferenças",
