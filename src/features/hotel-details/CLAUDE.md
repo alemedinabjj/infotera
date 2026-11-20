@@ -28,10 +28,10 @@ index.ts                 HotelDetailsView, HotelNotFound, loadHotel, parseHotelI
 - **404 "suave" (Decisão 2)**: hotel inexistente, id inválido (`parseHotelId`, sem chamar a API), foto de hotel
   inexistente e foto fora da faixa respondem `200` + `noindex` (`robots` no `generateMetadata`) com o "não encontrado"
   renderizado **inline** (`HotelNotFound`, `PhotoNotFoundView`), nunca por `notFound()`. Motivo (verificado no 16.4.6): sob
-  `cacheComponents` todo `notFound()` sai como `<html id="__next_error__">` com corpo vazio e o conteúdo só no cliente
-  (sem JS, tela em branco e sem título), e com `partialPrefetching: true` a 1ª visita a um id fora do `generateStaticParams`
-  recebe uma casca de 0 byte. Por isso `partialPrefetching` fica `false` (explícito) e `[...rest]` também é inline. O custo é o
-  status `200` no lugar de `404`; o `noindex` cobre o SEO. `e2e/not-found.prod.spec.ts` (`@prod`, sem JS) guarda isso.
+  `cacheComponents` todo `notFound()` sai como `<html id="__next_error__">` com corpo vazio e o conteúdo só no cliente (sem
+  JS, tela em branco e sem título). Inline, o HTML do servidor traz header, h1, link e título já na 1ª visita, mesmo para id
+  fora do `generateStaticParams`. `[...rest]` também é inline (`RouteNotFound`). O custo é o status `200` no lugar de `404`;
+  o `noindex` cobre o SEO. `e2e/not-found.prod.spec.ts` (`@prod`, sem JS) guarda isso.
 - **Formulário de datas por `app/`**: `renderDatesForm(destination)` (função servidor→servidor; o destino só se
   conhece depois do hotel) monta `app/hotel/[hotelId]/HotelDatesForm` (client, porque `getSubmitHref` é função)
   sobre o `SearchForm` da F2 (`fixedDestination`, `getSubmitHref`, envio sem rolar).
@@ -125,4 +125,4 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
 - "Tentar de novo" que falha de novo: `useStillFailing(retrying)` + `StillFailingNotice` (`role="status"` sempre montado, `sr-only`) em `SectionRefreshError`, `SectionError` e
   `PhotoOpenError` (lógica em `model/retry-feedback.ts`). Cartão offline com a conexão de volta: título neutro `Conexão de volta` (`photoOpenStatus`). Limite: no `PhotoModalError`
   (`error.tsx`) o cartão remonta a cada falha e o estado se perde, então não há aviso de "ainda" ali.
-- Página cheia sem JS: `<noscript><style>` esconde as setas (`data-photo-controls`); "Voltar para o hotel" usa anel de foco por dentro (`-outline-offset-2`).
+- Página cheia sem JS: `<noscript><style>` esconde as setas (`data-photo-arrow`; o contador fica); "Voltar para o hotel" usa anel de foco por dentro (`-outline-offset-2`).

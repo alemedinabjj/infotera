@@ -2,10 +2,10 @@ import { expect } from "@playwright/test";
 import { test } from "./fixtures";
 
 // "Não encontrado" sem JavaScript. Sob `cacheComponents` o Next responde todo `notFound()` com
-// `<html id="__next_error__">` e corpo vazio (o conteúdo só no cliente), e `partialPrefetching` ligado deixa
-// a 1ª visita a um id fora do `generateStaticParams` com uma casca de 0 byte. As rotas renderizam o "não
-// encontrado" inline e o HTML sai do servidor: header, h1, link de saída e título corretos sem executar JS.
-// Só no build: em `next dev` o corpo é streamado.
+// `<html id="__next_error__">` e corpo vazio (o conteúdo só no cliente). As rotas renderizam o "não encontrado"
+// inline (`200` + `noindex`) e o HTML sai do servidor já na 1ª visita: header, h1, link de saída e título
+// corretos sem executar JS. Os ids `61` e `999` não estão no `generateStaticParams`. Só no build: em `next dev`
+// o corpo é streamado.
 
 test.skip(process.env.E2E_PROD !== "1", "só no build: em `next dev` não há prerender");
 test.use({ javaScriptEnabled: false });

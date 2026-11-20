@@ -52,7 +52,7 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
   `pb-[calc(var(--bottom-bar-height,0px)+1.5rem)]`. Importa os dois direto de `@/shared/saved/components/*` (Server Component).
 
 ## F7c (PPR, ISR, galeria como rota)
-- `cacheComponents: true` + `partialPrefetching: false` (explícito; ligado, ids fora do `generateStaticParams` ficam com casca vazia e HTML `__next_error__`): PPR é `cacheComponents` no 16.x. `notFound()` sai como HTML vazio (corpo só no cliente): as rotas de "não encontrado" renderizam inline (`200` + `noindex`). Regra: dado de request ou não cacheado só dentro de `<Suspense>`;
+- `cacheComponents: true` + `partialPrefetching: true`: PPR é `cacheComponents` no 16.x. **`notFound()` sai como HTML vazio** (`<html id="__next_error__">`, corpo só no cliente), então as rotas públicas de "não encontrado" (hotel, foto, `[...rest]`) renderizam o componente **inline** (`200` + `noindex` no `generateMetadata`), não `notFound()`. Regra: dado de request ou não cacheado só dentro de `<Suspense>`;
   `usePathname`/`useSearchParams`/`Date.now()` em client component na casca também (por isso `NavigationTracker`, `CompareTray`, `ServiceWorkerRegistrar`,
   `SavedNav` ficam sob Suspense). `dynamicParams` não existe mais (removido do layout; o `[locale]` inválido cai em `notFound()` no layout).
 - Forma de cada rota (conferida no `npm run build`): `/` `○`; `/search` `◐`; `/hotel/[hotelId]` e `/hotel/1…60` `◐` (ISR, 60 ids da API); `/hotel/[hotelId]/photos/[photo]` `◐`;

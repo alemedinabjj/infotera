@@ -167,6 +167,7 @@ test.describe("página cheia sem JavaScript", () => {
     await page.goto("/hotel/1/photos/2");
     await expect(page.getByRole("heading", { level: 1, name: `Fotos de ${NAME}` })).toBeVisible();
     await expect(page.getByRole("link", { name: "Voltar para o hotel" })).toBeVisible();
+    await expect(pageCounter(page, "Foto 2 de 5")).toBeVisible();
     await expect(page.getByRole("button", { name: "Próxima foto" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Foto anterior" })).toBeHidden();
   });

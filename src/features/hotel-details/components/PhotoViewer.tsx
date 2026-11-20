@@ -10,7 +10,9 @@ import { photoPageTitle } from "../model/photo-route";
 import { PhotoControls } from "./PhotoControls";
 import { PhotoFrame, PhotoNeighbors } from "./PhotoFrame";
 
-const HIDE_CONTROLS_RULE = "[data-photo-controls]{display:none!important}";
+// Só as setas: o contador ("Foto 3 de 5") continua útil sem JS e passa a ficar centralizado.
+const HIDE_ARROWS_RULE =
+  "[data-photo-arrow]{display:none!important}[data-photo-controls]{justify-content:center}";
 
 type PhotoViewerProps = {
   hotelId: number;
@@ -77,7 +79,7 @@ export const PhotoViewer = ({
       ) : null}
       {/* Sem JS as setas não fazem nada: o `<noscript>` as esconde (a foto da URL continua à mostra). */}
       <noscript>
-        <style>{HIDE_CONTROLS_RULE}</style>
+        <style>{HIDE_ARROWS_RULE}</style>
       </noscript>
       {several ? <PhotoNeighbors images={images} index={viewer.index} /> : null}
     </div>

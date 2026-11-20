@@ -34,6 +34,7 @@ export const PhotoControls = ({
     <div data-photo-controls="" className={cn("flex items-center justify-between", className)}>
       <IconButton
         aria-label={t.previous}
+        data-photo-arrow=""
         variant={variant}
         className={arrow}
         icon={<ChevronLeftIcon className="size-6" />}
@@ -51,6 +52,7 @@ export const PhotoControls = ({
         variant={variant}
         className={arrow}
         data-photo-next=""
+        data-photo-arrow=""
         icon={<ChevronRightIcon className="size-6" />}
         onClick={() => onGo("next")}
       />

@@ -63,7 +63,7 @@ test.describe("hotel sem JavaScript: a casca estática @prod", () => {
     ).toBeVisible();
   });
 
-  test("página cheia da foto aberta direto: h1, foto e controles já no HTML, sem 'Carregando' (critério 19)", async ({
+  test("página cheia da foto aberta direto: h1, foto e contador já no HTML, setas escondidas, sem 'Carregando' (critério 19)", async ({
     page,
   }) => {
     await page.goto("/hotel/1/photos/3");
@@ -72,6 +72,9 @@ test.describe("hotel sem JavaScript: a casca estática @prod", () => {
     ).toBeVisible();
     await expect(page.getByText("Foto 3 de 5", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Voltar para o hotel" })).toBeVisible();
+    // As setas não fazem nada sem JS: o `<noscript><style>` as esconde; o contador fica.
+    await expect(page.getByRole("button", { name: "Próxima foto" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Foto anterior" })).toBeHidden();
     await expect(page.getByText("Carregando foto…")).toBeHidden();
   });
 });

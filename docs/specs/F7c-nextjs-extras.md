@@ -64,7 +64,7 @@ e isso agora é verificado no build.
 
 ## Decisões
 
-1. **Ligar `cacheComponents` (revoga a Decisão 5 da F0) com `partialPrefetching` explícito (`false` desde a rodada 4: ver "Rodada de correções da galeria").**
+1. **Ligar `cacheComponents` (revoga a Decisão 5 da F0) com `partialPrefetching: true`.**
    No 16.x, PPR **é** `cacheComponents`: `experimental.ppr` e `experimental_ppr` foram removidos. A
    doc pede `partialPrefetching` explícito, e deixar sem valor gera warning. A F0 desligou porque
    todo dado era por request. Isso deixou de valer com a F4: hotel, quartos, avaliações e similares
@@ -892,22 +892,20 @@ Novo token: **nenhum**.
   `loading.tsx` de `hotel/[hotelId]` (Suspense que jogava o conteúdo num `<div hidden id="S:…">` que só o JS
   revela) está **resolvida**: o arquivo saiu na Decisão do critério 5 e a página da foto e as miniaturas
   passam sem JS. As setas (Anterior/Próxima) não fazem nada sem JS: um `<noscript><style>` as esconde
-  (`data-photo-controls`), e a foto da URL continua à mostra.
+  (`data-photo-arrow`); a foto da URL e o contador continuam à mostra.
 - **"Não encontrado" renderizado no servidor (rodada 4).** Verificado no Next 16.4.6: sob `cacheComponents`
   todo `notFound()` (do layout, da página ou do `generateMetadata`) sai como `<html id="__next_error__">` com
-  `<body>` vazio e o conteúdo só no cliente (sem JS: tela em branco e sem título), e com
-  `partialPrefetching: true` a 1ª visita a um id fora do `generateStaticParams` (`/hotel/61`, `/hotel/abc`,
-  `/hotel/1/photos/9`) recebe uma casca de 0 byte (`pt-BR/hotel/[hotelId].html` vazio) e o mesmo HTML de
-  erro. Não há posição do `notFound()` que mude isso (nem `<noscript>`: o corpo inteiro é vazio). Correção:
-  (a) `partialPrefetching: false` (explícito, sem warning), que faz a 1ª visita esperar a página; (b) as rotas
-  não chamam `notFound()`: renderizam o "não encontrado" **inline** (`HotelNotFound`, `PhotoNotFoundView`,
-  `RouteNotFound` no `[...rest]`) com `robots: { index: false }` no `generateMetadata`. O HTML do servidor
-  traz header, h1, link de saída e título (`Hotel não encontrado | …`). Custo: o status passa a `200`
-  (soft 404 + `noindex`; `dynamicParams = false` daria 404 de verdade, mas é incompatível com
-  `cacheComponents`). `e2e/not-found.prod.spec.ts` prova sem JS para `/hotel/61`, `/hotel/999`, `/hotel/abc`,
-  `/hotel/999/photos/1`, `/hotel/1/photos/9`, `/hotel/1/photos/abc`, `/rota-inexistente` e as de `/en`.
-  Hotel inexistente na rota da foto mostra o "Hotel não encontrado" da F4, não "Foto não encontrada".
-  `confirmation/[bookingId]` mantém `notFound()` (fora desta rodada: tem PII e não é a página pública).
+  `<body>` vazio e o conteúdo só no cliente (sem JS: tela em branco e sem título); o 404 ficava em cache assim
+  por 60 s. Nenhuma posição do `notFound()` muda isso (nem um `<noscript>`: o corpo inteiro é vazio). Correção:
+  as rotas **não chamam `notFound()`**; renderizam o "não encontrado" **inline** (`HotelNotFound`,
+  `PhotoNotFoundView`, `RouteNotFound` no `[...rest]`) com `robots: { index: false }` no `generateMetadata`. O
+  HTML do servidor traz header, h1, link de saída e título (`Hotel não encontrado | …`) já na 1ª visita, mesmo
+  para ids fora do `generateStaticParams` (`/hotel/777`), com `partialPrefetching: true` mantido. Custo: o
+  status passa a `200` (soft 404 + `noindex`; `dynamicParams = false` daria 404 de verdade, mas é
+  incompatível com `cacheComponents`). `e2e/not-found.prod.spec.ts` prova sem JS para `/hotel/61`,
+  `/hotel/999`, `/hotel/abc`, `/hotel/999/photos/1`, `/hotel/1/photos/9`, `/hotel/1/photos/abc`,
+  `/rota-inexistente` e as de `/en`. Hotel inexistente na rota da foto mostra o "Hotel não encontrado" da F4,
+  não "Foto não encontrada". `confirmation/[bookingId]` mantém `notFound()` (fora desta rodada).
 - **Cartão de erro do modal.** Só aparece quando o **render** do slot quebra. Uma resposta RSC 500 vira
   navegação de documento em produção (o Next recarrega a URL em vez de mostrar o `error.tsx`); em dev o
   cartão aparece. Por isso `e2e/hotel-photos.states.spec.ts` (U6) roda só em dev.
