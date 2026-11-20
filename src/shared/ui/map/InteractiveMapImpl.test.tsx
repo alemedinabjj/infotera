@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { InteractiveMapImpl, type InteractiveMapProps } from "./InteractiveMapImpl";
@@ -103,7 +103,7 @@ describe("InteractiveMapImpl (Leaflet real no jsdom)", () => {
     pressEnter(first);
     expect(onSelect).toHaveBeenCalledWith("1");
     const link = await screen.findByRole("link", { name: "Ver hotel 1" });
-    expect(link).toHaveFocus();
+    await waitFor(() => expect(link).toHaveFocus());
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("link", { name: "Ver hotel 1" })).not.toBeInTheDocument();
     expect(markerButton(/Hotel 1,/)).toHaveFocus();
@@ -115,7 +115,7 @@ describe("InteractiveMapImpl (Leaflet real no jsdom)", () => {
     act(() => first.focus());
     const notPrevented = fireEvent.keyDown(first, { key: " ", keyCode: 32 });
     expect(notPrevented).toBe(false);
-    expect(await screen.findByRole("link", { name: "Ver hotel 1" })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole("link", { name: "Ver hotel 1" })).toHaveFocus());
   });
 
   it("o marcador declara aria-haspopup e aria-expanded; o popup é um diálogo nomeado pelo título", async () => {
@@ -197,7 +197,7 @@ describe("InteractiveMapImpl (Leaflet real no jsdom)", () => {
     await screen.findByRole("dialog");
     await user.keyboard("{Escape}");
     pressEnter(markerButton(/Hotel 1,/));
-    expect(await screen.findByRole("link", { name: "Ver hotel 1" })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole("link", { name: "Ver hotel 1" })).toHaveFocus());
   });
 
   it("sem renderPopup o marcador não abre popup", async () => {

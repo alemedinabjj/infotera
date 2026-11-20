@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   memo,
   type ReactNode,
+  useCallback,
   useEffect,
   useEffectEvent,
   useId,
@@ -23,6 +24,31 @@ const FOCUSABLE = "a[href], button:not([disabled])";
 
 const focusables = (root: HTMLElement | null): HTMLElement[] =>
   root ? Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)) : [];
+
+const MAX_FRAMES = 30;
+
+/** `checkVisibility` falta em ambientes antigos e no jsdom: aí vale "visível". */
+const isVisible = (element: HTMLElement): boolean =>
+  typeof element.checkVisibility === "function"
+    ? element.checkVisibility({ visibilityProperty: true })
+    : true;
+
+/** Foca o elemento assim que ele ficar visível (até ~30 quadros); devolve o cancelamento. */
+const focusWhenVisible = (find: () => HTMLElement | undefined): (() => void) => {
+  let frame = 0;
+  let attempts = 0;
+  const tick = () => {
+    const element = find();
+    if (element && isVisible(element)) {
+      element.focus({ preventScroll: true });
+      return;
+    }
+    attempts += 1;
+    if (attempts < MAX_FRAMES) frame = requestAnimationFrame(tick);
+  };
+  frame = requestAnimationFrame(tick);
+  return () => cancelAnimationFrame(frame);
+};
 
 type PopupBodyProps = {
   titleId: string;
@@ -43,10 +69,10 @@ type PopupBodyProps = {
 const PopupBody = ({ titleId, openCount, closeLabel, onClose, children }: PopupBodyProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `openCount` é o gatilho: um foco por abertura
-  useEffect(() => {
-    focusables(ref.current)[0]?.focus({ preventScroll: true });
-  }, [openCount]);
+  // O Leaflet mantém o popup `visibility: hidden` até posicioná-lo (e `focus()` num elemento oculto
+  // não faz nada): o foco entra no primeiro quadro em que o popup já está visível.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: o gatilho é o contador de aberturas
+  useEffect(() => focusWhenVisible(() => focusables(ref.current)[0]), [openCount]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const items = focusables(ref.current);
@@ -153,11 +179,28 @@ export const MarkerItem = memo(function MarkerItem({
     if (insidePopup || focused === document.body) ref.current?.getElement()?.focus();
   };
 
-  const closeTo = (focusTo: "marker" | "next") => {
+  const closeTo = useCallback((focusTo: "marker" | "next") => {
     const element = ref.current?.getElement();
     ref.current?.closePopup();
     (focusTo === "next" ? nextMarkerElement(element) : element)?.focus();
-  };
+  }, []);
+
+  // Elemento estável entre renders: o react-leaflet refaz o popup a cada `children` novo e o marcador
+  // re-renderiza a cada hover/foco.
+  const popupContent = useMemo(
+    () =>
+      renderPopup ? (
+        <PopupBody
+          titleId={titleId}
+          openCount={openCount}
+          closeLabel={closeLabel}
+          onClose={closeTo}
+        >
+          {renderPopup(id, { close: () => closeTo("marker"), titleId })}
+        </PopupBody>
+      ) : null,
+    [renderPopup, id, titleId, openCount, closeLabel, closeTo],
+  );
 
   return (
     <Marker
@@ -177,7 +220,7 @@ export const MarkerItem = memo(function MarkerItem({
         popupclose: onPopupClose,
       }}
     >
-      {renderPopup ? (
+      {popupContent ? (
         <Popup
           closeButton={false}
           minWidth={224}
@@ -185,14 +228,7 @@ export const MarkerItem = memo(function MarkerItem({
           autoPanPaddingTopLeft={[56, 8]}
           autoPanPaddingBottomRight={[8, 24]}
         >
-          <PopupBody
-            titleId={titleId}
-            openCount={openCount}
-            closeLabel={closeLabel}
-            onClose={closeTo}
-          >
-            {renderPopup(id, { close: () => closeTo("marker"), titleId })}
-          </PopupBody>
+          {popupContent}
         </Popup>
       ) : null}
     </Marker>

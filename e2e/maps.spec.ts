@@ -3,7 +3,7 @@ import { expect, test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { hotelPath, noHorizontalScroll } from "./helpers/hotel-details";
 
-const FRAME = "#localizacao .aspect-\\[2\\/1\\]";
+const FRAME = "#localizacao .sm\\:aspect-\\[2\\/1\\]";
 
 /** Rola até a moldura e espera o mapa interativo ficar visível (o estático já saiu). */
 const openHotelMap = async (page: Page): Promise<void> => {
@@ -103,13 +103,109 @@ test.describe("mapa do hotel", () => {
     // O nome acessível é aplicado depois da montagem: sinal de que o marcador já está pronto.
     await expect(marker).toHaveAttribute("aria-label", /Copacabana Palace/);
     await marker.focus();
+    await expect(marker).toHaveAttribute("aria-haspopup", "dialog");
+    await expect(marker).toHaveAttribute("aria-expanded", "false");
     await page.keyboard.press("Enter");
     const popup = page.locator(".leaflet-popup");
     await expect(popup).toBeVisible();
     await expect(popup).toContainText("Copacabana Palace");
+    await expect(marker).toHaveAttribute("aria-expanded", "true");
+    // O popup do hotel só tem o nome e o × (nosso, 44 px): o foco entra no ×.
+    await expect(popup.getByRole("dialog", { name: /Copacabana Palace/ })).toBeVisible();
+    const close = popup.getByRole("button", { name: "Fechar" });
+    await expect(close).toBeFocused();
+    expect((await close.boundingBox())?.width).toBeGreaterThanOrEqual(44);
     await page.keyboard.press("Escape");
     await expect(popup).toHaveCount(0);
     await expect(marker).toBeFocused();
+  });
+
+  test("Tab no × do popup fecha e devolve o foco ao próprio marcador; Espaço também abre", async ({
+    page,
+  }) => {
+    await page.goto(hotelPath(1));
+    await openHotelMap(page);
+    const marker = page.locator(".leaflet-marker-icon");
+    await expect(marker).toHaveAttribute("aria-label", /Copacabana Palace/);
+    await marker.focus();
+    await page.keyboard.press("Space");
+    const popup = page.locator(".leaflet-popup");
+    await expect(popup.getByRole("button", { name: "Fechar" })).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(popup).toHaveCount(0);
+    await expect(marker).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(popup.getByRole("button", { name: "Fechar" })).toBeFocused();
+    await popup.getByRole("button", { name: "Fechar" }).click();
+    await expect(marker).toBeFocused();
+  });
+
+  test("a dica de teclado fica abaixo da moldura, só aparece com foco de teclado e não cobre o mapa", async ({
+    page,
+  }) => {
+    await page.goto(hotelPath(1));
+    await openHotelMap(page);
+    const map = page.getByRole("region", { name: /^Mapa: / });
+    const hint = page.locator(`[id="${await map.getAttribute("aria-describedby")}"]`);
+    await expect(hint).toHaveCSS("opacity", "0");
+    await page.mouse.click(5, 5);
+    await map.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(map).toBeFocused();
+    await expect(hint).toHaveCSS("opacity", "1");
+    const frame = await page.locator(FRAME).boundingBox();
+    const hintBox = await hint.boundingBox();
+    expect(hintBox?.y ?? 0).toBeGreaterThanOrEqual((frame?.y ?? 0) + (frame?.height ?? 0));
+  });
+
+  test("a moldura é 2:1 no desktop e 4:3 em 320 px, igual antes e depois do Leaflet", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "o primeiro passo mede a moldura larga (desktop)");
+    await page.goto(hotelPath(1));
+    const ratio = async (): Promise<number> => {
+      const box = await page.locator(FRAME).boundingBox();
+      return (box?.width ?? 0) / (box?.height ?? 1);
+    };
+    await page.locator(FRAME).scrollIntoViewIfNeeded();
+    expect(await ratio()).toBeCloseTo(2, 1);
+    await page.setViewportSize({ width: 320, height: 700 });
+    await openHotelMap(page);
+    expect(await ratio()).toBeCloseTo(4 / 3, 1);
+  });
+
+  test("em 320 px o popup do hotel cabe na moldura sem cobrir o zoom", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto(hotelPath(1));
+    await openHotelMap(page);
+    const marker = page.locator(".leaflet-marker-icon");
+    await expect(marker).toHaveAttribute("aria-label", /Copacabana Palace/);
+    await marker.focus();
+    await page.keyboard.press("Enter");
+    const popup = page.locator(".leaflet-popup-content-wrapper");
+    await expect(popup).toBeVisible();
+    const frame = (await page.locator(FRAME).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+    const zoomIn = page.getByRole("button", { name: "Ampliar o mapa" });
+    await expect
+      .poll(async () => {
+        const box = await popup.boundingBox();
+        const plus = await zoomIn.boundingBox();
+        if (!box || !plus) return false;
+        const inside =
+          box.x >= frame.x &&
+          box.x + box.width <= frame.x + frame.width &&
+          box.y >= frame.y &&
+          box.y + box.height <= frame.y + frame.height;
+        const overlapsZoom =
+          box.x < plus.x + plus.width &&
+          box.x + box.width > plus.x &&
+          box.y < plus.y + plus.height &&
+          box.y + box.height > plus.y;
+        return inside && !overlapsZoom;
+      })
+      .toBe(true);
   });
 
   test("tiles com erro: o estático fica e nenhum erro aparece", async ({ page, tiles }) => {
@@ -138,8 +234,8 @@ test.describe("mapa do hotel", () => {
     // Rola até o mapa ficar parcialmente sob o cabeçalho fixo.
     await page.evaluate(() => {
       const top =
-        document.querySelector("#localizacao .aspect-\\[2\\/1\\]")?.getBoundingClientRect().top ??
-        0;
+        document.querySelector("#localizacao .sm\\:aspect-\\[2\\/1\\]")?.getBoundingClientRect()
+          .top ?? 0;
       window.scrollBy(0, top - 20);
     });
     const topElementIsHeader = await page.evaluate(() => {
