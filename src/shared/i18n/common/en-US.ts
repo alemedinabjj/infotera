@@ -131,6 +131,39 @@ export const enUS: CommonMessages = {
     linkCopied: "Link copied.",
     copyFailed: "Couldn't copy. Copy the address from the browser bar.",
   },
+  routes: {
+    newSearch: "Start a new search",
+    backToSearch: "Back to search",
+    tryOrSearch: "Try again or start a new search.",
+    siteDescription: "Search, compare and book hotels with clear pricing from start to finish.",
+    home: {
+      metaTitle: "Search hotels | Infotera Hotéis",
+      heading: "Find your hotel",
+      subtitle: "Compare prices and see the total for your stay before booking.",
+      chooseRoom: "Choose a room to continue.",
+    },
+    notFound: {
+      metaTitle: "Page not found | Infotera Hotéis",
+      title: "Page not found",
+      description: "The address may be wrong or the page no longer exists.",
+    },
+    globalError: {
+      metaTitle: "Something went wrong | Infotera Hotéis",
+      title: "Something went wrong",
+      description: "We hit an unexpected problem. Please try again shortly.",
+    },
+    searchError: "We couldn't open the search",
+    searchLoading: "Loading search…",
+    hotelError: "We couldn't open the hotel",
+    checkoutError: {
+      title: "We couldn't open the checkout",
+      description: "Try again or start a new search. You haven't been charged.",
+    },
+    confirmationError: {
+      title: "We couldn't load your booking",
+      description: "Your booking wasn't affected. Check your connection and try again.",
+    },
+  },
   validation: {
     invalidDate: "Invalid date. Use the format YYYY-MM-DD.",
     invalidTime: "Invalid time. Use HH:MM.",

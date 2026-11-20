@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
 import { CHOOSE_ROOM_NOTICE, HOME_NOTICE_PARAM } from "@/shared/lib/links";
 import { Alert } from "@/shared/ui";
 
@@ -9,8 +10,7 @@ import { Alert } from "@/shared/ui";
  * de `<Suspense>` na página) para a rota `/` continuar estática.
  */
 export const HomeNotice = () => {
+  const t = useCommonMessages().routes.home;
   const notice = useSearchParams().get(HOME_NOTICE_PARAM);
-  return notice === CHOOSE_ROOM_NOTICE ? (
-    <Alert tone="info">Escolha um quarto para continuar.</Alert>
-  ) : null;
+  return notice === CHOOSE_ROOM_NOTICE ? <Alert tone="info">{t.chooseRoom}</Alert> : null;
 };

@@ -20,9 +20,12 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 export const generateStaticParams = () => LOCALES.map((locale) => ({ locale }));
 export const dynamicParams = false;
 
-export const metadata: Metadata = {
-  title: "Infotera Hotéis",
-  description: "Busque, compare e reserve hotéis com preço claro do início ao fim.",
+export const generateMetadata = async ({ params }: LayoutProps<"/[locale]">): Promise<Metadata> => {
+  const { locale } = await params;
+  return {
+    title: "Infotera Hotéis",
+    description: commonMessages.get(isLocale(locale) ? locale : "pt-BR").routes.siteDescription,
+  };
 };
 
 export const viewport: Viewport = { themeColor: BRAND_PRIMARY };

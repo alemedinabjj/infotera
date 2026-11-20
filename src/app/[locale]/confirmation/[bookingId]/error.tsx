@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useTransition } from "react";
+import { useLocale } from "@/shared/i18n/client";
+import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
+import { localizePath } from "@/shared/i18n/paths";
 import { buttonClassName, ErrorState, FocusOnMount } from "@/shared/ui";
 
 type ConfirmationErrorProps = {
@@ -15,6 +18,8 @@ type ConfirmationErrorProps = {
  * leva só o `digest`: nem o id da reserva nem a mensagem do erro.
  */
 const ConfirmationError = ({ error, retry }: ConfirmationErrorProps) => {
+  const t = useCommonMessages().routes;
+  const locale = useLocale();
   const [retrying, startTransition] = useTransition();
   useEffect(() => {
     console.error({ event: "confirmation:route-error", digest: error.digest ?? null });
@@ -25,13 +30,13 @@ const ConfirmationError = ({ error, retry }: ConfirmationErrorProps) => {
       <ErrorState
         variant="page"
         headingLevel={1}
-        title="Não foi possível carregar sua reserva"
-        description="Sua reserva não foi afetada. Verifique sua conexão e tente de novo."
+        title={t.confirmationError.title}
+        description={t.confirmationError.description}
         onRetry={() => startTransition(() => retry())}
         retrying={retrying}
         action={
-          <Link href="/" className={buttonClassName({ variant: "ghost" })}>
-            Fazer nova busca
+          <Link href={localizePath(locale, "/")} className={buttonClassName({ variant: "ghost" })}>
+            {t.newSearch}
           </Link>
         }
       />

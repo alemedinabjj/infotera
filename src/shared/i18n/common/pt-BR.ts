@@ -134,6 +134,39 @@ export const ptBR = {
     linkCopied: "Link copiado.",
     copyFailed: "Não foi possível copiar. Copie o endereço na barra do navegador.",
   },
+  routes: {
+    newSearch: "Fazer nova busca",
+    backToSearch: "Voltar para a busca",
+    tryOrSearch: "Tente de novo ou faça uma nova busca.",
+    siteDescription: "Busque, compare e reserve hotéis com preço claro do início ao fim.",
+    home: {
+      metaTitle: "Buscar hotéis | Infotera Hotéis",
+      heading: "Encontre seu hotel",
+      subtitle: "Compare preços e veja o total da estadia antes de reservar.",
+      chooseRoom: "Escolha um quarto para continuar.",
+    },
+    notFound: {
+      metaTitle: "Página não encontrada | Infotera Hotéis",
+      title: "Página não encontrada",
+      description: "O endereço pode estar errado ou a página não existe mais.",
+    },
+    globalError: {
+      metaTitle: "Algo deu errado | Infotera Hotéis",
+      title: "Algo deu errado",
+      description: "Tivemos um problema inesperado. Tente de novo em instantes.",
+    },
+    searchError: "Não foi possível abrir a busca",
+    searchLoading: "Carregando busca…",
+    hotelError: "Não foi possível abrir o hotel",
+    checkoutError: {
+      title: "Não foi possível abrir o checkout",
+      description: "Tente de novo ou faça uma nova busca. Nada foi cobrado.",
+    },
+    confirmationError: {
+      title: "Não foi possível carregar sua reserva",
+      description: "Sua reserva não foi afetada. Verifique sua conexão e tente de novo.",
+    },
+  },
   validation: {
     invalidDate: "Data inválida. Use o formato AAAA-MM-DD.",
     invalidTime: "Horário inválido. Use HH:MM.",
