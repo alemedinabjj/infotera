@@ -65,9 +65,8 @@ const failedFeedback = (online: boolean): SubmitFeedback =>
       }
     : {
         tone: "warning",
-        title: "Você está sem internet",
-        description:
-          "Assim que a conexão voltar, tente de novo. Nada foi cobrado e seus dados foram mantidos.",
+        title: "Você está sem conexão.",
+        description: "Nada foi cobrado. Tente de novo quando a conexão voltar.",
         action: "retry",
       };
 

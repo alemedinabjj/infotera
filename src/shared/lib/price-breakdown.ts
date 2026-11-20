@@ -12,6 +12,15 @@ const BPS_DENOMINATOR = 10_000;
 export const applyBps = (cents: number, bps: number): number =>
   Math.floor((cents * bps + BPS_DENOMINATOR / 2) / BPS_DENOMINATOR);
 
+/** Taxa de serviço, ISS e total de uma base (já com desconto): a conta única de todas as telas. */
+export const feesOnBase = (
+  baseCents: number,
+): { serviceFeeCents: number; taxCents: number; totalCents: number } => {
+  const serviceFeeCents = applyBps(baseCents, SERVICE_FEE_BPS);
+  const taxCents = applyBps(baseCents, ISS_BPS);
+  return { serviceFeeCents, taxCents, totalCents: baseCents + serviceFeeCents + taxCents };
+};
+
 /** Uma linha do detalhamento do preço. `code` é `null` quando o desconto não grava o cupom. */
 export type PriceLine =
   | { kind: "stay"; nightlyCents: number; nights: number; rooms: number; amountCents: number }

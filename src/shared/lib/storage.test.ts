@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { createStorage, STORAGE_PREFIX } from "./storage";
 
 const schema = z.object({ n: z.number() });

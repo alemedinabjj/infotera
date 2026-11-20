@@ -1,6 +1,6 @@
 import type { FieldPath } from "react-hook-form";
-import { z } from "zod";
 import type { ISODate } from "@/shared/lib/dates";
+import { z } from "@/shared/lib/zod";
 import { cardDigits, cvvLength, detectCardBrand, isValidLuhn, MIN_CARD_DIGITS } from "./card";
 import { isValidCpf } from "./cpf";
 import { expiryIssue } from "./expiry";

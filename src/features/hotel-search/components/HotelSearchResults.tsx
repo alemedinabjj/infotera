@@ -4,6 +4,7 @@ import { useCallback, useId, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ErrorBoundary, SkipLink } from "@/shared/ui";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
+import { useRememberSearch } from "../hooks/useRememberSearch";
 import { useResultsController } from "../hooks/useResultsController";
 import { useResultsText } from "../hooks/useResultsText";
 import { serializeSearchFilters } from "../model/search-filters";
@@ -24,6 +25,7 @@ type HotelSearchResultsProps = {
  * cliente (`useQuery`); filtros, ordenação e página vêm da URL.
  */
 export const HotelSearchResults = ({ destination, criteria }: HotelSearchResultsProps) => {
+  useRememberSearch(criteria);
   const headingId = useId();
   const distanceHelpId = useId();
   const [drawerOpen, setDrawerOpen] = useState(false);

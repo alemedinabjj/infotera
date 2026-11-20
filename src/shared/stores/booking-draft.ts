@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
-import { z } from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { z } from "@/shared/lib/zod";
 import { searchCriteriaSchema } from "../lib/search-params";
 import { createRawStorage } from "../lib/storage";
 
@@ -24,7 +24,7 @@ export type BookingDraftState = { selection: RoomSelection | null };
 const initialState: BookingDraftState = { selection: null };
 
 /**
- * Persistido em `sessionStorage` com `skipHydration`: o `BookingDraftHydrator` reidrata no cliente
+ * Persistido em `sessionStorage` com `skipHydration`: o `StoreHydrator` reidrata no cliente
  * para o HTML do servidor (store vazio) não divergir do primeiro render do cliente.
  */
 export const useBookingDraft = create<BookingDraftState>()(

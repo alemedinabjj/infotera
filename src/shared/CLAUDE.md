@@ -100,3 +100,29 @@ para `shared/` quando aparecer o segundo uso.
 - `api/endpoints.fetchBooking` (id com `encodeURIComponent`), `lib/clipboard.copyText` (nunca lança; `copyCurrentUrl` usa),
   `lib/booking-history` (só ids, máx. 10, `localStorage`), `ui/FocusOnMount`, `CopyIcon`, `print:hidden` no header e no toaster.
 - `testing/fixtures`: `makeBooking`, `BOOKING_ID`.
+
+## F7a (extras de produto)
+- **`saved/`** (favoritos e comparação, estrutura `model/ stores/ components/ hooks/ messages.ts`, mesmas regras de `shared`):
+  stores Zustand `persist` em `localStorage` (`infotera:favorites` `{id,addedAt}` ≤ 100; `infotera:comparison` `{id,name}` ≤ 3), sempre
+  `skipHydration`, saneados **por item** (`sanitizeFavorites`/`sanitizeComparison`). `StoreHydrator` (no lugar do
+  `BookingDraftHydrator`) reidrata os três stores e ouve o evento `storage`. Componentes: `FavoriteButton` (`notify`, `onToggle`, `ref`),
+  `CompareCheckbox` (limite com `aria-disabled`), `CompareTray` (+ `CompareTrayChips`/`CompareTrayAction`, região viva sempre montada,
+  `--bottom-bar-height` por `ResizeObserver`, foco por teclado nunca coberto), `SavedNav` (header). **Server Components importam direto de
+  `saved/components/*`**: o barrel `saved/index.ts` reexporta stores (client) e só serve a árvores cliente.
+- Rotas em inglês: `/favorites`, `/compare`, `/my-bookings` (`saved/model/routes.ts` é a única fonte; `compareHref`).
+- **Motion** (`motion@14.14.0`, só `motion/react`): `MotionProvider` = `LazyMotion` assíncrono + `strict` (só `m.*`) + `reducedMotion="user"`;
+  `lib/motion.ts` tem os presets puros (`motionPreset(name, reduced, direction)`), `staggerDelay`, `shouldAnimateItem`, `stepDirection`.
+  Política: só `opacity`/`transform`; nada renderizado no servidor começa invisível; listas só em opacidade. Os testes de componente que
+  usam `m.*` renderizam com `renderWithProviders` (que traz `LazyMotion` síncrono): sem features, `m.*` nunca sai do `initial`.
+  `MotionGlobalConfig.skipAnimations = true` no `vitest.setup.ts`. O `layout="position"` do toast da spec **não** foi usado: exige `domMax`.
+- **Toast**: `toast.*(msg, { action?, key?, duration? })`; `key` igual substitui no lugar (`pushToast`, `version` reinicia o timer); 5 s,
+  8 s (erro), 10 s com ação; o tempo pausa com hover/foco em **qualquer** toast da região e com a aba oculta (`useRegionPause`).
+- **Dialog**: o painel é um `m.div` dentro de `AnimatePresence`; o `<dialog>` só fecha (e o foco volta ao gatilho) no `onExitComplete`
+  (`finish`); `data-closing` esmaece o backdrop. Fechamento forçado (`close` nativo) sincroniza sem animar.
+- `lib/focus.focusWhenReady`: foca quando o navegador deixar (controle que acabou de sair de `invisible`/`inert`; com reduced motion a regra
+  global de `transition-duration` atrasa `visibility` por alguns quadros).
+- `lib/booking-history` ganhou `removeManyFromHistory`, `clearBookingHistory`, `restoreHistoryEntry`/`restoreBookingHistory`,
+  `subscribeBookingHistory` e `getBookingHistorySnapshot` (estável, para `useSyncExternalStore`); aceita UUID v4 **ou** o id curto do json-server.
+- `api`: `fetchHotelsByIds` (nunca chama com lista vazia), `hotelsByIdsQueryOptions`, `bookingQueryOptions` (promovida, `meta.sensitive`
+  para o cache offline da F7b não persistir PII), chaves `hotels.byIds`/`rooms.byHotels` (ids canônicos: `api/ids.ts`).
+- `ComparisonTable`, `CompactHotelCard` e `lib/comparison` foram promovidos da F4; `ComparisonRow` tem `best`/`bestLabel`.

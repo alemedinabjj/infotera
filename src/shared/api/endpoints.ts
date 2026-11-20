@@ -1,5 +1,6 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { apiGet } from "./http";
+import { canonicalIds } from "./ids";
 import {
   type Booking,
   bookingSchema,
@@ -10,6 +11,7 @@ import {
 } from "./schemas";
 
 const roomsSchema = z.array(roomSchema);
+const hotelsSchema = z.array(hotelSchema);
 
 /** `GET /hotels/:id` (404 → `ApiError` com status 404). */
 export const fetchHotel = (id: number, signal?: AbortSignal): Promise<Hotel> =>
@@ -25,6 +27,20 @@ export const fetchRoomsOfHotels = (
   signal?: AbortSignal,
 ): Promise<Room[]> =>
   apiGet("/rooms", roomsSchema, { query: { hotelId: hotelIds.map(String) }, signal });
+
+/**
+ * `GET /hotels?id=1&id=4`: vários hotéis num request só (a chave repete e funciona como OU; id
+ * inexistente simplesmente não volta). **Nunca chama a API com lista vazia**: sem `id` o
+ * json-server devolveria todos os hotéis.
+ */
+export const fetchHotelsByIds = async (
+  ids: readonly number[],
+  signal?: AbortSignal,
+): Promise<Hotel[]> => {
+  const unique = canonicalIds(ids);
+  if (unique.length === 0) return [];
+  return apiGet("/hotels", hotelsSchema, { query: { id: unique.map(String) }, signal });
+};
 
 /** `GET /rooms/:id`. */
 export const fetchRoom = (id: number, signal?: AbortSignal): Promise<Room> =>

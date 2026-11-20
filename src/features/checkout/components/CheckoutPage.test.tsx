@@ -39,14 +39,13 @@ describe("gate da página", () => {
     expect(navigationSpies.replace).not.toHaveBeenCalled();
   });
 
-  it("sem seleção depois da hidratação: replace('/') + toast, formulário nunca aparece", async () => {
+  it("sem seleção depois da hidratação: replace para a home com o aviso, formulário nunca aparece", async () => {
     happyApi();
     await seedSelection(null);
     renderCheckout();
-    await waitFor(() => expect(navigationSpies.replace).toHaveBeenCalledWith("/"));
-    expect(useToastStore.getState().toasts.map((t) => t.message)).toEqual([
-      "Nenhum quarto selecionado. Escolha um hotel e um quarto para reservar.",
-    ]);
+    await waitFor(() =>
+      expect(navigationSpies.replace).toHaveBeenCalledWith("/?notice=choose-room"),
+    );
     expect(screen.queryByRole("heading", { name: "Dados dos hóspedes" })).not.toBeInTheDocument();
     expect(navigationSpies.replace).toHaveBeenCalledTimes(1);
   });
@@ -127,7 +126,9 @@ describe("estados bloqueantes", () => {
     await seedSelection(makeSelection());
     renderCheckout();
     await waitFor(() => expect(useBookingDraft.getState().selection).toBeNull());
-    await waitFor(() => expect(navigationSpies.replace).toHaveBeenCalledWith("/"));
+    await waitFor(() =>
+      expect(navigationSpies.replace).toHaveBeenCalledWith("/?notice=choose-room"),
+    );
   });
 
   it("hotel 404 limpa a seleção", async () => {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { ApiError, apiGet, apiGetPage, apiPost, buildQuery, isApiError } from "./http";
 import { hotelSchema } from "./schemas";
 

@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { formatCents } from "@/shared/lib/price-breakdown";
 import { cardClassName } from "@/shared/ui";
-import { splitNumberGroups } from "../model/booking-number";
+import { shortBookingCode, splitNumberGroups } from "../model/booking-number";
 import { CopyBookingNumber } from "./CopyBookingNumber";
 
 const NUMBER_ID = "numero-reserva";
@@ -26,6 +26,13 @@ export const BookingNumber = ({ number, stayLabel, totalCents }: BookingNumberPr
       })}
     >
       <dl>
+        <dt className="text-sm font-medium text-fg-muted">Código</dt>
+        <dd
+          translate="no"
+          className="mt-1 mb-3 font-mono text-2xl font-bold tracking-wider text-fg select-all"
+        >
+          {shortBookingCode(number)}
+        </dd>
         <dt className="text-sm font-medium text-fg-muted">Número da reserva</dt>
         <dd
           id={NUMBER_ID}

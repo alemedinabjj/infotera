@@ -9,6 +9,7 @@ import { useFeedKeyboard } from "../hooks/useFeedKeyboard";
 import { useFeedVirtualizer } from "../hooks/useFeedVirtualizer";
 import { useFocusFeedItem } from "../hooks/useFocusFeedItem";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
+import { useSeenCount } from "../hooks/useSeenCount";
 import type { GeoPoint } from "../model/distance";
 import { FeedFooter } from "./FeedFooter";
 import { FeedItems } from "./FeedItems";
@@ -39,6 +40,7 @@ export const HotelFeed = ({ hotels, headingId, feed, ...rest }: HotelFeedProps) 
   const endRef = useRef<HTMLParagraphElement>(null);
   const keys = useMemo(() => hotels.map((hotel) => hotel.id), [hotels]);
   const { virtualizer, scrollMargin, focusIndex } = useFeedVirtualizer({ feedRef, keys });
+  const seenCount = useSeenCount(feed.queryKey, virtualizer.getVirtualItems());
   const footerTargets = useMemo(() => [buttonRef, endRef], []);
 
   const loadMore = useFocusFeedItem({
@@ -64,6 +66,7 @@ export const HotelFeed = ({ hotels, headingId, feed, ...rest }: HotelFeedProps) 
         feedRef={feedRef}
         virtualizer={virtualizer}
         scrollMargin={scrollMargin}
+        seenCount={seenCount}
         hotels={hotels}
         headingId={headingId}
         busy={rest.stale || feed.isFetchingNextPage}

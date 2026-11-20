@@ -80,7 +80,7 @@ test.describe("modos da página", () => {
     await expect(page.getByText("Datas não definidas")).toBeVisible();
     await expect(page.getByText("Escolha as datas da estadia")).toBeVisible();
     await expect(page.getByRole("combobox", { name: /Destino/ })).toHaveValue("Rio de Janeiro, RJ");
-    await expect(page.getByText(/total ·/)).toHaveCount(0);
+    await expect(page.getByText(/total com taxas ·/)).toHaveCount(0);
     await expect(cards(page).first().getByRole("link")).toHaveAttribute("href", /^\/hotel\/\d+$/);
   });
 

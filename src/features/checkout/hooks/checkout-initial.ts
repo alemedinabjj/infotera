@@ -27,6 +27,11 @@ export type InitialCheckout = {
   paymentWipePending: boolean;
 };
 
+/** Código do cupom guardado no rascunho da sessão (ou `null`), para revalidar ao restaurar. */
+export const readDraftCouponCode = (): string | null =>
+  createStorage("session").read(CHECKOUT_DRAFT_KEY, persistedDraftSchema.nullable(), null)
+    ?.coupon ?? null;
+
 /** Valores iniciais: rascunho válido da sessão (se houver) ou o formulário vazio. */
 export const loadInitialCheckout = (criteria: SearchCriteria): InitialCheckout => {
   const stored = createStorage("session").read(

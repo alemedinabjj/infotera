@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { isApiError } from "@/shared/api/http";
 import type { Hotel } from "@/shared/api/schemas";
+import { searchHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { buttonClassName } from "@/shared/ui";
+import { buttonClassName, CompactHotelCard } from "@/shared/ui";
 import { fetchSimilarHotels } from "../api/similar";
-import { searchHref } from "../model/breadcrumb";
-import { SimilarHotelCard } from "./SimilarHotelCard";
 
 type SimilarHotelsProps = {
   hotelId: number;
@@ -57,7 +56,9 @@ export const SimilarHotels = async ({ hotelId, destination, criteria }: SimilarH
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
       {hotels.map((hotel) => (
-        <SimilarHotelCard key={hotel.id} hotel={hotel} criteria={criteria} />
+        <li key={hotel.id} className="flex">
+          <CompactHotelCard hotel={hotel} criteria={criteria} />
+        </li>
       ))}
     </ul>
   );

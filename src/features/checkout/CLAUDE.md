@@ -51,7 +51,9 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
   pressionado; ErrorSummary e SubmitError remontados por `key`.
 
 ## Segurança e privacidade (obrigatório)
-- **Nunca** persistir número do cartão, CVV, validade, documento, idade, cupom nem aceite. Rascunho = `toPersistedDraft`
+- **Nunca** persistir número do cartão, CVV, validade, documento, idade nem aceite. O **código do cupom** aplicado
+  PODE ser persistido (não é PII); ao restaurar, `useCoupon` revalida pela mesma consulta/regras e, se não vale mais,
+  mostra o aviso inline "Seu cupom {CÓDIGO} não vale mais para esta reserva.". Rascunho = `toPersistedDraft`
   (whitelist explícita) no `sessionStorage` (`infotera:checkout-draft`), debounce 500 ms, apagado após `created`.
 - `usePaymentWipe`: `pagehide` limpa cartão, validade, CVV e documento; volta do bfcache cai no passo de pagamento com aviso.
 - O payload do `POST /bookings` leva só `cardLast4`; o documento é validado e descartado.
@@ -64,3 +66,7 @@ Unit em `model/` e `api/` (tabelas para validadores, gate, cupons); componente p
 Falhas da mock-api **dentro** da action (que o `page.route` não vê) são cobertas em `create-booking.server.test.ts`
 (unit) e no E2E `e2e/checkout.server-failure.spec.ts`: o control-proxy responde 500 ao `POST /bookings` cujo corpo
 leva um sobrenome único do teste (`serverApi.failServerRequests(..., { method: "POST", body, times: 1 })`).
+
+## F7a (extras)
+- `AnimatedStep` envolve o passo atual: só o passo novo anima (`x` ±16, sem opacidade para nunca ficar invisível, direção por `stepDirection`), sem saída, sem animar na
+  1ª renderização, com `overflow-x-clip`. O foco no `h2` do passo não mudou.

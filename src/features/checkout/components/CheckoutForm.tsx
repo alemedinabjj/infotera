@@ -9,6 +9,7 @@ import type { CheckoutFlow } from "../hooks/useCheckoutFlow";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { noticeText } from "../model/notices";
 import { stepCounter, stepDocumentTitle, stepTitle } from "../model/steps";
+import { AnimatedStep } from "./AnimatedStep";
 import { SUMMARY_TOGGLE_ID } from "./BookingSummary";
 import { DeferBlurProvider } from "./blur-context";
 import { PaymentStep } from "./PaymentStep";
@@ -77,7 +78,9 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
               onSelect={(id) => form.setFocus(id)}
             />
           ) : null}
-          <StepBody flow={flow} />
+          <AnimatedStep step={step}>
+            <StepBody flow={flow} />
+          </AnimatedStep>
           {step === "review" && submit.state.kind !== "none" ? (
             <SubmitError
               key={submit.state.key}

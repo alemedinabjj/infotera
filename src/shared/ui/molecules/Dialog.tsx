@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import {
   type KeyboardEventHandler,
   type ReactNode,
@@ -9,6 +10,7 @@ import {
   useRef,
 } from "react";
 import { cn } from "../../lib/cn";
+import { type MotionPresetName, motionPreset } from "../../lib/motion";
 import { IconButton } from "../atoms/IconButton";
 import { XIcon } from "../icons";
 
@@ -19,6 +21,7 @@ type DialogPlacement = "center" | "sheet";
 type DialogLayout = {
   dialog: string;
   panel: string;
+  preset: MotionPresetName;
   header: string;
   title: string;
   body: string;
@@ -26,9 +29,9 @@ type DialogLayout = {
 };
 
 const CENTER: DialogLayout = {
-  dialog:
-    "m-auto max-h-[85dvh] w-[calc(100%-2rem)] rounded-dialog bg-surface text-fg shadow-overlay",
-  panel: "max-h-[85dvh]",
+  dialog: "m-auto max-h-[85dvh] w-[calc(100%-2rem)] text-fg",
+  panel: "max-h-[85dvh] overflow-hidden rounded-dialog bg-surface shadow-overlay",
+  preset: "dialog-center",
   header: "border-b border-border py-2 pr-2 pl-5",
   title: "text-lg",
   body: "overflow-y-auto px-5 py-4",
@@ -38,9 +41,9 @@ const CENTER: DialogLayout = {
 // Bottom-sheet: colado embaixo; a partir de `sm` continua embaixo, mas com largura de dialog.
 const SHEET: DialogLayout = {
   ...CENTER,
-  dialog:
-    "mt-auto mb-0 max-h-[90dvh] w-full max-w-none animate-slide-up rounded-t-dialog rounded-b-none bg-surface text-fg shadow-overlay sm:mx-auto sm:max-w-lg",
-  panel: "max-h-[90dvh]",
+  dialog: "mt-auto mb-0 max-h-[90dvh] w-full max-w-none text-fg sm:mx-auto sm:max-w-lg",
+  panel: "max-h-[90dvh] overflow-hidden rounded-t-dialog bg-surface shadow-overlay",
+  preset: "dialog-sheet",
   footer:
     "flex-row gap-3 border-t border-border px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
 };
@@ -48,8 +51,9 @@ const SHEET: DialogLayout = {
 // Tela cheia (lightbox): fundo `fg`, anel de foco branco (o `primary` não passa 3:1 sobre `fg`).
 const FULL: DialogLayout = {
   dialog:
-    "fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none animate-fade-in rounded-none bg-fg text-fg-on-primary [&_:focus-visible]:outline-fg-on-primary",
-  panel: "h-full",
+    "fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none text-fg-on-primary [&_:focus-visible]:outline-fg-on-primary",
+  panel: "h-full bg-fg",
+  preset: "dialog-full",
   header: "h-14 shrink-0 pr-2 pl-4",
   title: "truncate text-base",
   body: "min-h-0 flex-1",
@@ -88,32 +92,126 @@ type DialogProps = {
   className?: string;
 };
 
-/** Abre/fecha o `<dialog>` nativo, devolve o foco ao gatilho e trava o scroll do body. */
+type DialogSession = {
+  /** Fecha o `<dialog>` nativo, destrava o scroll e devolve o foco ao gatilho (depois da saída). */
+  finish: () => void;
+};
+
+/**
+ * Abre o `<dialog>` nativo e trava o scroll do body. O fechamento é do `finish`, que o painel
+ * chama no `onExitComplete`: a saída anima antes do `close()`.
+ */
 const useDialogLifecycle = (
   ref: RefObject<HTMLDialogElement | null>,
   open: boolean,
   initialFocus: string | undefined,
-) => {
+): DialogSession => {
+  const trigger = useRef<Element | null>(null);
+  const previousOverflow = useRef<string | null>(null);
+
+  const finish = () => {
+    const dialog = ref.current;
+    if (dialog?.open) dialog.close();
+    if (previousOverflow.current !== null) document.body.style.overflow = previousOverflow.current;
+    previousOverflow.current = null;
+    if (trigger.current instanceof HTMLElement) trigger.current.focus();
+    trigger.current = null;
+  };
+
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog || !open) return;
-    const trigger = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) {
+      trigger.current = document.activeElement;
+      previousOverflow.current = document.body.style.overflow;
+      dialog.showModal();
+    }
     // `showModal` foca o 1º focável (o "Fechar"); aqui a feature escolhe um controle mais útil.
     if (initialFocus) dialog.querySelector<HTMLElement>(initialFocus)?.focus();
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      if (dialog.open) dialog.close();
-      if (trigger instanceof HTMLElement) trigger.focus();
-    };
   }, [ref, open, initialFocus]);
+
+  // Desmontou com o dialog aberto (ex.: troca de rota): destrava o scroll sem esperar animação.
+  useEffect(() => {
+    const dialog = ref;
+    return () => {
+      if (dialog.current?.open) dialog.current.close();
+      if (previousOverflow.current !== null) {
+        document.body.style.overflow = previousOverflow.current;
+      }
+    };
+  }, [ref]);
+
+  return { finish };
+};
+
+type PanelProps = {
+  layout: DialogLayout;
+  size: DialogSize;
+  titleId: string;
+  title: string;
+  closeLabel: string;
+  onClose: () => void;
+  footer: ReactNode;
+  focusableBody: boolean;
+  children: ReactNode;
+};
+
+/** Visual do dialog (fundo, raio, sombra): o `<dialog>` é só o contêiner transparente. */
+const DialogPanel = ({
+  layout,
+  size,
+  titleId,
+  title,
+  closeLabel,
+  onClose,
+  footer,
+  focusableBody,
+  children,
+}: PanelProps) => {
+  const preset = motionPreset(layout.preset, useReducedMotion() ?? false);
+  return (
+    <m.div
+      initial={preset.initial}
+      animate={preset.animate}
+      exit={preset.exit}
+      transition={preset.transition}
+      className={cn("flex flex-col", layout.panel)}
+    >
+      <header className={cn("flex items-center justify-between gap-2", layout.header)}>
+        <h2 id={titleId} className={cn("font-semibold", layout.title)}>
+          {title}
+        </h2>
+        <IconButton
+          aria-label={closeLabel}
+          variant={size === "full" ? "overlay" : "ghost"}
+          icon={<XIcon className="size-6" />}
+          onClick={onClose}
+        />
+      </header>
+      {focusableBody ? (
+        <section
+          data-dialog-body
+          aria-labelledby={titleId}
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: região rolável nomeada; o teclado precisa rolar o texto longo
+          tabIndex={0}
+          // Contorno por dentro: o `overflow-hidden` do painel cortaria o anel de foco externo.
+          className={cn(layout.body, "focus-visible:outline-offset-[-2px]")}
+        >
+          {children}
+        </section>
+      ) : (
+        <div className={layout.body}>{children}</div>
+      )}
+      {footer ? <footer className={cn("flex gap-3", layout.footer)}>{footer}</footer> : null}
+    </m.div>
+  );
 };
 
 /**
  * Modal sobre `<dialog>` nativo (`showModal`): foco preso, `Esc` e fundo inerte vêm do browser.
- * Conteúdo só é montado enquanto aberto.
+ * O painel anima a entrada e a **saída**; o `<dialog>` só fecha (e o foco volta ao gatilho) depois
+ * da saída. Conteúdo só é montado enquanto aberto.
  */
 export const Dialog = ({
   open,
@@ -133,13 +231,18 @@ export const Dialog = ({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const pressStartedOnBackdrop = useRef(false);
-  useDialogLifecycle(ref, open, focusableBody ? "[data-dialog-body]" : initialFocus);
+  const { finish } = useDialogLifecycle(
+    ref,
+    open,
+    focusableBody ? "[data-dialog-body]" : initialFocus,
+  );
   const layout = layoutFor(size, placement);
 
   return (
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      data-closing={open ? undefined : ""}
       onKeyDown={onKeyDown}
       onClose={() => {
         if (open) onClose();
@@ -159,42 +262,29 @@ export const Dialog = ({
         if (closeOnBackdrop && startedOnBackdrop && event.target === event.currentTarget) onClose();
       }}
       className={cn(
-        "overflow-hidden p-0",
+        "overflow-visible bg-transparent p-0",
         layout.dialog,
-        layout === CENTER && size !== "full" && SIZE_CLASS[size],
+        layout.preset === "dialog-center" && SIZE_CLASS[size === "sm" ? "sm" : "md"],
         className,
       )}
     >
-      {open ? (
-        <div className={cn("flex flex-col", layout.panel)}>
-          <header className={cn("flex items-center justify-between gap-2", layout.header)}>
-            <h2 id={titleId} className={cn("font-semibold", layout.title)}>
-              {title}
-            </h2>
-            <IconButton
-              aria-label={closeLabel}
-              variant={size === "full" ? "overlay" : "ghost"}
-              icon={<XIcon className="size-6" />}
-              onClick={onClose}
-            />
-          </header>
-          {focusableBody ? (
-            <section
-              data-dialog-body
-              aria-labelledby={titleId}
-              // biome-ignore lint/a11y/noNoninteractiveTabindex: região rolável nomeada; o teclado precisa rolar o texto longo
-              tabIndex={0}
-              // Contorno por dentro: o `overflow-hidden` do dialog cortaria o anel de foco externo.
-              className={cn(layout.body, "focus-visible:outline-offset-[-2px]")}
-            >
-              {children}
-            </section>
-          ) : (
-            <div className={layout.body}>{children}</div>
-          )}
-          {footer ? <footer className={cn("flex gap-3", layout.footer)}>{footer}</footer> : null}
-        </div>
-      ) : null}
+      <AnimatePresence initial={false} onExitComplete={finish}>
+        {open ? (
+          <DialogPanel
+            key="panel"
+            layout={layout}
+            size={size}
+            titleId={titleId}
+            title={title}
+            closeLabel={closeLabel}
+            onClose={onClose}
+            footer={footer}
+            focusableBody={focusableBody}
+          >
+            {children}
+          </DialogPanel>
+        ) : null}
+      </AnimatePresence>
     </dialog>
   );
 };

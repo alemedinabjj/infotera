@@ -37,18 +37,20 @@ export const RatingScore = ({
       <Stars value={rating} decorative />
       {standalone ? null : (
         <>
-          {/* O separador fica colado ao item anterior: se a contagem quebrar de linha, ela não
-              começa com um "·" solto. */}
+          {/* Rótulo, separador e contagem formam um bloco só: se não couber, o bloco inteiro desce
+              (nenhum "·" fica solto no fim ou no começo de uma linha). */}
           <span className="inline-flex items-center gap-x-2 whitespace-nowrap">
             {showLabel ? (
-              <span className="text-sm font-medium text-fg-muted">{ratingLabel(rating)}</span>
+              <>
+                <span className="text-sm font-medium text-fg-muted">{ratingLabel(rating)}</span>
+                <span aria-hidden="true" className="text-sm text-fg-subtle">
+                  ·
+                </span>
+              </>
             ) : null}
-            <span aria-hidden="true" className="text-sm text-fg-subtle">
-              ·
+            <span className="text-sm text-fg-subtle">
+              {pluralize(reviewCount, "avaliação", "avaliações")}
             </span>
-          </span>
-          <span className="text-sm text-fg-subtle">
-            {pluralize(reviewCount, "avaliação", "avaliações")}
           </span>
         </>
       )}

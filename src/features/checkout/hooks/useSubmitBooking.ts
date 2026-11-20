@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
 import { queryKeys } from "@/shared/api/query-keys";
+import { withTimeout } from "@/shared/lib/timeout";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
 import { toast } from "@/shared/ui";
 import { createBookingAction } from "../api/create-booking.action";
@@ -46,6 +47,9 @@ const FAILED_ON_TRANSPORT: FailedResult = { status: "failed", kind: "unknown" };
  * e reusado enquanto o pedido não muda (retry idempotente). Sem duplo envio: guarda em `isPending`
  * e o botão em `loading`. Nada de texto do servidor: o feedback sai de `submitFeedback`.
  */
+/** Passou disso, "Confirmando…" vira erro de conexão (a action não é abortável; o retry é idempotente). */
+export const SUBMIT_TIMEOUT_MS = 15_000;
+
 export const useSubmitBooking = ({
   selection,
   price,
@@ -60,7 +64,8 @@ export const useSubmitBooking = ({
   const inFlight = useRef(false);
   const [state, setState] = useState<SubmitState>({ kind: "none" });
   const mutation = useMutation({
-    mutationFn: createBookingAction,
+    mutationFn: (request: Parameters<typeof createBookingAction>[0]) =>
+      withTimeout(createBookingAction(request), SUBMIT_TIMEOUT_MS),
     // Reserva nova: qualquer leitura de reserva em cache (F6) fica desatualizada.
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all }),
   });
@@ -105,6 +110,11 @@ export const useSubmitBooking = ({
       return;
     }
     const quote = price.result;
+    // Sem conexão: nem tenta (nada é cobrado) e já mostra o alerta com "Tentar de novo".
+    if (!navigator.onLine) {
+      handle(FAILED_ON_TRANSPORT, quote);
+      return;
+    }
     const draftRequest = toBookingRequest(values, selection, quote.quote, "");
     attempt.current = nextAttemptId(attempt.current, requestFingerprint(draftRequest));
     const request = { ...draftRequest, attemptId: attempt.current.id };

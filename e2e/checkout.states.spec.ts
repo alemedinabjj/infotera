@@ -43,10 +43,8 @@ test.describe("sem seleção", () => {
     });
     await page.goto("/");
     await page.goto("/checkout");
-    await expect(page).toHaveURL(/\/$/);
-    await expect(
-      page.getByText("Nenhum quarto selecionado. Escolha um hotel e um quarto para reservar."),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/\?notice=choose-room$/);
+    await expect(page.getByText("Escolha um quarto para continuar.")).toBeVisible();
     expect(await page.evaluate(() => Reflect.get(window, "__formSeen") === true)).toBe(false);
     await page.goBack();
     await expect(page).not.toHaveURL(/\/checkout/);
@@ -100,7 +98,7 @@ test.describe("estados bloqueantes", () => {
   test("quarto de outro hotel limpa a seleção e volta para `/`", async ({ page }) => {
     await seedSelection(page, { hotelId: 1, roomId: 45, criteria: criteria() });
     await page.goto("/checkout");
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/\?notice=choose-room$/);
     const raw = await page.evaluate(() => sessionStorage.getItem("infotera:booking-draft"));
     expect(raw ?? "").not.toContain("roomId");
   });
@@ -133,7 +131,7 @@ test.describe("seções lentas ou com falha", () => {
     const holder = page.getByRole("group", { name: "Hóspede 1 · titular da reserva" });
     await holder.getByLabel("Nome", { exact: true }).fill("Ana");
     await expect(
-      page.getByRole("heading", { name: "Não foi possível carregar os dados do hotel." }),
+      page.getByRole("heading", { name: "Não foi possível carregar os dados da reserva." }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("Falha simulada")).toHaveCount(0);
     await expect(page.getByRole("term").filter({ hasText: /^Total$/ })).toBeVisible();
@@ -207,6 +205,8 @@ test.describe("envio", () => {
 
   test("dois Enter rápidos no checkbox geram uma só chamada da action", async ({ page }) => {
     await acceptTermsViaDialog(page);
+    // O dialog anima a saída antes de fechar (e devolver o foco): só depois o checkbox aceita foco.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     const calls = actionRequests(page);
     let release: () => void = () => undefined;
     const gate = new Promise<void>((resolve) => {

@@ -1,8 +1,9 @@
 "use client";
 
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
-import { ErrorState, PriceBreakdown as SharedPriceBreakdown, Skeleton } from "@/shared/ui";
+import { PriceBreakdown as SharedPriceBreakdown, Skeleton } from "@/shared/ui";
 import type { CheckoutPrice } from "../hooks/checkout-price";
+import { TOTAL_NOT_LOADED } from "../model/price-labels";
 import { PriceBreakdownSkeleton } from "./PriceBreakdownSkeleton";
 
 type PriceBreakdownProps = {
@@ -27,16 +28,8 @@ export const PriceBreakdown = ({ price, couponValidating = false }: PriceBreakdo
   const slow = useSlowLoading(price.status === "loading");
   if (price.status === "loading") return <PriceBreakdownSkeleton slow={slow} />;
   if (price.status === "error") {
-    return (
-      <ErrorState
-        headingLevel={3}
-        title="Não foi possível carregar o preço."
-        description="Verifique sua conexão e tente de novo."
-        onRetry={price.retry}
-        retrying={price.retrying}
-        className="py-4"
-      />
-    );
+    // O "Tentar de novo" é um só e fica no topo do resumo (BookingSummary), fora deste painel.
+    return <p className="text-sm text-fg-muted">{TOTAL_NOT_LOADED}</p>;
   }
   const { quote } = price.result;
   return (

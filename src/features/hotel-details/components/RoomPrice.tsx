@@ -1,6 +1,6 @@
 import type { Room } from "@/shared/api/schemas";
 import { nightsBetween } from "@/shared/lib/dates";
-import { stayTotal } from "@/shared/lib/pricing";
+import { stayTotalWithFees } from "@/shared/lib/pricing";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { PriceTag } from "@/shared/ui";
 import type { RoomSelectability } from "../model/room-selectability";
@@ -21,7 +21,11 @@ export const RoomPrice = ({ room, criteria, selectability }: RoomPriceProps) => 
   return (
     <PriceTag
       variant="stay"
-      total={stayTotal({ pricePerNight: room.pricePerNight, nights, rooms: criteria.rooms })}
+      total={stayTotalWithFees({
+        pricePerNight: room.pricePerNight,
+        nights,
+        rooms: criteria.rooms,
+      })}
       nights={nights}
       rooms={criteria.rooms}
       nightly={room.pricePerNight}

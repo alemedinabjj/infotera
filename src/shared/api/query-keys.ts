@@ -1,3 +1,5 @@
+import { canonicalIds } from "./ids";
+
 type KeyParam = string | number | boolean | null | undefined | readonly (string | number)[];
 
 /** Chaves centralizadas para evitar colisão e permitir prefetch com a mesma chave em outra feature. */
@@ -10,10 +12,13 @@ export const queryKeys = {
     infinite: (params: Readonly<Record<string, KeyParam>>) =>
       ["hotels", "infinite", params] as const,
     detail: (id: number) => ["hotels", "detail", id] as const,
+    /** Ids deduplicados e ordenados: `[4, 1]` e `[1, 4]` compartilham cache. */
+    byIds: (ids: readonly number[]) => ["hotels", "by-ids", canonicalIds(ids)] as const,
   },
   rooms: {
     byHotel: (hotelId: number) => ["rooms", "hotel", hotelId] as const,
     detail: (id: number) => ["rooms", "detail", id] as const,
+    byHotels: (ids: readonly number[]) => ["rooms", "by-hotels", canonicalIds(ids)] as const,
   },
   reviews: {
     byHotel: (hotelId: number, page: number) => ["reviews", hotelId, page] as const,

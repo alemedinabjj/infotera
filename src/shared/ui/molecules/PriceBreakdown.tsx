@@ -50,20 +50,25 @@ export const PriceBreakdown = ({
         {rest.map((line) => (
           <Row key={line.kind} line={line} />
         ))}
-        <div
-          className={cn(
-            "flex items-start justify-between gap-3",
-            lines.length > 0 && "border-t border-border pt-3",
-            totalClassName,
-          )}
-        >
-          <dt className="text-base font-semibold text-fg">Total</dt>
-          <dd className="shrink-0 text-2xl font-bold whitespace-nowrap text-fg tabular-nums">
-            {formatCents(totalCents)}
-          </dd>
-        </div>
       </dl>
-      {showTaxNote ? <p className="text-sm text-fg-muted">Impostos e taxas incluídos.</p> : null}
+      {/* Total e nota juntos: se o total é `sticky`, a nota nunca fica escondida atrás dele. */}
+      <div
+        className={cn(
+          "flex flex-col gap-2",
+          lines.length > 0 && "border-t border-border pt-3",
+          totalClassName,
+        )}
+      >
+        <dl>
+          <div className="flex items-start justify-between gap-3">
+            <dt className="text-base font-semibold text-fg">Total</dt>
+            <dd className="shrink-0 text-2xl font-bold whitespace-nowrap text-fg tabular-nums">
+              {formatCents(totalCents)}
+            </dd>
+          </div>
+        </dl>
+        {showTaxNote ? <p className="text-sm text-fg-muted">Impostos e taxas incluídos.</p> : null}
+      </div>
     </div>
   );
 };

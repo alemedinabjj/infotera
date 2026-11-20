@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 
 const ERROR_MESSAGE =
   "NEXT_PUBLIC_API_URL ausente ou inválida. Copie .env.example para .env.local.";

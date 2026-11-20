@@ -215,6 +215,8 @@ describe("cupom (critérios 14–18)", () => {
     await apply(user, "BEMVINDO10");
     expect(screen.queryByRole("button", { name: "Aplicando…" })).not.toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /Remover\s*cupom/ })).toBeVisible();
+    // Só sobra o debounce do rascunho (grava o código do cupom); a consulta do cupom não agenda timer.
+    await act(async () => vi.advanceTimersByTimeAsync(600));
     expect(vi.getTimerCount()).toBe(0);
   });
 

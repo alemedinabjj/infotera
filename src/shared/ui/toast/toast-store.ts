@@ -1,23 +1,16 @@
 import { create } from "zustand";
+import {
+  pushToast,
+  type ToastAction,
+  type ToastItemData,
+  type ToastTone,
+  toastDuration,
+} from "./toast-model";
 
-export type ToastTone = "success" | "error" | "info";
+export type { ToastAction, ToastItemData, ToastTone } from "./toast-model";
+export { MAX_VISIBLE_TOASTS } from "./toast-model";
 
-export type ToastAction = { label: string; onClick: () => void };
-
-export type ToastItemData = {
-  id: number;
-  tone: ToastTone;
-  message: string;
-  action?: ToastAction;
-  /** Duração em ms até sumir sozinho. */
-  duration: number;
-};
-
-type ToastOptions = { action?: ToastAction };
-
-export const MAX_VISIBLE_TOASTS = 3;
-const DEFAULT_DURATION_MS = 5000;
-const ERROR_DURATION_MS = 8000;
+type ToastOptions = { action?: ToastAction; key?: string; duration?: number };
 
 type ToastState = { toasts: ToastItemData[] };
 
@@ -27,17 +20,20 @@ let nextId = 1;
 
 const push = (tone: ToastTone, message: string, options: ToastOptions = {}): number => {
   const id = nextId++;
-  const toastItem: ToastItemData = {
+  const active = typeof document === "undefined" ? null : document.activeElement;
+  const item: ToastItemData = {
     id,
+    version: 0,
     tone,
     message,
-    duration: tone === "error" ? ERROR_DURATION_MS : DEFAULT_DURATION_MS,
+    duration: toastDuration(tone, options.action !== undefined, options.duration),
+    ...(options.key === undefined ? {} : { key: options.key }),
     ...(options.action ? { action: options.action } : {}),
+    ...(active instanceof HTMLElement && active !== document.body ? { origin: active } : {}),
   };
-  useToastStore.setState((state) => ({
-    toasts: [...state.toasts, toastItem].slice(-MAX_VISIBLE_TOASTS),
-  }));
-  return id;
+  useToastStore.setState((state) => ({ toasts: pushToast(state.toasts, item) }));
+  const stored = useToastStore.getState().toasts.find((entry) => entry.key === options.key);
+  return options.key === undefined ? id : (stored?.id ?? id);
 };
 
 const dismiss = (id: number): void => {

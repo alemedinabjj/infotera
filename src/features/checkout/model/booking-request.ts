@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { searchCriteriaSchema } from "@/shared/lib/search-params";
+import { z } from "@/shared/lib/zod";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
 import { cardLast4 } from "./card";
 import type { CheckoutValues } from "./checkout.schema";

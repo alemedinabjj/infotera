@@ -1,10 +1,10 @@
 import { type QueryClient, queryOptions } from "@tanstack/react-query";
-import { z } from "zod";
 import { fetchRoomsOfHotels } from "@/shared/api/endpoints";
 import { apiGet, apiGetPage } from "@/shared/api/http";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import { queryKeys } from "@/shared/api/query-keys";
 import { type Hotel, hotelSchema } from "@/shared/api/schemas";
+import { z } from "@/shared/lib/zod";
 import { computeCentroid, type GeoPoint, slicePage, sortByDistance } from "../model/distance";
 import type { SearchFilters } from "../model/search-filters";
 import {

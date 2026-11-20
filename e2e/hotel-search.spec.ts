@@ -26,15 +26,15 @@ test.describe("lista e cards", () => {
     await expect(page.getByText("Mostrando 1–10 de 14")).toBeVisible();
 
     const card13 = cardByName(page, await hotelName(request, 13));
-    await expect(card13).toContainText("R$ 540,00");
-    await expect(card13).toContainText("total · 3 noites · 1 quarto");
-    await expect(card13).toContainText("a partir de R$ 180 por noite");
+    await expect(card13).toContainText("R$ 621,00");
+    await expect(card13).toContainText("total com taxas · 3 noites · 1 quarto");
+    await expect(card13).toContainText("a partir de R$ 180 por noite, sem taxas");
     await expect(card13.getByRole("link")).toHaveAttribute("href", `/hotel/13?${criteriaQuery()}`);
 
     const card19 = cardByName(page, await hotelName(request, 19));
     await expect(card19).toContainText("Esgotado");
     await expect(card19).toContainText("Sem quartos disponíveis para estas datas.");
-    await expect(card19).not.toContainText("total ·");
+    await expect(card19).not.toContainText("total com taxas ·");
     await expect(cardByName(page, await hotelName(request, 7))).toContainText("Apenas 1 quarto!");
   });
 
@@ -137,12 +137,12 @@ test.describe("filtros na barra lateral", () => {
   test("tipos (OU) e nota mínima", async ({ page }) => {
     await page.goto(searchPath());
     await expect(cards(page)).toHaveCount(10);
-    await page.getByRole("checkbox", { name: "Pousada" }).check();
+    await page.getByRole("checkbox", { name: "Pousada", exact: true }).check();
     await expect(cards(page)).toHaveCount(4);
-    await page.getByRole("checkbox", { name: "Resort" }).check();
+    await page.getByRole("checkbox", { name: "Resort", exact: true }).check();
     await expect(cards(page)).toHaveCount(5);
-    await page.getByRole("checkbox", { name: "Pousada" }).uncheck();
-    await page.getByRole("checkbox", { name: "Resort" }).uncheck();
+    await page.getByRole("checkbox", { name: "Pousada", exact: true }).uncheck();
+    await page.getByRole("checkbox", { name: "Resort", exact: true }).uncheck();
     await page.getByRole("radio", { name: /4,5 ou mais/ }).check();
     await expect(cards(page)).toHaveCount(5);
     await expect(page).toHaveURL(/minRating=4\.5/);

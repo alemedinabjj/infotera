@@ -24,6 +24,7 @@ describe("PriceBreakdown: cupom em validação", () => {
   it("sem validação em andamento não há skeleton do desconto", () => {
     const { container } = render(<PriceBreakdown price={ready} />);
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
-    expect(container.querySelector("dl")?.children).toHaveLength(4);
+    // estadia, taxa de serviço e ISS; o total mora no bloco seguinte (com a nota de impostos).
+    expect(container.querySelector("dl")?.children).toHaveLength(3);
   });
 });

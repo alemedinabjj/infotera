@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -120,7 +120,8 @@ describe("Dialog placement", () => {
       </Dialog>,
     );
     const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveClass("m-auto", "rounded-dialog");
+    expect(dialog).toHaveClass("m-auto", "bg-transparent");
+    expect(dialog.firstElementChild).toHaveClass("rounded-dialog", "bg-surface");
     expect(dialog).not.toHaveClass("animate-slide-up");
   });
 
@@ -137,7 +138,8 @@ describe("Dialog placement", () => {
       </Dialog>,
     );
     const dialog = screen.getByRole("dialog", { name: "Filtros" });
-    expect(dialog).toHaveClass("mt-auto", "w-full", "rounded-t-dialog", "animate-slide-up");
+    expect(dialog).toHaveClass("mt-auto", "w-full");
+    expect(dialog.firstElementChild).toHaveClass("rounded-t-dialog");
     expect(dialog).not.toHaveClass("m-auto");
     expect(screen.getByText("rodapé").parentElement).toHaveClass("flex-row");
   });
@@ -169,16 +171,10 @@ describe("Dialog initialFocus", () => {
       render(<Harness size="full" />);
       fireEvent.click(screen.getByRole("button", { name: "Ler termos" }));
       const dialog = screen.getByRole("dialog", { name: "Termos da reserva" });
-      for (const expected of [
-        "inset-0",
-        "h-dvh",
-        "w-full",
-        "max-h-none",
-        "bg-fg",
-        "rounded-none",
-      ]) {
+      for (const expected of ["inset-0", "h-dvh", "w-full", "max-h-none"]) {
         expect(dialog).toHaveClass(expected);
       }
+      expect(dialog.firstElementChild).toHaveClass("bg-fg");
       expect(dialog).not.toHaveClass("max-w-lg");
     });
 
@@ -223,5 +219,31 @@ describe("Dialog focusableBody", () => {
       </Dialog>,
     );
     expect(screen.queryByRole("region")).not.toBeInTheDocument();
+  });
+});
+
+describe("Dialog fechamento animado", () => {
+  it("marca data-closing enquanto o painel sai e só então fecha o <dialog>", async () => {
+    const close = vi.spyOn(HTMLDialogElement.prototype, "close");
+    render(<Harness />);
+    const trigger = screen.getByRole("button", { name: "Ler termos" });
+    trigger.focus();
+    await userEvent.click(trigger);
+    expect(screen.getByRole("dialog")).not.toHaveAttribute("data-closing");
+    await userEvent.click(screen.getByRole("button", { name: "Fechar" }));
+    await waitFor(() => expect(close).toHaveBeenCalledOnce());
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("close forçado (close watcher) sincroniza o estado sem travar o foco", async () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} />);
+    const trigger = screen.getByRole("button", { name: "Ler termos" });
+    trigger.focus();
+    await userEvent.click(trigger);
+    screen.getByRole("dialog").dispatchEvent(new Event("close"));
+    expect(onClose).toHaveBeenCalledOnce();
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 });

@@ -60,14 +60,18 @@ const HotelIdentity = ({ hotel, room }: Pick<BookingSummaryProps, "hotel" | "roo
       )}
       {room.data ? (
         <p className="text-sm text-fg-muted">{room.data.name}</p>
-      ) : room.isError ? (
-        <p className="text-sm text-fg-muted">Quarto indisponível no momento</p>
-      ) : (
+      ) : room.isError ? null : (
         <Skeleton className="h-5 w-1/2" />
       )}
     </div>
   </div>
 );
+
+/** Falha de conexão ao ler hotel e/ou quarto: um único aviso, fora do painel recolhível, com um retry. */
+const SUMMARY_ERROR = {
+  title: "Não foi possível carregar os dados da reserva.",
+  description: "Verifique sua conexão e tente de novo.",
+} as const;
 
 const toneClass = { success: "text-success", neutral: "text-fg", warning: "text-warning" } as const;
 
@@ -144,6 +148,7 @@ const Details = ({
 export const BookingSummary = (props: BookingSummaryProps) => {
   const { hotel, room, criteria, open, onToggle, children } = props;
   const today = todayISO();
+  const loadFailed = hotel.isError || room.isError;
   return (
     <section
       aria-labelledby={SUMMARY_TITLE_ID}
@@ -152,13 +157,16 @@ export const BookingSummary = (props: BookingSummaryProps) => {
       <h2 id={SUMMARY_TITLE_ID} className="text-lg font-semibold text-fg">
         Sua reserva
       </h2>
-      {hotel.isError ? (
+      {loadFailed ? (
         <ErrorState
           headingLevel={3}
-          title="Não foi possível carregar os dados do hotel."
-          description="Verifique sua conexão e tente de novo."
-          onRetry={() => void hotel.refetch()}
-          retrying={hotel.isFetching}
+          title={SUMMARY_ERROR.title}
+          description={SUMMARY_ERROR.description}
+          onRetry={() => {
+            if (hotel.isError) void hotel.refetch();
+            if (room.isError) void room.refetch();
+          }}
+          retrying={hotel.isFetching || room.isFetching}
           className="py-2"
         />
       ) : null}

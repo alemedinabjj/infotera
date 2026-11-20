@@ -19,7 +19,8 @@ ação, fundo levemente acinzentado, cards brancos, preço sempre em destaque e 
    espaço de mensagem de erro não empurra layout de forma brusca (ver `Field`).
 6. **Consistência acima de criatividade**: só tokens deste arquivo. Proibido hex solto e valor arbitrário
    (`mt-[13px]`, `text-[#333]`) em componente. Exceções permitidas: `env(safe-area-inset-*)`,
-   `dvh` e `calc()` de geometria listados neste arquivo.
+   `dvh` e `calc()` de geometria listados neste arquivo (inclui os três `calc()` da bandeja de
+   comparação com `--bottom-bar-height`, §4.9).
 
 ---
 
@@ -178,7 +179,7 @@ Testar sempre em 320, 375, 768 e 1280.
 | Conteúdo | `z-0` |
 | Popover do combobox | `z-10` |
 | Header sticky | `z-20` |
-| Barra de ação fixa (mobile) | `z-30` |
+| Barra de ação fixa (mobile) e bandeja de comparação | `z-30` |
 | Toasts | `z-50` |
 
 Dialog e Drawer usam `<dialog>` nativo com `showModal()`: vão para a *top layer* e dispensam z-index.
@@ -198,6 +199,20 @@ top layer) ou aceite que, com modal aberto, o feedback vai inline dentro do dial
 | `animate-slide-up` | translateY(16px)→0 + fade, 300ms | Toast, Drawer bottom-sheet, Dialog no mobile |
 | `animate-slide-in-right` | translateX(100%)→0, 300ms | Drawer lateral (≥ `lg`) |
 | `animate-pulse` / `animate-spin` | padrão do Tailwind | Skeleton / Spinner |
+
+**Política de movimento (F7a)** — animação nunca desloca layout nem alvo sob o ponteiro:
+- Só `opacity` e `transform` (nunca `height`/`width`/`top`).
+- Nada que o servidor renderiza (nem a imagem LCP) começa invisível: só anima o que o cliente monta.
+- Listas: só opacidade, sem translate. Stagger de 40 ms nos 6 primeiros itens e só no primeiro mount
+  de cada item (itens remontados pela virtualização não piscam).
+- Elementos fixos (toast, bandeja, sheet) podem transladar: não empurram nada.
+- Pulso de favoritar: `scale` 1 → 1,3 → 1 em 300 ms dentro de uma caixa fixa de 44 px.
+- Troca de passo do checkout: `x` ±16 → 0 + fade (200 ms), só o passo novo, sem saída.
+- Dialog: `center` = fade + `scale` 0,96 → 1; `sheet` = `y` 100% → 0 (300 ms na entrada, 200 ms
+  `ease-exit` na saída, que acontece antes do `close()`).
+- Biblioteca: pacote `motion` (`LazyMotion` assíncrono, `m.*` em modo `strict`,
+  `MotionConfig reducedMotion="user"`). Com reduced motion os presets não têm `x`/`y`/`scale` e o fade
+  fica ≤ 150 ms.
 
 `prefers-reduced-motion: reduce`: regra global zera animações e transições (bloco no §2). Skeleton
 fica estático, spinner para (por isso Spinner **sempre** vem com texto). Nada de parallax ou auto-play.
@@ -349,6 +364,8 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   `trees` (nature) — traços no estilo Lucide. `history` (relógio com seta) para "Buscas recentes".
   Checkout (F5): `credit-card` (cartão), `lock` (nota de privacidade), `tag` (cupom).
   Confirmação (F6): `copy` (dois retângulos sobrepostos, estilo Lucide `copy`).
+  Extras (F7a): `heart` (coração, variante `filled`), `compare` (dois painéis lado a lado) e `suitcase`
+  (mala, "Minhas reservas").
 - **Imagens:** `next/image` sempre com `aspect-ratio` fixo no container (`aspect-[5/2]` empilhado no card do celular,
   `aspect-video` no hero da galeria), `object-cover`, `sizes` correto, `bg-surface-sunken` enquanto carrega.
   `alt` = nome do hotel + contexto ("Hotel Copacabana Palace, foto 2 de 8"). Imagem quebrada → manter o
@@ -466,6 +483,23 @@ no topo; também cobriria os toasts.
     html:has([data-action-bar]) [data-toaster] { bottom: 6rem; }
   }
   ```
+
+### 4.9 Bandeja de comparação (F7a)
+
+Barra fixa global (layout raiz) enquanto houver ≥ 1 hotel marcado em "Comparar". Escondida em
+`/checkout`, `/confirmation/*` e `/comparar`.
+- `fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-border shadow-raised px-4 py-3
+  pb-[max(0.75rem,env(safe-area-inset-bottom))]`. `< sm` numa linha só (IconButton "Limpar
+  comparação", texto "2 de 3 hotéis", "Comparar"); ≥ `sm` título visível, chips (`Button secondary sm`
+  com nome `truncate max-w-48`, aria "Remover {nome} da comparação"), "Limpar" e "Comparar N hotéis".
+- "Comparar" é `Link` primary; com 1 hotel vira `Button aria-disabled`. Região viva `sr-only
+  aria-live="polite"` sempre montada fora da bandeja.
+- A altura é medida (`ResizeObserver`) e gravada em `--bottom-bar-height` no `html` (`0px` quando some).
+  Exceções de geometria permitidas: `pb-[calc(var(--bottom-bar-height,0px)+1.5rem)]` no `<main>`,
+  `bottom-[calc(var(--bottom-bar-height,0px)+1rem)]` no Toaster e `scroll-padding-bottom:
+  var(--bottom-bar-height, 0px)` no `html`.
+- Foco nunca fica coberto: no `focusin` por teclado, se o elemento termina sob a bandeja, rola com
+  `block: "nearest"`. Nunca por clique de mouse.
 
 ### 4.6 Página longa com seções (detalhe do hotel, F4)
 
@@ -642,7 +676,7 @@ Mostra dinheiro com `formatBRL` (de `shared/lib/currency`), `tabular-nums`, `whi
 | Variante | Visual | Uso |
 |---|---|---|
 | `nightly` | `a partir de` (`text-sm text-fg-subtle`) / **R$ 890** (`text-xl font-bold`) / `por noite` | Card de resultado, "a partir de" no detalhe |
-| `total` | **R$ 2.670,00** (`text-2xl font-bold`) / `total · 3 noites · 1 quarto` (`text-sm text-fg-muted`) | Barra fixa, resumo do checkout, confirmação |
+| `total` | **R$ 2.670,00** (`text-2xl font-bold`) / `total com taxas · 3 noites · 1 quarto` (`text-sm text-fg-muted`) | Barra fixa, resumo do checkout, confirmação |
 | `line` | label à esquerda, valor à direita (`flex justify-between`) | Linhas do breakdown (diárias, taxas) |
 | `nightly-inline` | `a partir de` (`text-sm text-fg-subtle`) **R$ 800** (`text-2xl font-bold`) `por noite` (`text-sm text-fg-muted`) numa linha `flex flex-wrap items-baseline gap-x-1` | "a partir de" no topo do detalhe do hotel |
 | `stay` com `exactNightly` | igual ao total do card, mas a 3ª linha é `R$ 1.200 por noite` (sem "a partir de") | Card de quarto (o preço do quarto é exato) |
@@ -655,10 +689,13 @@ Mostra dinheiro com `formatBRL` (de `shared/lib/currency`), `tabular-nums`, `whi
   diária. Nesse caso (F3) o **total vira o número grande** e a diária desce para linha secundária;
   nunca os dois no mesmo tamanho:
   ```
-              R$ 540,00          ← text-xl font-bold (no card; text-2xl fora dele)
-   total · 3 noites · 1 quarto   ← text-sm text-fg-muted
-   a partir de R$ 180 por noite  ← text-sm text-fg-subtle
+                      R$ 621,00                ← text-xl font-bold (no card; text-2xl fora dele)
+   total com taxas · 3 noites · 1 quarto   ← text-sm text-fg-muted
+   a partir de R$ 180 por noite, sem taxas ← text-sm text-fg-subtle
   ```
+  O total **inclui taxa de serviço (10%) e ISS (5%)**, pela mesma função pura do checkout
+  (`stayTotalWithFees`/`feesOnBase`): card, detalhe e checkout (sem cupom) mostram o mesmo número.
+  A diária é sempre "sem taxas".
   Sem datas, vale a variante `nightly`. Alinhamento no card: `text-right`, embaixo à direita.
 - Centavos: exibir sempre no total e no breakdown; no preço por noite do card pode omitir se for inteiro
   (`maximumFractionDigits: 0`), decidido por prop `compact`.
@@ -767,7 +804,11 @@ abaixo do valor.
   hover:shadow-raised transition-shadow duration-150 has-[a:focus-visible]:outline-2
   has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus`; link do título
   `after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline`.
-  Nenhum outro elemento focável dentro do card. Estrutura `<li><article>…<h3><a>`.
+  Estrutura `<li><article>…<h3><a>`. **Até 2 controles secundários** (favoritar e comparar) são
+  permitidos, **depois do link no DOM**, com `relative z-10` (acima do `::after` do link), nome
+  acessível com o nome do hotel e clique que não navega. O coração fica sobre a foto
+  (`absolute top-2 right-2`, `IconButton overlay`, 44 px). O "Comparar" fica numa linha própria no fim
+  do card (`min-h-11`); o skeleton ganha essa linha. Ordem de foco: nome → coração → Comparar.
 
 #### Disclosure ("Alterar busca")
 Botão que mostra/esconde um painel logo **abaixo** dele (nada acima se move). `Button secondary sm`
@@ -967,6 +1008,10 @@ reserva" — que também aparece inline).
 - Acessibilidade: a região é um contêiner único sempre montado com `role="status" aria-live="polite"`
   (`danger` em região separada `role="alert"`). Não roubar o foco.
 - API: `toast.success(msg)`, `toast.error(msg, { action })`, `toast.info(msg)` (store simples em `shared/ui`).
+  Opções `{ action?, key?, duration? }`: `key` igual substitui o toast no lugar e reinicia o tempo.
+- F7a: duração de 10 s quando há ação (WCAG 2.2.1). O tempo pausa com hover ou foco em **qualquer**
+  toast da região e com a aba oculta. Entrada `y` 16 → 0 + fade (200 ms), saída em fade (150 ms). A
+  região sobe acima da bandeja: `bottom-[calc(var(--bottom-bar-height,0px)+1rem)]`.
 
 #### HotelCard / RoomCard
 São da feature (F3/F4), mas devem compor: `Card interactive` + imagem `aspect-[4/3]` + `Badge` +
@@ -1271,3 +1316,12 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | molecules | Field (+ campo composto), Stepper, Alert, ErrorSummary, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação, PriceBreakdown | F1 (Combobox/DateRange na F2; ErrorSummary nasce na F2 e sobe na F5; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso; PriceBreakdown nasce na F5 e sobe na F6) |
 | organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`, `focusableBody`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4; `focusableBody` na F5) |
 | feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, StepIndicator, CouponForm, ActionBar (barra fixa), BookingNumber/CopyBookingNumber (valor copiável), StayDetails (hotel/quarto em streaming) | F3–F6, compondo os acima (ActionBar sobe para shared no 2º uso) |
+
+## Ajustes pós-revisão (F7a)
+
+- **Preço**: `total com taxas · N noites · N quartos` e `R$ X por noite, sem taxas` (ver `PriceTag`). Sem total: `Total não carregado — tente de novo`.
+- **Bandeja de comparação**: chips numa linha rolável; com `max-height: 600px` vira uma linha só (contador + ações), altura ≤ 25% da viewport.
+- **Toast**: canto inferior esquerdo e 320 px no desktop; ação devolve o foco ao controle de origem.
+- **Aviso na home**: `Alert info` "Escolha um quarto para continuar." (redirect do checkout sem seleção).
+- **Confirmação**: `Código` curto (`font-mono text-2xl`, `select-all`) acima do `Número da reserva`; e-mail mascarado.
+- **Selo "Abrindo…"** sobre a foto do card enquanto o hotel carrega.

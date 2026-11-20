@@ -19,6 +19,9 @@ export const HotelCardSkeleton = () => (
           <Skeleton className="h-5 w-40" />
           <Skeleton className="h-5 w-36" />
         </div>
+        <div className="flex min-h-11 items-center">
+          <Skeleton className="h-6 w-28" />
+        </div>
       </div>
     </div>
   </li>

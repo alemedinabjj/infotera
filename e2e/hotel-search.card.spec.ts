@@ -1,5 +1,6 @@
 import { type APIRequestContext, expect, test } from "@playwright/test";
 import { formatBRL } from "../src/shared/lib/currency";
+import { stayTotalWithFees } from "../src/shared/lib/pricing";
 import {
   API_URL,
   CHECK_IN,
@@ -61,7 +62,9 @@ test.describe("preço do card = quarto mais barato que serve", () => {
     await expect(cards(page).first()).toBeVisible();
     const nightly = await cheapestForParty(request, 1, 2);
     const card = cardByName(page, await hotelName(request, 1));
-    await expect(card).toContainText(formatBRL(nightly * NIGHTS));
+    await expect(card).toContainText(
+      formatBRL(stayTotalWithFees({ pricePerNight: nightly, nights: NIGHTS, rooms: 1 })),
+    );
   });
 
   test("São Paulo, grupo de 3: hotel 20 mostra o quarto de 3 pessoas, não o mais barato do hotel", async ({
@@ -73,7 +76,9 @@ test.describe("preço do card = quarto mais barato que serve", () => {
     const nightly = await cheapestForParty(request, 20, 3);
     expect(nightly).toBe(1310);
     const card = cardByName(page, await hotelName(request, 20));
-    await expect(card).toContainText(formatBRL(nightly * NIGHTS));
+    await expect(card).toContainText(
+      formatBRL(stayTotalWithFees({ pricePerNight: nightly, nights: NIGHTS, rooms: 1 })),
+    );
   });
 
   test("a lista pede os quartos num request só (hotelId repetido)", async ({ page }) => {
@@ -103,7 +108,7 @@ test.describe("controles", () => {
     await page.goto(searchPath());
     const clear = page.getByRole("button", { name: "Limpar filtros" }).first();
     await expect(clear).toHaveAttribute("aria-disabled", "true");
-    await expect(clear).toHaveCSS("text-decoration-line", "line-through");
+    await expect(clear).toHaveCSS("text-decoration-line", "none"); // só cinza, sem riscado
     await page.getByRole("checkbox", { name: "Piscina" }).check();
     await expect(clear).not.toHaveAttribute("aria-disabled", "true");
     await expect(clear).toHaveCSS("text-decoration-line", "none");

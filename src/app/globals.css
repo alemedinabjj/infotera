@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Viewport baixa (celular em paisagem, zoom 200%): a bandeja fixa vira 1 linha. */
+@custom-variant tall (@media (min-height: 601px));
+@custom-variant roomy (@media (min-width: 40rem) and (min-height: 601px));
+
 @theme {
   /* Fonte (a variável --font-inter vem do next/font no layout) */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -105,6 +109,8 @@
    */
   html {
     scroll-padding-top: 4.5rem;
+    /* Bandeja de comparação: a variável é gravada pela bandeja (0px sem ela). */
+    scroll-padding-bottom: var(--bottom-bar-height, 0px);
   }
 
   /* Âncoras (barra de seções do hotel) rolam suavemente; sem movimento para quem prefere menos. */
@@ -139,6 +145,12 @@
 
   dialog::backdrop {
     background-color: rgb(15 27 45 / 0.6);
+  }
+
+  /* O painel anima a saída antes do close(): o fundo some junto (só opacidade). */
+  dialog[data-closing]::backdrop {
+    opacity: 0;
+    transition: opacity 200ms var(--ease-exit);
   }
 
   @media (prefers-reduced-motion: reduce) {

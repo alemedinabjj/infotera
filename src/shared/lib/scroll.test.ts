@@ -17,7 +17,7 @@ describe("revealBelowHeader", () => {
     document.documentElement.style.scrollPaddingTop = "72px";
     const element = makeElement(40);
     revealBelowHeader(element);
-    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "start" });
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "instant" });
   });
 
   it("rola quando o topo está acima da janela", () => {
@@ -53,20 +53,20 @@ describe("revealNearest", () => {
     );
   afterEach(() => vi.unstubAllGlobals());
 
-  it("fora da janela (abaixo): rola o mínimo, suave", () => {
+  it("fora da janela (abaixo): rola o mínimo, instantâneo", () => {
     stubMotion(false);
     Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
     const element = makeElement(580);
     revealNearest(element);
-    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "smooth" });
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
   });
 
-  it("movimento reduzido: behavior auto", () => {
+  it("com ou sem movimento reduzido: sempre instantâneo", () => {
     stubMotion(true);
     Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
     const element = makeElement(580);
     revealNearest(element);
-    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "auto" });
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
   });
 
   it("já inteiro na janela: não rola", () => {
@@ -122,6 +122,17 @@ describe("revealBlock", () => {
     expect(scrollBy).not.toHaveBeenCalled();
     revealBlock(makeElement(750));
     expect(scrollBy).toHaveBeenCalledOnce();
+  });
+
+  it("a bandeja de comparação (data-bottom-bar) também limita a área útil", () => {
+    setup(null);
+    const tray = document.createElement("div");
+    tray.setAttribute("data-bottom-bar", "");
+    tray.style.position = "fixed";
+    tray.getBoundingClientRect = () => new DOMRect(0, 700, 100, 100);
+    document.body.append(tray);
+    revealBlock(makeElement(600));
+    expect(scrollBy).toHaveBeenCalledWith({ top: 8, behavior: "instant" });
   });
 
   it("rola para cima quando o topo está sob o header", () => {

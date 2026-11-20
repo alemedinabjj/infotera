@@ -27,7 +27,7 @@ export const INVALID_FIELD_MESSAGE = "Confira este dado e tente de novo.";
  * `trigger`, foco no `h2` ao trocar de passo, resumo de erros, rascunho e limpeza do pagamento.
  * O passo fica em estado do componente (não na URL).
  */
-export const useCheckoutForm = (criteria: SearchCriteria) => {
+export const useCheckoutForm = (criteria: SearchCriteria, couponCode: string | null = null) => {
   const [initial] = useState(() => loadInitialCheckout(criteria));
   const form = useForm<CheckoutValues>({
     resolver: checkoutResolver,
@@ -46,7 +46,7 @@ export const useCheckoutForm = (criteria: SearchCriteria) => {
   const stepRef = useRef(step);
   const containerRef = useRef<HTMLFormElement>(null);
   const blur = useDeferredBlur(containerRef);
-  const draft = useCheckoutDraft(form, reached);
+  const draft = useCheckoutDraft(form, reached, couponCode);
 
   useEffect(() => {
     stepRef.current = step;

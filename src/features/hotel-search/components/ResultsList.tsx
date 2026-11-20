@@ -1,5 +1,6 @@
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
+import { staggerDelay } from "@/shared/lib/motion";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import type { GeoPoint } from "../model/distance";
 import { HotelCard } from "./HotelCard";
@@ -35,6 +36,7 @@ export const ResultsList = ({
           selectedAmenities={selectedAmenities}
           center={center}
           priority={index === 0}
+          fade={{ delay: staggerDelay(index) }}
         />
       </li>
     ))}

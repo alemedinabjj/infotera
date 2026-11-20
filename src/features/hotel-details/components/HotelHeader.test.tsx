@@ -11,6 +11,11 @@ import { Breadcrumb } from "./Breadcrumb";
 import { HotelHeader } from "./HotelHeader";
 import { SectionNav } from "./SectionNav";
 
+vi.mock(
+  "next/navigation",
+  async () => (await import("@/shared/testing/next-navigation")).navigationMock,
+);
+
 const renderHeader = (
   hotelId: number,
   rooms = seedRooms(hotelId),
@@ -195,5 +200,26 @@ describe("Breadcrumb e SectionNav (critérios 6 e 11)", () => {
       "#avaliacoes",
       "#similares",
     ]);
+  });
+});
+
+describe("HotelHeader: favoritar e comparar (critério 5)", () => {
+  it("coração ao lado do h1 e Comparar na linha de ações, antes do Copiar link", async () => {
+    const user = userEvent.setup();
+    renderHeader(1);
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading.parentElement).toContainElement(
+      screen.getByRole("button", { name: "Salvar nos favoritos: Hotel Copacabana Palace" }),
+    );
+    await user.tab();
+    expect(screen.getByRole("button", { name: /Salvar nos favoritos/ })).toHaveFocus();
+    await user.tab();
+    expect(
+      screen.getByRole("checkbox", { name: "Comparar: Hotel Copacabana Palace" }),
+    ).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: /Copiar link/ })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("link", { name: "Ver quartos" })).toHaveFocus();
   });
 });

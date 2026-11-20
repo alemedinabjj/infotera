@@ -149,7 +149,8 @@ const useCouponFeedback = (
     if (view.kind === "applied" && previous.view.kind !== "applied") setFocusTarget("remove");
     if (view.kind === "error" && previous.view !== view) {
       setText(view.code);
-      setFocusTarget("input");
+      // Cupom restaurado que não vale mais: avisa, mas não rouba o foco de quem acabou de abrir a página.
+      if (!view.restored) setFocusTarget("input");
     }
     setPrevious({ view, snapshot });
   }

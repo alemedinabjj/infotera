@@ -1,3 +1,4 @@
+import { m, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { type CSSProperties, type RefCallback, useId } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
@@ -5,7 +6,9 @@ import { cn } from "@/shared/lib/cn";
 import { pluralize } from "@/shared/lib/format";
 import { amenityLabel, propertyTypeLabel } from "@/shared/lib/labels";
 import { hotelHref } from "@/shared/lib/links";
+import { motionPreset } from "@/shared/lib/motion";
 import type { SearchCriteria } from "@/shared/lib/search-params";
+import { CompareCheckbox, FavoriteButton } from "@/shared/saved";
 import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui";
 import { useHotelRooms } from "../hooks/useHotelRooms";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
@@ -15,6 +18,7 @@ import type { GeoPoint } from "../model/distance";
 import { CARD_IMAGE_SIZES } from "../model/image";
 import { HotelCardDistance } from "./HotelCardDistance";
 import { HotelCardFooter } from "./HotelCardFooter";
+import { OpeningIndicator } from "./OpeningIndicator";
 
 /** Posição do card no feed (padrão ARIA `feed`): tamanho do conjunto conhecido pelo total da API. */
 export type FeedItemProps = {
@@ -41,6 +45,8 @@ type HotelCardProps = {
   priority?: boolean;
   /** Só na rolagem contínua: o `article` vira item do `feed`. */
   feed?: FeedItemProps;
+  /** Entrada em fade (só opacidade) no primeiro mount, com este atraso (s); `null` não anima. */
+  fade?: { delay: number } | null;
 };
 
 const AmenityList = ({
@@ -90,14 +96,19 @@ export const HotelCard = ({
   center,
   priority = false,
   feed,
+  fade = null,
 }: HotelCardProps) => {
+  const preset = motionPreset("list-item", useReducedMotion() ?? false);
   const titleId = useId();
   const prefetch = usePrefetchHotel(hotel.id);
   const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id));
 
   return (
-    <article
+    <m.article
       ref={feed?.ref}
+      initial={fade ? preset.initial : false}
+      animate={preset.animate}
+      transition={{ ...preset.transition, delay: fade?.delay ?? 0 }}
       style={feed?.style}
       data-index={feed?.index}
       aria-posinset={feed?.posInSet}
@@ -107,14 +118,14 @@ export const HotelCard = ({
       className={cardClassName({
         variant: "interactive",
         className:
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row [--card-image-w:14rem] [--card-fav-size:2.75rem]",
       })}
     >
       <RemoteImage
         src={hotel.thumbnail}
         alt={hotel.name}
         sizes={CARD_IMAGE_SIZES}
-        className="aspect-[5/2] w-full shrink-0 sm:aspect-auto sm:min-h-42 sm:w-56"
+        className="aspect-[5/2] w-full shrink-0 sm:aspect-auto sm:min-h-42 sm:w-(--card-image-w)"
         muted={pricing.status === "sold-out"}
         priority={priority}
       />
@@ -126,8 +137,14 @@ export const HotelCard = ({
             {...prefetch}
           >
             {hotel.name}
+            <OpeningIndicator />
           </Link>
         </h3>
+        {/* Controle secundário: depois do link no DOM, acima do ::after. Em sm+ o canto da foto vem da
+            mesma variável que dá a largura da foto (`--card-image-w`), sem número solto. */}
+        <div className="absolute top-2 right-2 z-10 sm:right-auto sm:left-[calc(var(--card-image-w)-var(--card-fav-size)-0.5rem)]">
+          <FavoriteButton hotelId={hotel.id} hotelName={hotel.name} variant="overlay" />
+        </div>
         <p className="text-sm text-fg-muted">
           {propertyTypeLabel(hotel.propertyType)} · {hotel.destination}
         </p>
@@ -135,7 +152,10 @@ export const HotelCard = ({
         <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
         <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
         <HotelCardFooter pricing={pricing} />
+        <div className="relative z-10 flex min-h-11 items-center">
+          <CompareCheckbox hotelId={hotel.id} hotelName={hotel.name} className="min-h-11" />
+        </div>
       </div>
-    </article>
+    </m.article>
   );
 };

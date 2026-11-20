@@ -17,6 +17,12 @@ export * from "./icons";
 export { SiteHeader } from "./layout/SiteHeader";
 export { SkipLink } from "./layout/SkipLink";
 export { Alert } from "./molecules/Alert";
+export { CompactHotelCard } from "./molecules/CompactHotelCard";
+export {
+  type ComparisonColumn,
+  ComparisonTable,
+  type ComparisonTableMessages,
+} from "./molecules/ComparisonTable";
 export { cardClassName } from "./molecules/card-styles";
 export { Dialog } from "./molecules/Dialog";
 export { EmptyState } from "./molecules/EmptyState";

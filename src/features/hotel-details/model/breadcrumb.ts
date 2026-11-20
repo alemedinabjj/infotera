@@ -1,5 +1,6 @@
 import type { Hotel } from "@/shared/api/schemas";
-import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
+import { searchHref } from "@/shared/lib/links";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 
 export type BreadcrumbItem = { label: string; href: string | null };
 
@@ -10,12 +11,6 @@ export type HotelBreadcrumb = {
   backHref: string;
   backLabel: string;
 };
-
-/** Link para a lista: com os critérios da busca (`stay`) ou só com o destino (`browse`). */
-export const searchHref = (destination: string, criteria: SearchCriteria | null): string =>
-  criteria
-    ? `/search?${searchCriteriaToQueryString(criteria)}`
-    : `/search?${new URLSearchParams({ destination }).toString()}`;
 
 export const hotelBreadcrumb = (hotel: Hotel, criteria: SearchCriteria | null): HotelBreadcrumb => {
   const backHref = searchHref(hotel.destination, criteria);

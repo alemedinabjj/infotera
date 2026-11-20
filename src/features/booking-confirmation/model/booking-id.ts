@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 
 /**
  * Id aceito na rota, marcado (`brand`) para só circular depois de validado: UUID v4 (formato da F5)

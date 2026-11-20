@@ -17,8 +17,8 @@ export const ClearFiltersButton = ({ active, onClear, className }: ClearFiltersB
     size="sm"
     aria-disabled={active ? undefined : true}
     className={cn(
-      // Inativo: sem cor de ação, sem fundo, riscado de leve e cursor proibido (o botão segue focável).
-      "aria-disabled:bg-transparent aria-disabled:text-fg-subtle aria-disabled:line-through aria-disabled:opacity-60 aria-disabled:hover:bg-transparent aria-disabled:active:bg-transparent",
+      // Inativo: sem cor de ação, sem fundo, só cinza (sem riscado) e cursor proibido (o botão segue focável).
+      "aria-disabled:bg-transparent aria-disabled:text-fg-subtle aria-disabled:opacity-60 aria-disabled:hover:bg-transparent aria-disabled:active:bg-transparent",
       className,
     )}
     onClick={() => {

@@ -3,24 +3,17 @@
 import { useId, useState } from "react";
 import type { Room } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
-import { Checkbox, ChevronDownIcon } from "@/shared/ui";
-import {
-  buildRoomComparison,
-  comparisonAnnouncement,
-  onlyDifferences,
-} from "../model/room-comparison";
-import { ComparisonTable } from "./ComparisonTable";
+import { ChevronDownIcon, ComparisonTable } from "@/shared/ui";
+import { buildRoomComparison, ROOM_COMPARISON_MESSAGES } from "../model/room-comparison";
 
 type RoomComparisonProps = { rooms: readonly Room[] };
 
 /** Comparação de todos os quartos (só com 2 ou mais; recolhida por padrão). */
 export const RoomComparison = ({ rooms }: RoomComparisonProps) => {
   const [open, setOpen] = useState(false);
-  const [onlyDiff, setOnlyDiff] = useState(false);
   const titleId = useId();
   const panelId = useId();
   const { rows } = buildRoomComparison(rooms);
-  const visible = onlyDiff ? onlyDifferences(rows) : rows;
 
   return (
     <div id="comparar-quartos" className="flex flex-col gap-2">
@@ -40,24 +33,11 @@ export const RoomComparison = ({ rooms }: RoomComparisonProps) => {
         </button>
       </h3>
       {open ? (
-        <div id={panelId} className="flex flex-col gap-2">
-          <Checkbox
-            label="Mostrar só diferenças"
-            checked={onlyDiff}
-            onChange={(event) => setOnlyDiff(event.target.checked)}
-          />
-          <p className="flex items-center gap-2 text-sm text-fg-muted">
-            <span aria-hidden="true" className="h-4 w-1 shrink-0 bg-primary" />
-            Linhas marcadas mudam entre os quartos.
-          </p>
-          <p className="text-sm text-fg-subtle lg:hidden">Arraste para o lado para ver todos.</p>
-          <p className="sr-only" aria-live="polite">
-            {comparisonAnnouncement(visible.length, rows.length)}
-          </p>
+        <div id={panelId}>
           <ComparisonTable
-            rooms={rooms}
-            rows={visible}
-            markerOnly={rows.every((row) => row.differs)}
+            columns={rooms.map((room) => ({ id: room.id, header: room.name }))}
+            rows={rows}
+            messages={ROOM_COMPARISON_MESSAGES}
             labelledBy={titleId}
           />
         </div>

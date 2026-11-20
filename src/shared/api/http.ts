@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { env } from "./env";
 import { apiErrorBodySchema } from "./schemas";
 

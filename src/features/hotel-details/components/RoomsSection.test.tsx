@@ -81,11 +81,11 @@ describe("RoomsSection: com critérios (critério 15)", () => {
     expect(within(suite).getByText("Vista para o mar")).toBeInTheDocument();
     expect(within(suite).getByText("+2 comodidades")).toBeInTheDocument();
     expect(within(suite).getByText("Cancelamento grátis")).toBeInTheDocument();
-    expect(suite).toHaveTextContent(plain(formatBRL(3600)));
-    expect(suite).toHaveTextContent("total · 3 noites · 1 quarto");
-    expect(suite).toHaveTextContent("R$ 1.200 por noite");
+    expect(suite).toHaveTextContent(plain(formatBRL(4140)));
+    expect(suite).toHaveTextContent("total com taxas · 3 noites · 1 quarto");
+    expect(suite).toHaveTextContent("R$ 1.200 por noite, sem taxas");
     expect(suite).not.toHaveTextContent("a partir de");
-    expect(card("Quarto Standard")).toHaveTextContent(plain(formatBRL(2400)));
+    expect(card("Quarto Standard")).toHaveTextContent(plain(formatBRL(2760)));
     expect(screen.getAllByText("2 tipos de quarto")).toHaveLength(2); // status visível + anunciador
   });
 
@@ -171,7 +171,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
     expect(button).toHaveAttribute("aria-disabled", "true");
     expect(button).not.toBeDisabled();
     expect(button).toHaveAccessibleDescription("Sem quartos disponíveis para estas datas.");
-    expect(room).not.toHaveTextContent("total ·");
+    expect(room).not.toHaveTextContent("total com taxas ·");
   });
 
   it("3 adultos num quarto: o Standard (máx. 2) bloqueia com o motivo e o foco fica", async () => {
@@ -183,7 +183,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
     expect(button).toHaveAccessibleDescription(
       "Acomoda até 2 hóspedes. Sua busca tem 3 por quarto. Escolha outro quarto ou altere os hóspedes.",
     );
-    expect(standard).not.toHaveTextContent("total ·");
+    expect(standard).not.toHaveTextContent("total com taxas ·");
     button.focus();
     await user.click(button);
     expect(button).toHaveFocus();
@@ -230,7 +230,7 @@ describe("RoomsSection: sem critérios (critério 21)", () => {
     const suite = card("Suíte Deluxe Ocean View");
     expect(suite).toHaveTextContent("R$ 1.200");
     expect(suite).toHaveTextContent("por noite");
-    expect(suite).not.toHaveTextContent("total ·");
+    expect(suite).not.toHaveTextContent("total com taxas ·");
     expect(within(suite).getByRole("button", { name: /Escolher datas/ })).toBeInTheDocument();
   });
 

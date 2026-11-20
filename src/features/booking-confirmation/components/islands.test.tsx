@@ -33,6 +33,13 @@ describe("BookingNumber e copiar (critério 16)", () => {
     expect(screen.getByText(/R\$\s3\.726,00/)).toBeVisible();
   });
 
+  it("mostra o código curto (8 primeiros em maiúsculas) acima do número completo", () => {
+    renderNumber();
+    expect(screen.getByText("Código")).toBeVisible();
+    const code = screen.getByText(BOOKING_ID.slice(0, 8).toUpperCase());
+    expect(code).toHaveClass("select-all");
+  });
+
   it("o número não tem aria-label e é select-all, sem tradução", () => {
     renderNumber();
     const number = screen.getByText(BOOKING_ID);
