@@ -21,7 +21,7 @@ test.beforeEach(({ isMobile }) => {
 
 const SEED = { hotelId: 1, roomId: 1, criteria: criteria() };
 
-test.describe("CSP e cache do documento", () => {
+test.describe("CSP e cache do documento @prod", () => {
   test("um único header, com nonce novo a cada carga, sem unsafe-inline em script-src", async ({
     page,
   }) => {
@@ -83,7 +83,7 @@ test.describe("CSP e cache do documento", () => {
   });
 });
 
-test.describe("fluxo completo sob a CSP", () => {
+test.describe("fluxo completo sob a CSP @prod", () => {
   test("nenhuma violação, nenhum console com dados e o corpo da action sem cartão nem CPF", async ({
     page,
   }) => {

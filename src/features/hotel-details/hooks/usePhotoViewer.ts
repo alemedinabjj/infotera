@@ -1,6 +1,7 @@
 "use client";
 
 import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useResetOnHide } from "@/shared/hooks/useResetOnHide";
 import type { Locale } from "@/shared/i18n/config";
 import { type GalleryAction, galleryKeyAction, galleryNavigation } from "../model/gallery";
 import { photoHref } from "../model/photo-route";
@@ -28,6 +29,12 @@ export const usePhotoViewer = ({ hotelId, total, initialIndex, locale }: PhotoVi
     written.current = index;
     window.history.replaceState(null, "", photoHref(hotelId, index, locale));
   }, [index, hotelId, locale]);
+
+  // Activity (cacheComponents) esconde o modal em vez de desmontar: ao voltar a abrir, a foto é a da URL.
+  useResetOnHide(() => {
+    written.current = initialIndex;
+    setIndex(initialIndex);
+  });
 
   const go = useCallback(
     (action: GalleryAction) => setIndex((current) => galleryNavigation(current, total, action)),

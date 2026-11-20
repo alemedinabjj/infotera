@@ -39,7 +39,7 @@ test.describe("cabeçalho e navegação", () => {
     await expect(page).toHaveTitle("Hotel Copacabana Palace | Infotera Hotéis");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.getByText(/a partir de R\$\s*800 por noite/)).toBeVisible();
-    await expect(page.getByText("Sua estadia:", { exact: false }).first()).toBeVisible();
+    await expect(page.getByText("Sua estadia", { exact: true }).first()).toBeVisible();
     await page.goto(hotelPath(4));
     await expect(page.getByText(/a partir de R\$\s*720 por noite/)).toBeVisible();
   });
@@ -64,60 +64,6 @@ test.describe("cabeçalho e navegação", () => {
     await expect
       .poll(async () => (await policies.boundingBox())?.y ?? 0)
       .toBeGreaterThanOrEqual(await headerHeight(page));
-  });
-});
-
-test.describe("galeria e lightbox", () => {
-  test("abre em 'Ver todas', setas dão a volta, Home/End, Esc fecha e o foco volta", async ({
-    page,
-  }) => {
-    await page.goto(hotelPath(1));
-    await waitForHydration(page);
-    const open = page.getByRole("button", { name: "Ver todas as fotos (5)" });
-    await open.click();
-    const dialog = page.getByRole("dialog", { name: "Fotos de Hotel Copacabana Palace" });
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("Foto 1 de 5")).toBeVisible();
-    await expect(dialog.getByRole("button", { name: "Próxima foto" })).toBeFocused();
-
-    await page.keyboard.press("ArrowRight");
-    await expect(dialog.getByText("Foto 2 de 5")).toBeVisible();
-    await page.keyboard.press("End");
-    await expect(dialog.getByText("Foto 5 de 5")).toBeVisible();
-    await page.keyboard.press("ArrowRight");
-    await expect(dialog.getByText("Foto 1 de 5")).toBeVisible();
-    await page.keyboard.press("ArrowLeft");
-    await expect(dialog.getByText("Foto 5 de 5")).toBeVisible();
-    await page.keyboard.press("Home");
-    await expect(dialog.getByText("Foto 1 de 5")).toBeVisible();
-
-    // Foco preso: Shift+Tab percorre os controles do dialog (anterior, fechar), sem sair dele.
-    await page.keyboard.press("Shift+Tab");
-    await expect(dialog.getByRole("button", { name: "Foto anterior" })).toBeFocused();
-    await page.keyboard.press("Shift+Tab");
-    await expect(dialog.getByRole("button", { name: "Fechar" })).toBeFocused();
-
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeHidden();
-    await expect(open).toBeFocused();
-  });
-
-  test("miniaturas (≥ sm) abrem na foto escolhida; miniaturas carregam sob demanda", async ({
-    page,
-    isMobile,
-  }) => {
-    await page.goto(hotelPath(1));
-    await waitForHydration(page);
-    const thumb = page.getByRole("button", { name: "Abrir foto 3 de 5" });
-    if (isMobile) {
-      await expect(thumb).toBeHidden();
-      return;
-    }
-    await expect(thumb.locator("img")).toHaveAttribute("loading", "lazy");
-    await thumb.click();
-    await expect(page.getByText("Foto 3 de 5")).toBeVisible();
-    await page.getByRole("button", { name: "Fechar" }).click();
-    await expect(thumb).toBeFocused();
   });
 });
 

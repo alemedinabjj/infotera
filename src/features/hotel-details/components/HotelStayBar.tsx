@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { type ReactNode, Suspense } from "react";
 import type { Locale } from "@/shared/i18n/config";
 import { isBeforeToday, todayISO } from "@/shared/lib/dates";
@@ -16,6 +17,8 @@ type HotelStayBarProps = {
 
 const ResolvedStayBar = async ({ locale, criteria, renderDatesForm }: HotelStayBarProps) => {
   const resolved = await criteria;
+  // "Hoje" muda entre renders: só depois de um acesso dinâmico (nunca na casca estática).
+  await connection();
   const today = todayISO();
   return (
     <StayBarView

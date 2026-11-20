@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
+import { useResetOnHide } from "@/shared/hooks/useResetOnHide";
 import { useLocale } from "@/shared/i18n/client";
 import { Dialog } from "@/shared/ui";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
@@ -38,6 +39,11 @@ export const PhotoModal = ({ hotelId, name, images, initialIndex }: PhotoModalPr
   const closing = useRef(false);
   const counterId = useId();
   usePhotoOpener();
+  // Activity esconde a rota em vez de desmontar: o modal preservado volta aberto, não fechado.
+  useResetOnHide(() => {
+    closing.current = false;
+    setOpen(true);
+  });
   const src = images[viewer.index];
   const several = total > 1;
 
