@@ -6,6 +6,7 @@ import { getQueryClient } from "../api/query-client";
 import { queryKeys } from "../api/query-keys";
 import { APP_VERSION } from "../lib/app-version";
 import { useBookingDraft } from "../stores/booking-draft";
+import { makeHotel } from "../testing/fixtures";
 import { AppProviders } from "./AppProviders";
 
 const Probe = () => {
@@ -37,7 +38,7 @@ describe("AppProviders", () => {
   });
 });
 
-const HOTEL = { id: 1, name: "Hotel Restaurado" };
+const HOTEL = makeHotel({ id: 1, name: "Hotel Restaurado" });
 
 const savedClient = (overrides: { buster?: string; timestamp?: number; key?: unknown[] } = {}) =>
   JSON.stringify({

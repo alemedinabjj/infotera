@@ -112,11 +112,7 @@ describe("generateMetadata", () => {
     [{ destination: "Bonito, MS" }, "Hotéis em Bonito, MS | Infotera Hotéis"],
     [stay(), "Hotéis em Rio de Janeiro, RJ | Infotera Hotéis"],
   ])("título para %j", async (query, title) => {
-    expect(await generateMetadata(propsFor(query))).toEqual({
-      title,
-      alternates: {
-        languages: { "pt-BR": "/search", "en-US": "/en/search", "x-default": "/search" },
-      },
-    });
+    // Sem `alternates`: `/search` só faz sentido com a query.
+    expect(await generateMetadata(propsFor(query))).toEqual({ title });
   });
 });
