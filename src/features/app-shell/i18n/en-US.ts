@@ -18,7 +18,7 @@ export const enUS: AppShellMessages = {
   },
   update: {
     available: "New version available.",
-    reload: "Update",
+    reload: "Update now",
   },
   offlinePage: {
     title: "You're offline",

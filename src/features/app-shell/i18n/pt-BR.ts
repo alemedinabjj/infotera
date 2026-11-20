@@ -19,7 +19,7 @@ export const ptBR = {
   },
   update: {
     available: "Nova versão disponível.",
-    reload: "Atualizar",
+    reload: "Atualizar agora",
   },
   offlinePage: {
     title: "Você está sem internet",
