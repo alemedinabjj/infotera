@@ -39,7 +39,10 @@ test("hotel e quarto fora do ar: erro de conexão, um retry e total não carrega
   ).toBeVisible({ timeout: FIRST_FAILURE_MS });
   await expect(page.getByText("Quarto indisponível")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Tentar de novo" })).toHaveCount(1);
-  await expect(page.getByText("Total não carregado — tente de novo").first()).toBeVisible();
+  // A barra fixa (visível em qualquer largura) diz que o total não carregou.
+  await expect(
+    page.locator("[data-action-bar]").getByText("Total não carregado — tente de novo"),
+  ).toBeVisible();
 
   await serverApi.reset();
   await page.getByRole("button", { name: "Tentar de novo" }).click();

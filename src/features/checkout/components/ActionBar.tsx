@@ -42,9 +42,9 @@ export const ActionBar = ({ price, rooms, children }: ActionBarProps) => (
           <span className="sm:hidden">Total · </span>
           {describeNightsAndRooms(price.nights, rooms)}
         </p>
-        <p className="flex min-h-7 items-center text-xl font-bold whitespace-nowrap text-fg tabular-nums">
+        <div className="flex min-h-7 items-center text-xl font-bold whitespace-nowrap text-fg tabular-nums">
           <TotalValue price={price} />
-        </p>
+        </div>
       </div>
       <div className="sm:w-auto sm:min-w-56">{children}</div>
     </div>

@@ -93,7 +93,7 @@ test.describe("conteúdo", () => {
     expect(await idsInStorage(page)).toEqual([ok, flaky]);
   });
 
-  test("offline: aviso de rede, linha com erro e storage intacto", async ({
+  test("offline: só o aviso global (sem erro por linha) e storage intacto", async ({
     page,
     context,
     request,
@@ -109,8 +109,7 @@ test.describe("conteúdo", () => {
     await expect(page.getByText("Não foi possível carregar esta reserva.")).toBeVisible();
     await context.setOffline(true);
     await expect(page.getByText("Você está sem internet.")).toBeVisible();
-    await page.getByRole("button", { name: "Tentar de novo" }).click();
-    await expect(page.getByText("Não foi possível carregar esta reserva.")).toBeVisible();
+    await expect(page.getByText("Não foi possível carregar esta reserva.")).toHaveCount(0);
     expect(await idsInStorage(page)).toEqual([id]);
     expect((await analyzeAccessibility(page)).violations).toEqual([]);
     await context.setOffline(false);

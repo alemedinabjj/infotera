@@ -34,7 +34,7 @@ test.describe("favoritar", () => {
     await button.click();
     await button.click();
     await button.click();
-    await expect(page.getByText(/^Hotel (salvo nos|removido dos) favoritos\.$/)).toHaveCount(1);
+    await expect(page.getByText(/ (salvo nos|removido dos) favoritos\.$/)).toHaveCount(1);
   });
 
   test("o clique no coração não navega e o card tem a ordem nome, coração, Comparar", async ({

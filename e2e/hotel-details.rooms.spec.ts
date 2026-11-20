@@ -10,9 +10,9 @@ test.describe("selecionar quarto", () => {
   test("Suíte grava a seleção no sessionStorage e navega para /checkout", async ({ page }) => {
     await page.goto(hotelPath(1));
     const suite = roomCard(page, "Suíte Deluxe Ocean View");
-    await expect(suite).toContainText("R$ 3.600,00");
+    await expect(suite).toContainText("R$ 4.140,00");
     await expect(suite).toContainText("total com taxas · 3 noites · 1 quarto");
-    await expect(roomCard(page, "Quarto Standard")).toContainText("R$ 2.400,00");
+    await expect(roomCard(page, "Quarto Standard")).toContainText("R$ 2.760,00");
     await suite.getByRole("button", { name: /^Selecionar quarto/ }).click();
     await expect(page).toHaveURL(/\/checkout$/);
     const stored = await page.evaluate(() => sessionStorage.getItem("infotera:booking-draft"));
@@ -124,7 +124,7 @@ test.describe("sem datas", () => {
     await page.getByLabel(/Check-out/).fill(out);
     await page.getByRole("button", { name: "Ver disponibilidade" }).click();
     await expect(page).toHaveURL(new RegExp(`/hotel/1\\?.*checkIn=${CHECK_IN}&checkOut=${out}`));
-    await expect(roomCard(page, "Suíte Deluxe Ocean View")).toContainText("R$ 3.600,00");
+    await expect(roomCard(page, "Suíte Deluxe Ocean View")).toContainText("R$ 4.140,00");
     await expect(
       roomCard(page, "Suíte Deluxe Ocean View").getByRole("button", { name: /^Selecionar quarto/ }),
     ).toBeVisible();

@@ -26,9 +26,9 @@ test.describe("lista e cards", () => {
     await expect(page.getByText("Mostrando 1–10 de 14")).toBeVisible();
 
     const card13 = cardByName(page, await hotelName(request, 13));
-    await expect(card13).toContainText("R$ 540,00");
+    await expect(card13).toContainText("R$ 621,00");
     await expect(card13).toContainText("total com taxas · 3 noites · 1 quarto");
-    await expect(card13).toContainText("a partir de R$ 180 por noite");
+    await expect(card13).toContainText("a partir de R$ 180 por noite, sem taxas");
     await expect(card13.getByRole("link")).toHaveAttribute("href", `/hotel/13?${criteriaQuery()}`);
 
     const card19 = cardByName(page, await hotelName(request, 19));

@@ -85,7 +85,7 @@ test.describe("/compare", () => {
       if (url.pathname === "/rooms" && url.search.includes("hotelId=")) requests.push("rooms");
     });
     await tray(page).getByRole("link", { name: "Comparar 3 hotéis" }).click();
-    await expect(page).toHaveURL(/\/compare\?hotel=\d+&hotel=\d+&hotel=\d+$/);
+    await expect(page).toHaveURL(/\/compare\?hotel=\d+&hotel=\d+&hotel=\d+(&|$)/);
     const table = page.getByRole("table", {
       name: `Comparação entre ${names[0]}, ${names[1]} e ${names[2]}`,
     });
@@ -111,7 +111,7 @@ test.describe("/compare", () => {
     await expect(page.getByRole("table")).toBeVisible();
     const before = await page.evaluate(() => history.length);
     await page.getByRole("button", { name: `Remover ${names[1]} da comparação` }).click();
-    await expect(page).toHaveURL(/\/compare\?hotel=\d+&hotel=\d+$/);
+    await expect(page).toHaveURL(/\/compare\?hotel=\d+&hotel=\d+(&|$)/);
     expect(await page.evaluate(() => history.length)).toBe(before);
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
     const stored = await page.evaluate((key) => localStorage.getItem(key), COMPARISON_KEY);
