@@ -13,8 +13,7 @@ import { UnreadableBooking } from "./UnreadableBooking";
  * promessa vai para a seção em streaming, então o número da reserva não espera por eles.
  */
 export const BookingConfirmation = async ({ id }: { id: BookingId }) => {
-  const load = await loadBooking(id);
-  const locale = await getLocale();
+  const [load, locale] = await Promise.all([loadBooking(id), getLocale()]);
   switch (load.kind) {
     case "found":
       return (
