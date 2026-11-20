@@ -331,6 +331,8 @@ test.describe("acessibilidade (axe wcag2a/aa)", () => {
     await page.goto(feedPath());
     await expect(cardAt(page, 1)).toBeVisible();
     await loadEverything(page);
+    // O card novo entra com fade de opacidade: o axe medido no meio da animação vê cor misturada.
+    await expect(cardAt(page, 14)).toHaveCSS("opacity", "1");
     expect((await analyzeAccessibility(page)).violations).toEqual([]);
   });
 
