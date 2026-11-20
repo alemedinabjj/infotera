@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { checkoutMessages } from "../i18n/messages";
 import { brandLabel, cardLast4, detectCardBrand } from "./card";
 import type { CheckoutValues } from "./checkout.schema";
@@ -10,7 +10,7 @@ import { ageText } from "./summary-labels";
 type Payment = CheckoutValues["payment"];
 
 /** `Visa •••• 1111 · validade 12/28` (nunca o número completo). */
-export const describeCard = (payment: Payment, locale: Locale = DEFAULT_LOCALE): string => {
+export const describeCard = (payment: Payment, locale: Locale): string => {
   const t = checkoutMessages.get(locale).review;
   const brand = detectCardBrand(payment.cardNumber);
   const name = brand ? brandLabel(brand) : t.cardFallback;
@@ -18,7 +18,7 @@ export const describeCard = (payment: Payment, locale: Locale = DEFAULT_LOCALE):
 };
 
 /** `CPF ***.982.247-**` / `Passaporte ******456`. */
-export const describeDocument = (payment: Payment, locale: Locale = DEFAULT_LOCALE): string => {
+export const describeDocument = (payment: Payment, locale: Locale): string => {
   const t = checkoutMessages.get(locale).review;
   return payment.documentType === "cpf"
     ? t.cpf(maskCpf(payment.document))
@@ -30,10 +30,7 @@ export type ReviewGuest = { key: string; name: string; detail: string | null };
 const fullName = (first: string, last: string): string => `${first.trim()} ${last.trim()}`;
 
 /** Linhas da seção "Hóspedes": titular (com contato) e acompanhantes. */
-export const describeGuests = (
-  values: CheckoutValues,
-  locale: Locale = DEFAULT_LOCALE,
-): ReviewGuest[] => {
+export const describeGuests = (values: CheckoutValues, locale: Locale): ReviewGuest[] => {
   const t = checkoutMessages.get(locale).guests;
   const { contact, companions } = values;
   return [

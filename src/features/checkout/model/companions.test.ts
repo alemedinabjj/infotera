@@ -46,13 +46,13 @@ describe("buildCompanions", () => {
 
 describe("rótulos", () => {
   it("companionLabel numera a partir do hóspede 2", () => {
-    expect(companionLabel(0, "adult")).toBe("Hóspede 2 · adulto");
-    expect(companionLabel(1, "child")).toBe("Hóspede 3 · criança");
+    expect(companionLabel(0, "adult", "pt-BR")).toBe("Hóspede 2 · adulto");
+    expect(companionLabel(1, "child", "pt-BR")).toBe("Hóspede 3 · criança");
   });
 
   it("ageLabel", () => {
-    expect(ageLabel(0)).toBe("Menos de 1 ano");
-    expect(ageLabel(1)).toBe("1 ano");
-    expect(ageLabel(7)).toBe("7 anos");
+    expect(ageLabel(0, "pt-BR")).toBe("Menos de 1 ano");
+    expect(ageLabel(1, "pt-BR")).toBe("1 ano");
+    expect(ageLabel(7, "pt-BR")).toBe("7 anos");
   });
 });

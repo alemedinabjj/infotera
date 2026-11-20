@@ -1,5 +1,5 @@
 import { commonMessages } from "../i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import type { Locale } from "../i18n/config";
 import { plural } from "../i18n/messages";
 
 /** `pluralize(1, "noite", "noites")` → `"1 noite"`; 0 e n > 1 usam o plural. */
@@ -20,12 +20,11 @@ const ratingFormatter = (locale: Locale): Intl.NumberFormat => {
 };
 
 /** Nota com uma casa decimal: `4,5` em pt-BR e `4.5` em en-US. */
-export const formatRating = (rating: number, locale: Locale = DEFAULT_LOCALE): string =>
+export const formatRating = (rating: number, locale: Locale): string =>
   ratingFormatter(locale).format(rating);
 
 /** Inteiro agrupado pelo idioma: `1.200` em pt-BR e `1,200` em en-US. */
-export const formatCount = (count: number, locale: Locale = DEFAULT_LOCALE): string =>
-  count.toLocaleString(locale);
+export const formatCount = (count: number, locale: Locale): string => count.toLocaleString(locale);
 
 type GuestCounts = { adults: number; children: number; rooms: number };
 
@@ -37,10 +36,7 @@ const unitText = (
   `${formatCount(count, locale)} ${plural(count, commonMessages.get(locale).units[unit])}`;
 
 /** `"2 adultos, 1 criança · 1 quarto"`; omite crianças quando zero. */
-export const formatGuests = (
-  { adults, children, rooms }: GuestCounts,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const formatGuests = ({ adults, children, rooms }: GuestCounts, locale: Locale): string => {
   const people = [
     unitText(adults, "adult", locale),
     ...(children > 0 ? [unitText(children, "child", locale)] : []),
@@ -59,5 +55,5 @@ export const ratingBand = (rating: number): RatingLabel => {
 };
 
 /** Rótulo qualitativo da nota no idioma (Excelente/Muito bom/Bom/Regular). */
-export const ratingLabel = (rating: number, locale: Locale = DEFAULT_LOCALE): string =>
+export const ratingLabel = (rating: number, locale: Locale): string =>
   commonMessages.get(locale).rating[ratingBand(rating)];

@@ -1,6 +1,6 @@
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { amenitySchema } from "@/shared/api/schemas";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { availabilityStatus } from "@/shared/lib/availability";
 import { cancellationDetails } from "@/shared/lib/cancellation";
 import { type ComparisonRow, makeRow, NO, YES } from "@/shared/lib/comparison";
@@ -30,7 +30,7 @@ const nightly = (hotel: Hotel, rooms: readonly Room[]) => {
   return from ?? { price: hotel.pricePerNight, soldOut: false };
 };
 
-const makeRows = (locale: Locale) => {
+const makeHighlightRows = (locale: Locale) => {
   const m = comparisonMessages.get(locale);
   const priceText = (price: number): string =>
     formatBRL(price, { cents: !Number.isInteger(price), locale });
@@ -70,6 +70,11 @@ const makeRows = (locale: Locale) => {
     bestLabel: m.badges.bestRated,
   });
 
+  return { priceRow, ratingRow };
+};
+
+const makeTextRows = (locale: Locale) => {
+  const m = comparisonMessages.get(locale);
   const availabilityText = (hotel: Hotel): string => {
     switch (availabilityStatus(hotel.availableRooms, 1)) {
       case "sold-out":
@@ -139,7 +144,7 @@ const makeRows = (locale: Locale) => {
     ];
   };
 
-  return { priceRow, ratingRow, textRows };
+  return textRows;
 };
 
 /**
@@ -150,9 +155,10 @@ const makeRows = (locale: Locale) => {
 export const buildHotelComparison = (
   hotels: readonly Hotel[],
   rooms: readonly Room[],
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): HotelComparison => {
-  const { priceRow, ratingRow, textRows } = makeRows(locale);
+  const { priceRow, ratingRow } = makeHighlightRows(locale);
+  const textRows = makeTextRows(locale);
   const present = amenitySchema.options.filter((amenity) =>
     hotels.some((hotel) => hotel.amenities.includes(amenity)),
   );

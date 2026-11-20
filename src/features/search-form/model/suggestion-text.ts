@@ -1,5 +1,5 @@
 /** `offset` = posição (em caracteres) onde o trecho começa em `name`: chave estável e única. */
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { searchFormMessages } from "../i18n/messages";
 
 export type HighlightSegment = { text: string; match: boolean; offset: number };
@@ -33,11 +33,7 @@ export const highlightMatch = (name: string, query: string): HighlightSegment[] 
 };
 
 /** Anúncio do resultado da busca: "1 destino encontrado", "5 destinos encontrados" ou o vazio. */
-export const describeResultCount = (
-  count: number,
-  query: string,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const describeResultCount = (count: number, query: string, locale: Locale): string => {
   const t = searchFormMessages.get(locale).suggestions;
   if (count === 0) return t.none({ query: query.trim() });
   return count === 1 ? t.oneFound : t.manyFound({ count });

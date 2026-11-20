@@ -1,5 +1,5 @@
 import { commonMessages } from "../i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import type { Locale } from "../i18n/config";
 import { plural } from "../i18n/messages";
 import { formatUnit } from "../i18n/units";
 /** Quartos restantes a partir dos quais o card avisa que está acabando. */
@@ -39,7 +39,7 @@ type DescribeInput = {
   status: AvailabilityStatus;
   /** Hóspedes da busca (adultos + crianças), para o texto de `no-fit`. */
   guests?: number;
-  locale?: Locale;
+  locale: Locale;
   availableRooms: number;
   requestedRooms: number;
   /** `stay` tem datas; no `browse` o esgotado diz "no momento". */
@@ -55,7 +55,7 @@ export const describeAvailability = ({
   requestedRooms,
   hasDates,
   guests = 0,
-  locale = DEFAULT_LOCALE,
+  locale,
 }: DescribeInput): AvailabilityDescription => {
   const t = commonMessages.get(locale).availability;
   switch (status) {

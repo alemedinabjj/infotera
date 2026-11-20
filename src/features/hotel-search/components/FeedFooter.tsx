@@ -46,7 +46,6 @@ export const FeedFooter = ({
   endRef,
 }: FeedFooterProps) => {
   const t = useHotelSearchMessages();
-  const locale = useLocale();
   return (
     <div
       ref={sentinelRef}

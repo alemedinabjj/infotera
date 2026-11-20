@@ -11,7 +11,7 @@ import {
 
 describe("buildRoomComparison: hotel 18 (seed)", () => {
   const rooms = seedRooms(18);
-  const { rows } = buildRoomComparison(rooms);
+  const { rows } = buildRoomComparison(rooms, "pt-BR");
 
   it("tem uma célula por quarto em cada linha", () => {
     expect(rooms).toHaveLength(4);
@@ -40,7 +40,7 @@ describe("buildRoomComparison: hotel 18 (seed)", () => {
   it("valores formatados", () => {
     const byKey = Object.fromEntries(rows.map((row) => [row.key, row]));
     expect(byKey.price?.cells).toEqual(
-      [1000, 800, 900, 880].map((value) => formatBRL(value, { cents: false })),
+      [1000, 800, 900, 880].map((value) => formatBRL(value, { locale: "pt-BR", cents: false })),
     );
     expect(byKey.size?.cells).toEqual(["38 m²", "22 m²", "30 m²", "28 m²"]);
     expect(byKey.guests?.cells).toEqual(["Até 3", "Até 2", "Até 3", "Até 2"]);
@@ -63,7 +63,7 @@ describe("buildRoomComparison: hotel 18 (seed)", () => {
 describe("differs e onlyDifferences", () => {
   const a = makeRoom({ id: 1, maxGuests: 2, size: 30, amenities: ["aircon", "safe"] });
   const b = makeRoom({ id: 2, maxGuests: 2, size: 45, amenities: ["aircon"] });
-  const { rows } = buildRoomComparison([a, b]);
+  const { rows } = buildRoomComparison([a, b], "pt-BR");
 
   it("marca só as linhas com valores diferentes", () => {
     const byKey = Object.fromEntries(rows.map((row) => [row.key, row.differs]));
@@ -86,22 +86,27 @@ describe("1 quarto", () => {
   it("nenhuma linha difere e a comparação não se aplica", () => {
     const rooms = seedRooms(2);
     expect(rooms).toHaveLength(1);
-    const { rows } = buildRoomComparison(rooms);
+    const { rows } = buildRoomComparison(rooms, "pt-BR");
     expect(onlyDifferences(rows)).toEqual([]);
     expect(canCompare(rooms)).toBe(false);
     expect(canCompare([makeRoom({ id: 1 }), makeRoom({ id: 2 })])).toBe(true);
   });
 
   it("esgotado e preço com centavos", () => {
-    const { rows } = buildRoomComparison([makeRoom({ available: 0, pricePerNight: 99.5 })]);
+    const { rows } = buildRoomComparison(
+      [makeRoom({ available: 0, pricePerNight: 99.5 })],
+      "pt-BR",
+    );
     expect(rows.find((row) => row.key === "availability")?.cells).toEqual(["Esgotado"]);
-    expect(rows.find((row) => row.key === "price")?.cells).toEqual([formatBRL(99.5)]);
+    expect(rows.find((row) => row.key === "price")?.cells).toEqual([
+      formatBRL(99.5, { locale: "pt-BR" }),
+    ]);
   });
 });
 
 describe("comparisonAnnouncement", () => {
   it("todas ou parte das características", () => {
-    expect(comparisonAnnouncement(12, 12)).toBe("Mostrando todas as 12 características");
-    expect(comparisonAnnouncement(6, 12)).toBe("Mostrando 6 de 12 características");
+    expect(comparisonAnnouncement(12, 12, "pt-BR")).toBe("Mostrando todas as 12 características");
+    expect(comparisonAnnouncement(6, 12, "pt-BR")).toBe("Mostrando 6 de 12 características");
   });
 });

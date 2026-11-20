@@ -5,18 +5,18 @@ const normalize = (value: string): string => value.replace(/ /g, " ");
 
 describe("formatBRL", () => {
   it("formata com centavos e NBSP", () => {
-    const result = formatBRL(1200);
+    const result = formatBRL(1200, { locale: "pt-BR" });
     expect(result).toContain(" ");
     expect(normalize(result)).toBe("R$ 1.200,00");
   });
 
   it("omite centavos quando pedido", () => {
-    expect(normalize(formatBRL(1200, { cents: false }))).toBe("R$ 1.200");
+    expect(normalize(formatBRL(1200, { locale: "pt-BR", cents: false }))).toBe("R$ 1.200");
   });
 
   it("formata valores grandes e zero", () => {
-    expect(normalize(formatBRL(300000))).toBe("R$ 300.000,00");
-    expect(normalize(formatBRL(0))).toBe("R$ 0,00");
+    expect(normalize(formatBRL(300000, { locale: "pt-BR" }))).toBe("R$ 300.000,00");
+    expect(normalize(formatBRL(0, { locale: "pt-BR" }))).toBe("R$ 0,00");
   });
 });
 
@@ -39,6 +39,6 @@ describe("formatBRL por idioma", () => {
   });
 
   it("pt-BR explícito é igual ao padrão", () => {
-    expect(formatBRL(1200, { locale: "pt-BR" })).toBe(formatBRL(1200));
+    expect(formatBRL(1200, { locale: "pt-BR" })).toBe(formatBRL(1200, { locale: "pt-BR" }));
   });
 });

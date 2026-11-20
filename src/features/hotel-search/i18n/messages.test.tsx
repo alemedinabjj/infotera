@@ -17,7 +17,7 @@ vi.mock(
 describe("busca por idioma", () => {
   it("contagens, status e rótulos em inglês", () => {
     expect(describeResultCount(14, "en-US")).toBe("14 hotels found");
-    expect(describeResultCount(14)).toBe("14 hotéis encontrados");
+    expect(describeResultCount(14, "pt-BR")).toBe("14 hotéis encontrados");
     const { status } = describeToolbar({
       view: { kind: "results", stale: false, offlineWithData: false },
       slow: false,
@@ -31,7 +31,7 @@ describe("busca por idioma", () => {
 
   it("distância, faixa de preço e título", () => {
     expect(formatDistanceFromCenter(2.3, "en-US")).toBe("2.3 km from the center point");
-    expect(formatDistanceFromCenter(2.3)).toBe("a 2,3 km do ponto central");
+    expect(formatDistanceFromCenter(2.3, "pt-BR")).toBe("a 2,3 km do ponto central");
     expect(describePriceSummary({ min: 200, max: 3000 }, "en-US")).toBe("From R$200");
     expect(searchPageTitle({ kind: "browse", destination: "Rio" }, "en-US")).toBe(
       "Hotels in Rio | Infotera Hotéis",

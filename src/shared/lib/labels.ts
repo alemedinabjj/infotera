@@ -1,6 +1,6 @@
 import type { Amenity, PropertyType } from "@/shared/api/schemas";
 import { commonMessages } from "../i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import type { Locale } from "../i18n/config";
 
 /** Ordem de exibição das comodidades no filtro (as mais buscadas primeiro). */
 export const AMENITY_DISPLAY_ORDER = [
@@ -21,7 +21,7 @@ export const AMENITY_DISPLAY_ORDER = [
   "lounge_access",
 ] as const satisfies readonly Amenity[];
 
-export const amenityLabel = (amenity: Amenity, locale: Locale = DEFAULT_LOCALE): string =>
+export const amenityLabel = (amenity: Amenity, locale: Locale): string =>
   commonMessages.get(locale).amenities[amenity];
 
 /** Ordem de exibição dos tipos de hospedagem. */
@@ -31,5 +31,5 @@ export const PROPERTY_TYPE_DISPLAY_ORDER = [
   "resort",
 ] as const satisfies readonly PropertyType[];
 
-export const propertyTypeLabel = (type: PropertyType, locale: Locale = DEFAULT_LOCALE): string =>
+export const propertyTypeLabel = (type: PropertyType, locale: Locale): string =>
   commonMessages.get(locale).propertyTypes[type];

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { formatBRL } from "@/shared/lib/currency";
 import { hotelSearchMessages } from "../i18n/messages";
 import { PRICE_RANGE, type SearchFilters, serializeSearchFilters } from "./search-filters";
@@ -20,20 +20,13 @@ export const movePriceThumb = (draft: PriceDraft, thumb: PriceThumb, value: numb
 };
 
 /** `aria-valuetext` do slider: `R$ 500`; o topo do máximo é `R$ 3.000 ou mais`. */
-export const priceValueText = (
-  thumb: PriceThumb,
-  value: number,
-  locale: Locale = DEFAULT_LOCALE,
-): string =>
+export const priceValueText = (thumb: PriceThumb, value: number, locale: Locale): string =>
   thumb === "max" && value >= PRICE_RANGE.max
     ? hotelSearchMessages.get(locale).controls.priceMax({ price: reais(value, locale) })
     : reais(value, locale);
 
 /** Resumo em texto acima dos sliders. */
-export const describePriceSummary = (
-  { min, max }: PriceDraft,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const describePriceSummary = ({ min, max }: PriceDraft, locale: Locale): string => {
   const t = hotelSearchMessages.get(locale).controls;
   const hasMin = min > PRICE_RANGE.min;
   const hasMax = max < PRICE_RANGE.max;

@@ -10,7 +10,7 @@ const context = {
   online: true,
 };
 const feedback = (result: FailedResult, patch: Partial<typeof context> = {}) => {
-  const value = submitFeedback(result, { ...context, ...patch });
+  const value = submitFeedback(result, { ...context, ...patch }, "pt-BR");
   return { ...value, description: plain(value.description) };
 };
 

@@ -9,7 +9,7 @@ import { PaymentSummary } from "./PaymentSummary";
 import { UnreadableBooking } from "./UnreadableBooking";
 
 const plain = (value: string | null) => (value ?? "").replaceAll(" ", " ");
-const viewOf = (overrides = {}) => toBookingView(makeBooking(overrides), "2026-11-19");
+const viewOf = (overrides = {}) => toBookingView(makeBooking(overrides), "2026-11-19", "pt-BR");
 
 describe("ConfirmationHeader", () => {
   it("h1 com foco, frase do e-mail e data em horário de Brasília", () => {

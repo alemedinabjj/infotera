@@ -92,15 +92,19 @@ describe("restoreRecentSearch", () => {
 
 describe("describeRecentSearch", () => {
   it("monta o resumo com singular e plural", () => {
-    expect(describeRecentSearch(make(), TODAY)).toBe(
+    expect(describeRecentSearch(make(), TODAY, "pt-BR")).toBe(
       "São Paulo, SP · 12–15 dez · 2 adultos · 1 quarto",
     );
-    expect(describeRecentSearch(make({ adults: 1, rooms: 1 }), TODAY)).toContain("1 adulto ·");
+    expect(describeRecentSearch(make({ adults: 1, rooms: 1 }), TODAY, "pt-BR")).toContain(
+      "1 adulto ·",
+    );
   });
 
   it("inclui crianças só quando houver", () => {
-    expect(describeRecentSearch(make({ children: 1 }), TODAY)).toContain("2 adultos, 1 criança ·");
-    expect(describeRecentSearch(make({ children: 3, rooms: 2 }), TODAY)).toBe(
+    expect(describeRecentSearch(make({ children: 1 }), TODAY, "pt-BR")).toContain(
+      "2 adultos, 1 criança ·",
+    );
+    expect(describeRecentSearch(make({ children: 3, rooms: 2 }), TODAY, "pt-BR")).toBe(
       "São Paulo, SP · 12–15 dez · 2 adultos, 3 crianças · 2 quartos",
     );
   });

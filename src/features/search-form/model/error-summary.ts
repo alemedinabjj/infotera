@@ -1,5 +1,5 @@
 import type { FieldErrors } from "react-hook-form";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { searchFormMessages } from "../i18n/messages";
 import type { SearchFormValues } from "./search-form.schema";
 
@@ -12,7 +12,7 @@ export type SummaryItem = { field: SummaryField; label: string; message: string 
  */
 export const summarizeErrors = (
   errors: FieldErrors<SearchFormValues>,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): SummaryItem[] => {
   const t = searchFormMessages.get(locale).form;
   const guests = errors.adults?.message ?? errors.children?.message ?? errors.rooms?.message;

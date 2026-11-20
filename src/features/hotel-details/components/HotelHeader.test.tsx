@@ -156,7 +156,7 @@ describe("Copiar link (critério 8)", () => {
 describe("Breadcrumb e SectionNav (critérios 6 e 11)", () => {
   it("itens, link do meio com critérios e último com aria-current", () => {
     const criteria = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" });
-    const crumb = hotelBreadcrumb(makeHotel(), criteria);
+    const crumb = hotelBreadcrumb(makeHotel(), criteria, "pt-BR");
     render(<Breadcrumb {...crumb} />);
     const nav = screen.getByRole("navigation", { name: "Você está aqui" });
     const list = within(nav).getByRole("list");
@@ -174,7 +174,7 @@ describe("Breadcrumb e SectionNav (critérios 6 e 11)", () => {
   });
 
   it("sem critérios o link vai só com o destino", () => {
-    render(<Breadcrumb {...hotelBreadcrumb(makeHotel(), null)} />);
+    render(<Breadcrumb {...hotelBreadcrumb(makeHotel(), null, "pt-BR")} />);
     expect(
       screen.getAllByRole("link", { name: /Hotéis em Rio de Janeiro, RJ/ })[0],
     ).toHaveAttribute("href", "/search?destination=Rio+de+Janeiro%2C+RJ");

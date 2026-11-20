@@ -1,6 +1,6 @@
 import type { PriceBreakdown } from "../api/schemas";
 import { commonMessages } from "../i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import type { Locale } from "../i18n/config";
 import { formatUnit } from "../i18n/units";
 import { centsToReais, formatBRL, reaisToCents } from "./currency";
 
@@ -31,13 +31,13 @@ export type PriceLine =
   | { kind: "tax"; bps: number; amountCents: number };
 
 /** `R$ 1.200,00` a partir de centavos inteiros. */
-export const formatCents = (cents: number, locale: Locale = DEFAULT_LOCALE): string =>
+export const formatCents = (cents: number, locale: Locale): string =>
   formatBRL(centsToReais(cents), { locale });
 
 const percent = (bps: number): string => `${bps / 100}%`;
 
 /** Rótulo de cada linha do detalhamento (switch exaustivo). */
-export const priceLineLabel = (line: PriceLine, locale: Locale = DEFAULT_LOCALE): string => {
+export const priceLineLabel = (line: PriceLine, locale: Locale): string => {
   const t = commonMessages.get(locale).price;
   switch (line.kind) {
     case "stay":
@@ -56,7 +56,7 @@ export const priceLineLabel = (line: PriceLine, locale: Locale = DEFAULT_LOCALE)
 };
 
 /** Valor da linha; o desconto leva o sinal `−` no texto (cor nunca sozinha). */
-export const priceLineAmount = (line: PriceLine, locale: Locale = DEFAULT_LOCALE): string =>
+export const priceLineAmount = (line: PriceLine, locale: Locale): string =>
   line.kind === "discount"
     ? `−${formatCents(line.amountCents, locale)}`
     : formatCents(line.amountCents, locale);

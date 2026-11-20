@@ -9,8 +9,8 @@ import {
 } from "./checkout.schema";
 
 const TODAY = "2026-11-19";
-const MESSAGES = validationMessages();
-const schema = makeCheckoutSchema(TODAY);
+const MESSAGES = validationMessages("pt-BR");
+const schema = makeCheckoutSchema(TODAY, "pt-BR");
 
 const validContact = {
   firstName: "Ana",
@@ -185,8 +185,8 @@ describe("passo 2: pagamento", () => {
 
   it("makePaymentSchema usa o today recebido", () => {
     const payment = { ...validPayment, expiry: "11/26" };
-    expect(makePaymentSchema("2026-11-30").safeParse(payment).success).toBe(true);
-    expect(makePaymentSchema("2026-12-01").safeParse(payment).success).toBe(false);
+    expect(makePaymentSchema("2026-11-30", "pt-BR").safeParse(payment).success).toBe(true);
+    expect(makePaymentSchema("2026-12-01", "pt-BR").safeParse(payment).success).toBe(false);
   });
 });
 

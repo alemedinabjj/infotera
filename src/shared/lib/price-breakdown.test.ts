@@ -27,29 +27,39 @@ describe("priceLineLabel / priceLineAmount", () => {
   it("rótulos com singular e plural", () => {
     expect(
       plain(
-        priceLineLabel({ kind: "stay", nightlyCents: 120000, nights: 3, rooms: 2, amountCents: 1 }),
+        priceLineLabel(
+          { kind: "stay", nightlyCents: 120000, nights: 3, rooms: 2, amountCents: 1 },
+          "pt-BR",
+        ),
       ),
     ).toBe("R$ 1.200,00 × 3 noites × 2 quartos");
     expect(
       plain(
-        priceLineLabel({ kind: "stay", nightlyCents: 18000, nights: 1, rooms: 1, amountCents: 1 }),
+        priceLineLabel(
+          { kind: "stay", nightlyCents: 18000, nights: 1, rooms: 1, amountCents: 1 },
+          "pt-BR",
+        ),
       ),
     ).toBe("R$ 180,00 × 1 noite × 1 quarto");
-    expect(priceLineLabel({ kind: "discount", code: "BEMVINDO10", amountCents: 1 })).toBe(
+    expect(priceLineLabel({ kind: "discount", code: "BEMVINDO10", amountCents: 1 }, "pt-BR")).toBe(
       "Desconto (BEMVINDO10)",
     );
-    expect(priceLineLabel({ kind: "discount", code: null, amountCents: 1 })).toBe("Desconto");
-    expect(priceLineLabel({ kind: "service-fee", bps: 1000, amountCents: 1 })).toBe(
+    expect(priceLineLabel({ kind: "discount", code: null, amountCents: 1 }, "pt-BR")).toBe(
+      "Desconto",
+    );
+    expect(priceLineLabel({ kind: "service-fee", bps: 1000, amountCents: 1 }, "pt-BR")).toBe(
       "Taxa de serviço (10%)",
     );
-    expect(priceLineLabel({ kind: "tax", bps: 500, amountCents: 1 })).toBe("ISS (5%)");
+    expect(priceLineLabel({ kind: "tax", bps: 500, amountCents: 1 }, "pt-BR")).toBe("ISS (5%)");
   });
 
   it("o desconto leva o sinal de menos", () => {
-    expect(plain(priceLineAmount({ kind: "discount", code: "ABCD", amountCents: 72000 }))).toBe(
-      "−R$ 720,00",
+    expect(
+      plain(priceLineAmount({ kind: "discount", code: "ABCD", amountCents: 72000 }, "pt-BR")),
+    ).toBe("−R$ 720,00");
+    expect(plain(priceLineAmount({ kind: "tax", bps: 500, amountCents: 64800 }, "pt-BR"))).toBe(
+      "R$ 648,00",
     );
-    expect(plain(priceLineAmount({ kind: "tax", bps: 500, amountCents: 64800 }))).toBe("R$ 648,00");
   });
 });
 
@@ -57,13 +67,13 @@ describe("priceBreakdownLines", () => {
   it("ordem fixa e rótulos do exemplo com cupom", () => {
     const lines = priceBreakdownLines(breakdown);
     expect(lines.map((line) => line.kind)).toEqual(["stay", "discount", "service-fee", "tax"]);
-    expect(lines.map((line) => plain(priceLineLabel(line)))).toEqual([
+    expect(lines.map((line) => plain(priceLineLabel(line, "pt-BR")))).toEqual([
       "R$ 1.200,00 × 3 noites × 1 quarto",
       "Desconto (BEMVINDO10)",
       "Taxa de serviço (10%)",
       "ISS (5%)",
     ]);
-    expect(lines.map((line) => plain(priceLineAmount(line)))).toEqual([
+    expect(lines.map((line) => plain(priceLineAmount(line, "pt-BR")))).toEqual([
       "R$ 3.600,00",
       "−R$ 360,00",
       "R$ 324,00",
@@ -78,7 +88,7 @@ describe("priceBreakdownLines", () => {
 
   it("desconto sem código de cupom fica sem o código", () => {
     const lines = priceBreakdownLines({ ...breakdown, couponCode: undefined });
-    expect(lines[1] && priceLineLabel(lines[1])).toBe("Desconto");
+    expect(lines[1] && priceLineLabel(lines[1], "pt-BR")).toBe("Desconto");
   });
 });
 

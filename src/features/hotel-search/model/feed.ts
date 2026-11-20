@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { hotelSearchMessages } from "../i18n/messages";
 /** Rodapé do feed (rolagem contínua), um estado por vez. */
 export type FeedFooter =
@@ -36,7 +36,7 @@ type AnnouncementInput = {
   loaded: number;
   total: number;
   footer: FeedFooter;
-  locale?: Locale;
+  locale: Locale;
 };
 
 const pluralLoaded = (count: number, locale: Locale): string => {
@@ -54,7 +54,7 @@ export const describeFeedAnnouncement = ({
   loaded,
   total,
   footer,
-  locale = DEFAULT_LOCALE,
+  locale,
 }: AnnouncementInput): string => {
   switch (footer.kind) {
     // "Carregando mais hotéis…" já é lido pelo botão (`aria-live`/estado): sem anúncio duplicado.

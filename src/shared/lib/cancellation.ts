@@ -1,6 +1,6 @@
 import type { CancellationPolicy } from "../api/schemas";
 import { commonMessages } from "../i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import type { Locale } from "../i18n/config";
 
 export type CancellationDetails = {
   label: string;
@@ -15,7 +15,7 @@ export type CancellationDetails = {
  */
 export const cancellationDetails = (
   policy: CancellationPolicy,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): CancellationDetails => {
   const t = commonMessages.get(locale).cancellation;
   switch (policy) {

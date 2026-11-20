@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { type ISODate, isBeforeToday, isValidISODate } from "@/shared/lib/dates";
 import {
   applySearchCriteriaRules,
@@ -33,10 +33,7 @@ export const DEFAULT_SEARCH_FORM_VALUES: SearchFormValues = {
  * não separável (U+2011) para a palavra não quebrar em duas linhas no mobile.
  */
 /** Mensagens exclusivas do formulário no idioma (as de busca vêm de `searchMessages`). */
-export const formMessages = (locale: Locale = DEFAULT_LOCALE) =>
-  searchFormMessages.get(locale).validation;
-
-export const FORM_MESSAGES = formMessages();
+export const formMessages = (locale: Locale) => searchFormMessages.get(locale).validation;
 
 const countSchema = (min: number, max: number, message: string) =>
   z.number({ message }).int({ message }).min(min, { message }).max(max, { message });
@@ -54,7 +51,7 @@ const dateSchema = (requiredMessage: string, dateMessage: string) =>
  */
 export const makeSearchFormSchema = (
   today: ISODate,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): z.ZodType<SearchCriteria, SearchFormValues> => {
   const SEARCH_MESSAGES = searchMessages(locale);
   const FORM_MESSAGES = formMessages(locale);

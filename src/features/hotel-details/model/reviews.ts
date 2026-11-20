@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { formatCount } from "@/shared/lib/format";
 import { hotelDetailsMessages } from "../i18n/messages";
 
@@ -7,7 +7,7 @@ export const reviewsRangeLabel = (
   page: number,
   total: number,
   pageSize: number,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string => {
   const t = hotelDetailsMessages.get(locale).reviews;
   if (total === 1) return t.one;
@@ -18,7 +18,7 @@ export const reviewsRangeLabel = (
 };
 
 /** `42 pessoas acharam útil` · `1 pessoa achou útil` · `null` quando ninguém votou. */
-export const helpfulLabel = (count: number, locale: Locale = DEFAULT_LOCALE): string | null => {
+export const helpfulLabel = (count: number, locale: Locale): string | null => {
   if (count <= 0) return null;
   const t = hotelDetailsMessages.get(locale).reviews;
   return count === 1 ? t.helpfulOne : t.helpfulMany({ count: formatCount(count, locale) });

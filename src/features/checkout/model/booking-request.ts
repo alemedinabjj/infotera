@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from "@/shared/i18n/config";
 import { searchCriteriaSchema } from "@/shared/lib/search-params";
 import { z } from "@/shared/lib/zod";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
@@ -9,7 +10,7 @@ import { toE164 } from "./phone";
 import type { PriceQuote } from "./price";
 
 /** Mensagens técnicas: a Server Action devolve só `status`, nada disto chega à tela. */
-const guestName = (message: string) => personNameSchema(message);
+const guestName = (message: string) => personNameSchema(message, DEFAULT_LOCALE);
 
 /**
  * Entrada da Server Action (não confiável: validada no servidor). Só **referências e escolhas**:

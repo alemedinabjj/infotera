@@ -83,26 +83,32 @@ describe("outOfRangePage", () => {
 
 describe("textos", () => {
   it("describeResultCount: 0, 1 e n", () => {
-    expect(describeResultCount(0)).toBe("Nenhum hotel encontrado");
-    expect(describeResultCount(1)).toBe("1 hotel encontrado");
-    expect(describeResultCount(14)).toBe("14 hotéis encontrados");
+    expect(describeResultCount(0, "pt-BR")).toBe("Nenhum hotel encontrado");
+    expect(describeResultCount(1, "pt-BR")).toBe("1 hotel encontrado");
+    expect(describeResultCount(14, "pt-BR")).toBe("14 hotéis encontrados");
   });
 
   it("describePageSuffix só com mais de uma página", () => {
-    expect(describePageSuffix(2, 14)).toBe(", página 2 de 2");
-    expect(describePageSuffix(1, 10)).toBe("");
-    expect(describePageSuffix(1, 0)).toBe("");
+    expect(describePageSuffix(2, 14, "pt-BR")).toBe(", página 2 de 2");
+    expect(describePageSuffix(1, 10, "pt-BR")).toBe("");
+    expect(describePageSuffix(1, 0, "pt-BR")).toBe("");
   });
 
   it("describeVisibleRange", () => {
-    expect(describeVisibleRange(1, 14)).toBe("Mostrando 1–10 de 14");
-    expect(describeVisibleRange(2, 14)).toBe("Mostrando 11–14 de 14");
-    expect(describeVisibleRange(1, 1)).toBe("Mostrando 1–1 de 1");
+    expect(describeVisibleRange(1, 14, "pt-BR")).toBe("Mostrando 1–10 de 14");
+    expect(describeVisibleRange(2, 14, "pt-BR")).toBe("Mostrando 11–14 de 14");
+    expect(describeVisibleRange(1, 1, "pt-BR")).toBe("Mostrando 1–1 de 1");
   });
 
   it("describeAnnouncement por visão", () => {
     const announce = (v: ResultsView, slow = false) =>
-      describeAnnouncement({ view: v, slow, total: 14, destination: "Bonito, MS" });
+      describeAnnouncement({
+        locale: "pt-BR",
+        view: v,
+        slow,
+        total: 14,
+        destination: "Bonito, MS",
+      });
     expect(announce({ kind: "loading" })).toBe("Carregando hotéis…");
     expect(announce({ kind: "loading" }, true)).toBe("Está demorando mais que o normal…");
     expect(announce({ kind: "results", stale: false, offlineWithData: false })).toBe(
@@ -123,7 +129,7 @@ describe("describeToolbar", () => {
     slow = false,
     total = 14,
     listing: Listing = { mode: "pages", page: 1 },
-  ) => describeToolbar({ view: v, slow, total, listing });
+  ) => describeToolbar({ locale: "pt-BR", view: v, slow, total, listing });
 
   it("carregando: skeleton + spinner, e 'demorando' depois de 5 s", () => {
     expect(toolbar({ kind: "loading" })).toEqual({
@@ -178,7 +184,7 @@ describe("describeToolbar", () => {
 });
 
 describe("describeSheetAction", () => {
-  const action = (v: ResultsView, total = 14) => describeSheetAction(v, total);
+  const action = (v: ResultsView, total = 14) => describeSheetAction(v, total, "pt-BR");
   const results = (stale: boolean): ResultsView => ({
     kind: "results",
     stale,

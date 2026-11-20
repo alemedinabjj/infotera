@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { SEARCH_LIMITS } from "@/shared/lib/search-params";
 import { searchFormMessages } from "../i18n/messages";
 
@@ -65,7 +65,7 @@ const roomsHint = (counts: GuestCounts, { min, max }: Range, t: Hints): string |
 export const guestHint = (
   field: GuestField,
   counts: GuestCounts,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string | null => {
   const t = searchFormMessages.get(locale).guestHints;
   const range = guestLimits(counts)[field];
@@ -91,7 +91,7 @@ export const guestHint = (
 export const guestHints = (
   counts: GuestCounts,
   lastChanged: GuestField | null = null,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): Record<GuestField, string | null> => {
   const hints: Record<GuestField, string | null> = {
     adults: guestHint("adults", counts, locale),

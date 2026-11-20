@@ -81,11 +81,11 @@ describe("RoomsSection: com critérios (critério 15)", () => {
     expect(within(suite).getByText("Vista para o mar")).toBeInTheDocument();
     expect(within(suite).getByText("+2 comodidades")).toBeInTheDocument();
     expect(within(suite).getByText("Cancelamento grátis")).toBeInTheDocument();
-    expect(suite).toHaveTextContent(plain(formatBRL(4140)));
+    expect(suite).toHaveTextContent(plain(formatBRL(4140, { locale: "pt-BR" })));
     expect(suite).toHaveTextContent("total com taxas · 3 noites · 1 quarto");
     expect(suite).toHaveTextContent("R$ 1.200 por noite, sem taxas");
     expect(suite).not.toHaveTextContent("a partir de");
-    expect(card("Quarto Standard")).toHaveTextContent(plain(formatBRL(2760)));
+    expect(card("Quarto Standard")).toHaveTextContent(plain(formatBRL(2760, { locale: "pt-BR" })));
     expect(screen.getAllByText("2 tipos de quarto")).toHaveLength(2); // status visível + anunciador
   });
 

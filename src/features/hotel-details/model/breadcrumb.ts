@@ -1,5 +1,5 @@
 import type { Hotel } from "@/shared/api/schemas";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { localizePath } from "@/shared/i18n/paths";
 import { searchHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
@@ -20,7 +20,7 @@ export type HotelBreadcrumb = {
 export const hotelBreadcrumb = (
   hotel: Hotel,
   criteria: SearchCriteria | null,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): HotelBreadcrumb => {
   const t = hotelDetailsMessages.get(locale).breadcrumb;
   const backHref = localizePath(locale, searchHref(hotel.destination, criteria));

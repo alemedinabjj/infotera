@@ -1,5 +1,5 @@
 import type { Booking, Hotel, Room } from "@/shared/api/schemas";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { formatUnit } from "@/shared/i18n/units";
 import { type CancellationDetails, cancellationDetails } from "@/shared/lib/cancellation";
 import { reaisToCents } from "@/shared/lib/currency";
@@ -41,11 +41,7 @@ export type BookingView = {
  * Tudo o que vem **só da reserva** e aparece na hora: datas, noites, hóspedes, pagamento e preço.
  * O preço é o que foi cobrado (nunca recalculado); sem detalhamento confiável, só o `totalPrice`.
  */
-export const toBookingView = (
-  booking: Booking,
-  today: ISODate,
-  locale: Locale = DEFAULT_LOCALE,
-): BookingView => {
+export const toBookingView = (booking: Booking, today: ISODate, locale: Locale): BookingView => {
   const nights = Math.max(nightsBetween(booking.checkIn, booking.checkOut), 0);
   const { priceBreakdown } = booking;
   const reliable = priceBreakdown && isBreakdownConsistent(priceBreakdown, booking.totalPrice);
@@ -158,7 +154,7 @@ const errorTitleOf = (hotel: HotelView, room: RoomView, locale: Locale): string 
 /** Horários de check-in/out do hotel (ou o aviso quando ele não carregou). */
 export const checkTimes = (
   hotel: Settled<Hotel>,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): Pick<StayView, "checkInTime" | "checkOutTime"> => {
   const t = confirmationMessages.get(locale).stay;
   switch (hotel.status) {
@@ -183,7 +179,7 @@ export const toStayView = (
   booking: Booking,
   hotel: Settled<Hotel>,
   room: Settled<Room>,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): StayView => {
   const hotelView = toHotelView(booking, hotel, locale);
   const roomView = toRoomView(booking, room, locale);

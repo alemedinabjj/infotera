@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { todayISO } from "@/shared/lib/dates";
 import { type CheckoutValues, makeCheckoutSchema } from "./checkout.schema";
 
@@ -9,6 +9,6 @@ import { type CheckoutValues, makeCheckoutSchema } from "./checkout.schema";
  * certo) e devolve as mensagens do `locale`.
  */
 export const makeCheckoutResolver =
-  (locale: Locale = DEFAULT_LOCALE): Resolver<CheckoutValues, unknown, CheckoutValues> =>
+  (locale: Locale): Resolver<CheckoutValues, unknown, CheckoutValues> =>
   (values, context, options) =>
     zodResolver(makeCheckoutSchema(todayISO(), locale))(values, context, options);

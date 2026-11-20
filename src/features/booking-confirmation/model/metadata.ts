@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { confirmationMessages } from "../i18n/messages";
 import type { BookingLoad } from "./load-result";
 
@@ -6,7 +6,7 @@ import type { BookingLoad } from "./load-result";
 export const CONFIRMATION_ROBOTS = { index: false, follow: false } as const;
 
 /** Título genérico por estado: nunca leva nome, e-mail nem o id da reserva. */
-export const confirmationTitle = (load: BookingLoad, locale: Locale = DEFAULT_LOCALE): string => {
+export const confirmationTitle = (load: BookingLoad, locale: Locale): string => {
   const t = confirmationMessages.get(locale);
   switch (load.kind) {
     case "found":
@@ -23,5 +23,5 @@ export const confirmationTitle = (load: BookingLoad, locale: Locale = DEFAULT_LO
 };
 
 /** Título usado quando ler a reserva falha no metadata (o metadata nunca derruba a página). */
-export const fallbackConfirmationTitle = (locale: Locale = DEFAULT_LOCALE): string =>
+export const fallbackConfirmationTitle = (locale: Locale): string =>
   `${confirmationMessages.get(locale).titles.found} | ${confirmationMessages.get(locale).site}`;

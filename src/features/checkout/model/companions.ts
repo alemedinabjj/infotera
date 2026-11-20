@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { checkoutMessages } from "../i18n/messages";
 
 export type GuestKind = "adult" | "child";
@@ -39,14 +39,11 @@ export const buildCompanions = (
 };
 
 /** `Hóspede 2 · adulto` (o titular é o hóspede 1; `index` é a posição em `companions`). */
-export const companionLabel = (
-  index: number,
-  kind: GuestKind,
-  locale: Locale = DEFAULT_LOCALE,
-): string => checkoutMessages.get(locale).guests.label(index + 2, kind);
+export const companionLabel = (index: number, kind: GuestKind, locale: Locale): string =>
+  checkoutMessages.get(locale).guests.label(index + 2, kind);
 
 /** `Menos de 1 ano`, `1 ano`, `7 anos`. */
-export const ageLabel = (age: number, locale: Locale = DEFAULT_LOCALE): string =>
+export const ageLabel = (age: number, locale: Locale): string =>
   checkoutMessages.get(locale).guests.ageOption(age);
 
 export const AGE_OPTIONS: readonly number[] = Array.from({ length: 18 }, (_, age) => age);

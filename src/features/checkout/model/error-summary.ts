@@ -1,5 +1,5 @@
 import type { FieldErrors } from "react-hook-form";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import type { ErrorSummaryItem } from "@/shared/ui";
 import { checkoutMessages } from "../i18n/messages";
 import type { CheckoutFieldPath, CheckoutValues } from "./checkout.schema";
@@ -13,7 +13,7 @@ type SummaryContext = {
   step: CheckoutStep;
   companionKinds: readonly GuestKind[];
   documentType: CheckoutValues["payment"]["documentType"];
-  locale?: Locale;
+  locale: Locale;
 };
 
 const item = (
@@ -25,7 +25,7 @@ const item = (
 const personalItems = ({
   errors,
   companionKinds,
-  locale = DEFAULT_LOCALE,
+  locale,
 }: SummaryContext): CheckoutSummaryItem[] => {
   const t = checkoutMessages.get(locale);
   const contact = errors.contact;
@@ -58,11 +58,7 @@ const personalItems = ({
   return [...holderItems, ...others];
 };
 
-const paymentItems = ({
-  errors,
-  documentType,
-  locale = DEFAULT_LOCALE,
-}: SummaryContext): CheckoutSummaryItem[] => {
+const paymentItems = ({ errors, documentType, locale }: SummaryContext): CheckoutSummaryItem[] => {
   const t = checkoutMessages.get(locale);
   const payment = errors.payment;
   return [
@@ -88,7 +84,7 @@ export const summarizeCheckoutErrors = (context: SummaryContext): CheckoutSummar
     case "review":
       return item(
         "termsAccepted",
-        checkoutMessages.get(context.locale ?? DEFAULT_LOCALE).errorSummary.terms,
+        checkoutMessages.get(context.locale).errorSummary.terms,
         context.errors.termsAccepted?.message,
       );
     default: {

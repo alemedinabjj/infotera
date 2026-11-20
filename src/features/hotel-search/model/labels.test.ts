@@ -4,7 +4,7 @@ import { LIST_MODES, SORT_OPTIONS } from "./search-filters";
 
 describe("labels", () => {
   it("ordenações", () => {
-    expect(SORT_OPTIONS.map((option) => sortLabel(option))).toEqual([
+    expect(SORT_OPTIONS.map((option) => sortLabel(option, "pt-BR"))).toEqual([
       "Mais populares",
       "Menor preço",
       "Maior avaliação",
@@ -13,7 +13,7 @@ describe("labels", () => {
   });
 
   it("modos de listagem", () => {
-    expect(LIST_MODES.map((option) => listModeLabel(option))).toEqual([
+    expect(LIST_MODES.map((option) => listModeLabel(option, "pt-BR"))).toEqual([
       "Em páginas",
       "Rolagem contínua",
     ]);

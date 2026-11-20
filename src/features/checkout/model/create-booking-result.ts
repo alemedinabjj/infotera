@@ -1,5 +1,5 @@
 import type { ApiErrorKind } from "@/shared/api/http";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { formatCents } from "@/shared/lib/price-breakdown";
 import { checkoutMessages } from "../i18n/messages";
 import type { CheckoutMessages } from "../i18n/pt-BR";
@@ -39,7 +39,7 @@ type FeedbackContext = {
 };
 
 /** Eco em toast, só quando a chamada da action falha no transporte (o alerta inline já está visível nos demais casos). */
-export const transportToast = (locale: Locale = DEFAULT_LOCALE): string =>
+export const transportToast = (locale: Locale): string =>
   checkoutMessages.get(locale).submit.transportToast;
 
 const unavailableFeedback = (available: number, t: SubmitMessages): SubmitFeedback =>
@@ -66,7 +66,7 @@ const failedFeedback = (online: boolean, t: SubmitMessages): SubmitFeedback =>
 export const submitFeedback = (
   result: FailedResult,
   context: FeedbackContext,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): SubmitFeedback => {
   const t = checkoutMessages.get(locale).submit;
   const money = (cents: number) => formatCents(cents, locale);

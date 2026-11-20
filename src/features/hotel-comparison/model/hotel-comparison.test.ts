@@ -6,7 +6,7 @@ import { buildHotelComparison } from "./hotel-comparison";
 const seedRows = () => {
   const hotels = [seedHotel(1), seedHotel(4), seedHotel(11)];
   const rooms = [...seedRooms(1), ...seedRooms(4), ...seedRooms(11)];
-  return buildHotelComparison(hotels, rooms);
+  return buildHotelComparison(hotels, rooms, "pt-BR");
 };
 
 const row = (rows: ReturnType<typeof buildHotelComparison>["rows"], key: string) => {
@@ -71,6 +71,7 @@ describe("buildHotelComparison: casos de borda", () => {
         makeRoom({ id: 1, hotelId: 1, pricePerNight: 300 }),
         makeRoom({ id: 2, hotelId: 2, pricePerNight: 300 }),
       ],
+      "pt-BR",
     );
     expect(row(rows, "price").best).toEqual([]);
     expect(row(rows, "rating").best).toEqual([]);
@@ -80,6 +81,7 @@ describe("buildHotelComparison: casos de borda", () => {
     const { rows } = buildHotelComparison(
       [a, b],
       [makeRoom({ id: 2, hotelId: 2, pricePerNight: 300 })],
+      "pt-BR",
     );
     expect(row(rows, "price").cells[0]).toMatch(/R\$\s500/);
     expect(row(rows, "room-types").cells[0]).toBe("—");
@@ -92,6 +94,7 @@ describe("buildHotelComparison: casos de borda", () => {
         makeRoom({ id: 1, hotelId: 1, pricePerNight: 100, available: 0 }),
         makeRoom({ id: 2, hotelId: 2, pricePerNight: 300, available: 2 }),
       ],
+      "pt-BR",
     );
     expect(row(rows, "price").cells[0]).toContain("Esgotado");
     expect(row(rows, "price").best).toEqual([]);

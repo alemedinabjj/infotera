@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { hotelSearchMessages } from "../i18n/messages";
 export type GeoPoint = { latitude: number; longitude: number };
 
@@ -54,7 +54,7 @@ const numberFormat = (fractionDigits: number, locale: Locale): Intl.NumberFormat
  * Texto do card. Abaixo de 1 km arredonda para 50 m; de 1 km em diante, uma casa (inteiro a partir
  * de 10 km). A unidade é escolhida depois de arredondar (0,975 km vira `1,0 km`; 9,96 km vira `10 km`).
  */
-export const formatDistanceFromCenter = (km: number, locale: Locale = DEFAULT_LOCALE): string => {
+export const formatDistanceFromCenter = (km: number, locale: Locale): string => {
   const t = hotelSearchMessages.get(locale).distance;
   const meters = Math.round((km * 1000) / 50) * 50;
   if (meters < 100) return t.lessThan100;

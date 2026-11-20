@@ -50,8 +50,8 @@ test.describe("conteúdo (critérios 1, 2, 3 e 5)", () => {
     await expect(stay).toContainText("Av. Atlântica");
     await expect(stay).toContainText(await roomName(request, 1));
     await expect(stay).toContainText("1 cama king");
-    await expect(stay).toContainText(formatDate(CHECK_IN, "long"));
-    await expect(stay).toContainText(formatDate(CHECK_OUT, "long"));
+    await expect(stay).toContainText(formatDate(CHECK_IN, "long", "pt-BR"));
+    await expect(stay).toContainText(formatDate(CHECK_OUT, "long", "pt-BR"));
     await expect(stay).toContainText("A partir de 15:00");
     await expect(stay).toContainText("Até 12:00");
     await expect(stay).toContainText("3 noites · 2 adultos, 1 criança · 1 quarto");

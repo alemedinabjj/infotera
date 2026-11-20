@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
 import type { Room } from "@/shared/api/schemas";
 import { useLocale } from "@/shared/i18n/client";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { nightsBetween, todayISO } from "@/shared/lib/dates";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { couponQueryOptions } from "../api/coupons";
@@ -22,7 +22,7 @@ import {
 import { calculatePrice } from "../model/price";
 
 /** Aviso quando o cupom guardado no rascunho deixou de valer (outra data, outro quarto, expirou). */
-export const restoredCouponMessage = (code: string, locale: Locale = DEFAULT_LOCALE): string =>
+export const restoredCouponMessage = (code: string, locale: Locale): string =>
   checkoutMessages.get(locale).coupon.restoredInvalid(code);
 
 export type CouponView =

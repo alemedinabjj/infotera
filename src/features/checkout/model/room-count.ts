@@ -1,5 +1,5 @@
 import type { Room } from "@/shared/api/schemas";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { formatUnit } from "@/shared/i18n/units";
 import { guestsPerRoom, SEARCH_LIMITS, type SearchCriteria } from "@/shared/lib/search-params";
 import { checkoutMessages } from "../i18n/messages";
@@ -15,7 +15,7 @@ export type RoomCountBounds = {
 
 type CriteriaGuests = Pick<SearchCriteria, "adults" | "children">;
 
-export const availableHint = (available: number, locale: Locale = DEFAULT_LOCALE): string =>
+export const availableHint = (available: number, locale: Locale): string =>
   checkoutMessages.get(locale).roomCount.available(available);
 
 /**
@@ -26,7 +26,7 @@ export const availableHint = (available: number, locale: Locale = DEFAULT_LOCALE
 export const roomCountBounds = (
   criteria: CriteriaGuests,
   room: Pick<Room, "available" | "maxGuests">,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): RoomCountBounds => {
   const t = checkoutMessages.get(locale).roomCount;
   const guests = criteria.adults + criteria.children;
@@ -64,9 +64,9 @@ export const guestsFor = (criteria: CriteriaGuests & { rooms: number }): number 
   guestsPerRoom(criteria);
 
 /** Motivos de uma confirmação que falhou e de uma em andamento (região viva do stepper). */
-export const confirmFailedHint = (locale: Locale = DEFAULT_LOCALE): string =>
+export const confirmFailedHint = (locale: Locale): string =>
   checkoutMessages.get(locale).roomCount.confirmFailed;
-export const confirmingHint = (locale: Locale = DEFAULT_LOCALE): string =>
+export const confirmingHint = (locale: Locale): string =>
   checkoutMessages.get(locale).roomCount.confirming;
 
 export type RoomCountState = {

@@ -9,7 +9,7 @@ describe("copyCurrentUrl", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     const success = vi.spyOn(toast, "success");
-    await copyCurrentUrl();
+    await copyCurrentUrl("pt-BR");
     expect(writeText).toHaveBeenCalledWith(window.location.href);
     expect(success).toHaveBeenCalledWith("Link copiado.");
     vi.unstubAllGlobals();
@@ -20,7 +20,7 @@ describe("copyCurrentUrl", () => {
       clipboard: { writeText: vi.fn().mockRejectedValue(new Error("negado")) },
     });
     const error = vi.spyOn(toast, "error");
-    await copyCurrentUrl();
+    await copyCurrentUrl("pt-BR");
     expect(error).toHaveBeenCalledWith(
       "Não foi possível copiar. Copie o endereço na barra do navegador.",
     );

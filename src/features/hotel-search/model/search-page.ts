@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import type { ISODate } from "@/shared/lib/dates";
 import {
   parseDestinationParam,
@@ -40,7 +40,7 @@ const SITE = "Infotera Hotéis";
 const pageMessages = (locale: Locale) => hotelSearchMessages.get(locale).page;
 
 /** `<title>` da página: `Hotéis em Rio de Janeiro, RJ | Infotera Hotéis`. */
-export const searchPageTitle = (page: SearchPage, locale: Locale = DEFAULT_LOCALE): string => {
+export const searchPageTitle = (page: SearchPage, locale: Locale): string => {
   const t = pageMessages(locale);
   switch (page.kind) {
     case "missing-destination":
@@ -81,7 +81,7 @@ type StayCriteria = Extract<SearchPage, { kind: "stay" }>["criteria"];
 export const describeSearchSummary = (
   criteria: StayCriteria | null,
   today: ISODate,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string =>
   criteria ? describeStay(criteria, today, locale) : pageMessages(locale).datesUndefined;
 

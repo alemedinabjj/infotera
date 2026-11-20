@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { getTotalPages } from "@/shared/lib/pagination";
 import { hotelSearchMessages } from "../i18n/messages";
 import { PAGE_SIZE } from "./search-filters";
@@ -58,35 +58,24 @@ export const deriveResultsView = (input: ResultsViewInput): ResultsView => {
 const msgs = (locale: Locale) => hotelSearchMessages.get(locale).list;
 
 /** `Nenhum hotel encontrado` · `1 hotel encontrado` · `14 hotéis encontrados`. */
-export const describeResultCount = (total: number, locale: Locale = DEFAULT_LOCALE): string => {
+export const describeResultCount = (total: number, locale: Locale): string => {
   if (total <= 0) return msgs(locale).none;
   if (total === 1) return msgs(locale).one;
   return msgs(locale).many({ count: total });
 };
 
 /** `Mostrando 10 de 14` (feed: sem faixa nem página). */
-export const describeLoadedCount = (
-  loaded: number,
-  total: number,
-  locale: Locale = DEFAULT_LOCALE,
-): string => msgs(locale).loaded({ loaded, total });
+export const describeLoadedCount = (loaded: number, total: number, locale: Locale): string =>
+  msgs(locale).loaded({ loaded, total });
 
 /** Complemento só para leitor de tela: `, página 2 de 2` (vazio com 1 página). */
-export const describePageSuffix = (
-  page: number,
-  total: number,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const describePageSuffix = (page: number, total: number, locale: Locale): string => {
   const totalPages = getTotalPages(total, PAGE_SIZE);
   return totalPages > 1 ? msgs(locale).pageSuffix({ page, total: totalPages }) : "";
 };
 
 /** `Mostrando 11–14 de 14`. */
-export const describeVisibleRange = (
-  page: number,
-  total: number,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const describeVisibleRange = (page: number, total: number, locale: Locale): string => {
   const first = (page - 1) * PAGE_SIZE + 1;
   const last = Math.min(page * PAGE_SIZE, total);
   return msgs(locale).range({ first, last, total });
@@ -97,7 +86,7 @@ type AnnouncementInput = {
   slow: boolean;
   total: number;
   destination: string;
-  locale?: Locale;
+  locale: Locale;
 };
 
 /**
@@ -109,7 +98,7 @@ export const describeAnnouncement = ({
   slow,
   total,
   destination,
-  locale = DEFAULT_LOCALE,
+  locale,
 }: AnnouncementInput): string => {
   const t = msgs(locale);
   switch (view.kind) {
@@ -148,7 +137,7 @@ type ToolbarInput = {
   slow: boolean;
   total: number;
   listing: Listing;
-  locale?: Locale;
+  locale: Locale;
 };
 
 /** Sufixo de página (só leitor de tela) e linha de status do resultado, por modo. */
@@ -170,7 +159,7 @@ export const describeToolbar = ({
   slow,
   total,
   listing,
-  locale = DEFAULT_LOCALE,
+  locale,
 }: ToolbarInput): { heading: ToolbarHeading; status: ToolbarStatus } => {
   const t = msgs(locale);
   switch (view.kind) {
@@ -220,7 +209,7 @@ export type SheetAction = { text: string; updating: boolean };
 export const describeSheetAction = (
   view: ResultsView,
   total: number,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): SheetAction => {
   const t = msgs(locale);
   switch (view.kind) {

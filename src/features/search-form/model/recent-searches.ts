@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { formatUnit } from "@/shared/i18n/units";
 import { formatDateRange, type ISODate, isBeforeToday } from "@/shared/lib/dates";
 import {
@@ -70,7 +70,7 @@ export const restoreRecentSearch = (criteria: SearchCriteria, today: ISODate): R
 export const describeRecentDetails = (
   criteria: SearchCriteria,
   today: ISODate,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string => {
   const guests = [
     formatUnit(criteria.adults, "adult", locale),
@@ -87,5 +87,5 @@ export const describeRecentDetails = (
 export const describeRecentSearch = (
   criteria: SearchCriteria,
   today: ISODate,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string => `${criteria.destination} · ${describeRecentDetails(criteria, today, locale)}`;

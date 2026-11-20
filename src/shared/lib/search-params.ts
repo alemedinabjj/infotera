@@ -27,7 +27,7 @@ export const SEARCH_LIMITS = {
 export type SearchMessages = ReturnType<typeof searchMessages>;
 
 /** Mensagens de validação dos critérios de busca no idioma (reusadas pelo formulário da F2). */
-export const searchMessages = (locale: Locale = DEFAULT_LOCALE) => {
+export const searchMessages = (locale: Locale) => {
   const t = commonMessages.get(locale).validation.search;
   return {
     destination: t.destination,
@@ -42,7 +42,8 @@ export const searchMessages = (locale: Locale = DEFAULT_LOCALE) => {
   };
 };
 
-export const SEARCH_MESSAGES = searchMessages();
+/** Mensagens técnicas da URL (nunca exibidas): o idioma é fixo, de propósito. */
+export const SEARCH_MESSAGES = searchMessages(DEFAULT_LOCALE);
 
 const countSchema = (min: number, max: number, message: string) =>
   z.coerce.number({ message }).int({ message }).min(min, { message }).max(max, { message });

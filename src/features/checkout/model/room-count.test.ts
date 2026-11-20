@@ -3,7 +3,11 @@ import { initialRoomCountState, limitHint, roomCountBounds, roomCountReducer } f
 
 describe("roomCountBounds", () => {
   it("2 adultos no quarto 1: máximo 2 por causa dos adultos", () => {
-    const bounds = roomCountBounds({ adults: 2, children: 0 }, { available: 8, maxGuests: 3 });
+    const bounds = roomCountBounds(
+      { adults: 2, children: 0 },
+      { available: 8, maxGuests: 3 },
+      "pt-BR",
+    );
     expect(bounds).toMatchObject({
       min: 1,
       max: 2,
@@ -13,7 +17,11 @@ describe("roomCountBounds", () => {
   });
 
   it("4 adultos com maxGuests 3: mínimo 2 com o motivo", () => {
-    const bounds = roomCountBounds({ adults: 4, children: 0 }, { available: 8, maxGuests: 3 });
+    const bounds = roomCountBounds(
+      { adults: 4, children: 0 },
+      { available: 8, maxGuests: 3 },
+      "pt-BR",
+    );
     expect(bounds.min).toBe(2);
     expect(bounds.minHint).toBe(
       "Este quarto acomoda até 3 hóspedes: 4 hóspedes precisam de pelo menos 2 quartos.",
@@ -21,33 +29,53 @@ describe("roomCountBounds", () => {
   });
 
   it("limite de 4 quartos por reserva", () => {
-    const bounds = roomCountBounds({ adults: 6, children: 0 }, { available: 8, maxGuests: 3 });
+    const bounds = roomCountBounds(
+      { adults: 6, children: 0 },
+      { available: 8, maxGuests: 3 },
+      "pt-BR",
+    );
     expect(bounds.max).toBe(4);
     expect(bounds.maxHint).toBe("Máximo de 4 quartos por reserva.");
   });
 
   it("disponibilidade menor que os demais limites", () => {
-    const bounds = roomCountBounds({ adults: 6, children: 0 }, { available: 2, maxGuests: 4 });
+    const bounds = roomCountBounds(
+      { adults: 6, children: 0 },
+      { available: 2, maxGuests: 4 },
+      "pt-BR",
+    );
     expect(bounds.max).toBe(2);
     expect(bounds.maxHint).toBe("Só 2 quartos disponíveis.");
     expect(
-      roomCountBounds({ adults: 6, children: 0 }, { available: 1, maxGuests: 6 }).maxHint,
+      roomCountBounds({ adults: 6, children: 0 }, { available: 1, maxGuests: 6 }, "pt-BR").maxHint,
     ).toBe("Só 1 quarto disponível.");
   });
 
   it("empate: adultos antes da disponibilidade", () => {
-    const bounds = roomCountBounds({ adults: 2, children: 0 }, { available: 2, maxGuests: 3 });
+    const bounds = roomCountBounds(
+      { adults: 2, children: 0 },
+      { available: 2, maxGuests: 3 },
+      "pt-BR",
+    );
     expect(bounds.maxHint).toBe("Cada quarto precisa de pelo menos 1 adulto.");
   });
 
   it("nunca devolve max < min", () => {
-    const bounds = roomCountBounds({ adults: 4, children: 0 }, { available: 1, maxGuests: 2 });
+    const bounds = roomCountBounds(
+      { adults: 4, children: 0 },
+      { available: 1, maxGuests: 2 },
+      "pt-BR",
+    );
     expect(bounds.max).toBeGreaterThanOrEqual(bounds.min);
   });
 });
 
 describe("limitHint", () => {
-  const bounds = roomCountBounds({ adults: 4, children: 0 }, { available: 8, maxGuests: 3 });
+  const bounds = roomCountBounds(
+    { adults: 4, children: 0 },
+    { available: 8, maxGuests: 3 },
+    "pt-BR",
+  );
 
   it("mostra o motivo só no limite", () => {
     expect(limitHint(bounds, 2)).toBe(bounds.minHint);

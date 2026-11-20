@@ -1,5 +1,5 @@
 import type { Hotel, Room } from "@/shared/api/schemas";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import {
   type AvailabilityDescription,
   type AvailabilityStatus,
@@ -45,8 +45,8 @@ export const cheapestFittingRoom = (rooms: readonly Room[], party: Party | null)
 export const deriveCardPricing = (
   hotel: Hotel,
   criteria: SearchCriteria | null,
-  rooms?: readonly Room[],
-  locale: Locale = DEFAULT_LOCALE,
+  rooms: readonly Room[] | undefined,
+  locale: Locale,
 ): CardPricing => {
   const requestedRooms = criteria?.rooms ?? 1;
   const guests = criteria ? criteria.adults + criteria.children : 0;

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 
 const TIME_ZONE = "America/Sao_Paulo";
 
@@ -28,7 +28,7 @@ const FORMATTERS: Readonly<Record<Locale, Intl.DateTimeFormat>> = {
  * qualquer que seja o fuso do processo (o RSC roda em UTC na Vercel). Montado por partes para não
  * depender do separador de data e hora do ICU.
  */
-export const formatBookedAt = (iso: string, locale: Locale = DEFAULT_LOCALE): string => {
+export const formatBookedAt = (iso: string, locale: Locale): string => {
   const parts = Object.fromEntries(
     FORMATTERS[locale].formatToParts(new Date(iso)).map((part) => [part.type, part.value]),
   );

@@ -13,7 +13,7 @@ const failed = { status: "error" } as const;
 
 describe("toBookingView", () => {
   it("formato da F5 completo", () => {
-    const view = toBookingView(makeBooking(), TODAY);
+    const view = toBookingView(makeBooking(), TODAY, "pt-BR");
     expect(view).toMatchObject({
       number: "3f2a9c1e-7b4d-4e8a-9f12-6c0d3b2a1e57",
       bookedAt: "19/11/2026, 12:04",
@@ -40,18 +40,22 @@ describe("toBookingView", () => {
     const view = toBookingView(
       makeBooking({ checkIn: "2026-12-12", checkOut: "2026-12-13" }),
       TODAY,
+      "pt-BR",
     );
     expect(view.stayLabel).toBe("12–13 dez · 1 noite");
   });
 
   it("o ano aparece quando a estadia não é no ano de hoje", () => {
-    expect(toBookingView(makeBooking(), "2025-06-01").stayLabel).toBe("12–15 dez 2026 · 3 noites");
+    expect(toBookingView(makeBooking(), "2025-06-01", "pt-BR").stayLabel).toBe(
+      "12–15 dez 2026 · 3 noites",
+    );
   });
 
   it("formato do README: sem hóspedes, sem pagamento, só o total", () => {
     const view = toBookingView(
       makeBooking({ guests: [], payment: undefined, priceBreakdown: undefined, totalPrice: 4140 }),
       TODAY,
+      "pt-BR",
     );
     expect(view.guests).toEqual({ holderEmail: null, lines: [] });
     expect(view.cardLast4).toBeNull();
@@ -59,7 +63,7 @@ describe("toBookingView", () => {
   });
 
   it("sem payment não há linha de cartão", () => {
-    expect(toBookingView(makeBooking({ payment: undefined }), TODAY).cardLast4).toBeNull();
+    expect(toBookingView(makeBooking({ payment: undefined }), TODAY, "pt-BR").cardLast4).toBeNull();
   });
 
   it("breakdown cujas linhas não somam o total vira só o total de totalPrice", () => {
@@ -68,17 +72,18 @@ describe("toBookingView", () => {
     const view = toBookingView(
       makeBooking({ priceBreakdown: { ...priceBreakdown, taxCents: 1 } }),
       TODAY,
+      "pt-BR",
     );
     expect(view.price).toEqual({ kind: "total-only", totalCents: 372600 });
   });
 
   it("breakdown com total diferente de totalPrice vira só o totalPrice", () => {
-    const view = toBookingView(makeBooking({ totalPrice: 1 }), TODAY);
+    const view = toBookingView(makeBooking({ totalPrice: 1 }), TODAY, "pt-BR");
     expect(view.price).toEqual({ kind: "total-only", totalCents: 100 });
   });
 
   it("privacidade: telefone, idade e dados do cartão fora do resumo, exceto o campo de pagamento", () => {
-    const text = JSON.stringify(toBookingView(makeBooking(), TODAY));
+    const text = JSON.stringify(toBookingView(makeBooking(), TODAY, "pt-BR"));
     expect(text).not.toContain("98765");
     expect(text).not.toContain('"age"');
     expect(text.match(/1111/g)).toHaveLength(1);
@@ -89,6 +94,7 @@ describe("toBookingView", () => {
     const view = toBookingView(
       makeBooking({ checkIn: "2026-12-15", checkOut: "2026-12-12" }),
       TODAY,
+      "pt-BR",
     );
     expect(view.stayDetails.startsWith("0 noites")).toBe(true);
   });
@@ -105,7 +111,7 @@ describe("toStayView", () => {
   });
 
   it("hotel e quarto ok", () => {
-    const view = toStayView(booking, ok(hotel), ok(room));
+    const view = toStayView(booking, ok(hotel), ok(room), "pt-BR");
     expect(view.errorTitle).toBeNull();
     expect(view.hotel).toMatchObject({
       status: "ok",
@@ -140,11 +146,11 @@ describe("toStayView", () => {
       "Não foi possível carregar os dados do quarto.",
     ],
   ])("%s", (_name, hotelResult, roomResult, title) => {
-    expect(toStayView(booking, hotelResult, roomResult).errorTitle).toBe(title);
+    expect(toStayView(booking, hotelResult, roomResult, "pt-BR").errorTitle).toBe(title);
   });
 
   it("hotel missing: id da reserva, aviso e horários a confirmar", () => {
-    const view = toStayView(makeBooking({ hotelId: 9999 }), missing, ok(room));
+    const view = toStayView(makeBooking({ hotelId: 9999 }), missing, ok(room), "pt-BR");
     expect(view.hotel).toEqual({
       status: "missing",
       title: "Hotel #9999",
@@ -155,13 +161,13 @@ describe("toStayView", () => {
   });
 
   it("hotel com erro: horários indisponíveis", () => {
-    const view = toStayView(booking, failed, ok(room));
+    const view = toStayView(booking, failed, ok(room), "pt-BR");
     expect(view.hotel).toEqual({ status: "error" });
     expect(view.checkInTime).toBe("Indisponível no momento");
   });
 
   it("quarto missing", () => {
-    expect(toStayView(makeBooking({ roomId: 77 }), ok(hotel), missing).room).toEqual({
+    expect(toStayView(makeBooking({ roomId: 77 }), ok(hotel), missing, "pt-BR").room).toEqual({
       status: "missing",
       title: "Quarto #77",
       notice: "Os dados deste quarto não estão mais disponíveis.",
@@ -169,13 +175,15 @@ describe("toStayView", () => {
   });
 
   it("quarto de outro hotel (reserva forjada) conta como missing", () => {
-    const view = toStayView(booking, ok(hotel), ok(makeRoom({ hotelId: 2 })));
+    const view = toStayView(booking, ok(hotel), ok(makeRoom({ hotelId: 2 })), "pt-BR");
     expect(view.room.status).toBe("missing");
     expect(JSON.stringify(view)).not.toContain("Suíte Deluxe");
   });
 
   it("quarto ok e hotel ok não repetem o preço nem dados da reserva", () => {
-    expect(plain(JSON.stringify(toStayView(booking, ok(hotel), ok(room))))).not.toContain("Ana");
+    expect(plain(JSON.stringify(toStayView(booking, ok(hotel), ok(room), "pt-BR")))).not.toContain(
+      "Ana",
+    );
   });
 });
 
@@ -185,7 +193,7 @@ describe("checkTimes", () => {
     ["missing", { status: "missing" }, "Confirme com o hotel", "Confirme com o hotel"],
     ["error", { status: "error" }, "Indisponível no momento", "Indisponível no momento"],
   ])("hotel %s", (_name, hotel, checkIn, checkOut) => {
-    expect(checkTimes(hotel)).toEqual({ checkInTime: checkIn, checkOutTime: checkOut });
+    expect(checkTimes(hotel, "pt-BR")).toEqual({ checkInTime: checkIn, checkOutTime: checkOut });
   });
 });
 

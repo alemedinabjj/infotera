@@ -34,7 +34,7 @@ describe("hotel-details por idioma: lógica pura", () => {
     expect(roomCapacityLabel(1, "en-US")).toBe("1 guest");
     expect(roomCapacityLabel(3, "en-US")).toBe("Up to 3 guests");
     expect(roomSizeLabel(32.5, "en-US")).toBe("32.5 m²");
-    expect(roomSizeLabel(32.5)).toBe("32,5 m²");
+    expect(roomSizeLabel(32.5, "pt-BR")).toBe("32,5 m²");
     expect(roomTypesLabel(2, "en-US")).toBe("2 room types");
     expect(hotelPageTitle({ kind: "not-found" }, "en-US")).toBe(
       "Hotel not found | Infotera Hotéis",

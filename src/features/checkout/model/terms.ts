@@ -1,5 +1,5 @@
 import type { CancellationPolicy } from "@/shared/api/schemas";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { cancellationDetails } from "@/shared/lib/cancellation";
 import { checkoutMessages } from "../i18n/messages";
 
@@ -14,7 +14,7 @@ type TermsInput = {
 /** Texto dos termos (dados, sem JSX). Cancelamento e horários vêm do hotel quando já carregou. */
 export const termsSections = (
   { policy, checkInTime, checkOutTime }: TermsInput,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): TermsSection[] => {
   const t = checkoutMessages.get(locale).terms;
   return [

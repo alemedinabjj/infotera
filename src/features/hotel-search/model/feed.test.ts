@@ -36,7 +36,7 @@ describe("deriveFeedFooter", () => {
 describe("describeFeedAnnouncement", () => {
   const end: FeedFooter = { kind: "end", total: 14 };
   const announce = (previousLoaded: number, loaded: number, total: number, footer: FeedFooter) =>
-    describeFeedAnnouncement({ previousLoaded, loaded, total, footer });
+    describeFeedAnnouncement({ locale: "pt-BR", previousLoaded, loaded, total, footer });
 
   it("carregando: vazio (quem fala é o botão)", () => {
     expect(announce(10, 10, 14, { kind: "loading-more" })).toBe("");

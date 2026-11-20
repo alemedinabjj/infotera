@@ -11,6 +11,6 @@ describe("datas em America/New_York (DST em 2026-03-08)", () => {
 
   it("addDays e formatDate seguem estáveis", () => {
     expect(addDays("2026-03-07", 2)).toBe("2026-03-09");
-    expect(formatDate("2026-12-01", "short")).toBe("01/12/2026");
+    expect(formatDate("2026-12-01", "short", "pt-BR")).toBe("01/12/2026");
   });
 });

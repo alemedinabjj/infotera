@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { checkoutMessages } from "../i18n/messages";
 
 export type NoticeKind = "restored" | "payment-wiped";
@@ -7,11 +7,7 @@ export type NoticeKind = "restored" | "payment-wiped";
  * Texto do aviso do passo. Depois de restaurar o rascunho a idade das crianças nunca volta
  * (não é persistida), então o aviso do passo 1 pede para conferi-la quando há crianças.
  */
-export const noticeText = (
-  kind: NoticeKind,
-  hasChildren: boolean,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const noticeText = (kind: NoticeKind, hasChildren: boolean, locale: Locale): string => {
   const t = checkoutMessages.get(locale).notices;
   switch (kind) {
     case "restored":

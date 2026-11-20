@@ -12,14 +12,13 @@ import { isValidPassport } from "./passport";
 import { isValidPhone, PHONE_COUNTRY_CODES, type PhoneCountry } from "./phone";
 
 /** Mensagens de validação no idioma (`pt-BR` por padrão). */
-export const validationMessages = (locale: Locale = DEFAULT_LOCALE) =>
-  checkoutMessages.get(locale).validation;
+export const validationMessages = (locale: Locale) => checkoutMessages.get(locale).validation;
 
 /** Mensagem de telefone para o país e o motivo devolvido por `isValidPhone`. */
 export const phoneMessage = (
   country: PhoneCountry,
   check: ReturnType<typeof isValidPhone>,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string | null => {
   if (check.ok) return null;
   const t = validationMessages(locale);
@@ -133,7 +132,7 @@ const addDocumentIssue = (payment: PaymentFields, ctx: z.RefinementCtx, t: Messa
 };
 
 /** Pagamento (simulado): nada disto sai do navegador nem é persistido. */
-export const makePaymentSchema = (today: ISODate, locale: Locale = DEFAULT_LOCALE) => {
+export const makePaymentSchema = (today: ISODate, locale: Locale) => {
   const t = validationMessages(locale);
   return z
     .object({
@@ -156,7 +155,7 @@ export const makePaymentSchema = (today: ISODate, locale: Locale = DEFAULT_LOCAL
  * Schema completo, a única fonte da verdade dos 3 passos. `today` (`YYYY-MM-DD`) e o idioma das
  * mensagens entram por parâmetro.
  */
-export const makeCheckoutSchema = (today: ISODate, locale: Locale = DEFAULT_LOCALE) => {
+export const makeCheckoutSchema = (today: ISODate, locale: Locale) => {
   const t = validationMessages(locale);
   return z.object({
     contact: contactSchema(t, locale),
@@ -188,7 +187,7 @@ export const defaultCheckoutValues: CheckoutValues = {
  * passo 1. Criança sem idade conta como incompleto (a idade nunca é persistida).
  */
 export const isPersonalValid = (values: CheckoutValues, today: ISODate): boolean => {
-  const result = makeCheckoutSchema(today).safeParse(values);
+  const result = makeCheckoutSchema(today, DEFAULT_LOCALE).safeParse(values);
   if (result.success) return true;
   return !result.error.issues.some(
     (issue) => issue.path[0] === "contact" || issue.path[0] === "companions",

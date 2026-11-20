@@ -51,13 +51,14 @@ describe("deriveSuggestionsView", () => {
 
 describe("suggestionsErrorMessage", () => {
   it("troca a mensagem quando está offline", () => {
-    expect(suggestionsErrorMessage(false)).toBe("Não foi possível carregar os destinos.");
-    expect(suggestionsErrorMessage(true)).toMatch(/sem internet/);
+    expect(suggestionsErrorMessage(false, "pt-BR")).toBe("Não foi possível carregar os destinos.");
+    expect(suggestionsErrorMessage(true, "pt-BR")).toMatch(/sem internet/);
   });
 });
 
 describe("describeSuggestionsAnnouncement", () => {
   const input = {
+    locale: "pt-BR",
     view: "results",
     offline: false,
     itemCount: 3,
@@ -75,10 +76,10 @@ describe("describeSuggestionsAnnouncement", () => {
 
   it("anuncia o erro (ou o offline) e fica calado em loading/idle", () => {
     expect(describeSuggestionsAnnouncement({ ...input, view: "error" })).toBe(
-      suggestionsErrorMessage(false),
+      suggestionsErrorMessage(false, "pt-BR"),
     );
     expect(describeSuggestionsAnnouncement({ ...input, view: "error", offline: true })).toBe(
-      suggestionsErrorMessage(true),
+      suggestionsErrorMessage(true, "pt-BR"),
     );
     expect(describeSuggestionsAnnouncement({ ...input, view: "loading" })).toBe("");
     expect(describeSuggestionsAnnouncement({ ...input, view: "idle" })).toBe("");

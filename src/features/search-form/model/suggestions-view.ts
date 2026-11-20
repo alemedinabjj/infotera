@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { searchFormMessages } from "../i18n/messages";
 import { describeResultCount } from "./suggestion-text";
 
@@ -21,10 +21,7 @@ export type SuggestionsViewInput = {
   offline: boolean;
 };
 
-export const suggestionsErrorMessage = (
-  offline: boolean,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const suggestionsErrorMessage = (offline: boolean, locale: Locale): string => {
   const t = searchFormMessages.get(locale).suggestions;
   return offline ? t.offline : t.loadError;
 };
@@ -51,7 +48,7 @@ type AnnouncementInput = {
   text: string;
   /** A lista já é a da busca atual (nada em andamento, nem placeholder). */
   isCurrent: boolean;
-  locale?: Locale;
+  locale: Locale;
 };
 
 /** Texto da região `aria-live` do combobox: erro/offline, contagem de resultados ou nada. */

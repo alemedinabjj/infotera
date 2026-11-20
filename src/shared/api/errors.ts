@@ -1,9 +1,9 @@
 import { commonMessages } from "../i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import type { Locale } from "../i18n/config";
 import { isApiError } from "./http";
 
 /** Mensagem no idioma da página para o usuário. Nunca repassa o texto bruto nem o status da API. */
-export const toUserMessage = (error: unknown, locale: Locale = DEFAULT_LOCALE): string => {
+export const toUserMessage = (error: unknown, locale: Locale): string => {
   const MESSAGES = commonMessages.get(locale).errors;
   if (!isApiError(error)) return MESSAGES.unknown;
   const { kind } = error;

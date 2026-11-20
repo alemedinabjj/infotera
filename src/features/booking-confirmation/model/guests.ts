@@ -1,5 +1,5 @@
 import type { Booking } from "@/shared/api/schemas";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { confirmationMessages } from "../i18n/messages";
 
 export type GuestRole = "holder" | "adult" | "child";
@@ -32,10 +32,7 @@ export const maskEmail = (email: string | undefined): string | null => {
  * Titular (primeiro hóspede, o único com contato) e acompanhantes com o tipo. Reserva no formato
  * do README (`guests: []`) devolve `lines` vazio. A `key` é estável: papel + nome + ocorrência.
  */
-export const describeGuests = (
-  booking: Pick<Booking, "guests">,
-  locale: Locale = DEFAULT_LOCALE,
-): GuestsView => {
+export const describeGuests = (booking: Pick<Booking, "guests">, locale: Locale): GuestsView => {
   const roles = confirmationMessages.get(locale).guests;
   const seen = new Map<string, number>();
   const lines = booking.guests.map((guest, index): GuestLine => {

@@ -17,9 +17,10 @@ describe("labels", () => {
   });
 
   it("toda comodidade e todo tipo têm rótulo em pt-BR", () => {
-    for (const amenity of amenitySchema.options) expect(amenityLabel(amenity)).not.toBe("");
-    expect(amenityLabel("wifi")).toBe("Wi-Fi");
-    expect(amenityLabel("beach_access")).toBe("Acesso à praia");
-    expect(propertyTypeLabel("pousada")).toBe("Pousada");
+    for (const amenity of amenitySchema.options)
+      expect(amenityLabel(amenity, "pt-BR")).not.toBe("");
+    expect(amenityLabel("wifi", "pt-BR")).toBe("Wi-Fi");
+    expect(amenityLabel("beach_access", "pt-BR")).toBe("Acesso à praia");
+    expect(propertyTypeLabel("pousada", "pt-BR")).toBe("Pousada");
   });
 });

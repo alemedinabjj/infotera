@@ -11,7 +11,7 @@ describe("HOTEL_SECTIONS", () => {
       "avaliacoes",
       "similares",
     ]);
-    expect(HOTEL_SECTIONS.map((section) => sectionLabel(section.key))).toEqual([
+    expect(HOTEL_SECTIONS.map((section) => sectionLabel(section.key, "pt-BR"))).toEqual([
       "Visão geral",
       "Quartos",
       "Localização",

@@ -31,14 +31,16 @@ export const COUPONS: Record<string, Coupon> = {
 };
 
 /** Mensagem de formato do código no idioma (campo do cupom). */
-export const couponFormatMessage = (locale: Locale = DEFAULT_LOCALE): string =>
+export const couponFormatMessage = (locale: Locale): string =>
   checkoutMessages.get(locale).coupon.format;
 
 /** Código normalizado (trim + maiúsculas); espaços internos continuam e reprovam o formato. */
 export const normalizeCouponCode = (raw: string): string => raw.trim().toUpperCase();
 
 /** Formato de um código **já normalizado**: 4–12 letras ou números. */
-export const couponCodeSchema = z.string().regex(/^[A-Z0-9]{4,12}$/, couponFormatMessage());
+export const couponCodeSchema = z
+  .string()
+  .regex(/^[A-Z0-9]{4,12}$/, couponFormatMessage(DEFAULT_LOCALE));
 
 export const findCoupon = (code: string): Coupon | null =>
   Object.hasOwn(COUPONS, code) ? (COUPONS[code] ?? null) : null;
@@ -71,7 +73,7 @@ export const evaluateCoupon = (coupon: Coupon | null, context: CouponContext): C
 };
 
 /** Texto do motivo (erro do campo e anúncios). */
-export const couponMessage = (reason: CouponRejection, locale: Locale = DEFAULT_LOCALE): string => {
+export const couponMessage = (reason: CouponRejection, locale: Locale): string => {
   const t = checkoutMessages.get(locale).coupon;
   switch (reason.kind) {
     case "not-found":
@@ -90,7 +92,7 @@ export const couponMessage = (reason: CouponRejection, locale: Locale = DEFAULT_
 };
 
 /** `10% de desconto` / `R$ 50,00 de desconto`. */
-export const couponBenefit = (coupon: Coupon, locale: Locale = DEFAULT_LOCALE): string => {
+export const couponBenefit = (coupon: Coupon, locale: Locale): string => {
   const t = checkoutMessages.get(locale).coupon;
   return coupon.discount.kind === "percent"
     ? t.percentOff(coupon.discount.bps / 100)

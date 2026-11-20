@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { checkoutMessages } from "../i18n/messages";
 
 export type CouponSnapshot =
@@ -17,7 +17,7 @@ const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text
 export const describeCouponTransition = (
   previous: CouponSnapshot,
   next: CouponSnapshot,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string | null => {
   const t = checkoutMessages.get(locale).coupon;
   if (previous.kind === next.kind && previous.kind !== "error") {

@@ -100,11 +100,8 @@ const dateFormatter = (locale: Locale, format: DateFormat): Intl.DateTimeFormat 
  * Formata uma data ISO sem off-by-one de fuso. `short` = `01/12/2026` (pt-BR) ou `12/01/2026`
  * (en-US); `medium` = `1 de dez. de 2026` ou `Dec 1, 2026`; `long` inclui o dia da semana.
  */
-export const formatDate = (
-  value: ISODate,
-  format: DateFormat = "short",
-  locale: Locale = DEFAULT_LOCALE,
-): string => dateFormatter(locale, format).format(new Date(toUTCms(value)));
+export const formatDate = (value: ISODate, format: DateFormat = "short", locale: Locale): string =>
+  dateFormatter(locale, format).format(new Date(toUTCms(value)));
 
 const MONTHS_SHORT: Readonly<Record<Locale, readonly string[]>> = {
   "pt-BR": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
@@ -136,7 +133,7 @@ export const formatDateRange = (
   checkIn: ISODate,
   checkOut: ISODate,
   today: ISODate,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): string => {
   const start = toDayMonthYear(checkIn, locale);
   const end = toDayMonthYear(checkOut, locale);

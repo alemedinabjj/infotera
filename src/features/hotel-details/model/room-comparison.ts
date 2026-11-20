@@ -1,6 +1,6 @@
 import { type Room, type RoomAmenity, roomAmenitySchema } from "@/shared/api/schemas";
 import { commonMessages } from "@/shared/i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { type ComparisonRow, makeRow, NO, YES } from "@/shared/lib/comparison";
 import { formatBRL } from "@/shared/lib/currency";
 import { bedsLabel } from "@/shared/lib/room-labels";
@@ -30,10 +30,7 @@ const amenityRow = (amenity: RoomAmenity, rooms: readonly Room[], locale: Locale
  * Tabela de comparação de todos os quartos do hotel. Linhas fixas (preço, tamanho, hóspedes,
  * camas, disponibilidade) e uma por comodidade que **algum** quarto tem (ordem do enum).
  */
-export const buildRoomComparison = (
-  rooms: readonly Room[],
-  locale: Locale = DEFAULT_LOCALE,
-): RoomComparison => {
+export const buildRoomComparison = (rooms: readonly Room[], locale: Locale): RoomComparison => {
   const t = hotelDetailsMessages.get(locale).comparison;
   const present = roomAmenitySchema.options.filter((amenity) =>
     rooms.some((room) => room.amenities.includes(amenity)),
@@ -82,19 +79,13 @@ export { onlyDifferences } from "@/shared/lib/comparison";
 export const canCompare = (rooms: readonly Room[]): boolean => rooms.length >= 2;
 
 /** Anúncio (`aria-live`) do filtro: `Mostrando 6 de 12 características` / `…todas as 12…`. */
-export const comparisonAnnouncement = (
-  visible: number,
-  total: number,
-  locale: Locale = DEFAULT_LOCALE,
-): string => {
+export const comparisonAnnouncement = (visible: number, total: number, locale: Locale): string => {
   const t = hotelDetailsMessages.get(locale).comparison;
   return visible === total ? t.announceAll({ total }) : t.announceSome({ visible, total });
 };
 
 /** Textos da tabela de comparação de quartos (a molécula de `shared` não tem microcopy). */
-export const roomComparisonMessages = (
-  locale: Locale = DEFAULT_LOCALE,
-): ComparisonTableMessages => {
+export const roomComparisonMessages = (locale: Locale): ComparisonTableMessages => {
   const t = hotelDetailsMessages.get(locale).comparison;
   return {
     caption: t.caption,

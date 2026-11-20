@@ -1,6 +1,6 @@
 import type { Room } from "@/shared/api/schemas";
 import { commonMessages } from "@/shared/i18n/common/messages";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { SCARCE_THRESHOLD } from "@/shared/lib/availability";
 import { guestsPerRoom, type SearchCriteria } from "@/shared/lib/search-params";
 import { hotelDetailsMessages } from "../i18n/messages";
@@ -47,8 +47,8 @@ export const canSelect = (selectability: RoomSelectability): boolean =>
 export const selectabilityMessage = (
   selectability: RoomSelectability,
   hasDates: boolean,
-  otherRooms = true,
-  locale: Locale = DEFAULT_LOCALE,
+  otherRooms: boolean,
+  locale: Locale,
 ): string | null => {
   const t = hotelDetailsMessages.get(locale).selectability;
   switch (selectability.kind) {
@@ -82,7 +82,7 @@ export type SelectabilityBadge = { tone: "danger" | "warning"; text: string };
 /** Selo colado ao preço: esgotado, "Só N disponíveis" ou "Apenas N quartos!". */
 export const selectabilityBadge = (
   selectability: RoomSelectability,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: Locale,
 ): SelectabilityBadge | null => {
   const t = hotelDetailsMessages.get(locale).selectability;
   switch (selectability.kind) {

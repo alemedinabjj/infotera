@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import type { Locale } from "../i18n/config";
 
 const formatters = new Map<string, Intl.NumberFormat>();
 
@@ -18,17 +18,15 @@ const currencyFormatter = (locale: Locale, cents: boolean): Intl.NumberFormat =>
 type FormatBRLOptions = {
   /** `false` omite os centavos (ex.: preço por noite compacto). Padrão: `true`. */
   cents?: boolean;
-  /** Idioma da formatação (padrão pt-BR). O valor continua em BRL, sem conversão de câmbio. */
-  locale?: Locale;
+  /** Idioma da formatação . O valor continua em BRL, sem conversão de câmbio. */
+  locale: Locale;
 };
 
 /**
  * Formata um valor em reais: `R$ 1.200,00` em pt-BR (espaço não separável) e `R$1,200.00` em en-US.
  */
-export const formatBRL = (
-  reais: number,
-  { cents = true, locale = DEFAULT_LOCALE }: FormatBRLOptions = {},
-): string => currencyFormatter(locale, cents).format(reais);
+export const formatBRL = (reais: number, { cents = true, locale }: FormatBRLOptions): string =>
+  currencyFormatter(locale, cents).format(reais);
 
 /** Converte reais em centavos inteiros, sem erro de ponto flutuante. */
 export const reaisToCents = (reais: number): number => Math.round(reais * 100);

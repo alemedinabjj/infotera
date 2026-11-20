@@ -3,7 +3,7 @@ import type { Bed } from "../api/schemas";
 import { bedsLabel } from "./room-labels";
 
 describe("bedsLabel", () => {
-  const label = (...beds: Bed[]) => bedsLabel(beds);
+  const label = (...beds: Bed[]) => bedsLabel(beds, "pt-BR");
 
   it("singular e plural de cada tipo", () => {
     expect(label({ type: "single", quantity: 1 })).toBe("1 cama de solteiro");
@@ -30,6 +30,6 @@ describe("bedsLabel", () => {
   });
 
   it("sem camas: vazio", () => {
-    expect(bedsLabel([])).toBe("");
+    expect(bedsLabel([], "pt-BR")).toBe("");
   });
 });

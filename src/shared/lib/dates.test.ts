@@ -84,12 +84,12 @@ describe("isBeforeToday", () => {
 
 describe("formatDate", () => {
   it("short não volta um dia", () => {
-    expect(formatDate("2026-12-01", "short")).toBe("01/12/2026");
-    expect(formatDate("2026-01-01")).toBe("01/01/2026");
+    expect(formatDate("2026-12-01", "short", "pt-BR")).toBe("01/12/2026");
+    expect(formatDate("2026-01-01", "short", "pt-BR")).toBe("01/01/2026");
   });
 
   it("long inclui dia da semana", () => {
-    expect(formatDate("2026-12-12", "long")).toMatch(/sáb/i);
+    expect(formatDate("2026-12-12", "long", "pt-BR")).toMatch(/sáb/i);
   });
 });
 
@@ -104,7 +104,7 @@ describe("formatDateRange", () => {
     ["2027-03-30", "2027-04-02", "30 mar – 2 abr 2027"],
     ["2026-01-01", "2026-01-02", "1–2 jan"],
   ])("%s a %s → %s", (checkIn, checkOut, expected) => {
-    expect(formatDateRange(checkIn, checkOut, today)).toBe(expected);
+    expect(formatDateRange(checkIn, checkOut, today, "pt-BR")).toBe(expected);
   });
 });
 

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import type { Locale } from "@/shared/i18n/config";
 import { formatDate, formatDateRange, type ISODate } from "@/shared/lib/dates";
 import { guestsPerRoom, type SearchCriteria } from "@/shared/lib/search-params";
 import { checkoutMessages } from "../i18n/messages";
@@ -20,7 +20,7 @@ type BlockedInput = {
   available: number | null;
   maxGuests: number | null;
   today: ISODate;
-  locale?: Locale;
+  locale: Locale;
 };
 
 /** Texto de cada estado bloqueante (design system §6.6). */
@@ -31,7 +31,7 @@ export const describeBlocked = ({
   available,
   maxGuests,
   today,
-  locale = DEFAULT_LOCALE,
+  locale,
 }: BlockedInput): BlockedCopy => {
   const t = checkoutMessages.get(locale);
   const room = roomName ?? t.blocked.roomFallback;

@@ -124,25 +124,35 @@ describe("mensagens e selos", () => {
   ];
 
   it.each(cases)("%s", (_name, selectability, hasDates, message, badge) => {
-    expect(selectabilityMessage(selectability, hasDates)).toBe(message);
-    expect(selectabilityBadge(selectability)?.text ?? null).toBe(badge);
+    expect(selectabilityMessage(selectability, hasDates, true, "pt-BR")).toBe(message);
+    expect(selectabilityBadge(selectability, "pt-BR")?.text ?? null).toBe(badge);
   });
 
   it("não sugere outro quarto quando o hotel tem um só tipo", () => {
     expect(
-      selectabilityMessage({ kind: "insufficient", available: 1, requested: 2 }, true, false),
+      selectabilityMessage(
+        { kind: "insufficient", available: 1, requested: 2 },
+        true,
+        false,
+        "pt-BR",
+      ),
     ).toBe("Sua busca pede 2 quartos. Diminua a quantidade de quartos.");
     expect(
-      selectabilityMessage({ kind: "too-small", maxGuests: 2, guestsPerRoom: 3 }, true, false),
+      selectabilityMessage(
+        { kind: "too-small", maxGuests: 2, guestsPerRoom: 3 },
+        true,
+        false,
+        "pt-BR",
+      ),
     ).toBe("Acomoda até 2 hóspedes. Sua busca tem 3 por quarto. Altere os hóspedes.");
   });
 
   it("tons dos selos e só 'selectable' seleciona", () => {
-    expect(selectabilityBadge({ kind: "sold-out" })?.tone).toBe("danger");
-    expect(selectabilityBadge({ kind: "selectable", scarce: 1 })?.tone).toBe("warning");
-    expect(selectabilityBadge({ kind: "insufficient", available: 1, requested: 2 })?.text).toBe(
-      "Só 1 disponível",
-    );
+    expect(selectabilityBadge({ kind: "sold-out" }, "pt-BR")?.tone).toBe("danger");
+    expect(selectabilityBadge({ kind: "selectable", scarce: 1 }, "pt-BR")?.tone).toBe("warning");
+    expect(
+      selectabilityBadge({ kind: "insufficient", available: 1, requested: 2 }, "pt-BR")?.text,
+    ).toBe("Só 1 disponível");
     expect(canSelect({ kind: "selectable", scarce: null })).toBe(true);
     expect(canSelect({ kind: "needs-dates" })).toBe(false);
     expect(canSelect({ kind: "sold-out" })).toBe(false);
