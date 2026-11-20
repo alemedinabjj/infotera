@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stayStatus, stayStatusLabel } from "./stay-status";
+import { stayStatus, stayStatusTone } from "./stay-status";
 
 describe("stayStatus (12 a 15 de dezembro)", () => {
   it.each([
@@ -13,10 +13,10 @@ describe("stayStatus (12 a 15 de dezembro)", () => {
   });
 });
 
-describe("stayStatusLabel", () => {
-  it("textos do produto", () => {
-    expect(stayStatusLabel("upcoming").label).toBe("Próxima estadia");
-    expect(stayStatusLabel("ongoing").label).toBe("Em andamento");
-    expect(stayStatusLabel("completed").label).toBe("Concluída");
+describe("stayStatusTone", () => {
+  it("cor do selo por situação", () => {
+    expect(stayStatusTone("upcoming")).toBe("info");
+    expect(stayStatusTone("ongoing")).toBe("success");
+    expect(stayStatusTone("completed")).toBe("neutral");
   });
 });

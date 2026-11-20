@@ -8,8 +8,8 @@ import { cn } from "@/shared/lib/cn";
 import { focusWhenReady } from "@/shared/lib/focus";
 import { motionPreset, staggerDelay } from "@/shared/lib/motion";
 import { Button } from "@/shared/ui";
+import { useHistoryMessages } from "../hooks/useHistoryMessages";
 import type { HistoryRow } from "../model/history-rows";
-import { HISTORY_MESSAGES } from "../model/messages";
 import { HistoryItem } from "./HistoryItem";
 import { HistoryItemFailed, HistoryItemSkeleton } from "./HistoryItemStates";
 import { RemovedHistoryItem } from "./RemovedHistoryItem";
@@ -91,6 +91,7 @@ export const HistoryRowItem = ({
   offline,
   onRetry,
 }: HistoryRowItemProps) => {
+  const MESSAGES = useHistoryMessages();
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
   const [focus, setFocus] = useState<FocusTarget>(null);
   const undoRef = useRef<HTMLButtonElement>(null);
@@ -117,7 +118,7 @@ export const HistoryRowItem = ({
         setFocus("undo");
       }}
     >
-      {HISTORY_MESSAGES.remove}
+      {MESSAGES.remove}
     </Button>
   );
   const hotel =
@@ -125,9 +126,7 @@ export const HistoryRowItem = ({
       ? hotels.hotels.find((item) => item.id === row.booking.hotelId)
       : undefined;
   const name =
-    row.kind === "found"
-      ? (hotel?.name ?? HISTORY_MESSAGES.hotelUnavailable)
-      : HISTORY_MESSAGES.thisBooking;
+    row.kind === "found" ? (hotel?.name ?? MESSAGES.hotelUnavailable) : MESSAGES.thisBooking;
 
   return (
     <m.li

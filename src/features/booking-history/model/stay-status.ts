@@ -11,16 +11,17 @@ export const stayStatus = (checkIn: ISODate, checkOut: ISODate, today: ISODate):
   return today >= checkOut ? "completed" : "ongoing";
 };
 
-type StayStatusLabel = { label: string; tone: "info" | "success" | "neutral" };
+export type StayStatusTone = "info" | "success" | "neutral";
 
-export const stayStatusLabel = (status: StayStatus): StayStatusLabel => {
+/** Cor do selo da situação; o texto vem do dicionário (`stay[status]`). */
+export const stayStatusTone = (status: StayStatus): StayStatusTone => {
   switch (status) {
     case "upcoming":
-      return { label: "Próxima estadia", tone: "info" };
+      return "info";
     case "ongoing":
-      return { label: "Em andamento", tone: "success" };
+      return "success";
     case "completed":
-      return { label: "Concluída", tone: "neutral" };
+      return "neutral";
     default: {
       const unreachable: never = status;
       return unreachable;

@@ -1,7 +1,7 @@
-import { Alert, Button, Skeleton } from "@/shared/ui";
-import { HISTORY_MESSAGES } from "../model/messages";
+"use client";
 
-const MESSAGES = HISTORY_MESSAGES;
+import { Alert, Button, Skeleton } from "@/shared/ui";
+import { useHistoryMessages } from "../hooks/useHistoryMessages";
 
 /**
  * Skeleton da linha: mesma estrutura e alturas do `HistoryItem` em cada breakpoint (selo 24,
@@ -38,22 +38,25 @@ type FailedProps = {
 };
 
 /** Erro de uma linha: o id continua no storage; "Tentar de novo" refaz só esta reserva. */
-export const HistoryItemFailed = ({ unreadable, retrying, onRetry, removeButton }: FailedProps) => (
-  <div className="flex min-h-44 flex-col justify-center gap-3 p-4">
-    <Alert tone="danger">{unreadable ? MESSAGES.unreadable : MESSAGES.failed}</Alert>
-    <div className="flex flex-wrap gap-3">
-      {unreadable ? null : (
-        <Button
-          variant="secondary"
-          size="sm"
-          loading={retrying}
-          loadingText={MESSAGES.retrying}
-          onClick={onRetry}
-        >
-          {MESSAGES.retry}
-        </Button>
-      )}
-      {removeButton}
+export const HistoryItemFailed = ({ unreadable, retrying, onRetry, removeButton }: FailedProps) => {
+  const MESSAGES = useHistoryMessages();
+  return (
+    <div className="flex min-h-44 flex-col justify-center gap-3 p-4">
+      <Alert tone="danger">{unreadable ? MESSAGES.unreadable : MESSAGES.failed}</Alert>
+      <div className="flex flex-wrap gap-3">
+        {unreadable ? null : (
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={retrying}
+            loadingText={MESSAGES.retrying}
+            onClick={onRetry}
+          >
+            {MESSAGES.retry}
+          </Button>
+        )}
+        {removeButton}
+      </div>
     </div>
-  </div>
-);
+  );
+};

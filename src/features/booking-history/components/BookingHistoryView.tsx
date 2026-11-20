@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRef } from "react";
 import { useOnline } from "@/shared/hooks/useOnline";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { focusWhenReady } from "@/shared/lib/focus";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import {
@@ -15,24 +17,27 @@ import {
   WifiOffIcon,
 } from "@/shared/ui";
 import { useBookingHistory } from "../hooks/useBookingHistory";
+import { useHistoryMessages } from "../hooks/useHistoryMessages";
 import { useHistoryRows } from "../hooks/useHistoryRows";
-import { HISTORY_MESSAGES } from "../model/messages";
 import { ClearHistoryButton } from "./ClearHistoryButton";
 import { HistoryRowItem } from "./HistoryRowItem";
 
-const MESSAGES = HISTORY_MESSAGES;
-
-const LoadingList = ({ slow }: { slow: boolean }) => (
-  <div aria-busy="true" className="flex flex-col gap-4">
-    <p aria-live="polite" className="text-sm text-fg-muted">
-      {slow ? MESSAGES.slow : MESSAGES.loading}
-    </p>
-    <Skeleton shape="block" className="h-44" />
-  </div>
-);
+const LoadingList = ({ slow }: { slow: boolean }) => {
+  const MESSAGES = useHistoryMessages();
+  return (
+    <div aria-busy="true" className="flex flex-col gap-4">
+      <p aria-live="polite" className="text-sm text-fg-muted">
+        {slow ? MESSAGES.slow : MESSAGES.loading}
+      </p>
+      <Skeleton shape="block" className="h-44" />
+    </div>
+  );
+};
 
 /** Página `/my-bookings`: reservas guardadas neste navegador, com estado por linha. */
 export const BookingHistoryView = () => {
+  const MESSAGES = useHistoryMessages();
+  const locale = useLocale();
   const page = useHistoryRows();
   const live = useBookingHistory();
   const online = useOnline();
@@ -97,7 +102,10 @@ export const BookingHistoryView = () => {
           title={MESSAGES.empty.title}
           description={MESSAGES.empty.description}
           action={
-            <Link href="/" className={buttonClassName({ variant: "primary" })}>
+            <Link
+              href={localizePath(locale, "/")}
+              className={buttonClassName({ variant: "primary" })}
+            >
               {MESSAGES.empty.action}
             </Link>
           }

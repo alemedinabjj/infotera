@@ -1,7 +1,6 @@
-import { pluralize } from "@/shared/lib/format";
-
 /** Microcopy do histórico de reservas (pt-BR). */
-export const HISTORY_MESSAGES = {
+export const ptBR = {
+  metaTitle: "Minhas reservas | Infotera Hotéis",
   title: "Minhas reservas",
   intro: "Reservas confirmadas ou abertas neste navegador.",
   sharedComputer: "Em computador compartilhado, limpe o histórico ao terminar.",
@@ -45,6 +44,10 @@ export const HISTORY_MESSAGES = {
     done: "Histórico apagado.",
   },
   stay: {
-    nights: (count: number) => pluralize(count, "noite", "noites"),
+    upcoming: "Próxima estadia",
+    ongoing: "Em andamento",
+    completed: "Concluída",
   },
-} as const;
+};
+
+export type HistoryMessages = typeof ptBR;
