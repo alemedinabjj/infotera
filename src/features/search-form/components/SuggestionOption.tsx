@@ -48,7 +48,7 @@ export const SuggestionOption = ({
 }: SuggestionOptionProps) => {
   const ref = useRef<HTMLLIElement>(null);
   useEffect(() => {
-    if (active) ref.current?.scrollIntoView?.({ block: "nearest" });
+    if (active) ref.current?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
   }, [active]);
 
   return (

@@ -7,17 +7,15 @@ export const revealBelowHeader = (element: Element | null): void => {
   if (!element) return;
   const padding = Number.parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop);
   const limit = Number.isNaN(padding) ? 0 : padding;
-  if (element.getBoundingClientRect().top < limit) element.scrollIntoView?.({ block: "start" });
+  if (element.getBoundingClientRect().top < limit)
+    element.scrollIntoView?.({ block: "start", behavior: "instant" });
 };
-
-const prefersReducedMotion = (): boolean =>
-  typeof window.matchMedia === "function" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
  * Traz o elemento à vista só se ele não estiver inteiro na janela (abaixo do header fixo):
  * `scrollIntoView({ block: "nearest" })`, que rola o mínimo e respeita o `scroll-padding` do
- * `<html>`. Nunca mexe no foco; `behavior: "auto"` com movimento reduzido.
+ * `<html>`. Nunca mexe no foco. Sempre `behavior: "instant"`: rolagem programática ligada a foco
+ * não pode ficar animando (uma troca de rota no meio dela abria a página rolada).
  */
 export const revealNearest = (element: Element | null): void => {
   if (!element || typeof element.scrollIntoView !== "function") return;
@@ -25,10 +23,7 @@ export const revealNearest = (element: Element | null): void => {
   const limit = Number.isNaN(padding) ? 0 : padding;
   const rect = element.getBoundingClientRect();
   if (rect.top >= limit && rect.bottom <= window.innerHeight) return;
-  element.scrollIntoView({
-    block: "nearest",
-    behavior: prefersReducedMotion() ? "auto" : "smooth",
-  });
+  element.scrollIntoView({ block: "nearest", behavior: "instant" });
 };
 
 /** Folga entre o bloco revelado e a barra de ação fixa. */

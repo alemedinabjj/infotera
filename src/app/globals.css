@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Viewport baixa (celular em paisagem, zoom 200%): a bandeja fixa vira 1 linha. */
+@custom-variant tall (@media (min-height: 601px));
+@custom-variant roomy (@media (min-width: 40rem) and (min-height: 601px));
+
 @theme {
   /* Fonte (a variável --font-inter vem do next/font no layout) */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

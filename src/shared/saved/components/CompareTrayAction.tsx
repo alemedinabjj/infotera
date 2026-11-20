@@ -36,9 +36,13 @@ export const CompareTrayAction = ({ count, href }: CompareTrayActionProps) => {
         "shrink-0 whitespace-nowrap",
       )}
     >
-      {MESSAGES.action}
-      <span aria-hidden="true" className="hidden sm:inline">
-        {MESSAGES.actionCount(count)}
+      {/* Um único item flex: o espaço entre "Comparar" e "3 hotéis" é um só (sem `gap` extra). */}
+      <span>
+        {MESSAGES.action}
+        <span aria-hidden="true" className="hidden sm:inline">
+          {" "}
+          {MESSAGES.actionCount(count)}
+        </span>
       </span>
     </Link>
   );

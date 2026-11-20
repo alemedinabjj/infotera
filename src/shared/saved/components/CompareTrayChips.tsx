@@ -10,11 +10,12 @@ type CompareTrayChipsProps = {
   onRemove: (entry: CompareEntry) => void;
 };
 
-/** Chips dos hotéis marcados (a partir de `sm`): nome truncado, nome acessível completo. */
+/** Chips dos hotéis marcados, numa única linha rolável (a partir de `sm` e só com altura
+ * folgada: em viewport baixa a bandeja é uma linha só). Nome truncado, nome acessível completo. */
 export const CompareTrayChips = ({ items, onRemove }: CompareTrayChipsProps) => (
-  <ul className="hidden flex-wrap gap-2 sm:flex">
+  <ul className="hidden gap-2 overflow-x-auto roomy:flex">
     {items.map((entry) => (
-      <li key={entry.id}>
+      <li key={entry.id} className="shrink-0">
         <Button
           variant="secondary"
           size="sm"

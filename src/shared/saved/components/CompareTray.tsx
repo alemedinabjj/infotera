@@ -60,12 +60,12 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
           onClick={clearComparison}
         />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 id={titleId} className="sr-only text-sm font-semibold text-fg sm:not-sr-only">
+          <h2 id={titleId} className="sr-only text-sm font-semibold text-fg roomy:not-sr-only">
             {MESSAGES.title}
           </h2>
           <p className="text-sm text-fg-muted">{MESSAGES.counter(items.length)}</p>
           {items.length >= MAX_COMPARE ? (
-            <p className="hidden text-sm text-fg-subtle sm:block">
+            <p className="hidden text-sm text-fg-subtle tall:block">
               {SAVED_MESSAGES.compare.limitHint}
             </p>
           ) : null}

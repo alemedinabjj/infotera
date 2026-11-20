@@ -17,7 +17,7 @@ describe("revealBelowHeader", () => {
     document.documentElement.style.scrollPaddingTop = "72px";
     const element = makeElement(40);
     revealBelowHeader(element);
-    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "start" });
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "instant" });
   });
 
   it("rola quando o topo está acima da janela", () => {
@@ -53,20 +53,20 @@ describe("revealNearest", () => {
     );
   afterEach(() => vi.unstubAllGlobals());
 
-  it("fora da janela (abaixo): rola o mínimo, suave", () => {
+  it("fora da janela (abaixo): rola o mínimo, instantâneo", () => {
     stubMotion(false);
     Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
     const element = makeElement(580);
     revealNearest(element);
-    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "smooth" });
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
   });
 
-  it("movimento reduzido: behavior auto", () => {
+  it("com ou sem movimento reduzido: sempre instantâneo", () => {
     stubMotion(true);
     Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
     const element = makeElement(580);
     revealNearest(element);
-    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "auto" });
+    expect(element.scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
   });
 
   it("já inteiro na janela: não rola", () => {

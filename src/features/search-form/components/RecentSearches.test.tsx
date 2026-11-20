@@ -62,7 +62,7 @@ describe("RecentSearches", () => {
     );
     render();
     await user.click(await screen.findByRole("button", { name: /Gramado, RS/ }));
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" });
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "instant" });
     expect(screen.getByRole("button", { name: "Buscar hotéis" })).toHaveFocus();
     vi.restoreAllMocks();
   });

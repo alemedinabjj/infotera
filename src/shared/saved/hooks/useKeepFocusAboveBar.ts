@@ -5,7 +5,7 @@ import { isObscuredByBar } from "../model/tray";
 
 /**
  * WCAG 2.4.11: o foco por **teclado** nunca fica coberto pela bandeja. No `focusin`, se o elemento
- * termina sob a barra, rola o mínimo (`block: "nearest"`, que respeita o `scroll-padding-bottom`).
+ * termina sob a barra, rola o mínimo (`block: "nearest"`, `behavior: "instant"`: uma rolagem suave ainda em andamento quando a rota troca abria a página nova rolada).
  * Nunca por clique ou toque: mover a página entre `pointerdown` e `click` desloca o alvo.
  */
 export const useKeepFocusAboveBar = (active: boolean) => {
@@ -26,7 +26,7 @@ export const useKeepFocusAboveBar = (active: boolean) => {
       }
       const barTop = node.getBoundingClientRect().top;
       if (isObscuredByBar(target.getBoundingClientRect().bottom, barTop)) {
-        target.scrollIntoView({ block: "nearest" });
+        target.scrollIntoView({ block: "nearest", behavior: "instant" });
       }
     };
     document.addEventListener("pointerdown", onPointerDown, true);

@@ -129,7 +129,7 @@ describe("CompareTray: foco sob a bandeja", () => {
     const { target, scrollIntoView } = setup();
     fireEvent.keyDown(document, { key: "Tab" });
     act(() => target.focus());
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
   });
 
   it("pointerdown seguido de foco (clique) nunca rola", () => {
