@@ -25,8 +25,10 @@ teste avalia (código 45% da nota).
 ## Antes de entregar (obrigatório)
 ```bash
 npm run typecheck && npm run lint && npm run test
+npx -y react-doctor@0.9.23 . --scope changed --base <branch base> --verbose --no-telemetry
 ```
-Tudo verde. Se algo falhar e você não conseguir resolver, entregue com a falha descrita — nunca
+Tudo verde e React Doctor sem erro novo (se o ambiente bloquear o `npx`, avise no relatório;
+o orquestrador roda e devolve os achados). Componente grande demais vira subcomponentes ou hooks. Se algo falhar e você não conseguir resolver, entregue com a falha descrita — nunca
 pule, desabilite ou apague teste para ficar verde.
 
 ## Entrega

@@ -12,6 +12,12 @@ Leia `CLAUDE.md` (raiz), o `CLAUDE.md` da feature, a spec em `docs/specs/` e o d
 (`git diff` + arquivos novos via `git status`). Leia os arquivos inteiros que o diff toca quando
 precisar de contexto.
 
+Rode também o React Doctor no que mudou e use os achados como evidência:
+`npx -y react-doctor@0.9.23 . --scope changed --base <branch base> --verbose --no-telemetry`
+(se o ambiente bloquear o comando, use a saída que o orquestrador enviar no pedido).
+Erro do React Doctor é **bloqueante**; aviso vira **importante** se for componente gigante ou
+componente declarado dentro de componente.
+
 ## Checklist
 - **Aderência**: cada critério de aceite da spec está implementado? Algo foi feito fora do escopo?
 - **Correção**: bugs de lógica, datas/fuso, arredondamento de preço, race conditions em queries,
@@ -19,6 +25,8 @@ precisar de contexto.
 - **TypeScript**: `any`, `as`, `!` não justificados, tipos duplicados em vez de `z.infer`, unions não exaustivas.
 - **Arquitetura**: regras de dependência (`app → features → shared`, sem feature→feature, sem deep import),
   lógica fora de `model/`, `"use client"` alto demais na árvore, dado de servidor duplicado no Zustand.
+- **Tamanho e composição**: arquivo ou componente fazendo coisa demais deve virar subcomponentes,
+  hooks ou funções em `model/` (referência: ~150 linhas por componente, ~200 por arquivo).
 - **Clean code**: nomes, funções pequenas, DRY, comentários explicando o porquê, JSDoc onde precisa.
 - **Performance**: re-renders evitáveis, waterfalls de fetch, imagens sem `next/image`, bundle client inchado.
 - **Acessibilidade e UX**: labels, foco, teclado, contraste, mobile, feedback de ação.

@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "includes": [
       "**/*.{ts,tsx,mts,mjs,css,json,jsonc}",
@@ -21,10 +25,23 @@
     "lineWidth": 100
   },
   "javascript": {
-    "formatter": { "quoteStyle": "double", "semicolons": "always" }
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always"
+    }
   },
-  "css": { "parser": { "tailwindDirectives": true } },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "enabled": true,
     "domains": {
@@ -35,14 +52,43 @@
     },
     "rules": {
       "preset": "recommended",
-      "suspicious": { "noExplicitAny": "error" },
+      "suspicious": {
+        "noExplicitAny": "error"
+      },
       "style": {
-        "useConsistentTypeDefinitions": { "level": "error", "options": { "style": "type" } },
+        "useConsistentTypeDefinitions": {
+          "level": "error",
+          "options": {
+            "style": "type"
+          }
+        },
         "noNonNullAssertion": "error",
         "noEnum": "error",
         "noDefaultExport": "error",
         "useImportType": "error",
-        "useExportType": "error"
+        "useExportType": "error",
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 250,
+            "skipBlankLines": true
+          }
+        }
+      },
+      "complexity": {
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": {
+            "maxLines": 80,
+            "skipBlankLines": true
+          }
+        },
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": {
+            "maxAllowedComplexity": 15
+          }
+        }
       }
     }
   },
@@ -52,7 +98,13 @@
         "src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,opengraph-image,twitter-image,icon,apple-icon,sitemap,robots,manifest,forbidden,unauthorized}.{ts,tsx}",
         "*.config.{ts,mts,mjs}"
       ],
-      "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
     },
     {
       "includes": ["src/shared/**"],
@@ -72,7 +124,7 @@
                       "../**/features/**",
                       "../**/app/**"
                     ],
-                    "message": "shared não importa features nem app (app → features → shared)."
+                    "message": "shared n\u00e3o importa features nem app (app \u2192 features \u2192 shared)."
                   }
                 ]
               }
@@ -92,13 +144,13 @@
                 "patterns": [
                   {
                     "group": ["@/features", "@/features/**", "@/app", "@/app/**"],
-                    "message": "Feature não importa outra feature nem app; dentro da feature use import relativo."
+                    "message": "Feature n\u00e3o importa outra feature nem app; dentro da feature use import relativo."
                   },
                   {
                     "group": [
                       "**/{search-form,hotel-search,hotel-details,checkout,booking-confirmation}/**"
                     ],
-                    "message": "Feature não importa outra feature (nem por caminho relativo)."
+                    "message": "Feature n\u00e3o importa outra feature (nem por caminho relativo)."
                   }
                 ]
               }
@@ -118,9 +170,28 @@
                 "patterns": [
                   {
                     "group": ["@/features/*/**"],
-                    "message": "app importa features só pelo index.ts (@/features/<nome>)."
+                    "message": "app importa features s\u00f3 pelo index.ts (@/features/<nome>)."
                   }
                 ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.{ts,tsx}", "e2e/**", "tests/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveLinesPerFunction": "off"
+          },
+          "style": {
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": {
+                "maxLines": 500,
+                "skipBlankLines": true
               }
             }
           }

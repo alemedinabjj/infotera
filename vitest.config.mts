@@ -6,6 +6,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
     environment: "jsdom",
+    env: { NEXT_PUBLIC_API_URL: "http://api.test" },
     restoreMocks: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.ts"],

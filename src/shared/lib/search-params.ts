@@ -1,0 +1,125 @@
+import { z } from "zod";
+import { isoDateSchema, nightsBetween } from "./dates";
+
+export const SEARCH_PARAM_KEYS = [
+  "destination",
+  "checkIn",
+  "checkOut",
+  "rooms",
+  "adults",
+  "children",
+] as const;
+
+type SearchParamKey = (typeof SEARCH_PARAM_KEYS)[number];
+
+export const SEARCH_LIMITS = {
+  minRooms: 1,
+  maxRooms: 4,
+  maxAdults: 16,
+  maxChildren: 10,
+  maxGuestsPerRoom: 5,
+  minNights: 1,
+  maxNights: 30,
+} as const;
+
+const MESSAGES = {
+  destination: "Escolha um destino da lista.",
+  date: "Escolha uma data válida.",
+  rooms: `Escolha de ${SEARCH_LIMITS.minRooms} a ${SEARCH_LIMITS.maxRooms} quartos.`,
+  adults: `Informe de 1 a ${SEARCH_LIMITS.maxAdults} adultos.`,
+  children: `Informe de 0 a ${SEARCH_LIMITS.maxChildren} crianças.`,
+  checkOutOrder: "O check-out precisa ser pelo menos 1 dia depois do check-in.",
+  maxNights: `A estadia pode ter no máximo ${SEARCH_LIMITS.maxNights} noites.`,
+  adultsPerRoom: "Inclua pelo menos 1 adulto por quarto.",
+  guestsPerRoom: `Cada quarto acomoda até ${SEARCH_LIMITS.maxGuestsPerRoom} hóspedes. Aumente os quartos ou reduza os hóspedes.`,
+} as const;
+
+const countSchema = (min: number, max: number, message: string) =>
+  z.coerce.number({ message }).int({ message }).min(min, { message }).max(max, { message });
+
+/**
+ * Critérios de busca. Valida só o que não depende do relógio (formato, calendário, limites);
+ * "check-in no passado" é avaliado no cliente com `isBeforeToday`.
+ */
+export const searchCriteriaSchema = z
+  .object({
+    destination: z.string().trim().min(1, MESSAGES.destination).max(100, MESSAGES.destination),
+    checkIn: isoDateSchema,
+    checkOut: isoDateSchema,
+    rooms: countSchema(SEARCH_LIMITS.minRooms, SEARCH_LIMITS.maxRooms, MESSAGES.rooms),
+    adults: countSchema(1, SEARCH_LIMITS.maxAdults, MESSAGES.adults),
+    children: countSchema(0, SEARCH_LIMITS.maxChildren, MESSAGES.children),
+  })
+  .superRefine((value, ctx) => {
+    const datesOk =
+      isoDateSchema.safeParse(value.checkIn).success &&
+      isoDateSchema.safeParse(value.checkOut).success;
+    if (datesOk) {
+      const nights = nightsBetween(value.checkIn, value.checkOut);
+      if (nights < SEARCH_LIMITS.minNights) {
+        ctx.addIssue({ code: "custom", path: ["checkOut"], message: MESSAGES.checkOutOrder });
+      } else if (nights > SEARCH_LIMITS.maxNights) {
+        ctx.addIssue({ code: "custom", path: ["checkOut"], message: MESSAGES.maxNights });
+      }
+    }
+    if (value.adults < value.rooms) {
+      ctx.addIssue({ code: "custom", path: ["adults"], message: MESSAGES.adultsPerRoom });
+    }
+    if (value.adults + value.children > value.rooms * SEARCH_LIMITS.maxGuestsPerRoom) {
+      ctx.addIssue({ code: "custom", path: ["children"], message: MESSAGES.guestsPerRoom });
+    }
+  });
+
+export type SearchCriteria = z.infer<typeof searchCriteriaSchema>;
+
+export type SearchCriteriaIssue = { path: SearchParamKey; message: string };
+
+export type ParseSearchCriteriaResult =
+  | { success: true; data: SearchCriteria }
+  | { success: false; issues: SearchCriteriaIssue[] };
+
+type SearchParamsInput = URLSearchParams | Record<string, string | string[] | undefined>;
+
+const isParamKey = (key: unknown): key is SearchParamKey =>
+  SEARCH_PARAM_KEYS.some((candidate) => candidate === key);
+
+const readParam = (input: SearchParamsInput, key: SearchParamKey): string | undefined => {
+  const raw = input instanceof URLSearchParams ? (input.get(key) ?? undefined) : input[key];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return value === undefined || value.trim() === "" ? undefined : value;
+};
+
+/**
+ * Lê os critérios de busca de `URLSearchParams` ou do `searchParams` resolvido do Next.
+ * Arrays usam o primeiro valor; chaves extras (filtros) são ignoradas.
+ */
+export const parseSearchCriteria = (input: SearchParamsInput): ParseSearchCriteriaResult => {
+  const raw = Object.fromEntries(SEARCH_PARAM_KEYS.map((key) => [key, readParam(input, key)]));
+  const result = searchCriteriaSchema.safeParse(raw);
+  if (result.success) return { success: true, data: result.data };
+  const issues = result.error.issues.flatMap((issue): SearchCriteriaIssue[] => {
+    const path = issue.path[0];
+    return isParamKey(path) ? [{ path, message: issue.message }] : [];
+  });
+  return { success: false, issues };
+};
+
+/** Serializa os critérios com a ordem fixa de `SEARCH_PARAM_KEYS` (URLs estáveis). */
+export const serializeSearchCriteria = (criteria: SearchCriteria): URLSearchParams =>
+  new URLSearchParams([
+    ["destination", criteria.destination],
+    ["checkIn", criteria.checkIn],
+    ["checkOut", criteria.checkOut],
+    ["rooms", String(criteria.rooms)],
+    ["adults", String(criteria.adults)],
+    ["children", String(criteria.children)],
+  ]);
+
+/** Igual a `serializeSearchCriteria`, como string sem o `?`. */
+export const searchCriteriaToQueryString = (criteria: SearchCriteria): string =>
+  serializeSearchCriteria(criteria).toString();
+
+/** Hóspedes por quarto (arredondado para cima); a F4 compara com `maxGuests`. */
+export const guestsPerRoom = (
+  criteria: Pick<SearchCriteria, "adults" | "children" | "rooms">,
+): number => Math.ceil((criteria.adults + criteria.children) / criteria.rooms);

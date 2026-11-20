@@ -31,6 +31,8 @@ npm run test         # vitest run
 npm run test:watch   # vitest em modo watch
 npm run test:e2e     # playwright test --trace off (precisa da API e do front rodando)
 # E2E usa o Chromium do Playwright 1.63 (`npx playwright install chromium` se faltar)
+npx -y react-doctor@0.9.23 . --scope changed --base main --verbose --no-telemetry
+                     # saúde React: componentes gigantes/aninhados, perf, a11y (também roda em toda PR)
 ```
 
 ## Arquitetura: por feature
@@ -78,6 +80,8 @@ features/<nome>/
 - Named exports. Componentes como `const Nome = (...) => ...`.
 - Lógica (datas, preço, filtros ↔ URL) fica em `model/` como função pura, nunca dentro do componente.
 - JSDoc nos componentes e hooks exportados que não forem óbvios.
+- Tamanho (Biome bloqueia): até 80 linhas por função/componente, 250 por arquivo (500 em testes),
+  complexidade cognitiva até 15. Passou do limite → extraia subcomponente, hook ou função em `model/`.
 - Acessibilidade não é opcional: label em todo input, foco visível, navegação por teclado, `aria-live` para loading/erro, contraste AA, nada quebrado no mobile (320px).
 - Toda tela com dado remoto tem os 4 estados: loading (skeleton), erro (com retry), vazio, sucesso.
 - Identificadores e código em inglês; textos da UI e documentação em pt-BR.
@@ -108,7 +112,8 @@ espaçamento ou componente fora dele: peça ao `ui-designer` para incluir.
 ### Definição de pronto (por feature)
 
 1. Critérios de aceite da spec atendidos.
-2. `npm run typecheck && npm run lint && npm run test` verdes.
+2. `npm run typecheck && npm run lint && npm run test` verdes e React Doctor sem erro novo
+   (componente grande demais vira subcomponentes ou hooks; não silencie a regra).
 3. `reviewer`, `security` e `ux-reviewer` sem achado bloqueante.
 4. `CLAUDE.md` da feature atualizado se alguma decisão mudou.
 5. Commits atômicos em Conventional Commits (`feat(hotel-search): ...`, `test(checkout): ...`, `fix: ...`).
