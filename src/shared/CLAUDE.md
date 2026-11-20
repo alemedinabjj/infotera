@@ -143,3 +143,16 @@ para `shared/` quando aparecer o segundo uso.
   `hooks/useHydrated` evita divergência de hidratação com dado restaurado. Toast aceita `persistent: true`.
 - `lib/brand` (cores de marca fora do CSS; um teste compara com os tokens de `globals.css`) e `lib/app-version` (`NEXT_PUBLIC_APP_VERSION`).
 - **CSP do checkout**: ganhou `worker-src 'self'` (com `strict-dynamic` o fallback ignoraria `'self'`) e `manifest-src 'self'`; `img-src` vem de `TILE_ORIGIN`.
+
+## F7b: correções da revisão
+- **Átomos de UI puros por `locale`**: `Stars`, `PriceTag`, `RatingScore`, `PriceBreakdown`, `CompactHotelCard`, `ErrorState`,
+  `Pagination` e `SkipLink` recebem `locale` por prop (dicionário `commonMessages.get(locale)`), sem hook e sem
+  `"use client"`. Cliente passa `useLocale()`; servidor, `await getLocale()`. `SkipLink` aceita `label` pronto **ou** `locale`.
+- **Rotas públicas**: `compareHref(locale, ids, criteria)` já devolve o caminho com `/en`; todo `href`/`push`/`replace`/`replaceState`
+  usa `localizePath(locale, …)`. A catraca `src/i18n-guard.test.ts` falha com rota crua, inglês cru em JSX e rótulos de objeto.
+- **`aria-current` e bandeja**: `SavedNav`/`CompareTray` só olham o pathname depois de `useHydrated()` (`/[locale]/favorites` é SSG com rewrite).
+- **Persistência**: `deserializeClient` valida `state.data` por raiz (`hasValidPersistedData`); o histórico usa a raiz própria
+  `history-hotels` (fora da allowlist, com `meta.sensitive`) e "Limpar histórico" a remove.
+- **E2E**: todo spec importa `test` de `e2e/fixtures.ts` (Biome `noRestrictedImports`); a fixture bloqueia service workers
+  (o `page.route` não os vê), intercepta os tiles do OSM e falha se algum escapar. `pwa.build.spec` liga o SW com `test.use`.
+- `localeOf(params)` (`i18n/params`) em páginas; `SITE_URL` (`lib/site-url`) alimenta o `metadataBase`.
