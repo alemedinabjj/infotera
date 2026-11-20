@@ -129,6 +129,21 @@ describe("AppProviders: cache público persistido", () => {
     expect(raw).not.toContain("ana@exemplo.com");
   });
 
+  it("grava o que já estava no cache antes da restauração (hidratação do servidor)", async () => {
+    // O servidor pré-busca hotel e avaliações: o `HydrationBoundary` coloca as consultas no cache
+    // no 1º render, antes de o provider assinar o cache. Sem evento depois, nada seria gravado.
+    const client = getQueryClient();
+    client.setQueryData(queryKeys.hotels.detail(5), makeHotel({ id: 5 }));
+    client.setQueryData(queryKeys.reviews.byHotel(5, 1), { items: [], total: 0 });
+    render(<AppProviders>{null}</AppProviders>);
+    await waitFor(() => expect(window.localStorage.getItem(PERSIST_KEY)).not.toBeNull(), {
+      timeout: 4000,
+    });
+    const raw = window.localStorage.getItem(PERSIST_KEY) ?? "";
+    expect(raw).toContain('"hotels"');
+    expect(raw).toContain('"reviews"');
+  });
+
   it("o client do navegador mantém a consulta 24 h na memória (gcTime)", () => {
     expect(getQueryClient().getDefaultOptions().queries?.gcTime).toBe(PERSIST_MAX_AGE);
   });
