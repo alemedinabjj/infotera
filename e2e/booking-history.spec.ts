@@ -108,7 +108,8 @@ test.describe("conteúdo", () => {
     await page.goto("/my-bookings");
     await expect(page.getByText("Não foi possível carregar esta reserva.")).toBeVisible();
     await context.setOffline(true);
-    await expect(page.getByText("Você está sem internet.")).toBeVisible();
+    // `exact`: o banner global ("Você está sem internet. Mostramos…") também contém a frase.
+    await expect(page.getByText("Você está sem internet.", { exact: true })).toBeVisible();
     await expect(page.getByText("Não foi possível carregar esta reserva.")).toHaveCount(0);
     expect(await idsInStorage(page)).toEqual([id]);
     expect((await analyzeAccessibility(page)).violations).toEqual([]);

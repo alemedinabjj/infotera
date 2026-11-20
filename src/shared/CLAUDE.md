@@ -136,7 +136,7 @@ para `shared/` quando aparecer o segundo uso.
 - Formatadores (`formatBRL`, `formatRating`, `formatDate`, `formatDateRange`, `formatCount`) aceitam `locale` (opcional, padrão pt-BR).
 - **Mapa**: `lib/map-tiles` (`TILE_ORIGIN`/`TILE_URL`/`MAX_ZOOM`/`tileUrl`, única fonte da CSP e do cache do SW), `lib/geo` (`boundsOf`, `fitPlan`, `osmLink`),
   `ui/map/` (`InteractiveMapImpl` react-leaflet + `MapMarkerElement` (DOM por `textContent`, nunca HTML) + `map.css` + `useInteractiveMap` que carrega o
-  chunk sob demanda com `retry`). `leaflet.css` é CSS sem camada e vence os utilitários do Tailwind (cor de `a` dentro do mapa usa `!`).
+  chunk sob demanda; o `retry` recarrega a página, porque o runtime do Turbopack guarda a promessa rejeitada do chunk e um novo `import()` falha igual). `leaflet.css` é CSS sem camada e vence os utilitários do Tailwind (cor de `a` dentro do mapa usa `!`).
 - **Offline**: `api/persist.ts` (allowlist `PERSISTABLE_ROOTS` = suggestions/hotels/rooms/reviews, **nunca** `meta.sensitive === true` nem `bookings`;
   `serializeClient` refiltra), `AppProviders` usa `PersistQueryClientProvider` (24 h, `buster` = `APP_VERSION`), `makeQueryClient` tem `gcTime` 24 h no navegador.
   `hooks/useHydrated` evita divergência de hidratação com dado restaurado. Toast aceita `persistent: true`.

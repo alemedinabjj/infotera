@@ -10,6 +10,9 @@ const openHotelMap = async (page: Page): Promise<void> => {
   await page.locator(FRAME).scrollIntoViewIfNeeded();
   await expect(page.getByRole("region", { name: /^Mapa: / })).toBeVisible();
   await expect(page.getByRole("img", { name: /^Mapa: / })).toHaveCount(0);
+  // O marcador só é focável quando deixa de estar `visibility: hidden` (com movimento reduzido a
+  // visibilidade do painel de marcadores volta alguns quadros depois do mapa): espera a pílula visível.
+  await expect(page.locator(".leaflet-marker-icon > span")).toBeVisible();
 };
 
 test.describe("mapa do hotel", () => {
@@ -24,22 +27,34 @@ test.describe("mapa do hotel", () => {
   });
 
   test("vira interativo só ao chegar perto, no mesmo tamanho (sem salto)", async ({ page }) => {
-    const leafletChunks: string[] = [];
-    page.on("request", (request) => {
-      if (/leaflet/i.test(request.url()) && request.url().includes("/_next/")) {
-        leafletChunks.push(request.url());
-      }
+    // O nome dos chunks muda entre dev e build: identifica o do Leaflet pelo conteúdo ("leaflet-container").
+    const inspected: Promise<boolean>[] = [];
+    page.on("response", (response) => {
+      const type = response.request().resourceType();
+      if (
+        !response.url().includes("/_next/static/") ||
+        (type !== "script" && type !== "stylesheet")
+      )
+        return;
+      inspected.push(
+        response.text().then(
+          (text) => text.includes("leaflet-container"),
+          () => false,
+        ),
+      );
     });
+    const leafletChunksLoaded = async (): Promise<number> =>
+      (await Promise.all([...inspected])).filter(Boolean).length;
     await page.goto(hotelPath(1));
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator(".leaflet-container")).toHaveCount(0);
-    expect(leafletChunks).toEqual([]);
+    expect(await leafletChunksLoaded()).toBe(0);
 
     const frame = page.locator(FRAME);
     const before = await frame.boundingBox();
     await openHotelMap(page);
     await expect(page.locator(".leaflet-tile").first()).toBeVisible();
-    expect(leafletChunks.length).toBeGreaterThan(0);
+    expect(await leafletChunksLoaded()).toBeGreaterThan(0);
     const after = await frame.boundingBox();
     expect(after?.height).toBe(before?.height);
     expect(after?.width).toBe(before?.width);

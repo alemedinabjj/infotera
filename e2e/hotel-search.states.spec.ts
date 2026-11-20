@@ -196,7 +196,8 @@ test.describe("sem rede", () => {
     await expect(cards(page)).toHaveCount(10);
     await context.setOffline(true);
     await page.getByRole("checkbox", { name: "Piscina" }).check();
-    await expect(page.getByText("Você está sem internet.")).toBeVisible();
+    // `exact`: o banner global ("Você está sem internet. Mostramos…") também contém a frase.
+    await expect(page.getByText("Você está sem internet.", { exact: true })).toBeVisible();
     await expect(cards(page)).toHaveCount(0);
     await context.setOffline(false);
     await expect(cards(page)).toHaveCount(7);

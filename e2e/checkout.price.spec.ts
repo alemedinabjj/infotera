@@ -13,6 +13,9 @@ test.beforeEach(async ({ page: _page }, testInfo) => {
 const open = async (page: import("@playwright/test").Page) => {
   await page.goto("/checkout");
   await page.getByRole("heading", { level: 2, name: "Dados dos hóspedes" }).waitFor();
+  // O resumo só calcula o total depois que o quarto chega: os testes que seguram `rooms/1` precisam
+  // instalar a rota depois disso (senão pegam a carga inicial, que já nasce presa).
+  await total(page).waitFor();
 };
 
 /** Erro do campo (`Field`), sem o anúncio `sr-only` do cupom que repete o texto. */

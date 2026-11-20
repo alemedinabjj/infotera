@@ -1,6 +1,7 @@
 "use client";
 
 import { type ComponentType, useCallback, useEffect, useState } from "react";
+import { reloadPage } from "../../lib/navigation";
 import type { InteractiveMapProps } from "./InteractiveMapImpl";
 import { loadInteractiveMap } from "./loader";
 
@@ -18,7 +19,9 @@ type State =
 
 /**
  * Pede o chunk do mapa quando `enabled` fica `true` (nunca no carregamento da página). Estados:
- * `loading` (skeleton), `error` (com `retry`, que pede o chunk de novo) e `ready` (o componente).
+ * `loading` (skeleton), `error` (com `retry`) e `ready` (o componente). O runtime do Turbopack guarda
+ * a promessa **rejeitada** de cada chunk, então pedir o mesmo `import()` de novo devolve a mesma
+ * falha: o `retry` recarrega a página (a URL, com `map=1` e os filtros, e o cache da lista seguem).
  */
 export const useInteractiveMap = (enabled: boolean): InteractiveMapLoad => {
   const [state, setState] = useState<State>({ status: "idle" });
@@ -36,7 +39,7 @@ export const useInteractiveMap = (enabled: boolean): InteractiveMapLoad => {
   }, [enabled, start]);
 
   if (!enabled) return { status: "idle" };
-  if (state.status === "error") return { status: "error", retry: start };
+  if (state.status === "error") return { status: "error", retry: reloadPage };
   if (state.status === "ready") return { status: "ready", Map: state.Component };
   return { status: "loading" };
 };

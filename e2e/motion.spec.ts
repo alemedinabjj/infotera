@@ -70,6 +70,8 @@ test.describe("prefers-reduced-motion: reduce", () => {
       page,
     }) => {
       await page.goto(searchPath());
+      // Lista carregada: o spinner de carregamento (rotação infinita) não pode contar como animação do sheet.
+      await expect(page.getByRole("article")).toHaveCount(10);
       const trigger = page.getByRole("button", { name: /^Filtros/ });
       await trigger.click();
       const sheet = page.getByRole("dialog", { name: "Filtros" });
