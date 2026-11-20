@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Hotel } from "../../api/schemas";
+import { DEFAULT_LOCALE, type Locale } from "../../i18n/config";
+import { localizePath } from "../../i18n/paths";
 import { availabilityStatus, describeAvailability } from "../../lib/availability";
 import { cn } from "../../lib/cn";
 import { propertyTypeLabel } from "../../lib/labels";
@@ -30,6 +32,8 @@ type CompactHotelCardProps = {
   /** Linha no fim do card (ex.: "Comparar"). Controle secundário: `relative z-10`. */
   actions?: ReactNode;
   className?: string;
+  /** Idioma do link, do tipo e do selo (o card é Server Component; quem o usa passa o locale). */
+  locale?: Locale;
 };
 
 const IMAGE_SIZES = "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 6rem";
@@ -55,6 +59,7 @@ export const CompactHotelCard = ({
   linkCriteria,
   actions,
   className,
+  locale = DEFAULT_LOCALE,
 }: CompactHotelCardProps) => {
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const { badge } = describeAvailability({
@@ -62,8 +67,9 @@ export const CompactHotelCard = ({
     availableRooms: hotel.availableRooms,
     requestedRooms: 1,
     hasDates: criteria !== null,
+    locale,
   });
-  const type = propertyTypeLabel(hotel.propertyType);
+  const type = propertyTypeLabel(hotel.propertyType, locale);
   return (
     <article
       className={cardClassName({
@@ -79,7 +85,7 @@ export const CompactHotelCard = ({
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3 sm:p-4">
         <Heading className="line-clamp-2 text-base font-semibold text-fg">
           <Link
-            href={hotelHref(hotel.id, linkCriteria ?? criteria)}
+            href={localizePath(locale, hotelHref(hotel.id, linkCriteria ?? criteria))}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
           >
             {hotel.name}

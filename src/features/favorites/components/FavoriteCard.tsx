@@ -3,6 +3,7 @@
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { Hotel } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import { cn } from "@/shared/lib/cn";
 import { focusWhenReady } from "@/shared/lib/focus";
 import { useLastSearch } from "@/shared/lib/last-search";
@@ -15,8 +16,8 @@ import {
   useIsFavorite,
 } from "@/shared/saved";
 import { CompactHotelCard, PriceTag, Skeleton } from "@/shared/ui";
+import { useFavoritesMessages } from "../hooks/useFavoritesMessages";
 import type { PriceState } from "../model/favorites-view";
-import { FAVORITES_MESSAGES } from "../model/messages";
 import { RemovedFavorite } from "./RemovedFavorite";
 
 type FavoriteCardProps = {
@@ -28,13 +29,14 @@ type FavoriteCardProps = {
 
 /** "a partir de" pelos quartos, como na busca e na comparação (o `pricePerNight` do hotel diverge). */
 const CardPrice = ({ price }: { price: PriceState }) => {
+  const MESSAGES = useFavoritesMessages();
   switch (price.state) {
     case "loading":
       return <Skeleton className="h-5 w-36" />;
     case "ready":
       return <PriceTag variant="nightly-line" nightly={price.nightly} />;
     case "unavailable":
-      return <p className="text-sm text-fg-subtle">{FAVORITES_MESSAGES.priceUnavailable}</p>;
+      return <p className="text-sm text-fg-subtle">{MESSAGES.priceUnavailable}</p>;
     default: {
       const unreachable: never = price;
       return unreachable;
@@ -50,6 +52,7 @@ type FocusTarget = "undo" | "heart" | null;
  * abaixo se move. O foco vai para "Desfazer" e, ao desfazer, volta ao coração.
  */
 export const FavoriteCard = ({ hotel, entry, index, price }: FavoriteCardProps) => {
+  const locale = useLocale();
   const favorite = useIsFavorite(hotel.id);
   const lastSearch = useLastSearch();
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
@@ -90,6 +93,7 @@ export const FavoriteCard = ({ hotel, entry, index, price }: FavoriteCardProps) 
           layout="vertical"
           headingLevel={2}
           showDestination
+          locale={locale}
           price={<CardPrice price={price} />}
           media={
             <FavoriteButton

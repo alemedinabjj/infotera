@@ -1,9 +1,11 @@
-import { pluralize } from "@/shared/lib/format";
+import { plural } from "@/shared/i18n/messages";
 
-/** Microcopy da página de favoritos (pt-BR). */
-export const FAVORITES_MESSAGES = {
+/** Microcopy da página de favoritos (pt-BR é a fonte). */
+export const ptBR = {
+  metaTitle: "Favoritos | Infotera Hotéis",
   title: "Favoritos",
-  count: (count: number) => `${pluralize(count, "hotel salvo", "hotéis salvos")}`,
+  count: (count: number) =>
+    `${count} ${plural(count, { one: "hotel salvo", other: "hotéis salvos" })}`,
   loading: "Carregando seus favoritos…",
   slow: "Está demorando mais que o normal…",
   empty: {
@@ -24,4 +26,6 @@ export const FAVORITES_MESSAGES = {
   removed: "Removido dos favoritos.",
   undo: "Desfazer",
   undoLabel: (name: string) => `Desfazer: ${name}`,
-} as const;
+};
+
+export type FavoritesMessages = typeof ptBR;

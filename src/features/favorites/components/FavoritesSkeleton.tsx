@@ -1,15 +1,18 @@
+"use client";
+
 import { Skeleton } from "@/shared/ui";
-import { FAVORITES_MESSAGES } from "../model/messages";
+import { useFavoritesMessages } from "../hooks/useFavoritesMessages";
 
 const MAX_SKELETONS = 6;
 
 /** Skeleton com a geometria do card vertical. N = favoritos (no máximo 6). */
 export const FavoritesSkeleton = ({ count, slow }: { count: number; slow: boolean }) => {
+  const MESSAGES = useFavoritesMessages();
   const total = Math.min(Math.max(count, 1), MAX_SKELETONS);
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
       <p aria-live="polite" className="text-sm text-fg-muted">
-        {slow ? FAVORITES_MESSAGES.slow : FAVORITES_MESSAGES.loading}
+        {slow ? MESSAGES.slow : MESSAGES.loading}
       </p>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
         {Array.from({ length: total }, (_, index) => `sk-${index}`).map((key) => (
