@@ -3,10 +3,34 @@ import { Activity, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { useResetOnHide } from "./useResetOnHide";
 
+type Mode = "visible" | "hidden";
+
 const Probe = ({ reset }: { reset: () => void }) => {
   useResetOnHide(reset);
   return <p>probe</p>;
 };
+
+const ProbeHost = ({ mode, reset }: { mode: Mode; reset: () => void }) => (
+  <Activity mode={mode}>
+    <Probe reset={reset} />
+  </Activity>
+);
+
+const Field = () => {
+  const [open, setOpen] = useState(false);
+  useResetOnHide(() => setOpen(false));
+  return (
+    <button type="button" aria-expanded={open} onClick={() => setOpen(true)}>
+      abrir
+    </button>
+  );
+};
+
+const FieldHost = ({ mode }: { mode: Mode }) => (
+  <Activity mode={mode}>
+    <Field />
+  </Activity>
+);
 
 describe("useResetOnHide", () => {
   it("não chama reset enquanto está visível", () => {
@@ -24,15 +48,10 @@ describe("useResetOnHide", () => {
 
   it("chama reset ao esconder com Activity e não ao mostrar de novo", () => {
     const reset = vi.fn();
-    const Host = ({ mode }: { mode: "visible" | "hidden" }) => (
-      <Activity mode={mode}>
-        <Probe reset={reset} />
-      </Activity>
-    );
-    const { rerender } = render(<Host mode="visible" />);
-    rerender(<Host mode="hidden" />);
+    const { rerender } = render(<ProbeHost mode="visible" reset={reset} />);
+    rerender(<ProbeHost mode="hidden" reset={reset} />);
     expect(reset).toHaveBeenCalledTimes(1);
-    rerender(<Host mode="visible" />);
+    rerender(<ProbeHost mode="visible" reset={reset} />);
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
@@ -48,25 +67,11 @@ describe("useResetOnHide", () => {
   });
 
   it("zera o estado local ao esconder", () => {
-    const Field = () => {
-      const [open, setOpen] = useState(false);
-      useResetOnHide(() => setOpen(false));
-      return (
-        <button type="button" aria-expanded={open} onClick={() => setOpen(true)}>
-          abrir
-        </button>
-      );
-    };
-    const Host = ({ mode }: { mode: "visible" | "hidden" }) => (
-      <Activity mode={mode}>
-        <Field />
-      </Activity>
-    );
-    const { rerender, getByRole } = render(<Host mode="visible" />);
+    const { rerender, getByRole } = render(<FieldHost mode="visible" />);
     act(() => getByRole("button").click());
     expect(getByRole("button").getAttribute("aria-expanded")).toBe("true");
-    rerender(<Host mode="hidden" />);
-    rerender(<Host mode="visible" />);
+    rerender(<FieldHost mode="hidden" />);
+    rerender(<FieldHost mode="visible" />);
     expect(getByRole("button").getAttribute("aria-expanded")).toBe("false");
   });
 });
