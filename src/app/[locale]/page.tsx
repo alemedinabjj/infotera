@@ -3,14 +3,14 @@ import { Suspense } from "react";
 import { InstallPromptCard } from "@/features/app-shell";
 import { SearchForm } from "@/features/search-form";
 import { commonMessages } from "@/shared/i18n/common/messages";
-import { isLocale } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 import { alternatesFor } from "@/shared/i18n/paths";
 import { HomeNotice } from "./HomeNotice";
 
 export const generateMetadata = async ({ params }: PageProps<"/[locale]">): Promise<Metadata> => {
-  const { locale } = await params;
+  const locale = await localeOf(params);
   return {
-    title: isLocale(locale) ? commonMessages.get(locale).routes.home.metaTitle : undefined,
+    title: commonMessages.get(locale).routes.home.metaTitle,
     alternates: { languages: alternatesFor("/") },
   };
 };
@@ -18,8 +18,8 @@ export const generateMetadata = async ({ params }: PageProps<"/[locale]">): Prom
 const HEADING_ID = "search-heading";
 
 const HomePage = async ({ params }: PageProps<"/[locale]">) => {
-  const { locale } = await params;
-  const t = commonMessages.get(isLocale(locale) ? locale : "pt-BR").routes.home;
+  const locale = await localeOf(params);
+  const t = commonMessages.get(locale).routes.home;
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8 lg:gap-12">
       <Suspense fallback={null}>

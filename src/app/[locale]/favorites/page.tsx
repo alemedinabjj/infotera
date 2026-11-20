@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { FavoritesView, favoritesMessages } from "@/features/favorites";
-import { isLocale } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/favorites">): Promise<Metadata> => {
-  const { locale } = await params;
+  const locale = await localeOf(params);
   return {
-    title: isLocale(locale) ? favoritesMessages.get(locale).metaTitle : undefined,
+    title: favoritesMessages.get(locale).metaTitle,
     robots: { index: false },
   };
 };

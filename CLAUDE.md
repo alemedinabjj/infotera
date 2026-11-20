@@ -15,6 +15,7 @@ requisitos por feature, o que escolhemos dos avançados e os detalhes da mock-ap
 - Vitest + Testing Library (unit/componente), Playwright (E2E)
 - Doc do Next 16 desta versão: `node_modules/next/dist/docs/` (leia antes de usar API nova)
 - Backend: **somente** a `mock-api/` (json-server 0.17). Base URL em `NEXT_PUBLIC_API_URL`, nunca `localhost` fixo no código.
+  `NEXT_PUBLIC_SITE_URL` (opcional, padrão `http://localhost:3000`) é o `metadataBase`; veja `.env.example`.
 
 ## Comandos
 

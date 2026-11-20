@@ -8,7 +8,7 @@ import {
   parseHotelId,
   STAY_EDIT_TITLE_ID,
 } from "@/features/hotel-details";
-import { DEFAULT_LOCALE, isLocale } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 import { alternatesFor } from "@/shared/i18n/paths";
 import { parseSearchCriteria } from "@/shared/lib/search-params";
 import { HotelDatesForm } from "./HotelDatesForm";
@@ -16,8 +16,8 @@ import { HotelDatesForm } from "./HotelDatesForm";
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/hotel/[hotelId]">): Promise<Metadata> => {
-  const { locale: rawLocale, hotelId } = await params;
-  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
+  const { hotelId } = await params;
+  const locale = await localeOf(params);
   const id = parseHotelId(hotelId);
   if (id === null) return { title: hotelPageTitle({ kind: "not-found" }, locale) };
   const alternates = { languages: alternatesFor(`/hotel/${id}`) };
@@ -41,8 +41,8 @@ export const generateMetadata = async ({
  * compõe a feature; o formulário de datas (F2) entra por `renderDatesForm`.
  */
 const HotelPage = async ({ params, searchParams }: PageProps<"/[locale]/hotel/[hotelId]">) => {
-  const { locale: rawLocale, hotelId: rawId } = await params;
-  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
+  const { hotelId: rawId } = await params;
+  const locale = await localeOf(params);
   const hotelId = parseHotelId(rawId);
   if (hotelId === null) notFound();
   const parsed = parseSearchCriteria(await searchParams);

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { CheckoutPage, checkoutPageTitle } from "@/features/checkout";
-import { isLocale } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 
 export const generateMetadata = async ({
   params,
 }: Pick<PageProps<"/[locale]/checkout">, "params">): Promise<Metadata> => {
-  const { locale } = await params;
+  const locale = await localeOf(params);
   return {
-    title: checkoutPageTitle(isLocale(locale) ? locale : "pt-BR"),
+    title: checkoutPageTitle(locale),
     robots: { index: false },
   };
 };

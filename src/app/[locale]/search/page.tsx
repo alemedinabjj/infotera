@@ -11,8 +11,7 @@ import {
   searchPageTitle,
 } from "@/features/hotel-search";
 import { SearchForm } from "@/features/search-form";
-import { isLocale } from "@/shared/i18n/config";
-import { alternatesFor } from "@/shared/i18n/paths";
+import { localeOf } from "@/shared/i18n/params";
 import { isBeforeToday, todayISO } from "@/shared/lib/dates";
 import { SearchEditForm } from "./SearchEditForm";
 
@@ -20,14 +19,10 @@ export const generateMetadata = async ({
   params,
   searchParams,
 }: PageProps<"/[locale]/search">): Promise<Metadata> => {
-  const { locale } = await params;
-  return {
-    title: searchPageTitle(
-      parseSearchPage(await searchParams),
-      isLocale(locale) ? locale : "pt-BR",
-    ),
-    alternates: { languages: alternatesFor("/search") },
-  };
+  const locale = await localeOf(params);
+  // Sem `alternates`: `/search` só faz sentido com a query (destino, datas); um hreflang
+  // para `/search` sem ela apontaria para uma página vazia.
+  return { title: searchPageTitle(parseSearchPage(await searchParams), locale) };
 };
 
 /**
@@ -35,8 +30,7 @@ export const generateMetadata = async ({
  * filtros, a ordenação e a página vivem na URL e são lidos no cliente (`HotelSearchResults`).
  */
 const SearchPage = async ({ params, searchParams }: PageProps<"/[locale]/search">) => {
-  const { locale: rawLocale } = await params;
-  const locale = isLocale(rawLocale) ? rawLocale : "pt-BR";
+  const locale = await localeOf(params);
   const page = parseSearchPage(await searchParams);
 
   if (page.kind === "missing-destination") {

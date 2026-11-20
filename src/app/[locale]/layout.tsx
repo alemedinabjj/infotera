@@ -5,8 +5,10 @@ import { LanguageSwitch, OfflineBanner, ServiceWorkerRegistrar } from "@/feature
 import { I18nProvider } from "@/shared/i18n/client";
 import { commonMessages } from "@/shared/i18n/common/messages";
 import { isLocale, LOCALES } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 import { localizePath } from "@/shared/i18n/paths";
 import { BRAND_PRIMARY } from "@/shared/lib/brand";
+import { SITE_URL } from "@/shared/lib/site-url";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import { CompareTray } from "@/shared/saved/components/CompareTray";
 import { SavedNav } from "@/shared/saved/components/SavedNav";
@@ -21,10 +23,11 @@ export const generateStaticParams = () => LOCALES.map((locale) => ({ locale }));
 export const dynamicParams = false;
 
 export const generateMetadata = async ({ params }: LayoutProps<"/[locale]">): Promise<Metadata> => {
-  const { locale } = await params;
+  const locale = await localeOf(params);
   return {
+    metadataBase: SITE_URL,
     title: "Infotera Hotéis",
-    description: commonMessages.get(isLocale(locale) ? locale : "pt-BR").routes.siteDescription,
+    description: commonMessages.get(locale).routes.siteDescription,
   };
 };
 

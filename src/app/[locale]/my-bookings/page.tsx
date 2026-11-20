@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { BookingHistoryView, historyMessages } from "@/features/booking-history";
-import { isLocale } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/my-bookings">): Promise<Metadata> => {
-  const { locale } = await params;
+  const locale = await localeOf(params);
   return {
-    title: isLocale(locale) ? historyMessages.get(locale).metaTitle : undefined,
+    title: historyMessages.get(locale).metaTitle,
     robots: { index: false },
   };
 };

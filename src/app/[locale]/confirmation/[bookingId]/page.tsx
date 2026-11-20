@@ -6,13 +6,13 @@ import {
   generateConfirmationMetadata,
   parseBookingId,
 } from "@/features/booking-confirmation";
-import { DEFAULT_LOCALE, isLocale } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/confirmation/[bookingId]">): Promise<Metadata> => {
-  const { locale, bookingId } = await params;
-  return generateConfirmationMetadata(bookingId, isLocale(locale) ? locale : DEFAULT_LOCALE);
+  const { bookingId } = await params;
+  return generateConfirmationMetadata(bookingId, await localeOf(params));
 };
 
 /**

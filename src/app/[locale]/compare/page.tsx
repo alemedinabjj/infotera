@@ -5,14 +5,14 @@ import {
   ComparisonView,
   comparisonMessages,
 } from "@/features/hotel-comparison";
-import { isLocale } from "@/shared/i18n/config";
+import { localeOf } from "@/shared/i18n/params";
 
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/compare">): Promise<Metadata> => {
-  const { locale } = await params;
+  const locale = await localeOf(params);
   return {
-    title: isLocale(locale) ? comparisonMessages.get(locale).metaTitle : undefined,
+    title: comparisonMessages.get(locale).metaTitle,
     robots: { index: false },
   };
 };
