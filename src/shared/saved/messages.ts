@@ -5,8 +5,8 @@ import { MAX_COMPARE } from "./model/comparison";
 export const SAVED_MESSAGES = {
   favorite: {
     label: (name: string) => `Salvar nos favoritos: ${name}`,
-    added: "Hotel salvo nos favoritos.",
-    removed: "Hotel removido dos favoritos.",
+    added: (name: string) => `${name} salvo nos favoritos.`,
+    removed: (name: string) => `${name} removido dos favoritos.`,
     limit: "Você já tem 100 hotéis nos favoritos. Remova algum para salvar outro.",
     viewAction: "Ver favoritos",
     undoAction: "Desfazer",

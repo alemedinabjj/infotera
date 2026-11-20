@@ -29,6 +29,10 @@ const clearComparison = () => {
     action: {
       label: SAVED_MESSAGES.compare.undoAction,
       onClick: () => comparisonActions.restoreAll(previous),
+      // A bandeja volta: o foco vai ao "Comparar" dela (ou ao conteúdo, com 1 hotel só).
+      returnFocus: () =>
+        document.querySelector<HTMLElement>("[data-bottom-bar] a[href]") ??
+        document.getElementById("main-content"),
     },
   });
   document.getElementById("main-content")?.focus({ preventScroll: true });

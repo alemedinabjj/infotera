@@ -41,7 +41,7 @@ describe("FavoriteButton", () => {
     expect(button).toHaveAttribute("aria-pressed", "true");
     expect(button).toHaveAccessibleName("Salvar nos favoritos: Hotel Fasano");
     const status = screen.getByRole("status");
-    expect(within(status).getByText("Hotel salvo nos favoritos.")).toBeInTheDocument();
+    expect(within(status).getByText(/ salvo nos favoritos\.$/)).toBeInTheDocument();
     await user.click(within(status).getByRole("button", { name: "Ver favoritos" }));
     expect(navigationSpies.push).toHaveBeenCalledWith("/favorites");
   });
@@ -50,7 +50,7 @@ describe("FavoriteButton", () => {
     const user = userEvent.setup();
     const button = setup();
     for (let index = 0; index < 5; index++) await user.click(button);
-    expect(screen.getAllByText(/Hotel (salvo nos|removido dos) favoritos\./)).toHaveLength(1);
+    expect(screen.getAllByText(/ (salvo nos|removido dos) favoritos\./)).toHaveLength(1);
   });
 
   it("desfavoritar oferece Desfazer, que restaura com o addedAt original", async () => {

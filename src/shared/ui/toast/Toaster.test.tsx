@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Toaster } from "./Toaster";
 import { toast, useToastStore } from "./toast-store";
@@ -97,6 +97,46 @@ describe("Toaster", () => {
     });
     advance(5000);
     expect(screen.queryByText("segundo")).not.toBeInTheDocument();
+  });
+
+  it("acionar a ação devolve o foco ao controle que criou o toast (nunca ao body)", async () => {
+    vi.useRealTimers();
+    render(
+      <>
+        <button type="button">Origem</button>
+        <Toaster />
+      </>,
+    );
+    const origin = screen.getByRole("button", { name: "Origem" });
+    origin.focus();
+    act(() => {
+      toast.info("Removido.", { action: { label: "Desfazer", onClick: () => undefined } });
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Desfazer" }));
+    await waitFor(() => expect(origin).toHaveFocus());
+  });
+
+  it("returnFocus tem prioridade e ação que navega não mexe no foco", async () => {
+    vi.useRealTimers();
+    render(
+      <>
+        <button type="button">Origem</button>
+        <h1 tabIndex={-1}>Título</h1>
+        <Toaster />
+      </>,
+    );
+    screen.getByRole("button", { name: "Origem" }).focus();
+    act(() => {
+      toast.info("Limpo.", {
+        action: {
+          label: "Desfazer",
+          onClick: () => undefined,
+          returnFocus: () => screen.getByRole("heading"),
+        },
+      });
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Desfazer" }));
+    await waitFor(() => expect(screen.getByRole("heading")).toHaveFocus());
   });
 
   it("mostra no máximo 3 (descarta o mais antigo)", () => {

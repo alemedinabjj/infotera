@@ -54,12 +54,16 @@ export const FavoriteButton = ({
     onToggle?.(result);
     if (!notify) return;
     if (result === "added") {
-      toast.success(MESSAGES.added, {
+      toast.success(MESSAGES.added(hotelName), {
         key,
-        action: { label: MESSAGES.viewAction, onClick: () => router.push(FAVORITES_PATH) },
+        action: {
+          label: MESSAGES.viewAction,
+          onClick: () => router.push(FAVORITES_PATH),
+          navigates: true,
+        },
       });
     } else if (result === "removed" && previous) {
-      toast.info(MESSAGES.removed, {
+      toast.info(MESSAGES.removed(hotelName), {
         key,
         action: { label: MESSAGES.undoAction, onClick: () => favoritesActions.restore(previous) },
       });

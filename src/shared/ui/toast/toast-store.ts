@@ -20,6 +20,7 @@ let nextId = 1;
 
 const push = (tone: ToastTone, message: string, options: ToastOptions = {}): number => {
   const id = nextId++;
+  const active = typeof document === "undefined" ? null : document.activeElement;
   const item: ToastItemData = {
     id,
     version: 0,
@@ -28,6 +29,7 @@ const push = (tone: ToastTone, message: string, options: ToastOptions = {}): num
     duration: toastDuration(tone, options.action !== undefined, options.duration),
     ...(options.key === undefined ? {} : { key: options.key }),
     ...(options.action ? { action: options.action } : {}),
+    ...(active instanceof HTMLElement && active !== document.body ? { origin: active } : {}),
   };
   useToastStore.setState((state) => ({ toasts: pushToast(state.toasts, item) }));
   const stored = useToastStore.getState().toasts.find((entry) => entry.key === options.key);

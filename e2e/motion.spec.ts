@@ -49,7 +49,7 @@ test.describe("prefers-reduced-motion: reduce", () => {
     await page.getByRole("button", { name: `Salvar nos favoritos: ${name}` }).click();
     await page.getByRole("checkbox", { name: `Comparar: ${name}` }).check();
     await expect(page.locator("[data-bottom-bar]")).toBeVisible();
-    await expect(page.getByRole("status").getByText("Hotel salvo nos favoritos.")).toBeVisible();
+    await expect(page.getByRole("status").getByText(/ salvo nos favoritos\.$/)).toBeVisible();
     expect(await transformAnimations(page)).toEqual([]);
   });
 

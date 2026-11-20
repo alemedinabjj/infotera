@@ -36,6 +36,8 @@ export const ClearHistoryButton = ({ entries, onCleared, onRestored }: ClearHist
           restoreBookingHistory(previous);
           onRestored();
         },
+        // A lista volta e o botão "Limpar" é outro elemento: o foco vai ao título da página.
+        returnFocus: () => document.getElementById("history-title"),
       },
     });
   };

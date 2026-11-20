@@ -3,6 +3,7 @@
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef } from "react";
 import { cn } from "../../lib/cn";
+import { focusWhenReady } from "../../lib/focus";
 import { motionPreset } from "../../lib/motion";
 import { Button } from "../atoms/Button";
 import { IconButton } from "../atoms/IconButton";
@@ -48,6 +49,16 @@ const useAutoDismiss = (item: ToastItemData, paused: boolean) => {
   }, [paused, id, version, duration]);
 };
 
+/** Depois de uma ação que desmonta o toast, devolve o foco ao controle de origem (nunca ao `body`). */
+const restoreFocus = (item: ToastItemData): void => {
+  const { action, origin } = item;
+  if (!action || action.navigates) return;
+  focusWhenReady(
+    () => action.returnFocus?.() ?? (origin?.isConnected ? origin : null),
+    () => undefined,
+  );
+};
+
 /** Um toast animado (entrada `y`+fade, saída em fade). O tempo é pausado pela região. */
 export const ToastItem = ({ item, paused }: { item: ToastItemData; paused: boolean }) => {
   const preset = motionPreset("toast", useReducedMotion() ?? false);
@@ -75,6 +86,7 @@ export const ToastItem = ({ item, paused }: { item: ToastItemData; paused: boole
             onClick={() => {
               item.action?.onClick();
               close();
+              restoreFocus(item);
             }}
           >
             {item.action.label}

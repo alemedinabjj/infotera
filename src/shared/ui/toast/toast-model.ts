@@ -1,6 +1,16 @@
 export type ToastTone = "success" | "error" | "info";
 
-export type ToastAction = { label: string; onClick: () => void };
+export type ToastAction = {
+  label: string;
+  onClick: () => void;
+  /**
+   * Para onde o foco volta depois da ação (o toast e, às vezes, o controle de origem desmontam).
+   * Sem isto, volta ao controle que estava focado quando o toast foi criado, se ainda existir.
+   */
+  returnFocus?: () => HTMLElement | null;
+  /** A ação navega para outra rota: o foco não é devolvido (a página nova cuida dele). */
+  navigates?: true;
+};
 
 export type ToastItemData = {
   id: number;
@@ -11,6 +21,8 @@ export type ToastItemData = {
   tone: ToastTone;
   message: string;
   action?: ToastAction;
+  /** Controle focado quando o toast foi criado (o que o disparou). */
+  origin?: HTMLElement;
   /** Duração em ms até sumir sozinho. */
   duration: number;
 };

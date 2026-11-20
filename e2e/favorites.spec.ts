@@ -27,7 +27,7 @@ test.describe("favoritar", () => {
     const button = heart(page, name);
     await button.click();
     await expect(button).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("status").getByText("Hotel salvo nos favoritos.")).toBeVisible();
+    await expect(page.getByRole("status").getByText(/ salvo nos favoritos\.$/)).toBeVisible();
     await expect(favoritesLink(page)).toHaveAccessibleName("Favoritos, 1 hotel");
 
     await button.click();

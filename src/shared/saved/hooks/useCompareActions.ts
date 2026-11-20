@@ -35,7 +35,11 @@ export const useCompareActions = (): CompareActions => {
         const ids = useComparisonStore.getState().items.map((item) => item.id);
         toast.info(MESSAGES.limitToast, {
           key: "compare:limit",
-          action: { label: MESSAGES.viewAction, onClick: () => router.push(compareHref(ids)) },
+          action: {
+            label: MESSAGES.viewAction,
+            onClick: () => router.push(compareHref(ids)),
+            navigates: true,
+          },
         });
         return;
       }
