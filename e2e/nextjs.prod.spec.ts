@@ -90,6 +90,30 @@ test.describe("hotel com JavaScript @prod", () => {
     ).toBeLessThan(0.1);
   });
 
+  test("o skeleton do quarto tem a altura final do card (1280 e 375)", async ({ browser }) => {
+    const cardHeights = async (width: number, javaScriptEnabled: boolean) => {
+      const context = await browser.newContext({
+        viewport: { width, height: 900 },
+        javaScriptEnabled,
+      });
+      const page = await context.newPage();
+      await page.goto(hotelPath(1));
+      if (javaScriptEnabled) {
+        await expect(page.getByRole("button", { name: /Selecionar quarto/ }).first()).toBeVisible();
+      }
+      const heights = await page
+        .locator("#quartos article")
+        .evaluateAll((cards) => cards.map((card) => card.getBoundingClientRect().height));
+      await context.close();
+      return heights;
+    };
+    for (const width of [1280, 375]) {
+      const skeleton = await cardHeights(width, false);
+      expect(skeleton.length).toBeGreaterThan(0);
+      expect(skeleton).toEqual(await cardHeights(width, true));
+    }
+  });
+
   test("sem critérios: 'Escolha as datas' e 'Escolher datas' em cada quarto", async ({ page }) => {
     await page.goto(hotelPath(1, false));
     await expect(
