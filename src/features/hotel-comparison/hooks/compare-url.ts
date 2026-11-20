@@ -39,11 +39,12 @@ export const dropMissingIds = (
   missing: readonly number[],
   criteria: SearchCriteria | null,
 ): void => {
+  const gone = new Set(missing);
   window.history.replaceState(
     null,
     "",
     compareHref(
-      ids.filter((id) => !missing.includes(id)),
+      ids.filter((id) => !gone.has(id)),
       criteria,
     ),
   );

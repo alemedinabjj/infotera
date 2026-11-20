@@ -18,13 +18,12 @@ export const usePruneNotFound = (
   criteria: SearchCriteria | null,
 ): number => {
   const [removed, setRemoved] = useState(0);
-  const missing = settled && hotels ? missingIds(ids, hotels) : [];
-  const key = missing.join(",");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `key` resume `missing`/`ids`
   useEffect(() => {
+    if (!settled || !hotels) return;
+    const missing = missingIds(ids, hotels);
     if (missing.length === 0) return;
     dropMissingIds(ids, missing, criteria);
     setRemoved((count) => count + missing.length);
-  }, [key]);
+  }, [ids, hotels, settled, criteria]);
   return removed;
 };

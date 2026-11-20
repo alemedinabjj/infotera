@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
 import type { Room } from "@/shared/api/schemas";
 import { nightsBetween, todayISO } from "@/shared/lib/dates";
@@ -74,29 +74,33 @@ export const useCoupon = (
   });
   const roomKey = roomQueryOptions(roomId).queryKey;
 
-  const lookup = async (code: string, restored = false): Promise<void> => {
-    const mine = ++token.current;
-    setView({ kind: "validating", code });
-    try {
-      const coupon = await queryClient.fetchQuery(couponQueryOptions(code));
-      const room = await queryClient.ensureQueryData(roomQueryOptions(roomId));
-      if (mine === token.current)
-        setView(settle(code, coupon, room, latestCriteria.current, restored));
-    } catch {
-      if (mine === token.current) {
-        setView({ kind: "error", code, message: COUPON_LOOKUP_FAILED });
+  const lookup = useCallback(
+    async (code: string, restored = false): Promise<void> => {
+      const mine = ++token.current;
+      setView({ kind: "validating", code });
+      try {
+        const coupon = await queryClient.fetchQuery(couponQueryOptions(code));
+        const room = await queryClient.ensureQueryData(roomQueryOptions(roomId));
+        if (mine === token.current)
+          setView(settle(code, coupon, room, latestCriteria.current, restored));
+      } catch {
+        if (mine === token.current) {
+          setView({ kind: "error", code, message: COUPON_LOOKUP_FAILED });
+        }
       }
-    }
-  };
+    },
+    [queryClient, roomId],
+  );
 
   // Rascunho com cupom: revalida (mesma consulta e regras) antes de aplicar; se não vale, avisa.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: só na montagem
+  const restoreStarted = useRef(false);
   useEffect(() => {
-    if (!restoredCode) return;
+    if (!restoredCode || restoreStarted.current) return;
+    restoreStarted.current = true;
     const code = normalizeCouponCode(restoredCode);
     if (couponCodeSchema.safeParse(code).success) void lookup(code, true);
     else setView({ kind: "error", code, message: restoredCouponMessage(code), restored: true });
-  }, []);
+  }, [restoredCode, lookup]);
 
   const apply = (raw: string): void => {
     const code = normalizeCouponCode(raw);
