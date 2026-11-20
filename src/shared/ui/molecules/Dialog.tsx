@@ -88,6 +88,10 @@ type DialogProps = {
    * `role="region"` nomeada pelo título) e recebe o foco inicial, para setas/PageDown rolarem.
    */
   focusableBody?: boolean;
+  /** `id` do texto que descreve o diálogo (`aria-describedby`): ex.: o contador "Foto 3 de 5". */
+  describedBy?: string;
+  /** Depois da saída animada e de o `<dialog>` fechar (o foco já voltou ao gatilho). */
+  onClosed?: () => void;
   /** Teclas dentro do dialog (ex.: setas do lightbox). `Esc` e `Tab` já são nativos. */
   onKeyDown?: KeyboardEventHandler<HTMLDialogElement>;
   className?: string;
@@ -106,6 +110,7 @@ const useDialogLifecycle = (
   ref: RefObject<HTMLDialogElement | null>,
   open: boolean,
   initialFocus: string | undefined,
+  onClosed: (() => void) | undefined,
 ): DialogSession => {
   const trigger = useRef<Element | null>(null);
   const previousOverflow = useRef<string | null>(null);
@@ -117,6 +122,7 @@ const useDialogLifecycle = (
     previousOverflow.current = null;
     if (trigger.current instanceof HTMLElement) trigger.current.focus();
     trigger.current = null;
+    onClosed?.();
   };
 
   useEffect(() => {
@@ -226,6 +232,8 @@ export const Dialog = ({
   closeOnBackdrop = false,
   initialFocus,
   focusableBody = false,
+  describedBy,
+  onClosed,
   onKeyDown,
   className,
 }: DialogProps) => {
@@ -237,6 +245,7 @@ export const Dialog = ({
     ref,
     open,
     focusableBody ? "[data-dialog-body]" : initialFocus,
+    onClosed,
   );
   const layout = layoutFor(size, placement);
 
@@ -244,6 +253,7 @@ export const Dialog = ({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      aria-describedby={describedBy}
       data-closing={open ? undefined : ""}
       onKeyDown={onKeyDown}
       onClose={() => {

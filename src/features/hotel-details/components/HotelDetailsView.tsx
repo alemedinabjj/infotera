@@ -69,7 +69,7 @@ export const HotelDetailsView = async ({
       <div className="flex flex-col gap-4">
         <Breadcrumb build={(c) => hotelBreadcrumb(hotel, c, locale)} criteria={criteria} />
         <HotelHeader locale={locale} hotel={hotel} rooms={rooms}>
-          <Gallery name={hotel.name} images={hotel.images} />
+          <Gallery locale={locale} hotelId={hotel.id} images={hotel.images} />
         </HotelHeader>
         <SectionNav locale={locale} />
       </div>

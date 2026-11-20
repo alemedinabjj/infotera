@@ -78,6 +78,7 @@ export const enUS: HotelDetailsMessages = {
     failed: "We couldn't load this photo.",
     loading: "Loading photo…",
     modalLoadingTitle: "Hotel photos",
+    close: "Close",
     openError: "We couldn't open the photo",
     openErrorBody: "Check your connection and try again.",
     offlineTitle: "You're offline",

@@ -80,6 +80,7 @@ export const ptBR = {
     failed: "Não foi possível carregar esta foto.",
     loading: "Carregando foto…",
     modalLoadingTitle: "Fotos do hotel",
+    close: "Fechar",
     openError: "Não foi possível abrir a foto",
     openErrorBody: "Verifique sua conexão e tente de novo.",
     offlineTitle: "Você está sem internet",

@@ -1,5 +1,4 @@
 import { act, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { formatClockTime } from "@/shared/lib/clock";
 import { makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
@@ -114,15 +113,16 @@ describe("hotel-details por idioma: componentes", () => {
     expect(screen.getByRole("link", { name: "Start a new search" })).toHaveAttribute("href", "/en");
   });
 
-  it("galeria e lightbox em inglês", async () => {
-    const user = userEvent.setup();
+  it("galeria em inglês: links para a rota da foto sob /en", () => {
     const images = ["https://images.unsplash.com/photo-1", "https://images.unsplash.com/photo-2"];
-    renderWithProviders(<Gallery name="Hotel X" images={images} />, { locale: "en-US" });
-    expect(screen.getByRole("button", { name: "Open photo 1 of 2" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "See all photos (2)" }));
-    expect(screen.getByRole("dialog", { name: "Photos of Hotel X" })).toBeInTheDocument();
-    expect(screen.getByText("Photo 1 of 2")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Next photo" })).toBeInTheDocument();
+    renderWithProviders(<Gallery locale="en-US" hotelId={1} images={images} />, {
+      locale: "en-US",
+    });
+    expect(screen.getByRole("link", { name: "Open photo 1 of 2" })).toHaveAttribute(
+      "href",
+      "/en/hotel/1/photos/1",
+    );
+    expect(screen.getByRole("link", { name: "See all photos (2)" })).toBeInTheDocument();
   });
 
   it("quartos em inglês: contagem, botão com o nome do quarto e motivo do bloqueio", async () => {
