@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { createStorage } from "./storage";
 
 describe("createStorage sem window (SSR)", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import {
   applySearchCriteriaRules,
   guestsPerRoom,

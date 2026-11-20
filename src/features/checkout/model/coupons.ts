@@ -1,6 +1,6 @@
-import { z } from "zod";
 import { type ISODate, isBeforeToday } from "@/shared/lib/dates";
 import { formatCents } from "@/shared/lib/price-breakdown";
+import { z } from "@/shared/lib/zod";
 import type { PriceDiscount } from "./price";
 
 export type Coupon = {

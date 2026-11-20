@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 
 /** Data de calendário no formato `YYYY-MM-DD` (sem hora e sem fuso). */
 export type ISODate = string;

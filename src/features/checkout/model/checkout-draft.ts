@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import type { CheckoutValues } from "./checkout.schema";
 import { PHONE_COUNTRY_CODES } from "./phone";
 import { CHECKOUT_STEPS, type CheckoutStep } from "./steps";

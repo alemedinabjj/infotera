@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { type SearchCriteria, serializeSearchCriteria } from "../../lib/search-params";
 import { COMPARE_PATH } from "./routes";
 

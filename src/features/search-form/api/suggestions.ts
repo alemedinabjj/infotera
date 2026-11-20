@@ -1,8 +1,8 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
-import { z } from "zod";
 import { apiGet } from "@/shared/api/http";
 import { queryKeys } from "@/shared/api/query-keys";
 import { type Suggestion, suggestionSchema } from "@/shared/api/schemas";
+import { z } from "@/shared/lib/zod";
 import { normalizeQuery } from "../model/suggestion-text";
 
 const MIN_QUERY_LENGTH = 2;

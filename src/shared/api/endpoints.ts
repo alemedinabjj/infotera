@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { apiGet } from "./http";
 import { canonicalIds } from "./ids";
 import {

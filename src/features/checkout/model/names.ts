@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 
 const NAME_CHARS = /^[\p{L}][\p{L}\s'’-]*$/u;
 const LETTER = /\p{L}/gu;

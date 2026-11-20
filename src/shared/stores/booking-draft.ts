@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
-import { z } from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { z } from "@/shared/lib/zod";
 import { searchCriteriaSchema } from "../lib/search-params";
 import { createRawStorage } from "../lib/storage";
 

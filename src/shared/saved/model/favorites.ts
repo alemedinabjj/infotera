@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 
 /** Teto técnico (storage). Com 60 hotéis no seed nunca aparece no uso normal. */
 export const FAVORITES_LIMIT = 100;

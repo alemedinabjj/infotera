@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { type Hotel, hotelSchema, type Room, roomSchema } from "../api/schemas";
 
 const seedSchema = z.object({ hotels: z.array(hotelSchema), rooms: z.array(roomSchema) });

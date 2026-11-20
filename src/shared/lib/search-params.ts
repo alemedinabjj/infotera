@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { isoDateSchema, nightsBetween } from "./dates";
 
 export const SEARCH_PARAM_KEYS = [

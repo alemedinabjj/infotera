@@ -1,6 +1,6 @@
-import { z } from "zod";
 import { apiGet } from "@/shared/api/http";
 import { type Hotel, hotelSchema } from "@/shared/api/schemas";
+import { z } from "@/shared/lib/zod";
 
 export const SIMILAR_HOTELS_LIMIT = 4;
 

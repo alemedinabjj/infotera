@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { createStorage, STORAGE_PREFIX } from "./storage";
 
 /** Chave no `localStorage` (`infotera:booking-history`). */

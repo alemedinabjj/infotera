@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { type ISODate, isBeforeToday, isValidISODate } from "@/shared/lib/dates";
 import {
   applySearchCriteriaRules,
@@ -6,6 +5,7 @@ import {
   SEARCH_MESSAGES,
   type SearchCriteria,
 } from "@/shared/lib/search-params";
+import { z } from "@/shared/lib/zod";
 
 /** Valores do formulário. Datas e destino são `""` enquanto vazios. */
 export type SearchFormValues = {
