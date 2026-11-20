@@ -6,6 +6,13 @@ export const ptBR = {
     targetShort: "EN",
     label: "Mudar idioma para English",
   },
+  install: {
+    title: "Instale o Infotera Hotéis",
+    description: "Abra suas buscas mais rápido, até sem internet.",
+    install: "Instalar",
+    dismiss: "Agora não",
+    installed: "App instalado.",
+  },
   update: {
     available: "Nova versão disponível.",
     reload: "Atualizar",

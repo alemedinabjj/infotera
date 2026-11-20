@@ -6,6 +6,13 @@ export const enUS: AppShellMessages = {
     targetShort: "PT",
     label: "Switch language to Português",
   },
+  install: {
+    title: "Install Infotera Hotéis",
+    description: "Open your searches faster, even offline.",
+    install: "Install",
+    dismiss: "Not now",
+    installed: "App installed.",
+  },
   update: {
     available: "New version available.",
     reload: "Update",

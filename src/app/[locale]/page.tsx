@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { InstallPromptCard } from "@/features/app-shell";
 import { SearchForm } from "@/features/search-form";
 import { alternatesFor } from "@/shared/i18n/paths";
 import { CHOOSE_ROOM_NOTICE, HOME_NOTICE_PARAM } from "@/shared/lib/links";
@@ -27,6 +28,7 @@ const HomePage = async ({ searchParams }: PageProps<"/[locale]">) => {
         </p>
       </header>
       <SearchForm labelledBy={HEADING_ID} />
+      <InstallPromptCard />
     </div>
   );
 };
