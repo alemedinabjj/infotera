@@ -10,7 +10,13 @@ import {
 export type { ToastAction, ToastItemData, ToastTone } from "./toast-model";
 export { MAX_VISIBLE_TOASTS } from "./toast-model";
 
-type ToastOptions = { action?: ToastAction; key?: string; duration?: number };
+type ToastOptions = {
+  action?: ToastAction;
+  key?: string;
+  duration?: number;
+  /** Sem fechar sozinho (ex.: "Nova versão disponível"): só some pelo ×, pela ação ou por `dismiss`. */
+  persistent?: boolean;
+};
 
 type ToastState = { toasts: ToastItemData[] };
 
@@ -26,7 +32,11 @@ const push = (tone: ToastTone, message: string, options: ToastOptions = {}): num
     version: 0,
     tone,
     message,
-    duration: toastDuration(tone, options.action !== undefined, options.duration),
+    duration: toastDuration(
+      tone,
+      options.action !== undefined,
+      options.persistent ? Number.POSITIVE_INFINITY : options.duration,
+    ),
     ...(options.key === undefined ? {} : { key: options.key }),
     ...(options.action ? { action: options.action } : {}),
     ...(active instanceof HTMLElement && active !== document.body ? { origin: active } : {}),

@@ -39,7 +39,8 @@ const useAutoDismiss = (item: ToastItemData, paused: boolean) => {
 
   useEffect(() => {
     if (state.current.version !== version) state.current = { version, remaining: duration };
-    if (paused) return;
+    // Persistente (`duration` infinita): nunca fecha sozinho.
+    if (paused || !Number.isFinite(state.current.remaining)) return;
     const startedAt = Date.now();
     const timer = setTimeout(() => toast.dismiss(id), state.current.remaining);
     return () => {

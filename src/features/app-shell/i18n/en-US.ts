@@ -6,6 +6,10 @@ export const enUS: AppShellMessages = {
     targetShort: "PT",
     label: "Switch language to Português",
   },
+  update: {
+    available: "New version available.",
+    reload: "Update",
+  },
   offlinePage: {
     title: "You're offline",
     description:

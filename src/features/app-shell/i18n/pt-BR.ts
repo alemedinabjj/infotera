@@ -6,6 +6,10 @@ export const ptBR = {
     targetShort: "EN",
     label: "Mudar idioma para English",
   },
+  update: {
+    available: "Nova versão disponível.",
+    reload: "Atualizar",
+  },
   offlinePage: {
     title: "Você está sem internet",
     description:

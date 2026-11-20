@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
-import { LanguageSwitch, OfflineBanner } from "@/features/app-shell";
+import { LanguageSwitch, OfflineBanner, ServiceWorkerRegistrar } from "@/features/app-shell";
 import { I18nProvider } from "@/shared/i18n/client";
 import { isLocale, LOCALES } from "@/shared/i18n/config";
 import { BRAND_PRIMARY } from "@/shared/lib/brand";
@@ -51,6 +51,7 @@ const RootLayout = async ({ children, params }: LayoutProps<"/[locale]">) => {
               {children}
             </main>
             <CompareTray />
+            <ServiceWorkerRegistrar />
           </AppProviders>
         </I18nProvider>
       </body>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLocale } from "@/shared/i18n/client";
 import { localizePath } from "@/shared/i18n/paths";
+import { reloadPage } from "@/shared/lib/navigation";
 import { buttonClassName } from "@/shared/ui/atoms/button-styles";
 import { WifiOffIcon } from "@/shared/ui/icons";
 import { EmptyState } from "@/shared/ui/molecules/EmptyState";
@@ -25,7 +26,7 @@ export const OfflinePage = () => {
         <>
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={reloadPage}
             className={buttonClassName({ variant: "primary" })}
           >
             {messages.retry}
