@@ -12,3 +12,9 @@ export const splitNumberGroups = (value: string): NumberGroup[] => {
     return group;
   });
 };
+
+const SHORT_CODE_LENGTH = 8;
+
+/** Código curto legível para citar por telefone: os 8 primeiros caracteres em maiúsculas. */
+export const shortBookingCode = (value: string): string =>
+  value.slice(0, SHORT_CODE_LENGTH).toUpperCase();
