@@ -69,12 +69,12 @@ export const makeSearchFormSchema = (today: ISODate): z.ZodType<SearchCriteria, 
     })
     .superRefine(applySearchCriteriaRules);
 
-/** Critérios (URL, recentes) → valores do formulário. */
-export const toFormValues = (criteria: SearchCriteria): SearchFormValues => ({
-  destination: criteria.destination,
-  checkIn: criteria.checkIn,
-  checkOut: criteria.checkOut,
-  rooms: criteria.rooms,
-  adults: criteria.adults,
-  children: criteria.children,
+/** Critérios (URL, recentes), inteiros ou parciais → valores do formulário (o resto vem dos padrões). */
+export const toFormValues = (criteria: Partial<SearchCriteria>): SearchFormValues => ({
+  destination: criteria.destination ?? DEFAULT_SEARCH_FORM_VALUES.destination,
+  checkIn: criteria.checkIn ?? DEFAULT_SEARCH_FORM_VALUES.checkIn,
+  checkOut: criteria.checkOut ?? DEFAULT_SEARCH_FORM_VALUES.checkOut,
+  rooms: criteria.rooms ?? DEFAULT_SEARCH_FORM_VALUES.rooms,
+  adults: criteria.adults ?? DEFAULT_SEARCH_FORM_VALUES.adults,
+  children: criteria.children ?? DEFAULT_SEARCH_FORM_VALUES.children,
 });

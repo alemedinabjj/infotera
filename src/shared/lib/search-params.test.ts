@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   applySearchCriteriaRules,
   guestsPerRoom,
+  parseDestinationParam,
   parseSearchCriteria,
   SEARCH_MESSAGES,
   SEARCH_PARAM_KEYS,
@@ -164,5 +165,29 @@ describe("applySearchCriteriaRules", () => {
     expect(messages({ ...base, adults: 5, children: 1 })).toEqual([
       ["children", SEARCH_MESSAGES.guestsPerRoom],
     ]);
+  });
+});
+
+describe("parseDestinationParam", () => {
+  it("devolve o destino com acento preservado e sem espaços nas pontas", () => {
+    expect(parseDestinationParam("  São Paulo, SP ")).toBe("São Paulo, SP");
+  });
+
+  it.each([
+    ["ausente", undefined],
+    ["vazio", ""],
+    ["só espaços", "   "],
+    ["maior que 100", "a".repeat(101)],
+    ["array vazio", []],
+  ])("devolve null para %s", (_label, input) => {
+    expect(parseDestinationParam(input)).toBeNull();
+  });
+
+  it("aceita exatamente 100 caracteres", () => {
+    expect(parseDestinationParam("a".repeat(100))).toBe("a".repeat(100));
+  });
+
+  it("usa o primeiro valor de um array", () => {
+    expect(parseDestinationParam(["Rio de Janeiro, RJ", "Outro"])).toBe("Rio de Janeiro, RJ");
   });
 });

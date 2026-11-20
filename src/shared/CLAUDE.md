@@ -9,14 +9,17 @@ feature só fica na feature; promova para cá quando aparecer o segundo uso.
 shared/
   api/        env · http · errors · schemas · query-keys · endpoints · queries
               query-client · server-query-client (só para Server Components)
+  hooks/      useToday · useDebouncedValue (promovidos da F2)
   lib/        cn · dates · currency · format · search-params · storage · pagination
   ui/         atoms/ (Button (+button-styles), IconButton, Input, Select, Checkbox, Radio, Skeleton, Spinner,
                        Badge, Stars, VisuallyHidden)
               molecules/ (Field, QuantityStepper, Pagination, EmptyState, ErrorState, Alert, Dialog)
+              ErrorBoundary (classe, `fallback({ error, reset })`, `resetKeys`)
               toast/ (toast-store, Toaster) · layout/ (SiteHeader, SkipLink) · icons.tsx · index.ts
   providers/  AppProviders (QueryClientProvider + BookingDraftHydrator + Toaster)
   stores/     booking-draft.ts (Zustand + persist em sessionStorage)
   testing/    render.tsx (renderWithProviders) · fixtures.ts (makeHotel/Room/Review/SearchCriteria)
+              next-navigation.ts (mock de `next/navigation` sobre o `window.location`: `setTestUrl`, `navigationSpies`)
 ```
 
 ## Decisões que valem para todas as features
@@ -42,6 +45,10 @@ shared/
 - `QuantityStepper` aceita `hint` (motivo do limite): região `aria-live` sempre montada e `aria-describedby` (descrição + hint) nos dois botões.
 - `search-params.ts` exporta `SEARCH_MESSAGES` e `applySearchCriteriaRules` (formulário da F2 e schema da URL compartilham as regras); `dates.ts` tem `formatDateRange(checkIn, checkOut, today)`.
 
+- `Dialog` tem `placement: "center" | "sheet"` (bottom-sheet) e `initialFocus` (seletor do controle que recebe o foco ao abrir).
+- `search-params.ts` também exporta `parseDestinationParam`; `format.ts` exporta `ratingLabel` (Excelente/Muito bom/Bom/Regular).
+- Testes de componente que usam `next/navigation`: `vi.mock("next/navigation", async () => (await import("@/shared/testing/next-navigation")).navigationMock)`.
+
 ## ui/
 - Fonte da verdade visual: `docs/design/design-system.md`. Tokens viram o `@theme` do Tailwind;
   nada de cor ou espaçamento solto (`#3b82f6`, `mt-[13px]`) nos componentes.
@@ -58,10 +65,9 @@ Unitário obrigatório para tudo em `lib/` e para os schemas (casos válidos e i
 ## Pendentes para features
 Componentes do design system que a F1 não entrega; nascem na feature que os usa primeiro e sobem
 para `shared/` quando aparecer o segundo uso.
-- **Drawer / `Dialog` variante `side`** (filtros no mobile): F3 (`hotel-search`).
 - **`Dialog` `size="full"`** (lightbox da galeria): F4 (`hotel-details`).
-- **Card** (hotel/quarto): F3 (`HotelCard`) e F4 (`RoomCard`); extrair para `shared/ui` no segundo uso.
-- **RatingScore** (nota + `Stars` + contagem): F3, reaproveitado na F4.
-- **PriceTag** (preço, "por noite", total): F3, reaproveitado na F4/F5.
+- **Card** (hotel/quarto): `HotelCard` nasceu na F3; F4 (`RoomCard`) é o segundo uso, extrair então.
+- **RatingScore**, **PriceTag** e `unsplashLoader`/`BLUR_DATA_URL` (imagem): nasceram na F3 (`hotel-search`); promover na F4.
 - **Breadcrumb**: F4 (`hotel-details`).
 - **Combobox** e **DateRange**: nasceram na F2 (`search-form`, `useCombobox` + `DateRangeFields`); promover quando houver segundo uso.
+- `stayTotal` (preço total por estadia) nasceu na F3; F4/F5 promovem.

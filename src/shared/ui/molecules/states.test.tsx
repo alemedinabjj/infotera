@@ -50,4 +50,9 @@ describe("Alert", () => {
     rerender(<Alert tone="warning" title="Atenção" />);
     expect(screen.getByRole("status")).toHaveTextContent("Atenção");
   });
+
+  it("aceita um ícone próprio no lugar do ícone do tom", () => {
+    render(<Alert tone="warning" title="Sem internet" icon={<svg data-testid="custom" />} />);
+    expect(screen.getByTestId("custom")).toBeInTheDocument();
+  });
 });

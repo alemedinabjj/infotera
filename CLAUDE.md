@@ -29,7 +29,7 @@ npm run lint         # biome check
 npm run format       # biome check --write (formata e organiza imports)
 npm run test         # vitest run
 npm run test:watch   # vitest em modo watch
-npm run test:e2e     # playwright test --trace off (precisa da API e do front rodando)
+npm run test:e2e     # playwright test --trace off (sobe a mock-api e o front se não estiverem rodando; exige `npm install` em mock-api/)
 # E2E usa o Chromium do Playwright 1.63 (`npx playwright install chromium` se faltar)
 npx -y react-doctor@0.9.23 . --scope changed --base main --verbose --no-telemetry
                      # saúde React: componentes gigantes/aninhados, perf, a11y (também roda em toda PR)

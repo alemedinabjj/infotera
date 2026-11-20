@@ -41,6 +41,13 @@ describe("Button", () => {
     expect(button).toHaveFocus();
   });
 
+  it("aria-disabled ganha a aparência de desabilitado em qualquer variante", () => {
+    for (const variant of ["primary", "secondary", "ghost", "danger"] as const) {
+      expect(buttonClassName({ variant })).toContain("aria-disabled:text-fg-subtle");
+      expect(buttonClassName({ variant })).toContain("aria-disabled:cursor-not-allowed");
+    }
+  });
+
   it("loadingText substitui o rótulo em uma região aria-live polite", () => {
     render(
       <Button loading loadingText="Confirmando…">

@@ -32,18 +32,18 @@ type AlertProps = {
   title?: ReactNode;
   children?: ReactNode;
   action?: ReactNode;
+  /** Troca o ícone do tom (ex.: `WifiOffIcon`); renderize-o com `className="mt-0.5 size-5 shrink-0"`. */
+  icon?: ReactNode;
   className?: string;
 };
 
 /** Mensagem inline. `danger` usa `role="alert"`; os demais `role="status"`. */
-export const Alert = ({ tone = "info", title, children, action, className }: AlertProps) => (
+export const Alert = ({ tone = "info", title, children, action, icon, className }: AlertProps) => (
   <div
     role={tone === "danger" ? "alert" : "status"}
     className={cn("flex gap-3 rounded-card border p-4", TONES[tone].box, className)}
   >
-    <span className={TONES[tone].title}>
-      <ToneIcon tone={tone} />
-    </span>
+    <span className={TONES[tone].title}>{icon ?? <ToneIcon tone={tone} />}</span>
     <div className="flex min-w-0 flex-1 flex-col gap-2 text-sm text-fg">
       {title ? <p className={cn("font-semibold", TONES[tone].title)}>{title}</p> : null}
       {children ? <div>{children}</div> : null}

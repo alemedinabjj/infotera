@@ -49,10 +49,20 @@ describe("hotelSchema rejeita dados fora do contrato", () => {
     ["rating acima de 5", { rating: 5.1 }],
     ["images inválidas", { images: ["nao-url"] }],
     ["images http", { images: ["http://example.com/a.jpg"] }],
+    ["images de host desconhecido", { images: ["https://evil.example.com/a.jpg"] }],
+    ["thumbnail de host desconhecido", { thumbnail: "https://images.unsplash.com.evil.io/a" }],
     ["horário inválido", { checkInTime: "25:00" }],
     ["moeda diferente", { currency: "USD" }],
   ])("%s", (_name, override) => {
     expect(hotelSchema.safeParse({ ...firstHotel, ...override }).success).toBe(false);
+  });
+});
+
+describe("reviewSchema aceita só avatares de host conhecido", () => {
+  const review = reviewSchema.parse(seed.reviews[0]);
+  it("rejeita outro host", () => {
+    const parsed = reviewSchema.safeParse({ ...review, guestAvatar: "https://evil.example.com/a" });
+    expect(parsed.success).toBe(false);
   });
 });
 

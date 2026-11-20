@@ -11,14 +11,23 @@ import { GuestsPicker } from "./GuestsPicker";
 import { RecentSearches } from "./RecentSearches";
 
 type SearchFormProps = {
-  /** Preenche tudo e trata o destino como já escolhido (ex.: "Alterar busca" na F3). */
-  initialCriteria?: SearchCriteria;
+  /**
+   * Preenche o que vier (o resto fica nos padrões) e trata o destino presente como já escolhido
+   * (ex.: "Alterar busca" na F3).
+   */
+  initialCriteria?: Partial<SearchCriteria>;
+  /** Mostra a lista de buscas recentes abaixo do formulário (padrão `true`). */
+  showRecentSearches?: boolean;
   /** `id` do título da página (vira o nome acessível do `<form>`). */
   labelledBy?: string;
 };
 
 /** Formulário de busca: destino (autocomplete), datas, hóspedes e envio para `/search`. */
-export const SearchForm = ({ initialCriteria, labelledBy }: SearchFormProps) => {
+export const SearchForm = ({
+  initialCriteria,
+  showRecentSearches = true,
+  labelledBy,
+}: SearchFormProps) => {
   const search = useSearchForm(initialCriteria);
   const { form, notices } = search;
 
@@ -89,11 +98,13 @@ export const SearchForm = ({ initialCriteria, labelledBy }: SearchFormProps) => 
           </p>
         </form>
       </FormProvider>
-      <RecentSearches
-        items={search.recent.items}
-        onRestore={search.restore}
-        onClear={clearRecent}
-      />
+      {showRecentSearches ? (
+        <RecentSearches
+          items={search.recent.items}
+          onRestore={search.restore}
+          onClear={clearRecent}
+        />
+      ) : null}
     </div>
   );
 };

@@ -4,7 +4,13 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Dialog } from "./Dialog";
 
-const Harness = ({ onClose = () => undefined }: { onClose?: () => void }) => {
+const Harness = ({
+  onClose = () => undefined,
+  placement,
+}: {
+  onClose?: () => void;
+  placement?: "center" | "sheet";
+}) => {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -14,6 +20,7 @@ const Harness = ({ onClose = () => undefined }: { onClose?: () => void }) => {
       <Dialog
         open={open}
         title="Termos da reserva"
+        placement={placement}
         onClose={() => {
           setOpen(false);
           onClose();
@@ -96,5 +103,58 @@ describe("Dialog", () => {
     fireEvent.pointerDown(dialog);
     fireEvent.click(dialog);
     expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+describe("Dialog placement", () => {
+  it("center é o padrão: centralizado, sem animação de sheet", () => {
+    render(
+      <Dialog open title="T" onClose={() => undefined}>
+        <p>x</p>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("m-auto", "rounded-dialog");
+    expect(dialog).not.toHaveClass("animate-slide-up");
+  });
+
+  it("sheet cola embaixo, ocupa a largura e anima de baixo para cima", () => {
+    render(
+      <Dialog
+        open
+        title="Filtros"
+        placement="sheet"
+        onClose={() => undefined}
+        footer={<p>rodapé</p>}
+      >
+        <p>x</p>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "Filtros" });
+    expect(dialog).toHaveClass("mt-auto", "w-full", "rounded-t-dialog", "animate-slide-up");
+    expect(dialog).not.toHaveClass("m-auto");
+    expect(screen.getByText("rodapé").parentElement).toHaveClass("flex-row");
+  });
+
+  it("sheet fecha pelo Esc (cancel) e devolve o foco ao gatilho", async () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} placement="sheet" />);
+    const trigger = screen.getByRole("button", { name: "Ler termos" });
+    await userEvent.click(trigger);
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+});
+
+describe("Dialog initialFocus", () => {
+  it("foca o controle indicado em vez do botão Fechar", () => {
+    render(
+      <Dialog open title="T" onClose={() => undefined} initialFocus="input[name='primeiro']">
+        <input name="primeiro" aria-label="Primeiro" />
+      </Dialog>,
+    );
+    expect(screen.getByLabelText("Primeiro")).toHaveFocus();
   });
 });

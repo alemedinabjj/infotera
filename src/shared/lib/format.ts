@@ -20,3 +20,13 @@ export const formatGuests = ({ adults, children, rooms }: GuestCounts): string =
   ].join(", ");
   return `${people} · ${pluralize(rooms, "quarto", "quartos")}`;
 };
+
+export type RatingLabel = "Excelente" | "Muito bom" | "Bom" | "Regular";
+
+/** Rótulo qualitativo da nota: ≥ 4,5 Excelente, ≥ 4,0 Muito bom, ≥ 3,5 Bom, abaixo Regular. */
+export const ratingLabel = (rating: number): RatingLabel => {
+  if (rating >= 4.5) return "Excelente";
+  if (rating >= 4) return "Muito bom";
+  if (rating >= 3.5) return "Bom";
+  return "Regular";
+};

@@ -48,3 +48,9 @@ index.ts
 - Unit: `price` (1 e 30 noites, vários quartos, arredondamento), CPF (válidos, inválidos, repetidos
   tipo 111.111.111-11), Luhn, validade (mês atual, passado), schemas por step, `to-booking`.
 - Componente: não avança step com erro; persistência não contém dados de cartão; retry do submit.
+
+## Notas vindas da F3
+- CSP completa (F5): hoje não há `img-src`. As fotos usam o loader do Unsplash (`images.unsplash.com` direto, não só
+  `/_next/image`): libere esse host (e `i.pravatar.cc` para avatares) em `img-src`.
+- O total do card da F3 é `diária × noites × quartos` sem taxas; aqui o breakdown com taxas é a fonte da verdade
+  (o rótulo da F3 diz "total", nunca "total final").

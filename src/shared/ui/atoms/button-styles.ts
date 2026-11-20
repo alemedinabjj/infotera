@@ -13,6 +13,8 @@ const BASE =
   "inline-flex items-center justify-center gap-2 rounded-control transition-colors duration-150 " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus " +
   "disabled:cursor-not-allowed disabled:border-transparent disabled:bg-surface-sunken disabled:text-fg-subtle " +
+  "aria-disabled:cursor-not-allowed aria-disabled:border-transparent aria-disabled:bg-surface-sunken aria-disabled:text-fg-subtle " +
+  "aria-disabled:hover:bg-surface-sunken aria-disabled:active:bg-surface-sunken aria-disabled:hover:brightness-100 " +
   "aria-busy:cursor-progress";
 
 const VARIANTS: Record<ButtonVariant, string> = {

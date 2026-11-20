@@ -37,3 +37,9 @@ index.ts
 ## Testes
 - Unit: `availability`, `cancellation`, menor preço dos quartos.
 - Componente: lightbox por teclado; selecionar quarto grava no store e navega; quarto esgotado desabilitado.
+
+## Contrato com a F3
+- A F3 prefetcha (hover/foco do card) `hotelQueryOptions(id)` e `hotelRoomsQueryOptions(id)` de `shared/api/queries`.
+  Leia hotel e quartos com **as mesmas options** nas partes cliente (ou hidrate com a mesma chave) para o prefetch valer.
+- Preço do card da F3 = `pricePerNight` do hotel; "a partir de" aqui vem dos quartos (hotéis 1 e 4 divergem: o detalhe mostra menos).
+- `unsplashLoader`, `BLUR_DATA_URL`, `RatingScore`, `PriceTag` e `HotelCard` nasceram na F3: promova para `shared/` ao reusar.
