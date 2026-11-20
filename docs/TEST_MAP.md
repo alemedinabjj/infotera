@@ -125,12 +125,20 @@ Features
 - ✅ Modo offline (cache de buscas persistido) e PWA (manifest, service worker, ícones).
 - ✅ i18n pt-BR + en-US.
 Next.js
-- ✅ Partial Prerendering · Server Actions para mutations · Parallel Routes para modals ·
-  ISR · Edge Runtime onde apropriado.
+- ✅ Partial Prerendering · Server Actions para mutations · Parallel Routes para modals · ISR.
+- ⛔ Edge Runtime: avaliado e descartado (decisão do usuário). No Next 16.4 `runtime = 'edge'` está
+  deprecated e é incompatível com `cacheComponents` (PPR); PPR/ISR resolvem melhor o problema real.
+  Justificar no README.
 
 ### F8 — delivery
+- ✅ Portão final: `end-user-tester` percorre TODAS as jornadas no navegador (personas celular,
+  desktop, só teclado, conexão ruim, inglês) com o build de produção; veredito `PRONTO PARA ENTREGA`.
 - ✅ Testes unitários, de componente e E2E do fluxo completo (Playwright) + axe.
 - README completo (decisões, trade-offs, uso de IA), `.env.example`, deploy (Vercel + Render).
+- Mock API publicada no Render: `https://infotera-mock-api.onrender.com` (serviço `infotera-mock-api`,
+  plano free, região Virginia; build `cd mock-api && npm install`, start `cd mock-api && npm start`).
+  Sobe hoje da branch `chore/setup-ai-workflow`; trocar para `main` depois do merge. No plano free o
+  serviço dorme após ~15 min sem uso: o primeiro request pode levar ~50 s (cold start).
 
 ## Mock API — o que importa saber
 

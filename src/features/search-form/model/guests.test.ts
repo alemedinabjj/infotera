@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type GuestCounts, guestHint, guestLimits } from "./guests";
+import { type GuestCounts, guestHint, guestHints, guestLimits } from "./guests";
 
 const counts = (rooms: number, adults: number, children: number): GuestCounts => ({
   rooms,
@@ -69,5 +69,32 @@ describe("guestHint", () => {
     expect(guestHint("rooms", counts(2, 5, 2))).toBe(
       "Com 7 hóspedes, são necessários pelo menos 2 quartos.",
     );
+  });
+});
+
+describe("guestHints (sem frase repetida)", () => {
+  const full = counts(1, 3, 2); // 5 hóspedes num quarto: adultos e crianças no teto
+
+  it("a mesma frase de capacidade aparece uma vez, no controle que a pessoa mexeu", () => {
+    expect(guestHint("adults", full)).toBe(guestHint("children", full));
+    expect(guestHints(full, "children")).toMatchObject({ adults: null });
+    expect(guestHints(full, "children").children).toMatch(/^Até 5 hóspedes por quarto/);
+    expect(guestHints(full, "adults").children).toBeNull();
+    expect(guestHints(full, "adults").adults).toMatch(/^Até 5 hóspedes por quarto/);
+  });
+
+  it("sem último controle, vale o primeiro da lista", () => {
+    expect(guestHints(full).adults).not.toBeNull();
+    expect(guestHints(full).children).toBeNull();
+  });
+
+  it("frases diferentes seguem todas visíveis", () => {
+    const hints = guestHints(counts(2, 2, 0), "rooms");
+    expect(hints.adults).toBe("Cada quarto precisa de pelo menos 1 adulto.");
+    expect(hints.rooms).not.toBeNull();
+  });
+
+  it("sem limite batido, nada a mostrar", () => {
+    expect(guestHints(counts(1, 2, 0))).toEqual({ adults: null, children: null, rooms: null });
   });
 });

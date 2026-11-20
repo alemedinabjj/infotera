@@ -75,3 +75,30 @@ export const guestHint = (field: GuestField, counts: GuestCounts): string | null
     }
   }
 };
+
+/**
+ * Motivos de todos os contadores, sem repetir a mesma frase: quando dois controles batem no mesmo
+ * limite (ex.: "Até 5 hóspedes por quarto" em Adultos e Crianças), só o que a pessoa acabou de
+ * mexer (`lastChanged`) a mostra; sem essa informação, vale o primeiro da lista.
+ */
+export const guestHints = (
+  counts: GuestCounts,
+  lastChanged: GuestField | null = null,
+): Record<GuestField, string | null> => {
+  const hints: Record<GuestField, string | null> = {
+    adults: guestHint("adults", counts),
+    children: guestHint("children", counts),
+    rooms: guestHint("rooms", counts),
+  };
+  const order: GuestField[] = ["adults", "children", "rooms"];
+  const shown = new Set<string>();
+  const ranked =
+    lastChanged === null ? order : [lastChanged, ...order.filter((f) => f !== lastChanged)];
+  for (const field of ranked) {
+    const text = hints[field];
+    if (text === null) continue;
+    if (shown.has(text)) hints[field] = null;
+    else shown.add(text);
+  }
+  return hints;
+};

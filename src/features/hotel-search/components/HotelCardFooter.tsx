@@ -1,6 +1,5 @@
-import { Badge } from "@/shared/ui";
+import { Badge, PriceTag } from "@/shared/ui";
 import type { CardPricing } from "../model/card-pricing";
-import { PriceTag } from "./PriceTag";
 
 /** Selo de disponibilidade (esquerda) + preço e nota (direita), colados: é onde se decide. */
 export const HotelCardFooter = ({ pricing }: { pricing: CardPricing }) => {

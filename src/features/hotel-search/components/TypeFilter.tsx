@@ -1,7 +1,7 @@
 import type { PropertyType } from "@/shared/api/schemas";
+import { PROPERTY_TYPE_DISPLAY_ORDER, propertyTypeLabel } from "@/shared/lib/labels";
 import { Checkbox } from "@/shared/ui";
 import type { FilterChange } from "../model/filter-change";
-import { PROPERTY_TYPE_DISPLAY_ORDER, propertyTypeLabel } from "../model/labels";
 import { FilterGroup } from "./FilterGroup";
 
 type TypeFilterProps = {

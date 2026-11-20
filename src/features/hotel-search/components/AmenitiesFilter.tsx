@@ -1,7 +1,7 @@
 import type { Amenity } from "@/shared/api/schemas";
+import { AMENITY_DISPLAY_ORDER, amenityLabel } from "@/shared/lib/labels";
 import { Checkbox } from "@/shared/ui";
 import type { FilterChange } from "../model/filter-change";
-import { AMENITY_DISPLAY_ORDER, amenityLabel } from "../model/labels";
 import { FilterGroup } from "./FilterGroup";
 
 type AmenitiesFilterProps = {

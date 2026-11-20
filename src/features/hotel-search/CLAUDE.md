@@ -9,17 +9,17 @@ Spec: `docs/specs/F3-hotel-search.md` (inclui `## UI/UX` e os "Ajustes aos crit�
 model/search-filters.ts   tipos, PRICE_RANGE, parse tolerante por chave, serialização canônica, withFilters, contadores
 model/filter-change.ts    applyFilterChange (reducer exaustivo; toda ação zera a página; clear mantém a ordenação)
 model/to-api-query.ts     filtros → query da mock-api; amenitiesPattern (regex com lookaheads = E); SORT_TO_API
-model/search-page.ts      parseSearchPage (missing-destination | browse | stay), hotelHref, título, resumo, key
-model/card-pricing.ts     bloco de preço do card (disponibilidade + total) · stay-price.ts (centavos) · availability.ts
+model/search-page.ts      parseSearchPage (missing-destination | browse | stay), título, resumo (via `describeStay` de shared), key
+model/card-pricing.ts     bloco de preço do card (disponibilidade + total; `stayTotal` e `availability` vêm de `shared/lib`)
 model/results-view.ts     deriveResultsView, toolbar, anúncios, rótulo do primário do sheet, página fora do intervalo
-model/price-range.ts      limite entre os dois sliders, aria-valuetext, resumo · labels.ts · card-amenities.ts · image.ts
+model/price-range.ts      limite entre os dois sliders, aria-valuetext, resumo · labels.ts (só `sortLabel`) · card-amenities.ts · image.ts (só `CARD_IMAGE_SIZES`)
 api/hotels.ts             hotelsQueryOptions(destination, filters) → { items, total } + keepPreviousIfSameDestination
 hooks/useSearchFilters    lê (useSearchParams) e grava (history.replaceState) · useHotelResults · usePrefetchHotel
-hooks/usePriceDraft       sliders locais, timer de 400 ms no handler (cancelado por mudança externa) · useSlowLoading
+hooks/usePriceDraft       sliders locais, timer de 400 ms no handler (cancelado por mudança externa)
 hooks/useResultsController  liga filtros + query + foco/altura · useFocusOnPageChange · useFocusAfterRetry · useKeepResultsHeight
 hooks/useCloseOnDesktop · useFocusAfterEdit
 components/               HotelSearchResults (cliente) · ResultsToolbar/Section/List/Skeleton/Empty/Error · HotelCard(+Footer,
-                          Image, Skeleton) · RatingScore · PriceTag · FiltersPanel/Fields/Drawer + um componente por filtro ·
+                          Skeleton) · FiltersPanel/Fields/Drawer + um componente por filtro ·
                           SearchHeader · MissingDestination
 index.ts                  API pública usada por app/search
 ```
@@ -78,3 +78,10 @@ index.ts                  API pública usada por app/search
   (URL do jsdom, `replaceState`/`popstate`) e `fetch` stubado por URL.
 - E2E (`hotel-search.spec.ts`, `.states.spec.ts`, `.mobile.spec.ts`): mock-api real, `_delay`/`_fail`
   pelos fixtures, offline, axe (lista, sheet, vazio, erro, sem destino), 320 px.
+
+## Promovido para `shared/` na F4 (segundo uso)
+`RatingScore`, `PriceTag`, `RemoteImage` (era `HotelImage`: `className` define a geometria, `priority` no lugar de
+`eager`), `cardClassName`, `unsplashLoader`/`BLUR_DATA_URL` (`lib/image`), `stayTotal` (`lib/pricing`),
+`availabilityStatus`/`describeAvailability` (`lib/availability`), `amenityLabel`/`propertyTypeLabel` (`lib/labels`),
+`hotelHref` (`lib/links`), `describeStay` (`lib/stay-summary`), `copyCurrentUrl` (`ui`), `useSlowLoading`. O
+`HotelCard` segue aqui.

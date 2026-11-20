@@ -43,8 +43,25 @@ const toUTCms = (value: ISODate): number => {
 export const toISODate = (date: Date): ISODate =>
   `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
-/** Hoje, na data local do usuário. */
-export const todayISO = (now: Date = new Date()): ISODate => toISODate(now);
+/** Fuso do produto (hotéis brasileiros): o servidor roda em UTC e não pode decidir "hoje" sozinho. */
+const PRODUCT_TIME_ZONE = "America/Sao_Paulo";
+
+const todayFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: PRODUCT_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/**
+ * Hoje no calendário de `America/Sao_Paulo`, no servidor e no cliente (um `Date` em UTC às 23:30
+ * de Brasília já é "amanhã" em UTC, e o aviso de datas passadas erraria).
+ */
+export const todayISO = (now: Date = new Date()): ISODate => {
+  const parts = todayFormatter.formatToParts(now);
+  const part = (type: string): string => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+};
 
 /** Soma `days` (pode ser negativo) a uma data, em UTC por componentes. */
 export const addDays = (value: ISODate, days: number): ISODate =>

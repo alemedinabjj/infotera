@@ -54,10 +54,23 @@ describe("GuestsPicker", () => {
     render(<Harness values={{ adults: 3, children: 2 }} />);
     for (const name of ["Aumentar adultos", "Aumentar crianças"]) {
       expect(button(name)).toHaveAttribute("aria-disabled", "true");
-      expect(button(name)).toHaveAccessibleDescription(
-        /Até 5 hóspedes por quarto\. Adicione um quarto/,
-      );
     }
+    // O motivo aparece uma vez só (no 1º controle, já que ninguém mexeu ainda), sem repetir.
+    expect(screen.getAllByText(/Até 5 hóspedes por quarto\./)).toHaveLength(1);
+    expect(button("Aumentar adultos")).toHaveAccessibleDescription(
+      /Até 5 hóspedes por quarto\. Adicione um quarto/,
+    );
+  });
+
+  it("o motivo do teto fica no controle que a pessoa acabou de mexer", async () => {
+    const user = userEvent.setup();
+    render(<Harness values={{ adults: 3, children: 1 }} />);
+    await user.click(button("Aumentar crianças"));
+    expect(screen.getAllByText(/Até 5 hóspedes por quarto\./)).toHaveLength(1);
+    expect(button("Aumentar crianças")).toHaveAccessibleDescription(
+      /Até 5 hóspedes por quarto\. Adicione um quarto/,
+    );
+    expect(button("Aumentar adultos")).not.toHaveAccessibleDescription(/Até 5/);
   });
 
   it("2 quartos exigem 2 adultos; adicionar quarto libera mais hóspedes", async () => {

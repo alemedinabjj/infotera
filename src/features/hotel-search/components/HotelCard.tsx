@@ -2,16 +2,15 @@ import Link from "next/link";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import { pluralize } from "@/shared/lib/format";
+import { amenityLabel, propertyTypeLabel } from "@/shared/lib/labels";
+import { hotelHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { CheckIcon } from "@/shared/ui";
+import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
 import { deriveCardPricing } from "../model/card-pricing";
-import { amenityLabel, propertyTypeLabel } from "../model/labels";
-import { hotelHref } from "../model/search-page";
+import { CARD_IMAGE_SIZES } from "../model/image";
 import { HotelCardFooter } from "./HotelCardFooter";
-import { HotelImage } from "./HotelImage";
-import { RatingScore } from "./RatingScore";
 
 type HotelCardProps = {
   hotel: Hotel;
@@ -74,12 +73,14 @@ export const HotelCard = ({
 
   return (
     <li>
-      <article className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow duration-150 hover:shadow-raised has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus sm:flex-row">
-        <HotelImage
+      <article className={cardClassName({ variant: "interactive", className: "sm:flex-row" })}>
+        <RemoteImage
           src={hotel.thumbnail}
           alt={hotel.name}
+          sizes={CARD_IMAGE_SIZES}
+          className="aspect-[4/3] w-full shrink-0 sm:aspect-auto sm:min-h-42 sm:w-56"
           muted={pricing.status === "sold-out"}
-          eager={priority}
+          priority={priority}
         />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
           <h3 className="line-clamp-2 text-lg font-semibold text-fg">

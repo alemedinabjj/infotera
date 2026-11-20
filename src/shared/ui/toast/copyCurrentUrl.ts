@@ -1,4 +1,4 @@
-import { toast } from "@/shared/ui";
+import { toast } from "./toast-store";
 
 /** Grava a URL atual (com filtros e página) na área de transferência e avisa por toast. */
 export const copyCurrentUrl = async (): Promise<void> => {

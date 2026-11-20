@@ -81,6 +81,11 @@ Regras:
 - Texto colorido (`danger`, `success`, `warning`, `primary`) só sobre `surface`, `canvas` ou o próprio `*-soft`.
 - Botão destrutivo: texto branco sobre `danger` = 6.57. Sobre `success` = 5.69.
 - Texto sobre foto: sempre com faixa de `overlay/60` por baixo, nunca direto na imagem.
+- Sobre fundo escuro (`bg-fg`, só no lightbox) o anel de foco é branco
+  (`focus-visible:outline-fg-on-primary`, 17.28:1): `primary` sobre `fg` dá 2.59:1, abaixo de 3:1.
+  Texto sobre `bg-fg` = `text-fg-on-primary` (17.28:1).
+- Linha destacada em tabela (`bg-primary-soft`): `fg` 15.16:1 · `fg-muted` 6.61:1 · `fg-subtle`
+  4.76:1 · ícone `success` 4.99:1.
 
 **Tema escuro:** fora do escopo (⏭️). Os tokens são semânticos, então seria só redefinir as variáveis
 dentro de `@media (prefers-color-scheme: dark)`. Não implementar agora; declare `color-scheme: light`.
@@ -339,6 +344,11 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
   `aspect-video` no hero da galeria), `object-cover`, `sizes` correto, `bg-surface-sunken` enquanto carrega.
   `alt` = nome do hotel + contexto ("Hotel Copacabana Palace, foto 2 de 8"). Imagem quebrada → manter o
   bloco cinza com ícone `bed` centralizado (sem layout shift).
+  Galeria do hotel (F4): `< sm` só a foto principal `aspect-video`; `≥ sm` grade `grid-cols-4
+  grid-rows-2 gap-2 h-72 lg:h-96` (principal `col-span-2 row-span-2`, até 4 thumbs, grade se ajusta
+  ao número de fotos sem buraco). "+N fotos" sobre o último thumb usa faixa `bg-overlay/60` com texto
+  `text-fg-on-primary` (≥ 4.5:1 mesmo sobre foto branca). Foto dentro de botão: `alt=""` e o botão
+  tem `aria-label` ("Abrir foto 2 de 5"). Avatar de pessoa: `alt=""` (o nome está ao lado).
 
 ---
 
@@ -404,13 +414,28 @@ Mostrando 1–10 de 14                  ← linha de status min-h-5 text-sm text
 
 ### 4.5 Barra de ação fixa (mobile)
 
-Para a ação primária em páginas longas (detalhe do hotel, checkout) abaixo de `lg`:
+Para a ação primária do **checkout** abaixo de `lg` (F5). O detalhe do hotel **não** usa barra fixa
+(F4): antes de escolher o quarto não há total para mostrar e ela só repetiria "Ver quartos", que está
+no topo; também cobriria os toasts.
 ```
 ┌──────────────────────────────────────┐
 │ R$ 1.840,00  total · 3 noites  [Ação]│   fixed bottom-0 inset-x-0 z-30 bg-surface
 └──────────────────────────────────────┘   border-t shadow-raised px-4 py-3 pb-[env(safe-area-inset-bottom)]
 ```
 Reserve o espaço no fim do `<main>` (`pb-24`) para não cobrir conteúdo. Some em `lg:` (ação fica na sidebar).
+
+### 4.6 Página longa com seções (detalhe do hotel, F4)
+
+- Seções empilhadas `flex flex-col gap-8 lg:gap-12`, cada uma `<section id aria-labelledby>` com h2
+  `text-xl font-semibold`. O h2 fica fora de Suspense/boundary (âncora estável).
+- Navegação por âncoras (`SectionNav`): `<nav aria-label="Seções da página">` **estática** (não
+  sticky: um segundo elemento sticky somaria com o header e esconderia o foco), `border-y
+  border-border`, `<ul class="flex gap-1 overflow-x-auto py-1">`, links com `buttonClassName({ variant:
+  "ghost", size: "sm" })` + `shrink-0 whitespace-nowrap`. No celular rola na horizontal dentro de si
+  (não esconder a scrollbar); o rótulo de cada link é igual ao h2 da seção.
+- Âncoras dependem do `scroll-padding-top` global; `scroll-behavior: smooth` só sem
+  `prefers-reduced-motion`.
+- Ordem DOM = ordem visual em todas as larguras (nada de `order-*` para reordenar blocos).
 
 ---
 
@@ -447,8 +472,10 @@ Convenções para todos:
 - Props: `variant`, `size`, `fullWidth` (`w-full`, padrão no mobile para a ação primária), `loading`,
   `leftIcon`, `rightIcon`.
 - **Disabled:** `bg-surface-sunken text-fg-subtle border-transparent cursor-not-allowed` (todas as
-  variantes). Use `disabled` só quando a ação é impossível (ex.: Esgotado). Para formulário inválido,
-  **não desabilite o submit**: deixe enviar e mostre os erros (o usuário descobre o que falta).
+  variantes). Ação bloqueada por regra (esgotado, quarto pequeno para a busca) usa **`aria-disabled`**
+  com esse visual, nunca `disabled` (mantém o foco), e o **motivo em texto visível** acima do botão,
+  ligado por `aria-describedby`, dizendo como resolver. Para formulário inválido, **não desabilite o
+  submit**: deixe enviar e mostre os erros.
 - **Loading:** mantém a largura (sem shift), troca o ícone esquerdo por `Spinner` e o texto pelo
   `loadingText` ("Confirmando…"), `aria-busy="true"`, `aria-disabled="true"` e ignora cliques (não usar
   `disabled`, que tira o foco).
@@ -518,6 +545,8 @@ Não é interativo. Se transmitir status crítico (esgotado), o texto do badge b
   `sr-only`: "Nota 4,8 de 5, Excelente, 2.847 avaliações". Props: `rating`, `reviewCount`,
   `showLabel = true`, `size: "sm" | "md"` (`sm` = nota `text-sm`, para reviews na F4).
   `reviewCount` 0 → `Sem avaliações` (sem estrelas).
+  `reviewCount` é opcional: omitido → sem contagem e sem rótulo qualitativo (uso: nota inteira de
+  um comentário, `size="sm"`, visível `5 ★★★★★`, nome "Nota 5 de 5"; inteiros sem casa decimal).
 - Notas são 0–5 (hotel com decimal, review inteiro). Rótulo qualitativo opcional: ≥ 4,5 "Excelente",
   ≥ 4,0 "Muito bom", ≥ 3,5 "Bom", abaixo "Regular" (função pura em `shared/lib`).
 
@@ -532,6 +561,11 @@ conteúdo final (ex.: `HotelCardSkeleton`).
 SVG `animate-spin` `size-4`/`size-5`, `currentColor`, `aria-hidden`. Sempre ao lado de texto visível ou
 `sr-only` ("Carregando…"). Usar só para ações curtas (botão, combobox). Carregamento de seção = Skeleton.
 
+#### Avatar
+`size-10 rounded-full overflow-hidden bg-surface-sunken`, imagem `object-cover alt=""`. Imagem
+quebrada/ausente: iniciais (até 2 letras) `text-sm font-semibold text-fg-muted` centralizadas (6.40:1).
+Sempre ao lado do nome em texto. Nasce na F4 (comentários).
+
 #### PriceTag
 Mostra dinheiro com `formatBRL` (de `shared/lib/currency`), `tabular-nums`, `whitespace-nowrap` no valor.
 
@@ -540,6 +574,9 @@ Mostra dinheiro com `formatBRL` (de `shared/lib/currency`), `tabular-nums`, `whi
 | `nightly` | `a partir de` (`text-sm text-fg-subtle`) / **R$ 890** (`text-xl font-bold`) / `por noite` | Card de resultado, "a partir de" no detalhe |
 | `total` | **R$ 2.670,00** (`text-2xl font-bold`) / `total · 3 noites · 1 quarto` (`text-sm text-fg-muted`) | Barra fixa, resumo do checkout, confirmação |
 | `line` | label à esquerda, valor à direita (`flex justify-between`) | Linhas do breakdown (diárias, taxas) |
+| `nightly-inline` | `a partir de` (`text-sm text-fg-subtle`) **R$ 800** (`text-2xl font-bold`) `por noite` (`text-sm text-fg-muted`) numa linha `flex flex-wrap items-baseline gap-x-1` | "a partir de" no topo do detalhe do hotel |
+| `stay` com `exactNightly` | igual ao total do card, mas a 3ª linha é `R$ 1.200 por noite` (sem "a partir de") | Card de quarto (o preço do quarto é exato) |
+| `room-nightly` | **R$ 1.200** (`text-xl font-bold`) / `por noite`, alinhado à direita | Card de quarto sem datas |
 
 - Leitura por leitor de tela como frase: `aria-label` não é necessário se a ordem do DOM já for
   "a partir de R$ 890 por noite". Não quebrar o valor com elementos que separem "R$" do número.
@@ -635,6 +672,14 @@ Botão que mostra/esconde um painel logo **abaixo** dele (nada acima se move). `
 com `rightIcon` `ChevronDownIcon` (`rotate-180 transition-transform` quando aberto), `aria-expanded`,
 `aria-controls` = id do painel. Abrir não move o foco (padrão disclosure); fechar pelo mesmo botão.
 Painel fechado = não montado. Uso: "Alterar busca" na F3 (painel com o `SearchForm`).
+Variante **cabeçalho** (F4, "Comparar quartos (4)"): `<h3><button aria-expanded aria-controls>` com o
+texto do título (`text-lg font-semibold text-fg`, `min-h-11`, `ChevronDownIcon` à direita); usada
+quando o painel é uma subseção com título.
+**Disclosure nativo** (`<details>/<summary>`, sem JS) para conteúdo complementar curto ("+2
+comodidades", "Ver regras de cancelamento"): `summary` `min-h-11 inline-flex items-center gap-2
+font-medium text-primary cursor-pointer list-none [&::-webkit-details-marker]:hidden`, `ChevronDownIcon
+size-4 group-open:rotate-180 transition-transform` (`details` com `group`). Abre abaixo; foco fica no
+`summary`.
 
 #### Breadcrumb
 `<nav aria-label="Você está aqui"><ol>` com separador `chevron-right` `aria-hidden`. Último item é
@@ -653,6 +698,22 @@ o link de voltar ao nível anterior** ("← Hotéis em São Paulo"), para não q
 - `aria-label` de cada número: "Página 4". Ao trocar de página: rolar para o topo da lista e mover o foco
   para o título/contagem de resultados (`tabIndex={-1}`).
 - Esconder a paginação se houver 1 página só.
+
+#### Tabela de comparação
+`<table class="w-full text-sm tabular-nums">` com `<caption>` (pode ser `sr-only` se houver título
+visível), `th scope="col"` por item comparado (`min-w-36`, quebra linha) e `th scope="row"` por
+atributo (`sticky left-0 min-w-28 bg-surface`, opaco). Células `px-3 py-3`, linhas `divide-y
+divide-border`.
+- Linha que difere: `bg-primary-soft` na linha inteira (inclusive o `th` sticky) + `border-l-4
+  border-primary` no `th` + `<span class="sr-only">, diferente entre os quartos</span>`; legenda
+  visível acima ("Linhas marcadas mudam entre os quartos.").
+- Booleano: `CheckIcon text-success` + `Sim` / `MinusIcon text-fg-subtle` + `Não` (ícones
+  `aria-hidden`).
+- Largura: a tabela fica numa região `role="region" aria-labelledby tabIndex=0 overflow-x-auto
+  rounded-card border border-border` (rola só ela; exceção de reflow para tabela de dados) com a dica
+  `Arraste para o lado para ver todos.` (`text-sm text-fg-subtle lg:hidden`).
+- Filtro "Mostrar só diferenças": `Checkbox` acima; anúncio `sr-only aria-live` com a contagem de
+  linhas visíveis.
 
 #### EmptyState
 Centralizado, `py-12`, ícone `size-12 text-fg-subtle` em círculo `bg-surface-sunken`, título `text-lg
@@ -738,8 +799,13 @@ ao fechar — garantir explicitamente guardando o elemento ativo).
 │           [Secundária][Primária]│  footer opcional: border-t, botões à direita (empilhados no mobile, primária em cima)
 └─────────────────────────────────┘
 ```
-- Tamanhos: `sm` (`max-w-sm`, confirmações), `md` (`max-w-lg`, termos), `full` (lightbox: tela cheia
-  `bg-fg`/preto, imagem `object-contain`).
+- Tamanhos: `sm` (`max-w-sm`, confirmações), `md` (`max-w-lg`, termos), `full` (lightbox, F4):
+  `fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none rounded-none bg-fg text-fg-on-primary
+  animate-fade-in`; header `h-14 px-4` sem borda (h2 `text-base font-semibold truncate`), corpo
+  `flex-1 min-h-0` sem padding (imagem `object-contain`), footer `h-16 px-4
+  pb-[env(safe-area-inset-bottom)]` com `IconButton overlay` "Foto anterior"/"Próxima foto" nas pontas
+  e contador central `w-28 text-center tabular-nums aria-live="polite"`. Anel de foco branco (§1.1).
+  Sem fechar no backdrop (não há backdrop visível). Foco inicial no controle principal ("Próxima foto").
 - Mobile: `w-[calc(100%-2rem)] max-h-[85dvh]`; ≥ `sm` centralizado. `rounded-dialog shadow-overlay`.
 - `aria-labelledby` = título; `aria-describedby` opcional. Botão fechar `IconButton` "Fechar".
 - Clique no backdrop fecha só em dialogs informativos (termos, lightbox); em confirmação, não.
@@ -799,6 +865,16 @@ São da feature (F3/F4), mas devem compor: `Card interactive` + imagem `aspect-[
   vêm primeiro em `text-fg font-medium`; "+N" `text-fg-subtle` com `sr-only` " comodidades".
 - Skeleton com a mesma geometria (foto `block`, linhas com a altura do `line-height` de cada texto,
   `border-t` e 3 linhas à direita).
+- **RoomCard (F4)**: `Card static` com a geometria do HotelCard (vertical no mobile, horizontal `sm+`).
+  Ordem: foto (`alt=""`) → h3 nome → descrição → fatos (`45 m²` · `Até 3 hóspedes` · camas, ícones
+  `size-4`) → até 4 comodidades + `<details>` "+N comodidades" → linha de cancelamento → bloco de
+  preço (total grande, diária exata) → motivo de bloqueio (se houver) → botão (`fullWidth`, `sm:w-56
+  sm:ml-auto`). Estados de botão: "Selecionar quarto" (primary), "Escolher datas" (secondary; sem datas **ou** com datas já passadas, motivo `As datas desta busca já passaram.`),
+  "Esgotado"/bloqueado (`aria-disabled` + motivo). Nome acessível do botão inclui o quarto
+  (`sr-only` ": {nome}"). Selecionando: `selected` (`ring-1 ring-primary`) + `loading`.
+- **SimilarHotelCard (F4)**: `Card interactive` compacto; `< sm` horizontal (foto `w-24
+  aspect-square`), `sm+` vertical (foto `aspect-[4/3]`); nome `text-base line-clamp-2`, `RatingScore
+  sm` sem rótulo, `PriceTag nightly-line`, badge de disponibilidade.
 
 ---
 
@@ -857,7 +933,9 @@ Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
 |---|---|---|---|
 | Destino sem hotéis (Bonito) | `Nenhum hotel em Bonito, MS` | `Ainda não temos hospedagens neste destino. Tente uma cidade próxima.` | `Fazer nova busca` |
 | Filtros sem resultado | `Nenhum hotel com esses filtros` | `Tente aumentar a faixa de preço ou remover alguma comodidade.` | `Limpar filtros` (primária) |
-| Hotel sem avaliações | `Ainda sem avaliações` | `Este hotel ainda não recebeu avaliações de hóspedes.` | — |
+| Hotel sem comentários | `Ainda sem comentários` | `Este hotel ainda não recebeu comentários de hóspedes.` | — |
+| Hotel sem quartos | `Nenhum quarto para reserva` | `Este hotel ainda não tem quartos cadastrados. Veja hotéis parecidos na mesma região.` | link `Ver hotéis similares` |
+| Similares vazio | — | `Nenhum outro hotel em {destino}.` | `Fazer nova busca` |
 | Checkout sem seleção | `Nenhum quarto selecionado` | `Escolha um hotel e um quarto para fazer a reserva.` | `Buscar hotéis` |
 | Hotel não encontrado (404) | `Hotel não encontrado` | `O link pode estar errado ou o hotel não está mais disponível.` | `Fazer nova busca` |
 | Reserva não encontrada (404) | `Reserva não encontrada` | `Confira o número da reserva no link. Reservas de teste são apagadas quando o sistema reinicia.` | `Fazer nova busca` |
@@ -875,6 +953,11 @@ Loading: `Buscando…` · `Confirmando reserva…` · `Tentando…`.
 | Lento (> 5s) | Texto abaixo do skeleton: `Está demorando mais que o normal…` | — |
 | Autocomplete | `Não foi possível carregar os destinos.` | `Tentar de novo` |
 | Copiar link falhou | Toast: `Não foi possível copiar. Copie o endereço na barra do navegador.` | — |
+| Erro de renderização do hotel | h1 `Não foi possível abrir o hotel` · `Tente de novo ou faça uma nova busca.` | `Tentar de novo` + `Fazer nova busca` |
+| Quartos não carregaram | `Não foi possível carregar os quartos.` · `Verifique sua conexão e tente de novo.` | `Tentar de novo` |
+| Avaliações offline na troca de página | Alert warning (`WifiOffIcon`): `Você está sem internet.` · `As avaliações aparecem assim que a conexão voltar.` | — |
+| Similares não carregaram (recomendação) | `Não foi possível carregar hotéis similares.` | link `Ver hotéis em {destino}` (sem retry) |
+| Foto do lightbox quebrada | `Não foi possível carregar esta foto.` | — (setas seguem) |
 
 Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem status HTTP ao usuário.
 
@@ -885,6 +968,10 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | Esgotado (hotel/quarto) | Badge `danger` + botão desabilitado | Badge `Esgotado` · botão `Esgotado` · nota `Sem quartos disponíveis para estas datas.` |
 | Escassez (1–2) | Badge `warning` | `Apenas 1 quarto!` / `Apenas 2 quartos!` |
 | Menos quartos que a busca (F3) | Badge `warning`, sem total | Badge `Só 2 quartos disponíveis` · nota `Sua busca pede 3 quartos.` |
+| Quarto pequeno para a busca (F4) | Texto `text-fg-muted` com `InfoIcon` + botão `aria-disabled`, sem total | `Acomoda até 2 hóspedes. Sua busca tem 3 por quarto. Escolha outro quarto ou altere os hóspedes.` |
+| Menos quartos que a busca (F4, por quarto) | Badge `warning` + botão `aria-disabled`, sem total | Badge `Só 2 disponíveis` · `Sua busca pede 3 quartos. Diminua a quantidade de quartos ou escolha outro tipo.` |
+| Hotel esgotado (F4, topo de Quartos) | Alert `warning` com link | `Este hotel está esgotado nestas datas` · `Veja opções parecidas na mesma região.` · `Ver hotéis similares` |
+| Sem datas no detalhe (F4) | Alert `info` + formulário aberto; botão do quarto `Escolher datas` | `Escolha as datas para reservar` · `Com as datas e os hóspedes, mostramos o preço total e a disponibilidade de cada quarto.` |
 | Esgotado sem datas na busca | Badge `danger` | nota `Sem quartos disponíveis no momento.` |
 | Disponível | — | Nada (não poluir) |
 | Quarto ficou indisponível no checkout | Alert `warning` | `Este quarto esgotou enquanto você reservava. Escolha outro quarto no mesmo hotel.` + `Ver quartos` |
@@ -913,10 +1000,23 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 - Confirmação: h1 `Reserva confirmada` · `Enviamos os detalhes para nome@exemplo.com.` (simulado) ·
   `Número da reserva` em destaque `tabular-nums`.
 - Política de cancelamento: `free` → `Cancelamento grátis` (badge success) · `moderate` → `Cancelamento com
-  reembolso parcial` · `strict` → `Sem reembolso em caso de cancelamento`. Detalhe expansível na F4.
+  reembolso parcial` (badge neutral) · `strict` → `Sem reembolso em caso de cancelamento` (badge warning).
+  Regras (texto ilustrativo, F4, em `<details>` "Ver regras de cancelamento"):
+  `free`: `Cancele grátis até 48 horas antes do check-in.` · `Depois desse prazo, cobramos a primeira
+  diária.` · `Se você não comparecer, cobramos a primeira diária.`
+  `moderate`: `Cancele até 7 dias antes do check-in e receba 50% do valor de volta.` · `Depois desse
+  prazo, não há reembolso.`
+  `strict`: `Esta tarifa não tem reembolso em caso de cancelamento.` · `Mudança de datas depende de
+  disponibilidade e pode ter custo.`
+- Horários: `Check-in` `A partir de 15:00` · `Check-out` `Até 12:00`.
+- Comodidades de quarto: `Vista para o mar` · `Vista para a cidade` · `Vista para o jardim` · `Varanda` ·
+  `Terraço` · `Banheira` · `Frigobar` · `Cofre` · `Ar-condicionado` · `Mesa de trabalho` · `Cozinha` ·
+  `Sala de estar` · `Sistema de som` · `Mordomo` · `Acesso à piscina` · `Jardim privativo` · `Acesso ao lounge`.
+- Camas: `cama de solteiro` · `cama de casal` · `cama queen` · `cama king` · `cama twin` · `sofá-cama`
+  (plurais `camas de solteiro`, `sofás-camas`…; junção `1 cama king e 1 sofá-cama`).
 - `aria-label`s padrão: `Fechar`, `Fechar notificação`, `Limpar destino`, `Foto anterior`, `Próxima foto`,
-  `Página {n}`, `Diminuir {campo}`, `Aumentar {campo}`, `Copiar link do hotel`, `Paginação`, `Você está aqui`,
-  `Fechar filtros`.
+  `Abrir foto {n} de {total}`, `Página {n}`, `Diminuir {campo}`, `Aumentar {campo}`, `Copiar link do hotel`,
+  `Paginação`, `Você está aqui`, `Seções da página`, `Fechar filtros`, `Mapa: {endereço}`.
 
 ---
 
@@ -940,8 +1040,8 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 
 | Nível | Componentes | Introduzido em |
 |---|---|---|
-| atoms | Button (+ButtonLink), IconButton, Input, Select, Checkbox, Radio, Badge, Stars, Skeleton, Spinner, PriceTag, icons | F1 (PriceTag nasce na F3) |
-| atoms | Range (estilo do `input type="range"` nativo) | F3 (classes no componente do filtro; promover se reutilizado) |
-| molecules | Field, Stepper, Alert, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure | F1 (Combobox/DateRange nascem na F2; Card, RatingScore e Disclosure nascem na F3 e sobem no 2º uso) |
-| organisms | Dialog (`placement: "center" \| "sheet"`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3) |
-| feature | HotelCard, RoomCard, Gallery/Lightbox, PriceBreakdown, StepIndicator | F3–F5, compondo os acima |
+| atoms | Button (+ButtonLink), IconButton, Input, Select, Checkbox, Radio, Badge, Stars, Skeleton, Spinner, PriceTag, RemoteImage, icons | F1 (PriceTag nasce na F3; PriceTag e RemoteImage sobem na F4) |
+| atoms | Range (estilo do `input type="range"` nativo) · Avatar | F3 · F4 (na feature até o 2º uso) |
+| molecules | Field, Stepper, Alert, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação | F1 (Combobox/DateRange na F2; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso) |
+| organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4) |
+| feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, PriceBreakdown, StepIndicator | F3–F5, compondo os acima |

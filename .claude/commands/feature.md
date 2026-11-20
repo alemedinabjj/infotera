@@ -1,5 +1,5 @@
 ---
-description: Roda o pipeline completo de uma feature (planner → ui-designer → developer → qa → reviewer + security + ux-reviewer → correções → commits)
+description: Roda o pipeline completo de uma feature (planner → ui-designer → developer → qa → reviewer + security + ux-reviewer → correções → end-user-tester → commits)
 argument-hint: <id-da-feature, ex. F3 ou hotel-search>
 ---
 
@@ -17,8 +17,10 @@ delegue aos agentes, não implemente você mesmo.
    bloqueantes (qa)? Mande todos de uma vez para o **developer** e repita os passos 5–6 só para o que mudou.
    Achado do ux-reviewer que contradiz a spec de UI volta para o **ui-designer** decidir antes.
    Máximo 3 voltas; depois disso pare e apresente o impasse ao usuário.
-8. Rode você mesmo `npm run typecheck && npm run lint && npm run test` e confira a saída.
-9. Faça commits atômicos em Conventional Commits com escopo da feature (`feat(<nome>): ...`,
+8. **end-user-tester** → percorre no navegador as jornadas de usuário que a feature toca (inclusive
+   as anteriores que ela afeta). Bloqueante volta para o **developer**. Na F8, roda com TODAS as jornadas.
+9. Rode você mesmo `npm run typecheck && npm run lint && npm run test` e confira a saída.
+10. Faça commits atômicos em Conventional Commits com escopo da feature (`feat(<nome>): ...`,
    `test(<nome>): ...`, `docs(<nome>): ...`) e faça push na branch de trabalho.
    Sem `Co-Authored-By: Claude`, `Claude-Session:` ou qualquer atribuição de IA em commits e PRs.
-10. Responda com: critérios de aceite atendidos, decisões para o README, achados aceitos como dívida.
+11. Responda com: critérios de aceite atendidos, decisões para o README, achados aceitos como dívida.

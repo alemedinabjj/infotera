@@ -101,10 +101,15 @@ O comando `/feature <id>` roda o pipeline inteiro. Manualmente, a ordem é:
 | 5 | `reviewer` | Opus 5.5 | Revisa qualidade, arquitetura e aderência à spec. Só lê |
 | 6 | `security` | Opus 5.5 | Revisa segurança e privacidade (PII, XSS, env, deps). Só lê |
 | 7 | `ux-reviewer` | Opus 5.5 | Roda o app, tira screenshots por viewport e revisa usabilidade (Nielsen, mobile, teclado, estados). Só lê |
+| 8 | `end-user-tester` | Opus 5.5 | **Portão final**: usa o app num navegador real como usuário final (personas celular, desktop, só teclado, conexão ruim, inglês) e percorre TODAS as funcionalidades de ponta a ponta. Só lê |
 
 `reviewer`, `security` e `ux-reviewer` rodam em paralelo. Achado bloqueante volta para o `developer`
 (ou para o `ui-designer`, se contradizer a spec de UI); o ciclo repete até os três aprovarem
 (no máximo 3 voltas; depois disso, pare e pergunte ao usuário).
+
+O `end-user-tester` roda ao fechar cada feature (jornadas que ela toca) e, obrigatoriamente, na
+entrega (F8) com todas as jornadas. Veredito `NÃO PRONTO` bloqueia a entrega: os bloqueantes voltam
+para o `developer` e o `end-user-tester` roda de novo.
 
 Toda UI segue `docs/design/design-system.md` (tokens, componentes, microcopy). Não invente cor,
 espaçamento ou componente fora dele: peça ao `ui-designer` para incluir.

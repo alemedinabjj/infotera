@@ -53,6 +53,10 @@ describe("hotelSchema rejeita dados fora do contrato", () => {
     ["thumbnail de host desconhecido", { thumbnail: "https://images.unsplash.com.evil.io/a" }],
     ["horário inválido", { checkInTime: "25:00" }],
     ["moeda diferente", { currency: "USD" }],
+    ["latitude acima de 90", { latitude: 90.5 }],
+    ["latitude abaixo de -90", { latitude: -91 }],
+    ["longitude acima de 180", { longitude: 181 }],
+    ["longitude abaixo de -180", { longitude: -180.1 }],
   ])("%s", (_name, override) => {
     expect(hotelSchema.safeParse({ ...firstHotel, ...override }).success).toBe(false);
   });

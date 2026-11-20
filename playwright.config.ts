@@ -11,7 +11,13 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   reporter: isCI ? "github" : "list",
-  use: { baseURL, trace: "retain-on-failure" },
+  use: {
+    baseURL,
+    trace: "retain-on-failure",
+    // O site rola suave nas âncoras (só sem `prefers-reduced-motion`); nos testes a rolagem é
+    // instantânea para as medições de posição não pegarem a animação no meio.
+    reducedMotion: "reduce",
+  },
   projects: [
     { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },

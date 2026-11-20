@@ -1,9 +1,9 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { type Control, useController, useFormContext, useWatch } from "react-hook-form";
 import { AlertCircleIcon, QuantityStepper } from "@/shared/ui";
-import { type GuestField, guestHint, guestLimits } from "../model/guests";
+import { type GuestField, guestHints, guestLimits } from "../model/guests";
 import type { SearchFormValues } from "../model/search-form.schema";
 
 const ROWS = [
@@ -59,6 +59,9 @@ export const GuestsPicker = () => {
   const [rooms, adults, children] = useWatch({ control, name: ["rooms", "adults", "children"] });
   const counts = { rooms, adults, children };
   const limits = guestLimits(counts);
+  // Dois controles no mesmo teto dariam a mesma frase duas vezes: só o último mexido a mostra.
+  const [lastChanged, setLastChanged] = useState<GuestField | null>(null);
+  const hints = guestHints(counts, lastChanged);
   const errorId = useId();
   const error = ROWS.map((row) => fields[row.name].fieldState.error?.message).find(Boolean);
 
@@ -72,11 +75,14 @@ export const GuestsPicker = () => {
             className="py-3 first:pt-0 last:pb-0"
             label={row.label}
             description={row.description}
-            hint={guestHint(row.name, counts)}
+            hint={hints[row.name]}
             value={counts[row.name]}
             min={limits[row.name].min}
             max={limits[row.name].max}
-            onChange={fields[row.name].field.onChange}
+            onChange={(value) => {
+              setLastChanged(row.name);
+              fields[row.name].field.onChange(value);
+            }}
             decreaseLabel={row.decrease}
             increaseLabel={row.increase}
           />
