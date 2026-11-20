@@ -18,6 +18,17 @@ const expectNoViolations = async (page: Page) => {
   ).toEqual([]);
 };
 
+/**
+ * O número aparece uma vez na tela. O React transmite o conteúdo da rota num `<div hidden>` que só
+ * sai do DOM quando troca o skeleton: `getByText` também casa esse nó oculto, por isso o texto é
+ * procurado dentro do `main` (o que a pessoa vê e o leitor de tela lê) e, depois de estabilizar, o
+ * id tem de existir uma única vez no documento inteiro.
+ */
+const expectBookingNumber = async (page: Page, id: string) => {
+  await expect(page.getByRole("main").getByText(id, { exact: true })).toBeVisible();
+  await expect(page.locator("#numero-reserva")).toHaveCount(1);
+};
+
 const NOT_FOUND = { level: 1, name: "Reserva não encontrada" } as const;
 
 const waitForHydration = (page: Page) =>
@@ -53,12 +64,15 @@ test.describe("reserva não encontrada (critérios 7, 8 e 9)", () => {
   });
 
   test("reserva do curl do README (id curto do json-server) abre", async ({ page, request }) => {
+    // O json-server só gera id texto (uuid) se a coleção já tiver um; numa base vazia o POST sem id
+    // devolve um número. Uma reserva antes garante o formato sem depender da ordem dos testes.
+    await createBooking(request);
     const response = await request.post(`${API_URL}/bookings`, { data: README_FORMAT_BOOKING });
     const { id } = z.object({ id: z.string() }).parse(await response.json());
     expect(id).not.toMatch(/^\d+$/);
     await page.goto(bookingPath(id));
     await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
-    await expect(page.getByText(id, { exact: true })).toBeVisible();
+    await expectBookingNumber(page, id);
   });
 
   test("UUID em maiúsculas abre normalmente, com o número em minúsculas", async ({
@@ -68,7 +82,7 @@ test.describe("reserva não encontrada (critérios 7, 8 e 9)", () => {
     const id = await createBooking(request);
     await page.goto(bookingPath(id.toUpperCase()));
     await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
-    await expect(page.getByText(id, { exact: true })).toBeVisible();
+    await expectBookingNumber(page, id);
   });
 });
 
