@@ -1,4 +1,4 @@
-import { localizePath, parsePublicPath } from "@/shared/i18n/paths";
+import { localizePath, type OFFLINE_ROUTES, parsePublicPath } from "@/shared/i18n/paths";
 import { TILE_ORIGIN } from "@/shared/lib/map-tiles";
 
 /**
@@ -12,6 +12,8 @@ export const PUBLIC_ROUTES = [
   "/search",
   "/hotel/:id",
   "/offline",
+  "/offline/checkout",
+  "/offline/bookings",
   "/favorites",
   "/compare",
 ] as const;
@@ -26,6 +28,32 @@ export const PRIVATE_ROUTES = [
   "/confirmation/:id",
   "/my-bookings",
 ] as const;
+
+/** Variante da página offline: rota pública não salva, checkout, ou reservas (confirmação e histórico). */
+export type OfflineVariant = "public" | "checkout" | "bookings";
+
+const OFFLINE_SUFFIX: Readonly<Record<OfflineVariant, (typeof OFFLINE_ROUTES)[number]>> = {
+  public: "/offline",
+  checkout: "/offline/checkout",
+  bookings: "/offline/bookings",
+};
+
+/** A variante da página offline para uma rota (sem o prefixo de idioma). */
+export const offlineVariantFor = (path: string): OfflineVariant => {
+  if (path === "/checkout" || path.startsWith("/checkout/")) return "checkout";
+  if (path === "/confirmation" || path.startsWith("/confirmation/")) return "bookings";
+  if (path === "/my-bookings" || path.startsWith("/my-bookings/")) return "bookings";
+  return "public";
+};
+
+/**
+ * Página offline que o service worker mostra para um documento sem rede e sem cópia: a variante da
+ * rota no idioma da URL (`/checkout` → `/offline/checkout`, `/en/my-bookings` → `/en/offline/bookings`).
+ */
+export const offlinePathFor = (pathname: string): string => {
+  const { locale, path } = parsePublicPath(pathname);
+  return localizePath(locale, OFFLINE_SUFFIX[offlineVariantFor(path)]);
+};
 
 export type CacheName = "pages" | "pages-rsc" | "static" | "images" | "tiles";
 
@@ -122,10 +150,10 @@ export const cacheRuleFor = (request: CacheRequest): CacheRule => {
 };
 
 const sameOriginRule = (url: URL, request: CacheRequest): CacheRule => {
-  const { locale, path } = parsePublicPath(url.pathname);
+  const { path } = parsePublicPath(url.pathname);
   const isRsc = request.headers.get("RSC") === "1";
   const isDocument = request.isNavigation;
-  const offlinePath = localizePath(locale, "/offline");
+  const offlinePath = offlinePathFor(url.pathname);
 
   if (isPrivate(path)) {
     return isDocument || isRsc
