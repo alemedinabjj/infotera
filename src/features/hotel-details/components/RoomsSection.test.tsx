@@ -52,7 +52,7 @@ const renderRooms = async ({
         <RoomsSection
           locale="pt-BR"
           hotelId={hotelId}
-          rooms={rooms}
+          rooms={{ kind: "ok", value: rooms }}
           hotelAvailableRooms={hotelAvailableRooms}
           cancellationPolicy="free"
           criteria={Promise.resolve(search)}

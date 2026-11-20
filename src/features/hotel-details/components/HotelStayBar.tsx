@@ -15,7 +15,8 @@ type HotelStayBarProps = {
   renderDatesForm: (criteria: SearchCriteria | null) => ReactNode;
 };
 
-const ResolvedStayBar = async ({ locale, criteria, renderDatesForm }: HotelStayBarProps) => {
+/** Exportado só para o teste (o RTL não renderiza Server Component assíncrono). */
+export const ResolvedStayBar = async ({ locale, criteria, renderDatesForm }: HotelStayBarProps) => {
   const resolved = await criteria;
   // "Hoje" muda entre renders: só depois de um acesso dinâmico (nunca na casca estática).
   await connection();

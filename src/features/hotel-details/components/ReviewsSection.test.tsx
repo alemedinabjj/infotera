@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Review } from "@/shared/api/schemas";
 import { makeReview } from "@/shared/testing/fixtures";
 import { renderWithProviders } from "@/shared/testing/render";
+import type { FirstReviews } from "../api/catalog.cached";
+import type { Settled } from "../api/settled";
 import { ReviewsSection } from "./ReviewsSection";
 
 const TOTAL = 14;
@@ -43,9 +45,9 @@ const stubReviews = (override?: (page: number) => Promise<Response> | null) => {
   return fetchMock;
 };
 
-const first = (total = TOTAL) => ({
-  page: { items: total === 0 ? [] : reviewsFor(1), total },
-  fetchedAt: Date.now(),
+const first = (total = TOTAL): Settled<FirstReviews> => ({
+  kind: "ok",
+  value: { page: { items: total === 0 ? [] : reviewsFor(1), total }, fetchedAt: Date.now() },
 });
 
 const renderReviews = () =>

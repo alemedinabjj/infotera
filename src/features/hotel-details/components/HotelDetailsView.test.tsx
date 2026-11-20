@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeReview } from "@/shared/testing/fixtures";
 import { renderWithProviders } from "@/shared/testing/render";
@@ -17,6 +18,9 @@ vi.mock("next/navigation", async () => ({
 // Os RSC assíncronos (similares, barra da estadia, links) têm teste próprio.
 vi.mock("./SimilarHotels", () => ({ SimilarHotels: () => <p>similares</p> }));
 vi.mock("./HotelStayBar", () => ({ HotelStayBar: () => <p>barra da estadia</p> }));
+vi.mock("./RequestOnly", () => ({
+  RequestOnly: ({ children }: { children: ReactNode }) => children,
+}));
 vi.mock("./StayAware", async () => (await import("../testing/stay-aware")).stayAwareMock);
 
 const snapshots = vi.hoisted(() => ({
@@ -79,6 +83,16 @@ describe("HotelDetailsView: catálogo em paralelo", () => {
     snapshots.rooms.mockResolvedValue([]);
     snapshots.reviews.mockResolvedValue({ page: { items: [], total: 0 }, fetchedAt: 1 });
     await expect(view()).rejects.toMatchObject({ status: 500 });
+  });
+
+  it("falha dos quartos ou dos comentários não derruba a página: o hotel segue e a seção mostra o erro", async () => {
+    stubSnapshots();
+    snapshots.rooms.mockRejectedValue(new Error("rooms down"));
+    snapshots.reviews.mockRejectedValue(new Error("reviews down"));
+    const { container } = renderWithProviders(await view());
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Hotel Copacabana Palace");
+    expect(container.querySelector("#quartos")).toBeInTheDocument();
+    expect(container.querySelector("#avaliacoes")).toBeInTheDocument();
   });
 });
 

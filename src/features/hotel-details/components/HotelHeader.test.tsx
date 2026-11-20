@@ -19,7 +19,7 @@ vi.mock(
 
 const renderHeader = (hotelId: number, rooms = seedRooms(hotelId)) =>
   renderWithProviders(
-    <HotelHeader locale="pt-BR" hotel={seedHotel(hotelId)} rooms={rooms}>
+    <HotelHeader locale="pt-BR" hotel={seedHotel(hotelId)} rooms={{ kind: "ok", value: rooms }}>
       <p>galeria</p>
     </HotelHeader>,
   );
@@ -51,7 +51,7 @@ describe("HotelHeader (critério 7)", () => {
   it("destaque vira badge", () => {
     const hotel = makeHotel({ featured: true });
     renderWithProviders(
-      <HotelHeader locale="pt-BR" hotel={hotel} rooms={[]}>
+      <HotelHeader locale="pt-BR" hotel={hotel} rooms={{ kind: "ok", value: [] }}>
         <p>galeria</p>
       </HotelHeader>,
     );

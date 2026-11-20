@@ -7,6 +7,7 @@ import {
   getHotelRoomsSnapshot,
   getHotelSnapshot,
 } from "../api/catalog.cached";
+import { settle } from "../api/settled";
 import { hotelDetailsMessages } from "../i18n/messages";
 import { hotelBreadcrumb } from "../model/breadcrumb";
 import { Breadcrumb } from "./Breadcrumb";
@@ -55,8 +56,9 @@ export const HotelDetailsView = async ({
 }: HotelDetailsViewProps) => {
   const [snapshot, rooms, firstReviews] = await Promise.all([
     getHotelSnapshot(hotelId),
-    getHotelRoomsSnapshot(hotelId),
-    getFirstReviewsSnapshot(hotelId),
+    // Fora do escopo cacheado: falha de quartos/comentários vira erro da seção, não da página.
+    settle(getHotelRoomsSnapshot(hotelId)),
+    settle(getFirstReviewsSnapshot(hotelId)),
   ]);
   if (snapshot.kind === "not-found") notFound();
   const { hotel } = snapshot;

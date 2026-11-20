@@ -5,6 +5,7 @@ import { propertyTypeLabel } from "@/shared/lib/labels";
 import { CompareCheckbox } from "@/shared/saved/components/CompareCheckbox";
 import { FavoriteButton } from "@/shared/saved/components/FavoriteButton";
 import { Badge, buttonClassName, ChevronDownIcon, MapPinIcon, RatingScore } from "@/shared/ui";
+import type { Settled } from "../api/settled";
 import { hotelDetailsMessages } from "../i18n/messages";
 import { FromPrice } from "./FromPrice";
 import { ShareButton } from "./ShareButton";
@@ -13,7 +14,7 @@ type HotelHeaderProps = {
   locale: Locale;
   hotel: Hotel;
   /** Quartos do snapshot do catálogo: o "a partir de" vem deles. */
-  rooms: readonly Room[];
+  rooms: Settled<readonly Room[]>;
   /** Galeria: fica entre o nome e o preço (a mesma ordem em todas as larguras). */
   children: ReactNode;
 };

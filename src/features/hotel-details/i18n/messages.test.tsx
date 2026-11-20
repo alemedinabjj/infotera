@@ -80,7 +80,11 @@ describe("hotel-details por idioma: componentes", () => {
           build={(c) => hotelBreadcrumb(hotel, c, "en-US")}
           criteria={Promise.resolve(null)}
         />
-        <HotelHeader locale="en-US" hotel={hotel} rooms={seedRooms(hotel.id)}>
+        <HotelHeader
+          locale="en-US"
+          hotel={hotel}
+          rooms={{ kind: "ok", value: seedRooms(hotel.id) }}
+        >
           <p>gallery</p>
         </HotelHeader>
         <SectionNav locale="en-US" />
@@ -137,7 +141,7 @@ describe("hotel-details por idioma: componentes", () => {
           <RoomsSection
             locale="en-US"
             hotelId={hotel.id}
-            rooms={rooms}
+            rooms={{ kind: "ok", value: rooms }}
             hotelAvailableRooms={5}
             cancellationPolicy="free"
             criteria={Promise.resolve(makeSearchCriteria())}

@@ -97,6 +97,10 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
   o selo do card é do quarto (`roomStaticBadge`: esgotado ou "Apenas N"); "Só N disponíveis" (insufficient) virou só o texto do motivo.
 - `StayEditProvider` não recebe mais a chave dos critérios: `useStayEdit(criteriaKey)` (a chave só existe depois da promessa). `RoomSelectionProvider` guarda o "Selecionando…" da lista
   (atravessa as ilhas). `todayISO()` só depois de `await connection()` (servidor) ou depois do `use(criteria)` (cliente).
+- **Falha de quartos/comentários não derruba a página (critério 24 da F4)**: `HotelDetailsView` resolve os dois **fora** do escopo cacheado com `settle()` (`api/settled.ts`:
+  `{kind:"ok",value} | {kind:"error"}`, sem expor a causa); hotel continua relançando. O ramo de erro (`SectionRefreshError` nos quartos e nos comentários; "Preços indisponíveis no
+  momento." no `FromPrice`) vai dentro de `RequestOnly` (Suspense + `await connection()`): nunca entra na casca estática. "Tentar de novo" = `useRefreshRetry` (`router.refresh()` em
+  transition, botão fica em "Tentando…"; o foco vai ao h2 quando o componente desmonta depois de um retry). O `SectionBoundary`/`SectionError` (TanStack) ficou só para as páginas 2+ dos comentários.
 - Avaliações: p.1 em `ReviewsStatic` (cliente sem TanStack, fallback e casca) e `ReviewsPager` (TanStack com `initialData`/`initialDataUpdatedAt = fetchedAt`) sob Suspense.
 - **ISR**: `generateStaticParams = listPrerenderHotelIds` (todos os ids; 8 tentativas, 2 s → 15 s, `Aguardando a mock-api (tentativa n/8)…`; vazio ou esgotado = erro em pt-BR).
   `npm run build` precisa da API no ar. `/hotel/61` é gerado sob demanda e vai direto a "não encontrado" (sem skeleton antes).
