@@ -158,6 +158,7 @@ para `shared/` quando aparecer o segundo uso.
 - `localeOf(params)` (`i18n/params`) em páginas; `SITE_URL` (`lib/site-url`) alimenta o `metadataBase`.
 
 ## F7c
+- `ui/WipeOnHide`: rota com PII (`/checkout`, `/confirmation/[id]`) não pode ficar no DOM escondido pelo Activity e o Next não tem opt-out por rota. O cleanup de `useLayoutEffect` troca os filhos (já enviados pelo servidor) por `null` ao esconder e os devolve ao mostrar.
 - `hooks/useResetOnHide(reset)`: `useLayoutEffect` cujo cleanup chama `reset` (último `reset` por ref). Serve a Activity (`cacheComponents`): zera estado transitório/sensível quando a rota é escondida.
 - `PriceTag` ganhou `stay-total` (2 primeiras linhas de `stay`) e `nightly-line withoutFees`; `room-nightly` saiu. `Dialog` ganhou `describedBy` e `onClosed` (depois da saída e do foco ao gatilho).
 - Componentes com `usePathname` (`SavedNav`, `CompareTray`, `NavigationTracker`, `ServiceWorkerRegistrar`) ficam sob `<Suspense>` no layout (rotas com segmento dinâmico).

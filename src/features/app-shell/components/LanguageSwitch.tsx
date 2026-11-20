@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { type MouseEvent, useCallback, useEffect, useState } from "react";
+import { type MouseEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { useLocale } from "@/shared/i18n/client";
 import type { Locale } from "@/shared/i18n/config";
 import { writeLocaleCookie } from "@/shared/i18n/cookie";
@@ -27,17 +27,17 @@ const isPlainClick = (event: MouseEvent): boolean =>
  * avisa que `usePathname` com rewrite diverge); depois de montar ele passa a refletir
  * `window.location` e é recalculado ao entrar no link (hover, foco ou toque), então copiar o
  * endereço ou abrir em nova aba também leva à página certa.
+ *
+ * `pathname` só dispara o recálculo a cada navegação no cliente: sem ele o link guardava o endereço
+ * da página anterior (ex.: o id de uma reserva) até o hover.
  */
-export const LanguageSwitch = () => {
+const LanguageSwitchLink = ({ pathname }: { pathname: string | null }) => {
   const locale = useLocale();
   const messages = useAppShellMessages().languageSwitch;
   const target = otherLocale(locale);
   const [href, setHref] = useState(() => localizePath(target, "/"));
   const refresh = useCallback(() => setHref(switchLocalePath(target, currentHref())), [target]);
 
-  // O pathname só dispara o recálculo a cada navegação no cliente: sem ele o link guardava o endereço da
-  // página anterior (ex.: o id de uma reserva) até o hover.
-  const pathname = usePathname();
   // biome-ignore lint/correctness/useExhaustiveDependencies: `pathname` é o gatilho do recálculo
   useEffect(refresh, [refresh, pathname]);
 
@@ -69,3 +69,15 @@ export const LanguageSwitch = () => {
     </a>
   );
 };
+
+const LanguageSwitchWithPath = () => <LanguageSwitchLink pathname={usePathname()} />;
+
+/**
+ * `usePathname` é dado de request: na casca prerenderizada ele bloqueia, então fica sob `<Suspense>`
+ * e o fallback é o mesmo link (apontando para a home do outro idioma), sem salto de layout.
+ */
+export const LanguageSwitch = () => (
+  <Suspense fallback={<LanguageSwitchLink pathname={null} />}>
+    <LanguageSwitchWithPath />
+  </Suspense>
+);
