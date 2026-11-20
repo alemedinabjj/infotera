@@ -11,6 +11,9 @@ vi.mock(
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
 );
 
+// `connection()` só existe dentro de uma request do Next; no teste a página é chamada como função.
+vi.mock("next/server", () => ({ connection: async () => undefined }));
+
 type Query = Record<string, string>;
 
 const propsFor = (query: Query) => ({
