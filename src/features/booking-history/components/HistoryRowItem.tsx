@@ -23,6 +23,8 @@ type HistoryRowItemProps = {
   kept: boolean;
   hotels: HotelLookup;
   retrying: boolean;
+  /** Sem conexão: só o aviso global; a linha fica como placeholder, sem erro vermelho. */
+  offline: boolean;
   onRetry: () => void;
 };
 
@@ -32,6 +34,7 @@ const Content = ({
   row,
   hotels,
   retrying,
+  offline,
   onRetry,
   removeButton,
 }: Omit<HistoryRowItemProps, "index" | "kept"> & {
@@ -49,10 +52,20 @@ const Content = ({
     case "missing":
       return <HistoryItemSkeleton />;
     case "failed":
+      // Sem conexão o aviso global já explica: nada de erro vermelho por linha.
+      if (offline) return <HistoryItemSkeleton />;
+      return (
+        <HistoryItemFailed
+          unreadable={false}
+          retrying={retrying}
+          onRetry={onRetry}
+          removeButton={removeButton()}
+        />
+      );
     case "unreadable":
       return (
         <HistoryItemFailed
-          unreadable={row.kind === "unreadable"}
+          unreadable
           retrying={retrying}
           onRetry={onRetry}
           removeButton={removeButton()}
@@ -75,6 +88,7 @@ export const HistoryRowItem = ({
   kept,
   hotels,
   retrying,
+  offline,
   onRetry,
 }: HistoryRowItemProps) => {
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
@@ -133,6 +147,7 @@ export const HistoryRowItem = ({
           row={row}
           hotels={hotels}
           retrying={retrying}
+          offline={offline}
           onRetry={onRetry}
           removeButton={removeButton}
         />

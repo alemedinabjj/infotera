@@ -6,6 +6,7 @@ export const HISTORY_MESSAGES = {
   intro: "Reservas confirmadas ou abertas neste navegador.",
   sharedComputer: "Em computador compartilhado, limpe o histórico ao terminar.",
   loading: "Carregando suas reservas…",
+  slow: "Está demorando mais que o normal…",
   hotelUnavailable: "Hotel indisponível",
   thisBooking: "esta reserva",
   bookedOn: (date: string) => `Reservada em ${date}`,
@@ -23,8 +24,8 @@ export const HISTORY_MESSAGES = {
   retrying: "Tentando…",
   vanished: (count: number) =>
     count === 1
-      ? "1 reserva não existe mais e saiu da lista. Reservas de teste são apagadas quando o sistema reinicia."
-      : `${count} reservas não existem mais e saíram da lista. Reservas de teste são apagadas quando o sistema reinicia.`,
+      ? "1 reserva não existe mais e saiu da lista. Reservas de demonstração são apagadas periodicamente."
+      : `${count} reservas não existem mais e saíram da lista. Reservas de demonstração são apagadas periodicamente.`,
   offline: {
     title: "Você está sem internet.",
     description: "Suas reservas aparecem assim que a conexão voltar.",

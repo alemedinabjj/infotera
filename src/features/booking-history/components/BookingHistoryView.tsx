@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { useOnline } from "@/shared/hooks/useOnline";
+import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { focusWhenReady } from "@/shared/lib/focus";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import {
@@ -21,10 +22,10 @@ import { HistoryRowItem } from "./HistoryRowItem";
 
 const MESSAGES = HISTORY_MESSAGES;
 
-const LoadingList = () => (
+const LoadingList = ({ slow }: { slow: boolean }) => (
   <div aria-busy="true" className="flex flex-col gap-4">
     <p aria-live="polite" className="text-sm text-fg-muted">
-      {MESSAGES.loading}
+      {slow ? MESSAGES.slow : MESSAGES.loading}
     </p>
     <Skeleton shape="block" className="h-44" />
   </div>
@@ -35,6 +36,7 @@ export const BookingHistoryView = () => {
   const page = useHistoryRows();
   const live = useBookingHistory();
   const online = useOnline();
+  const slow = useSlowLoading(!page.hydrated || page.pending);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const hasRows = page.rows.length > 0;
   // O botão e o dialog desmontam junto com a lista (o navegador devolve o foco ao `body`): foca no
@@ -84,7 +86,12 @@ export const BookingHistoryView = () => {
         </Alert>
       )}
       {page.vanished > 0 ? <Alert tone="info">{MESSAGES.vanished(page.vanished)}</Alert> : null}
-      {!page.hydrated ? <LoadingList /> : null}
+      {!page.hydrated ? <LoadingList slow={slow} /> : null}
+      {page.hydrated && page.pending ? (
+        <p aria-live="polite" className="min-h-5 text-sm text-fg-muted">
+          {slow ? MESSAGES.slow : null}
+        </p>
+      ) : null}
       {page.hydrated && !hasRows ? (
         <EmptyState
           title={MESSAGES.empty.title}
@@ -110,6 +117,7 @@ export const BookingHistoryView = () => {
               kept={page.liveIds.has(row.entry.id)}
               hotels={page.hotels}
               retrying={page.retrying(row.entry.id)}
+              offline={!online}
               onRetry={() => page.retry(row.entry.id)}
             />
           ))}

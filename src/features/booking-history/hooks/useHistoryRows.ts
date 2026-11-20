@@ -16,6 +16,8 @@ export type HistoryRows = {
   /** Ids ainda guardados (muda ao remover; o snapshot da página não). */
   liveIds: ReadonlySet<string>;
   hotels: HotelLookup;
+  /** Alguma reserva ainda carrega (para o aviso de demora). */
+  pending: boolean;
   vanished: number;
   /** Tira um novo retrato do storage (depois de limpar ou de desfazer a limpeza). */
   resetSnapshot: () => void;
@@ -57,6 +59,7 @@ export const useHistoryRows = (): HistoryRows => {
     rows: all.filter((row) => row.kind !== "missing"),
     liveIds: new Set(live.map((entry) => entry.id)),
     hotels,
+    pending: !settled,
     vanished,
     resetSnapshot: () => setSnapshot(null),
     retry: (id) => {

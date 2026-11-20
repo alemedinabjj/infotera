@@ -49,7 +49,7 @@ export const ComparisonTableRow = ({
       <th
         scope="row"
         className={cn(
-          "sticky left-0 z-0 min-w-36 px-3 py-3 text-left font-medium break-words hyphens-none text-fg",
+          "sticky left-0 z-0 w-24 px-3 py-3 text-left font-medium break-words hyphens-none text-fg sm:w-44",
           row.differs ? "border-l-4 border-primary" : null,
           band ? "bg-primary-soft" : "bg-surface",
         )}

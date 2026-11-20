@@ -10,7 +10,7 @@ const REGION_CLASS = "flex flex-col gap-3";
 /**
  * Duas regiões vivas sempre montadas: `role="status"` (sucesso/info) e `role="alert"` (erro).
  * Nunca rouba o foco. O tempo pausa com hover/foco em qualquer toast e com a aba oculta.
- * Fica acima da bandeja de comparação (`--bottom-bar-height`). Montar uma vez no layout raiz.
+ * No desktop fica no canto inferior ESQUERDO e estreito (320 px): os CTAs ficam à direita (ex.: "Selecionar quarto") e nunca ficam cobertos. Fica acima da bandeja de comparação (`--bottom-bar-height`). Montar uma vez no layout raiz.
  */
 export const Toaster = () => {
   const toasts = useToastStore((state) => state.toasts);
@@ -21,7 +21,7 @@ export const Toaster = () => {
       data-toaster
       ref={regionRef}
       {...handlers}
-      className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--bottom-bar-height,0px)+1rem)] z-50 flex flex-col gap-3 sm:right-6 sm:bottom-[calc(var(--bottom-bar-height,0px)+1.5rem)] sm:left-auto sm:w-96 print:hidden"
+      className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--bottom-bar-height,0px)+1rem)] z-50 flex flex-col gap-3 sm:bottom-[calc(var(--bottom-bar-height,0px)+1.5rem)] sm:left-6 sm:w-80 sm:right-auto print:hidden"
     >
       <div role="status" aria-live="polite" className={REGION_CLASS}>
         <AnimatePresence initial={false} onExitComplete={resync}>

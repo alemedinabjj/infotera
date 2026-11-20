@@ -135,7 +135,7 @@ export const ComparisonView = ({ headingLevel = 1 }: ComparisonViewProps) => {
   const Heading = headingLevel === 1 ? "h1" : "h2";
   return (
     <div className="flex flex-col gap-4">
-      <FocusOnMount selector={`#${COMPARE_TITLE_ID}`} />
+      <FocusOnMount selector={`#${COMPARE_TITLE_ID}`} afterNavigationOnly />
       <Heading
         id={COMPARE_TITLE_ID}
         tabIndex={-1}

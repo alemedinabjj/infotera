@@ -160,6 +160,17 @@ describe("BookingHistoryView", () => {
     );
   });
 
+  it("offline: só o alerta global, a linha com falha não mostra erro vermelho", async () => {
+    save([ID_A]);
+    stub(() => json({ error: "x" }, 500));
+    const online = vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    renderPage();
+    expect(await screen.findByText("Você está sem internet.")).toBeInTheDocument();
+    await waitFor(() => expect(document.querySelector('[aria-busy="true"]')).not.toBeNull());
+    expect(screen.queryByText("Não foi possível carregar esta reserva.")).not.toBeInTheDocument();
+    online.mockRestore();
+  });
+
   it("corpo ilegível: mensagem própria sem retry", async () => {
     save([ID_A]);
     stub(() => json({ lixo: true }));

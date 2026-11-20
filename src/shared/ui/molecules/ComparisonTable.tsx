@@ -32,7 +32,7 @@ type ComparisonTableProps = {
 
 /**
  * Tabela de comparação (DS "Tabela de comparação"): região rolável rotulada e focável (no celular
- * rola **dentro** dela, a página nunca ganha scroll lateral), primeira coluna fixa (`sticky`), linhas
+ * rola **dentro** dela, a página nunca ganha scroll lateral), primeira coluna fixa (`sticky`, estreita abaixo de `sm`: 96px) e colunas de hotel de largura igual (`table-fixed`), linhas
  * que diferem marcadas, "Mostrar só diferenças" com anúncio e selo de texto no melhor valor.
  */
 export const ComparisonTable = ({ columns, rows, messages, labelledBy }: ComparisonTableProps) => {
@@ -62,18 +62,18 @@ export const ComparisonTable = ({ columns, rows, messages, labelledBy }: Compari
         tabIndex={0}
         className="overflow-x-auto rounded-card border border-border"
       >
-        <table className="w-full text-sm tabular-nums">
+        <table className="w-full min-w-[30rem] table-fixed text-sm tabular-nums">
           <caption className="sr-only">{messages.caption}</caption>
           <thead>
             <tr>
-              <th scope="col" className="sticky left-0 z-0 min-w-36 bg-surface px-3 py-3">
+              <th scope="col" className="sticky left-0 z-0 w-24 bg-surface px-3 py-3 sm:w-44">
                 <span className="sr-only">{messages.cornerLabel}</span>
               </th>
               {columns.map((column) => (
                 <th
                   key={column.id}
                   scope="col"
-                  className="min-w-36 px-3 py-3 text-left align-top font-semibold text-fg"
+                  className="px-3 py-3 text-left align-top font-semibold text-fg"
                 >
                   {column.header}
                 </th>

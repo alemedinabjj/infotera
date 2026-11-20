@@ -5,12 +5,14 @@ import type { ReactNode } from "react";
 import { getQueryClient } from "../api/query-client";
 import { Toaster } from "../ui/toast/Toaster";
 import { MotionProvider } from "./MotionProvider";
+import { NavigationTracker } from "./NavigationTracker";
 import { StoreHydrator } from "./StoreHydrator";
 
 /** Providers globais: TanStack Query, Motion, reidratação dos stores persistidos (rascunho, favoritos, comparação) e Toaster. */
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={getQueryClient()}>
     <MotionProvider>
+      <NavigationTracker />
       {children}
       <StoreHydrator />
       <Toaster />
