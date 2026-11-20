@@ -51,7 +51,9 @@ const HotelPage = async ({ params, searchParams }: PageProps<"/[locale]/hotel/[h
   const [{ hotelId: rawId }, locale] = await Promise.all([params, localeOf(params)]);
   const hotelId = parseHotelId(rawId);
   if (hotelId === null) notFound();
-  const criteria = searchParams.then(toStayCriteria);
+  // Chamada sem `await`: a promessa só resolve por request (no prerender `searchParams` nunca resolve).
+  const stayCriteria = async () => toStayCriteria(await searchParams);
+  const criteria = stayCriteria();
 
   return (
     <HotelDetailsView
