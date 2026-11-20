@@ -87,3 +87,23 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
 - Conteúdo da API (descrição, comentários, nome e descrição do quarto, endereço, destino) é português: `lang={contentLang(locale)}`.
 - `CompactHotelCard` (shared) virou client folha para ler o locale (link, tipo e selo de disponibilidade).
 - E2E: `e2e/i18n.hotel.spec.ts` (sem português em `/en/hotel/:id`, links em `/en`, axe pt e en, 320 px).
+
+## F7c (PPR + ISR + galeria como rota)
+- **Catálogo em `"use cache"`** (`api/catalog.cached.ts`): `getHotelSnapshot` (hours), `getHotelRoomsSnapshot` (minutes), `getFirstReviewsSnapshot` (hours, com `fetchedAt`),
+  `getSimilarHotelsSnapshot` (hours). Só sucesso ou `not-found` voltam do escopo cacheado (404 classificado **dentro**); erro é relançado, nunca guardado. Sem TanStack no
+  servidor (`dehydrate`/`setQueryData` chamam `Date.now()`); `hotel.server.ts` e o `HydrationBoundary` saíram. `vitest.setup.ts` mocka `next/cache`.
+- **Casca + 3 buracos**, todos de **uma promessa** `criteria: Promise<SearchCriteria | null>`: `HotelStayBar` (RSC async em Suspense; `StayBarView` é o cliente), `RoomStayAction`
+  (cliente, `use(criteria)`, um Suspense por quarto; fallback `RoomStayActionSkeleton` com as alturas do total e do botão, `animate-none`, `aria-hidden`) e `StayAware`
+  (render prop; fallback = o mesmo link sem critérios: breadcrumb, similares, alerta de esgotado). Diária `R$ … por noite, sem taxas` fica na casca (`PriceTag nightly-line withoutFees`);
+  o selo do card é do quarto (`roomStaticBadge`: esgotado ou "Apenas N"); "Só N disponíveis" (insufficient) virou só o texto do motivo.
+- `StayEditProvider` não recebe mais a chave dos critérios: `useStayEdit(criteriaKey)` (a chave só existe depois da promessa). `RoomSelectionProvider` guarda o "Selecionando…" da lista
+  (atravessa as ilhas). `todayISO()` só depois de `await connection()` (servidor) ou depois do `use(criteria)` (cliente).
+- Avaliações: p.1 em `ReviewsStatic` (cliente sem TanStack, fallback e casca) e `ReviewsPager` (TanStack com `initialData`/`initialDataUpdatedAt = fetchedAt`) sob Suspense.
+- **ISR**: `generateStaticParams = listPrerenderHotelIds` (todos os ids; 8 tentativas, 2 s → 15 s, `Aguardando a mock-api (tentativa n/8)…`; vazio ou esgotado = erro em pt-BR).
+  `npm run build` precisa da API no ar. `/hotel/61` recebe a casca de fallback (`loading.tsx`) e é gerado sob demanda.
+- **Galeria como rota**: miniaturas são `PhotoLink` (`next/link`, `scroll={false}`, registra `data-photo-opener`). `PhotoModal` (`Dialog full`, prop nova `onClosed`/`describedBy`) fecha em
+  `close()` → foco ao gatilho → **um** `router.back()`; `PhotoViewer` é a página cheia. Setas trocam o índice em estado e a URL por `history.replaceState` (sem request, sem entrada).
+  `usePhotoViewer` e `PhotoModal` usam `useResetOnHide` (Activity preserva a rota escondida: sem reset o modal voltava fechado/na foto errada).
+- Segunda entrada pública `client.ts` (`PhotoModalError`, para `error.tsx`). `PhotoNotFound` não linka para outra foto (seria interceptado).
+- Trade-offs: reload na foto + "Voltar para o hotel" perde as datas (a galeria não depende de `searchParams`); cartão de erro do modal usa o anel `focus` padrão (claro).
+- **Pendente (critério 5/19)**: o HTML do build entrega o conteúdo num segmento Suspense *outlined* do `loading.tsx`; sem JavaScript fica o skeleton (`test.fixme` em `e2e/nextjs.prod.spec.ts`).

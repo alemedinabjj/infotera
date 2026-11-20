@@ -50,3 +50,18 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
   no servidor. `/compare` lê `?hotel=` no cliente dentro de `<Suspense fallback={<ComparisonFallback />}>`.
 - `layout.tsx` monta `SavedNav` (slot `actions` do `SiteHeader`) e `CompareTray`; o `<main>` reserva o fim com
   `pb-[calc(var(--bottom-bar-height,0px)+1.5rem)]`. Importa os dois direto de `@/shared/saved/components/*` (Server Component).
+
+## F7c (PPR, ISR, galeria como rota)
+- `cacheComponents: true` + `partialPrefetching: true`: PPR é `cacheComponents` no 16.x. Regra: dado de request ou não cacheado só dentro de `<Suspense>`;
+  `usePathname`/`useSearchParams`/`Date.now()` em client component na casca também (por isso `NavigationTracker`, `CompareTray`, `ServiceWorkerRegistrar`,
+  `SavedNav` ficam sob Suspense). `dynamicParams` não existe mais (removido do layout; o `[locale]` inválido cai em `notFound()` no layout).
+- Forma de cada rota (conferida no `npm run build`): `/` `○`; `/search` `◐`; `/hotel/[hotelId]` e `/hotel/1…60` `◐` (ISR, 60 ids da API); `/hotel/[hotelId]/photos/[photo]` `◐`;
+  **`/checkout` `ƒ`** (casca vazia: `export const instant = false` + `await connection()`); `/confirmation/[bookingId]` `◐` (casca sem PII).
+- **Nunca** crie `loading.tsx` nem `<Suspense>` acima do `connection()` do checkout (nem `app/loading.tsx`): viraria uma casca estática sem nonce. O `@prod` do nonce é o guarda.
+- `hotel/[hotelId]/page.tsx` cria `const criteria = searchParams.then(toStayCriteria)` **sem `await`** e passa a promessa à feature: no prerender ela nunca resolve (tudo
+  que a espera vira fallback), por request resolve na hora. `await searchParams` no topo mata o PPR da rota.
+- Galeria: `hotel/[hotelId]/layout.tsx` (`{children}{modal}`), `@modal/default.tsx` (`null`), `@modal/(.)photos/[photo]` (modal) e `photos/[photo]` (página cheia). Funciona com o
+  rewrite do `proxy.ts` (`/hotel/1/photos/3` ↔ `/pt-BR/...`). `error.tsx` do modal importa `@/features/hotel-details/client` (única exceção à regra "só `index.ts`": o `index` leva
+  código `"use cache"` ao bundle do cliente). Foto inválida: a página renderiza `PhotoNotFound` (sem `not-found.tsx`: ele não recebe o hotel).
+- Edge Runtime descartado: `runtime = 'edge'` é *deprecated* e incompatível com `cacheComponents`; o Proxy roda em Node. PPR + ISR resolvem latência/cold start melhor (README).
+- `serverActions.bodySizeLimit: "64kb"` (única action: `createBookingAction`).

@@ -24,7 +24,7 @@ requisitos por feature, o que escolhemos dos avançados e os detalhes da mock-ap
 ```bash
 cd mock-api && npm install && npm run server   # API em http://localhost:3333 (delay 300ms)
 npm run dev          # front em http://localhost:3000
-npm run build        # build de produção
+npm run build        # build de produção (EXIGE a mock-api no ar: `generateStaticParams` lista os hotéis; F7c)
 npm run typecheck    # tsc --noEmit
 npm run lint         # biome check
 npm run format       # biome check --write (formata e organiza imports)
@@ -40,6 +40,7 @@ npm run test:e2e     # playwright test --trace off (sobe mock-api, control-proxy
 # PWA/offline: contra o build (o service worker é desligado no `next dev`)
 npm run build && npx next start -p 3100   # depois, noutro terminal:
 PLAYWRIGHT_BASE_URL=http://localhost:3100 npm run test:e2e:build   # e2e/pwa.build.spec.ts
+npm run test:e2e:prod # E2E contra `next build && next start` (testes `@prod`: PPR, ISR, nonce da CSP sob cacheComponents)
 npx -y react-doctor@0.9.23 . --scope changed --base main --verbose --no-telemetry
                      # saúde React: componentes gigantes/aninhados, perf, a11y (também roda em toda PR)
 ```

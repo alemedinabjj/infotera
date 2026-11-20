@@ -85,3 +85,8 @@ leva um sobrenome único do teste (`serverApi.failServerRequests(..., { method: 
 - Texto do hotel/quarto/endereço vem da API em pt-BR: leva `lang={contentLang(locale)}`.
 - Política de PII inalterada (nada de cartão/CVV/validade/documento persistido). E2E: `e2e/i18n.checkout.spec.ts`.
 - Cuidado com a heurística de `e2e/helpers/language.ts`: palavras como "data", "do", "com" (e e-mails `.com`) contam como português; o copy em inglês as evita.
+
+## F7c (Activity e pagamento)
+- Com `cacheComponents` o Next esconde rotas (Activity) em vez de desmontar. `usePaymentWipe` também zera cartão, validade, CVV, nome no cartão e documento ao esconder (`useResetOnHide`);
+  `TermsField` fecha o modal de termos. O sucesso sai por `assignLocation('/confirmation/<id>')` (carga de documento: descarta o heap com o cartão), não por `router.replace`.
+- `/checkout` é `ƒ` (`instant = false` + `connection()`): ver `src/app/CLAUDE.md`. `bodySizeLimit` da action: 64 KB.

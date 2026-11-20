@@ -181,3 +181,7 @@ index.ts                  API pública usada por app/search
   restaurada divergia do HTML do servidor).
 - **i18n**: dicionário completo (`list`, `feed`, `controls`, `distance`, `page`, `map`). `describe*`, `sortLabel`, `formatDistanceFromCenter`, `describePriceSummary`, `searchPageTitle`
   aceitam `locale`. O card localiza o link (`localizePath`) e usa `formatUnit`.
+
+## F7c (prefetch por intenção)
+- `HotelCard` usa `useIntentPrefetch`: `prefetch="auto"` (só a casca genérica) até `pointerenter`/`focus`/`touchstart`, depois `true` (conteúdo cacheado do hotel). `usePrefetchHotel` (TanStack) saiu:
+  a página do hotel não lê mais esses caches. `FiltersDrawer` usa `useResetOnHide(onClose)` (Activity: o sheet não volta aberto; voltar de `/hotel/x` mantém filtros, feed e scroll).
