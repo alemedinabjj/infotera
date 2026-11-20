@@ -2,10 +2,11 @@
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { useHydrated } from "@/shared/hooks/useHydrated";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { hotelsInfiniteQueryOptions, nextBatchRetry } from "../api/hotels-infinite";
 import { deriveFeedFooter } from "../model/feed";
-import { deriveResultsView } from "../model/results-view";
+import { deriveResultsView, type ResultsView } from "../model/results-view";
 import { hasActiveFilters, type SearchFilters } from "../model/search-filters";
 import { hasFailed, type ResultsModel } from "./results-model";
 
@@ -26,24 +27,29 @@ export const useHotelFeed = (
     enabled,
     retry: nextBatchRetry(client, options.queryKey),
   });
-  const pages = query.data?.pages;
+  // Cache restaurado só existe no cliente: até hidratar vale "sem dado" (igual ao HTML do servidor).
+  const hydrated = useHydrated();
+  const pages = hydrated ? query.data?.pages : undefined;
   const items = useMemo(() => pages?.flatMap((page) => page.items) ?? [], [pages]);
   const total = pages?.at(-1)?.total ?? 0;
   const hasData = pages !== undefined;
 
-  const view = deriveResultsView({
-    hasData,
-    isError: hasFailed({
-      hasData,
-      isError: query.isError,
-      errorUpdateCount: query.errorUpdateCount,
-    }),
-    isPlaceholderData: query.isPlaceholderData,
-    isPaused: query.fetchStatus === "paused",
-    total,
-    page: 1,
-    hasActiveFilters: hasActiveFilters(filters),
-  });
+  const loading: ResultsView = { kind: "loading" };
+  const view = !hydrated
+    ? loading
+    : deriveResultsView({
+        hasData,
+        isError: hasFailed({
+          hasData,
+          isError: query.isError,
+          errorUpdateCount: query.errorUpdateCount,
+        }),
+        isPlaceholderData: query.isPlaceholderData,
+        isPaused: query.fetchStatus === "paused",
+        total,
+        page: 1,
+        hasActiveFilters: hasActiveFilters(filters),
+      });
   const slow = useSlowLoading(enabled && view.kind === "loading");
 
   return {

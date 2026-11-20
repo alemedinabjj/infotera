@@ -42,8 +42,13 @@ test.describe("cache público persistido", () => {
     await page.goto("/");
     await page.getByRole("combobox", { name: /Destino/ }).fill("rio");
     await expect(page.getByRole("option").first()).toBeVisible();
+    // A gravação é limitada a 1 por segundo: espera a das sugestões antes de sair da página.
+    await expect.poll(() => cacheText(page)).toContain('"suggestions"');
 
     await page.goto(hotelPath(1, false, criteriaQuery().replace("children=0", "children=1")));
+    // As avaliações (consulta pública) só entram no cache depois de carregadas.
+    await expect(page.getByText("Maria Silva").first()).toBeVisible();
+    await expect.poll(() => cacheText(page)).toContain('"reviews"');
     await roomCard(page, "Suíte Deluxe Ocean View")
       .getByRole("button", { name: /^Selecionar quarto/ })
       .click();
