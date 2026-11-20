@@ -13,7 +13,11 @@ import { cards, searchPath } from "./helpers/hotel-search";
 
 // O `test` de `./fixtures` bloqueia service workers (o `page.route` não vê o que um SW pede). Aqui o
 // SW é o objeto do teste: liga de volta; a fixture `tiles` ainda falha se um tile escapar.
-test.use({ serviceWorkers: "allow" });
+test.use({
+  serviceWorkers: "allow",
+  // Pedidos do SW escapam do `route`: sem resolver o host dos tiles, eles falham em vez de bater no OSM.
+  launchOptions: { args: ["--host-resolver-rules=MAP tile.openstreetmap.org ~NOTFOUND"] },
+});
 test.skip(!process.env.PLAYWRIGHT_BASE_URL, "service worker só no build de produção");
 test.beforeEach(({ isMobile }) => {
   test.skip(isMobile, "o service worker é verificado no desktop");
