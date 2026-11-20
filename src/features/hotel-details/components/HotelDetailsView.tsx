@@ -57,8 +57,8 @@ export const HotelDetailsView = async ({
   const [snapshot, rooms, firstReviews] = await Promise.all([
     getHotelSnapshot(hotelId),
     // Fora do escopo cacheado: falha de quartos/comentários vira erro da seção, não da página.
-    settle(getHotelRoomsSnapshot(hotelId)),
-    settle(getFirstReviewsSnapshot(hotelId)),
+    settle(getHotelRoomsSnapshot(hotelId), { resource: "rooms", hotelId }),
+    settle(getFirstReviewsSnapshot(hotelId), { resource: "reviews", hotelId }),
   ]);
   if (snapshot.kind === "not-found") return <HotelNotFound locale={locale} />;
   const { hotel } = snapshot;
