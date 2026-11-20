@@ -63,6 +63,6 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
   que a espera vira fallback), por request resolve na hora. `await searchParams` no topo mata o PPR da rota.
 - Galeria: `hotel/[hotelId]/layout.tsx` (`{children}{modal}`), `@modal/default.tsx` (`null`), `@modal/(.)photos/[photo]` (modal) e `photos/[photo]` (página cheia). Funciona com o
   rewrite do `proxy.ts` (`/hotel/1/photos/3` ↔ `/pt-BR/...`). `error.tsx` do modal importa `@/features/hotel-details/client` (única exceção à regra "só `index.ts`": o `index` leva
-  código `"use cache"` ao bundle do cliente). Foto inválida: a página renderiza `PhotoNotFound` (sem `not-found.tsx`: ele não recebe o hotel).
+  código `"use cache"` ao bundle do cliente). Foto inválida: `notFound()` e `photos/[photo]/not-found.tsx` (cliente, id do hotel por `useParams`). A página da foto não tem `loading.tsx` (o do `@modal` sim) e exporta `generateStaticParams` + `instant = false`.
 - Edge Runtime descartado: `runtime = 'edge'` é *deprecated* e incompatível com `cacheComponents`; o Proxy roda em Node. PPR + ISR resolvem latência/cold start melhor (README).
 - `serverActions.bodySizeLimit: "64kb"` (única action: `createBookingAction`).

@@ -1,8 +1,8 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { navigationSpies } from "@/shared/testing/next-navigation";
+import { navigationSpies, setTestUrl } from "@/shared/testing/next-navigation";
 import { renderWithProviders } from "@/shared/testing/render";
 import { Gallery } from "./Gallery";
 import { PhotoModal } from "./PhotoModal";
@@ -127,6 +127,8 @@ describe("PhotoModal: fechar (critérios 14 e 15, U3)", () => {
     renderWithProviders(<Host />);
     const opener = screen.getByRole("link", { name: "Abrir foto 4 de 5" });
     fireEvent.click(opener);
+    // A rota respondeu: o caminho muda e o modal de carregamento do link dá lugar ao da rota.
+    act(() => setTestUrl("/hotel/1/photos/4"));
     fireEvent.click(screen.getByTestId("voltar"));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(opener).toHaveFocus();

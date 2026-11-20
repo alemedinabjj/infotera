@@ -1,11 +1,10 @@
 export { getHotelSnapshot } from "./api/catalog.cached";
-export { listPrerenderHotelIds } from "./api/prerender.server";
+export { listPrerenderHotelIds, listPrerenderPhotoParams } from "./api/prerender.server";
 export { HotelDetailsView } from "./components/HotelDetailsView";
 export { HotelNotFound } from "./components/HotelNotFound";
 export { PhotoModal } from "./components/PhotoModal";
-export { PhotoNotFound } from "./components/PhotoNotFound";
+export { PhotoModalLoading } from "./components/PhotoModalLoading";
 export { PhotoPage } from "./components/PhotoPage";
-export { PhotoSkeleton } from "./components/PhotoSkeleton";
 export { type DatesFormLabels, datesFormLabels } from "./model/dates-form-labels";
 export { parseHotelId } from "./model/hotel-id";
 export { hotelPageTitle } from "./model/metadata";

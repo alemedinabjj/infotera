@@ -246,4 +246,29 @@ describe("Dialog fechamento animado", () => {
     expect(onClose).toHaveBeenCalledOnce();
     await waitFor(() => expect(trigger).toHaveFocus());
   });
+
+  it("o close disparado pelo próprio Dialog (finish) não é um pedido da pessoa", async () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: "Ler termos" }));
+    await userEvent.click(screen.getByRole("button", { name: "Fechar" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+describe("Dialog desmontado ou escondido aberto", () => {
+  it("fecha de verdade, destrava o scroll e o close que o navegador dispara não chama onClose", async () => {
+    const onClose = vi.fn();
+    const { unmount } = render(<Harness onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: "Ler termos" }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("open");
+    expect(document.body.style.overflow).toBe("hidden");
+    unmount();
+    expect(dialog).not.toHaveAttribute("open");
+    expect(document.body.style.overflow).toBe("");
+    dialog.dispatchEvent(new Event("close"));
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

@@ -426,7 +426,7 @@ Comparar quartos · Comentários p.1 · Similares (links dos cards = mesmo link 
 | Tela/área | Loading | Erro | Vazio / inválido | Sucesso | Offline / lento |
 |---|---|---|---|---|---|
 | Modal da foto (rota carregando) | Mesma moldura do Dialog `full` aberta na hora: título genérico `Fotos do hotel`, "Fechar", corpo `bg-fg` com `Spinner` + `Carregando foto…` **visível** (padrão do `LightboxPhoto`; bloco claro de skeleton sobre fundo escuro seria um flash), corpo com `aria-busy="true"`, footer `h-16` vazio reservado | Mesma moldura; no corpo, um cartão claro centralizado (`bg-surface rounded-card p-6 max-w-sm w-[calc(100%-2rem)]`) com `ErrorState` `Não foi possível abrir a foto` · `Verifique sua conexão e tente de novo.` + `Tentar de novo` (secondary, `reset()` + `router.refresh()`) e `Fechar` (ghost, mesmo fluxo de fechar). O cartão claro evita texto `fg-muted` sobre `bg-fg` | Índice inválido: o modal não abre (`null`); a página por trás fica como estava | Foto, contador, setas. Troca de foto instantânea | `navigator.onLine === false` no erro: título `Você está sem internet` · `A foto abre assim que a conexão voltar.` (mesmos botões). Foto que não baixa: `Não foi possível carregar esta foto.` sobre a moldura, setas seguem (F4) |
-| Página cheia da foto | Skeleton claro com a geometria final: `h-11 w-44` (voltar), `h-7 w-3/4` (h1), bloco `aspect-[4/3] sm:aspect-video rounded-card`, linha `h-11` com 2 blocos `size-11` nas pontas e `h-5 w-28` no meio. `aria-busy` + `sr-only aria-live="polite"` `Carregando foto…` | `error.tsx` do hotel (F4: `Não foi possível abrir o hotel`) | **Foto não encontrada** (índice fora de `1..total`, `0`, `abc`, `01`): `EmptyState` de página, h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto de {hotel}.` + `ButtonLink primary` `Ver o hotel` (`/hotel/{id}`). Hotel inexistente: `Hotel não encontrado` da F4 | h1, foto, controles, título da aba `Foto 3 de 5 · {hotel} \| Infotera Hotéis` (atualizado a cada troca) | Sem cache: página offline `public` da F7b |
+| Página cheia da foto | Skeleton claro com a geometria final: `h-11 w-44` (voltar), `h-7 w-3/4` (h1), bloco `aspect-[4/3] sm:aspect-video rounded-card`, linha `h-11` com 2 blocos `size-11` nas pontas e `h-5 w-28` no meio. `aria-busy` + `sr-only aria-live="polite"` `Carregando foto…` | `error.tsx` do hotel (F4: `Não foi possível abrir o hotel`) | **Foto não encontrada** (índice fora de `1..total`, `0`, `abc`, `01`): `EmptyState` de página, h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto deste hotel.` (o `not-found.tsx` não recebe `params`: sem o nome do hotel; o id vem de `useParams`) + `ButtonLink primary` `Ver o hotel` (`/hotel/{id}`). Hotel inexistente: `Hotel não encontrado` da F4 | h1, foto, controles, título da aba `Foto 3 de 5 · {hotel} \| Infotera Hotéis` (atualizado a cada troca) | Sem cache: página offline `public` da F7b |
 | Buracos da página do hotel | Fallbacks estáticos (sem pulso), `aria-hidden` | Não há: são cálculos sobre dados já na casca, sem request | Sem datas: `Escolha as datas para reservar` + formulário aberto (F4) e `Escolher datas` em cada quarto | Total, detalhe, motivo e botão no lugar reservado | JS desligado: fallbacks ficam; nome, fotos, diárias, comentários e similares visíveis |
 | Server Action acima de 64 KB | — | Inalcançável pela UI. Se acontecer (requisição forjada), mostra o erro de envio da F5 (`Não foi possível confirmar sua reserva` · `Nenhuma cobrança foi feita. Seus dados foram mantidos; tente de novo em instantes.`). Sem texto novo, sem citar tamanho | — | — | — |
 
@@ -449,7 +449,7 @@ seria interceptado e abriria o modal por cima da página de erro.
 - `←`/`→` (e as setas na tela, e arrastar na horizontal no celular): foto anterior/próxima, dando a
   volta. `Home`/`End`: primeira/última. A URL troca por `replaceState`, o contador anuncia
   `Foto 4 de 5`, o foco fica onde estava. Sem animação de troca.
-- `Tab` circula só dentro do modal (Fechar → anterior → próxima). O fundo é inerte.
+- `Tab` segue o **ciclo nativo do `<dialog>` modal** (decisão: não prendemos o foco à mão): Fechar → anterior → próxima e, depois, a interface do navegador (barra de endereço), voltando ao modal. O fundo é inerte (nada fora do modal recebe foco nem clique), o que atende ao critério de foco do WCAG 2.2 (2.1.2: o foco nunca fica preso) sem biblioteca nem código a manter.
 - Zoom do navegador (pinça) continua liberado.
 
 **Fechar**
@@ -499,7 +499,7 @@ Os textos do visualizador já existem em `hotelDetailsMessages.gallery` (F4). No
 | `photoPage.back` | `Voltar para o hotel` | `Back to hotel` |
 | `photoPage.metaTitle` | `Foto {n} de {total} · {hotel} \| Infotera Hotéis` | `Photo {n} of {total} · {hotel} \| Infotera Hotéis` |
 | `photoPage.notFoundTitle` | `Foto não encontrada` | `Photo not found` |
-| `photoPage.notFoundBody` | `Este endereço não corresponde a nenhuma foto de {hotel}.` | `This address doesn't match any photo of {hotel}.` |
+| `photoPage.notFoundBody` | `Este endereço não corresponde a nenhuma foto deste hotel.` | `This address doesn't match any photo of this hotel.` |
 | `photoPage.viewHotel` | `Ver o hotel` | `View hotel` |
 | `photoPage.metaNotFound` | `Foto não encontrada \| Infotera Hotéis` | `Photo not found \| Infotera Hotéis` |
 
@@ -848,3 +848,32 @@ Novo token: **nenhum**.
 | `npm run build` local sem API vira atrito | `CLAUDE.md`/README: "suba a mock-api antes do build". A retry mostra o motivo em pt-BR |
 | `use cache` em memória não persiste entre instâncias serverless (Vercel) | Esperado (`use-cache.md`, "Runtime caching considerations"). A saída ISR da página é persistida pela plataforma. Sem `use cache: remote` (custo e infra a mais) |
 | 60 páginas × 4 GETs deixam o build lento | ~240 GETs leves com 300 ms de delay e prerender paralelo. Medir na tarefa 11. Se passar de 2 min, reduzir para os mais populares (`_sort=reviewCount`), já que o fallback ISR cobre o resto |
+
+
+## Rodada de correções da galeria (modal e página cheia da foto)
+
+- **Activity e `<dialog>` (modal reaberto por Voltar/Avançar).** Ao esconder a rota, o React solta o
+  `ref` antes do cleanup passivo e o `<dialog>` modal ficava `open` fora do top layer (sem fundo inerte
+  nem Esc). O `Dialog` agora fecha em um cleanup de `useLayoutEffect` que guarda o nó, reabre com
+  `showModal()` se encontrar um `<dialog>` aberto e não modal, e não trata o `close` disparado por ele
+  mesmo como pedido da pessoa (era isso que deixava o estado em "fechando" e fazia a foto 3 ou 5 não
+  abrir). O `usePhotoViewer` lê a foto da URL (`photoIndexFromPath`) ao reexibir, em vez de resetar para o
+  índice das props.
+- **Loading, erro e offline do modal** usam o mesmo `Dialog size="full"` (`PhotoModalFrame`) e o
+  `useCloseOnce` (trava por ref, `restorePhotoFocus()`, um único `router.back()`). O Next não mostra o
+  `loading.tsx` do slot enquanto a navegação não tem o que mostrar (dev, sem prefetch), então o clique em
+  `PhotoLink` abre a moldura de carregamento na hora (`usePhotoOpening`) e ela some quando o caminho
+  muda. Fechar antes de a rota chegar esconde a moldura e, quando a rota chega, volta uma entrada. Sem
+  internet o clique não navega e mostra `Você está sem internet`.
+- **Service worker:** `/hotel/:id/photos/:photo` é rota pública (rede primeiro e página offline do
+  idioma), igual ao hotel.
+- **Página cheia sem JS (critério 19).** Sem `loading.tsx` próprio e com todas as fotos em
+  `generateStaticParams`; o `PhotoFrame` esconde o "Carregando foto…" com `<noscript>`. **Pendência
+  fora desta frente:** o `loading.tsx` de `hotel/[hotelId]` envolve a página da foto num Suspense e o
+  HTML do build entrega o conteúdo em um segmento outlined (`<div hidden id="S:…">`) que só o JS revela.
+  Sem esse arquivo (verificado numa cópia do projeto), a página da foto e a miniatura sem JS passam. O
+  arquivo é da frente da página do hotel: o Suspense do skeleton precisa sair de `loading.tsx` (por
+  exemplo para dentro da própria página do hotel, ou um route group `(details)` só para ela).
+- **404 da foto:** `notFound()` com o `not-found.tsx` da rota (UI "Foto não encontrada"). O status HTTP
+  continua 200 nos params não gerados no build: sob PPR a casca já saiu quando o `notFound()` roda.
+  `dynamicParams = false` daria 404 de verdade, mas é incompatível com `cacheComponents`.

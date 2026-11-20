@@ -54,7 +54,7 @@ export const PhotoViewer = ({
       aria-labelledby={headingId}
       aria-describedby={counterId}
       onKeyDown={viewer.onKeyDown}
-      className="flex w-full flex-col gap-4 lg:mx-auto lg:max-w-4xl"
+      className="flex w-full flex-col gap-4"
     >
       <div
         className="relative aspect-[4/3] w-full touch-pan-y overflow-hidden rounded-card bg-fg sm:aspect-video"

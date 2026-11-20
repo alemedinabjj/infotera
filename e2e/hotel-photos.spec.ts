@@ -5,6 +5,10 @@ import { test } from "./helpers/mock-api-server";
 
 const NAME = "Hotel Copacabana Palace";
 
+/** Contador da página cheia, dentro do grupo (a cópia oculta do HTML em streaming não conta). */
+const pageCounter = (page: Page, text: string) =>
+  page.getByRole("group", { name: `Fotos de ${NAME}` }).getByText(text, { exact: true });
+
 const openDialog = (page: Page) => page.getByRole("dialog", { name: `Fotos de ${NAME}` });
 
 /** Abre a galeria pelo link "Ver todas" (existe no celular e no desktop). */
@@ -100,10 +104,10 @@ test.describe("página cheia da foto (critérios 16, 17 e 19)", () => {
   test("URL direta: h1, foto, controles que trocam sem modal e título da aba", async ({ page }) => {
     await page.goto("/hotel/1/photos/3");
     await expect(page.getByRole("heading", { level: 1, name: `Fotos de ${NAME}` })).toBeVisible();
-    await expect(page.getByText("Foto 3 de 5")).toBeVisible();
+    await expect(pageCounter(page, "Foto 3 de 5")).toBeVisible();
     await expect(page).toHaveTitle(`Foto 3 de 5 · ${NAME} | Infotera Hotéis`);
     await page.getByRole("button", { name: "Próxima foto" }).click();
-    await expect(page.getByText("Foto 4 de 5")).toBeVisible();
+    await expect(pageCounter(page, "Foto 4 de 5")).toBeVisible();
     await expect(page).toHaveURL(/\/hotel\/1\/photos\/4$/);
     await expect(page).toHaveTitle(`Foto 4 de 5 · ${NAME} | Infotera Hotéis`);
     await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -144,7 +148,7 @@ test.describe("acessibilidade e 320 px (critérios 27 e 28)", () => {
     expect((await analyzeAccessibility(page)).violations).toEqual([]);
     expect(await noHorizontalScroll(page)).toBe(true);
     await page.goto("/hotel/1/photos/2");
-    await expect(page.getByText("Foto 2 de 5")).toBeVisible();
+    await expect(pageCounter(page, "Foto 2 de 5")).toBeVisible();
     expect((await analyzeAccessibility(page)).violations).toEqual([]);
     expect(await noHorizontalScroll(page)).toBe(true);
   });

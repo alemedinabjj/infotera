@@ -55,13 +55,24 @@ test.describe("hotel sem JavaScript: a casca estática @prod", () => {
     await expect(suite.locator("[aria-hidden='true'].animate-none").first()).toBeAttached();
   });
 
-  // Fica pendente: a página cheia da foto é de outra frente (mesmo problema do segmento outlined).
-  test.fixme("a miniatura leva à página cheia da foto", async ({ page }) => {
+  test("a miniatura leva à página cheia da foto", async ({ page }) => {
     await page.goto(hotelPath(1));
     await page.getByRole("link", { name: "Ver todas as fotos (5)" }).click();
     await expect(
       page.getByRole("heading", { level: 1, name: "Fotos de Hotel Copacabana Palace" }),
     ).toBeVisible();
+  });
+
+  test("página cheia da foto aberta direto: h1, foto e controles já no HTML, sem 'Carregando' (critério 19)", async ({
+    page,
+  }) => {
+    await page.goto("/hotel/1/photos/3");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Fotos de Hotel Copacabana Palace" }),
+    ).toBeVisible();
+    await expect(page.getByText("Foto 3 de 5", { exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Voltar para o hotel" })).toBeVisible();
+    await expect(page.getByText("Carregando foto…")).toBeHidden();
   });
 });
 

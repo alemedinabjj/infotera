@@ -14,6 +14,17 @@ export const parsePhotoParam = (raw: string, total: number): number | null => {
   return position <= total ? position - 1 : null;
 };
 
+/**
+ * Índice (base 0) da foto que a URL atual aponta (`/hotel/1/photos/3`, com ou sem `/en`), ou `null`
+ * se o caminho não é de uma foto válida. O visualizador troca a foto por `replaceState`, então a URL
+ * (e não as props da rota renderizada) é a fonte da verdade quando o histórico reexibe a rota.
+ */
+export const photoIndexFromPath = (pathname: string, total: number): number | null => {
+  const segments = pathname.split("/").filter(Boolean);
+  const [photos, raw] = segments.slice(-2);
+  return photos === "photos" && raw !== undefined ? parsePhotoParam(raw, total) : null;
+};
+
 /** URL pública da foto de índice `index` (base 0) no idioma: `/hotel/1/photos/3`, `/en/hotel/1/photos/3`. */
 export const photoHref = (hotelId: number, index: number, locale: Locale): string =>
   localizePath(locale, `/hotel/${hotelId}/photos/${index + 1}`);

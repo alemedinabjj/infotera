@@ -1,10 +1,16 @@
 "use client";
 
-import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
-import { useResetOnHide } from "@/shared/hooks/useResetOnHide";
+import {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { Locale } from "@/shared/i18n/config";
 import { type GalleryAction, galleryKeyAction, galleryNavigation } from "../model/gallery";
-import { photoHref } from "../model/photo-route";
+import { photoHref, photoIndexFromPath } from "../model/photo-route";
 
 type PhotoViewerOptions = {
   hotelId: number;
@@ -23,6 +29,7 @@ type PhotoViewerOptions = {
 export const usePhotoViewer = ({ hotelId, total, initialIndex, locale }: PhotoViewerOptions) => {
   const [index, setIndex] = useState(initialIndex);
   const written = useRef(initialIndex);
+  const revealed = useRef(false);
 
   useEffect(() => {
     if (written.current === index) return;
@@ -30,11 +37,19 @@ export const usePhotoViewer = ({ hotelId, total, initialIndex, locale }: PhotoVi
     window.history.replaceState(null, "", photoHref(hotelId, index, locale));
   }, [index, hotelId, locale]);
 
-  // Activity (cacheComponents) esconde o modal em vez de desmontar: ao voltar a abrir, a foto é a da URL.
-  useResetOnHide(() => {
-    written.current = initialIndex;
-    setIndex(initialIndex);
-  });
+  // Activity (cacheComponents) esconde a rota em vez de desmontar e a reexibe no Voltar/Avançar, com o
+  // estado de antes. Os efeitos rodam de novo ao reexibir: a foto passa a ser a da URL do histórico
+  // (que `replaceState` manteve em dia), não o índice guardado nem o das props da rota.
+  useLayoutEffect(() => {
+    if (!revealed.current) {
+      revealed.current = true;
+      return;
+    }
+    const fromUrl = photoIndexFromPath(window.location.pathname, total);
+    if (fromUrl === null) return;
+    written.current = fromUrl;
+    setIndex(fromUrl);
+  }, [total]);
 
   const go = useCallback(
     (action: GalleryAction) => setIndex((current) => galleryNavigation(current, total, action)),
