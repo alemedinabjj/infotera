@@ -11,20 +11,22 @@ import {
   searchPageTitle,
 } from "@/features/hotel-search";
 import { SearchForm } from "@/features/search-form";
+import { alternatesFor } from "@/shared/i18n/paths";
 import { isBeforeToday, todayISO } from "@/shared/lib/dates";
 import { SearchEditForm } from "./SearchEditForm";
 
 export const generateMetadata = async ({
   searchParams,
-}: PageProps<"/search">): Promise<Metadata> => ({
+}: PageProps<"/[locale]/search">): Promise<Metadata> => ({
   title: searchPageTitle(parseSearchPage(await searchParams)),
+  alternates: { languages: alternatesFor("/search") },
 });
 
 /**
  * `/search`. O servidor só lê os critérios (destino, datas, hóspedes) e monta a casca; a lista, os
  * filtros, a ordenação e a página vivem na URL e são lidos no cliente (`HotelSearchResults`).
  */
-const SearchPage = async ({ searchParams }: PageProps<"/search">) => {
+const SearchPage = async ({ searchParams }: PageProps<"/[locale]/search">) => {
   const page = parseSearchPage(await searchParams);
 
   if (page.kind === "missing-destination") {

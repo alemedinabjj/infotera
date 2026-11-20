@@ -8,8 +8,8 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
-// `/checkout` recebe a política estrita (com nonce) do `proxy.ts`; aqui ela sairia duplicada.
-const BASELINE_CSP_SOURCE = "/((?!checkout(?:/|$)).*)";
+// `/checkout` e `/en/checkout` recebem a política estrita (com nonce) do `proxy.ts`; aqui ela sairia duplicada.
+const BASELINE_CSP_SOURCE = "/((?!(?:en/)?checkout(?:/|$)).*)";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,

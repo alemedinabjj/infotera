@@ -9,7 +9,7 @@ import {
 
 export const generateMetadata = async ({
   params,
-}: PageProps<"/confirmation/[bookingId]">): Promise<Metadata> =>
+}: PageProps<"/[locale]/confirmation/[bookingId]">): Promise<Metadata> =>
   generateConfirmationMetadata((await params).bookingId);
 
 /**
@@ -17,7 +17,7 @@ export const generateMetadata = async ({
  * reserva e nunca pode entrar em cache de rota. O id é validado antes de qualquer request: o que
  * não é UUID v4 nem id curto do json-server (nunca só dígitos) vira "não encontrada" sem chamar a API.
  */
-const ConfirmationPage = async ({ params }: PageProps<"/confirmation/[bookingId]">) => {
+const ConfirmationPage = async ({ params }: PageProps<"/[locale]/confirmation/[bookingId]">) => {
   await connection();
   const id = parseBookingId((await params).bookingId);
   if (id === null) notFound();

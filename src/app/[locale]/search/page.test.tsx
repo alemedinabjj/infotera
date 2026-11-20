@@ -14,7 +14,7 @@ vi.mock(
 type Query = Record<string, string>;
 
 const propsFor = (query: Query) => ({
-  params: Promise.resolve({}),
+  params: Promise.resolve({ locale: "pt-BR" }),
   searchParams: Promise.resolve(query),
 });
 
@@ -112,6 +112,11 @@ describe("generateMetadata", () => {
     [{ destination: "Bonito, MS" }, "Hotéis em Bonito, MS | Infotera Hotéis"],
     [stay(), "Hotéis em Rio de Janeiro, RJ | Infotera Hotéis"],
   ])("título para %j", async (query, title) => {
-    expect(await generateMetadata(propsFor(query))).toEqual({ title });
+    expect(await generateMetadata(propsFor(query))).toEqual({
+      title,
+      alternates: {
+        languages: { "pt-BR": "/search", "en-US": "/en/search", "x-default": "/search" },
+      },
+    });
   });
 });

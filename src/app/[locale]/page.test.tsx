@@ -8,9 +8,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 describe("HomePage", () => {
   const props = (notice?: string) =>
     ({
-      params: Promise.resolve({}),
+      params: Promise.resolve({ locale: "pt-BR" }),
       searchParams: Promise.resolve(notice ? { notice } : {}),
-    }) satisfies PageProps<"/">;
+    }) satisfies PageProps<"/[locale]">;
 
   it("tem título em pt-BR, um único h1 e o formulário nomeado por ele", async () => {
     renderWithProviders(await HomePage(props()));
@@ -21,6 +21,14 @@ describe("HomePage", () => {
     const form = screen.getByRole("form", { name: "Encontre seu hotel" });
     expect(form).toHaveAttribute("novalidate");
     expect(screen.getByRole("button", { name: "Buscar hotéis" })).toBeInTheDocument();
+  });
+
+  it("declara os idiomas alternativos (hreflang)", () => {
+    expect(metadata.alternates?.languages).toEqual({
+      "pt-BR": "/",
+      "en-US": "/en",
+      "x-default": "/",
+    });
   });
 
   it("mostra o aviso visível quando o checkout redirecionou sem quarto", async () => {

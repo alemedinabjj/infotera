@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { assignLocation } from "@/shared/lib/navigation";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { useBookingDraftActions } from "@/shared/stores/booking-draft";
@@ -14,6 +16,7 @@ import { useBookingDraftActions } from "@/shared/stores/booking-draft";
  */
 export const useSelectRoom = (hotelId: number, criteria: SearchCriteria | null) => {
   const { selectRoom } = useBookingDraftActions();
+  const locale = useLocale();
   const [pendingRoomId, setPendingRoomId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -29,7 +32,7 @@ export const useSelectRoom = (hotelId: number, criteria: SearchCriteria | null) 
     setPendingRoomId(id);
     // O Zustand persiste de forma síncrona: o storage já está gravado quando o documento troca.
     selectRoom({ hotelId, roomId: id, criteria });
-    assignLocation("/checkout");
+    assignLocation(localizePath(locale, "/checkout"));
   };
 
   return { select, pendingRoomId };

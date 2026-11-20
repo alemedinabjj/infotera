@@ -17,7 +17,7 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
 const props = (hotelId: string, search: Record<string, string> = {}) => ({
-  params: Promise.resolve({ hotelId }),
+  params: Promise.resolve({ locale: "pt-BR", hotelId }),
   searchParams: Promise.resolve(search),
 });
 
@@ -70,6 +70,9 @@ describe("generateMetadata (critérios 1 e 2)", () => {
     );
     expect(await generateMetadata(props("1"))).toEqual({
       title: "Hotel Copacabana Palace | Infotera Hotéis",
+      alternates: {
+        languages: { "pt-BR": "/hotel/1", "en-US": "/en/hotel/1", "x-default": "/hotel/1" },
+      },
     });
   });
 
@@ -80,7 +83,7 @@ describe("generateMetadata (critérios 1 e 2)", () => {
     );
     const expected = { title: "Hotel não encontrado | Infotera Hotéis" };
     expect(await generateMetadata(props("abc"))).toEqual(expected);
-    expect(await generateMetadata(props("999"))).toEqual(expected);
+    expect(await generateMetadata(props("999"))).toMatchObject(expected);
   });
 
   it("erro da API: título padrão, sem derrubar a página", async () => {
@@ -88,6 +91,6 @@ describe("generateMetadata (critérios 1 e 2)", () => {
       "fetch",
       vi.fn(async () => json({ error: "x" }, 500)),
     );
-    expect(await generateMetadata(props("1"))).toEqual({ title: "Hotel | Infotera Hotéis" });
+    expect(await generateMetadata(props("1"))).toMatchObject({ title: "Hotel | Infotera Hotéis" });
   });
 });

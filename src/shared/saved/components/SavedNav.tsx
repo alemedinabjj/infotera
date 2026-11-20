@@ -4,6 +4,8 @@ import { m, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useLocale } from "../../i18n/client";
+import { localizePath, parsePublicPath } from "../../i18n/paths";
 import { cn } from "../../lib/cn";
 import { motionPreset } from "../../lib/motion";
 import { buttonClassName } from "../../ui/atoms/button-styles";
@@ -76,21 +78,22 @@ const Counter = ({ count }: { count: number }) => {
 
 /** Links "Favoritos" (com contador) e "Minhas reservas" do cabeçalho. Só ícone abaixo de `sm`. */
 export const SavedNav = () => {
-  const pathname = usePathname();
+  const locale = useLocale();
+  const { path } = parsePublicPath(usePathname());
   const count = useFavoriteCount();
   return (
     <nav aria-label={MESSAGES.label} className="flex items-center gap-1">
       <NavLink
-        href={FAVORITES_PATH}
-        current={pathname === FAVORITES_PATH}
+        href={localizePath(locale, FAVORITES_PATH)}
+        current={path === FAVORITES_PATH}
         label={MESSAGES.favoritesLabel(count)}
         text={MESSAGES.favorites}
         icon={<HeartIcon className="size-5" />}
         badge={<Counter count={count} />}
       />
       <NavLink
-        href={MY_BOOKINGS_PATH}
-        current={pathname === MY_BOOKINGS_PATH}
+        href={localizePath(locale, MY_BOOKINGS_PATH)}
+        current={path === MY_BOOKINGS_PATH}
         label={MESSAGES.myBookings}
         text={MESSAGES.myBookings}
         icon={<SuitcaseIcon className="size-5" />}

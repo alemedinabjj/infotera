@@ -1,7 +1,9 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { applyFilterChange, type FilterChange } from "../model/filter-change";
 import { parseSearchFilters, type SearchFilters, withFilters } from "../model/search-filters";
 
@@ -23,7 +25,8 @@ type UseSearchFilters = {
  */
 export const useSearchFilters = (): UseSearchFilters => {
   const searchParams = useSearchParams();
-  const pathname = usePathname();
+  // Nunca `usePathname()` em render: com o rewrite do proxy ele pode divergir entre servidor e cliente.
+  const pathname = localizePath(useLocale(), "/search");
   const urlFilters = useMemo(() => parseSearchFilters(searchParams), [searchParams]);
   // O Next atualiza `useSearchParams` numa transition (um tique depois do `replaceState`): sem
   // isso o controle marcado "desmarcaria" por um instante. O valor otimista vale enquanto a URL

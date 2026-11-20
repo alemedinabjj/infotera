@@ -22,7 +22,7 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
 const props = (bookingId: string) => ({
-  params: Promise.resolve({ bookingId }),
+  params: Promise.resolve({ locale: "pt-BR", bookingId }),
   searchParams: Promise.resolve({}),
 });
 
