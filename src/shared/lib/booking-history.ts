@@ -4,6 +4,9 @@ import { createStorage, STORAGE_PREFIX } from "./storage";
 /** Chave no `localStorage` (`infotera:booking-history`). */
 export const BOOKING_HISTORY_KEY = "booking-history";
 export const BOOKING_HISTORY_LIMIT = 10;
+/** Entradas guardadas há mais que isto expiram na leitura (privacidade em computador compartilhado). */
+export const BOOKING_HISTORY_TTL_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const SHORT_ID = /^[A-Za-z0-9_-]{6,36}$/;
 const ONLY_DIGITS = /^\d+$/;
@@ -50,15 +53,32 @@ export const addBookingToHistory = (
   return [entry, ...list.filter((item) => item.id !== entry.id)].slice(0, BOOKING_HISTORY_LIMIT);
 };
 
-/** Lê o histórico. Storage corrompido vira `[]`; entrada inválida é descartada. */
-export const readBookingHistory = (): BookingHistoryEntry[] =>
-  storage
-    .read(BOOKING_HISTORY_KEY, storedSchema, [])
-    .flatMap((item) => {
-      const parsed = bookingHistoryEntrySchema.safeParse(item);
-      return parsed.success ? [parsed.data] : [];
-    })
-    .slice(0, BOOKING_HISTORY_LIMIT);
+/** Descarta as entradas com `savedAt` mais antigo que o prazo (30 dias). */
+export const dropExpiredEntries = (
+  list: readonly BookingHistoryEntry[],
+  now: Date,
+): BookingHistoryEntry[] =>
+  list.filter(
+    (item) => now.getTime() - Date.parse(item.savedAt) <= BOOKING_HISTORY_TTL_DAYS * DAY_MS,
+  );
+
+/**
+ * Lê o histórico. Storage corrompido vira `[]`; entrada inválida é descartada; entrada com mais de
+ * 30 dias expira e o storage é regravado sem ela (sem evento: quem lê já recebe a lista limpa).
+ */
+export const readBookingHistory = (now: Date = new Date()): BookingHistoryEntry[] => {
+  const stored = storage.read(BOOKING_HISTORY_KEY, storedSchema, []);
+  const valid = stored.flatMap((item) => {
+    const parsed = bookingHistoryEntrySchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+  const fresh = dropExpiredEntries(valid, now).slice(0, BOOKING_HISTORY_LIMIT);
+  if (fresh.length < valid.length) {
+    if (fresh.length === 0) storage.remove(BOOKING_HISTORY_KEY);
+    else storage.write(BOOKING_HISTORY_KEY, fresh);
+  }
+  return fresh;
+};
 
 /** Registra a reserva aberta. Nunca lança (storage é best-effort); id inválido é ignorado. */
 export const recordBooking = (id: string, now: Date): void => {
@@ -130,7 +150,7 @@ export const getBookingHistorySnapshot = (): readonly BookingHistoryEntry[] => {
   const raw = rawHistory();
   if (raw === cache.raw) return cache.list;
   const list = raw === null ? EMPTY : readBookingHistory();
-  cache = { raw, list: list.length === 0 ? EMPTY : list };
+  cache = { raw: raw === null ? raw : rawHistory(), list: list.length === 0 ? EMPTY : list };
   return cache.list;
 };
 

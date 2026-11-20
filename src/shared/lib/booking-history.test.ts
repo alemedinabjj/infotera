@@ -125,6 +125,19 @@ describe("restoreHistoryEntry", () => {
     ]);
   });
 
+  it("expira na leitura entradas com mais de 30 dias e regrava o storage", () => {
+    const now = new Date("2026-11-19T12:00:00Z");
+    window.localStorage.setItem(
+      RAW_KEY,
+      JSON.stringify([
+        { id: uuid(1), savedAt: "2026-11-10T12:00:00.000Z" },
+        { id: uuid(2), savedAt: "2026-10-19T11:59:00.000Z" },
+      ]),
+    );
+    expect(readBookingHistory(now).map((entry) => entry.id)).toEqual([uuid(1)]);
+    expect(JSON.parse(window.localStorage.getItem(RAW_KEY) ?? "[]")).toHaveLength(1);
+  });
+
   it("respeita o teto de 10 e não duplica", () => {
     const list = Array.from({ length: 10 }, (_, n) => entry(n + 1, 100 - n));
     expect(restoreHistoryEntry(list, entry(99, 0))).toHaveLength(10);

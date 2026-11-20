@@ -4,6 +4,7 @@ import { pluralize } from "@/shared/lib/format";
 export const HISTORY_MESSAGES = {
   title: "Minhas reservas",
   intro: "Reservas confirmadas ou abertas neste navegador.",
+  sharedComputer: "Em computador compartilhado, limpe o histórico ao terminar.",
   loading: "Carregando suas reservas…",
   hotelUnavailable: "Hotel indisponível",
   thisBooking: "esta reserva",

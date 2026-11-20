@@ -59,7 +59,9 @@ export const BookingHistoryView = () => {
           >
             {MESSAGES.title}
           </h1>
-          <p className="text-fg-muted">{MESSAGES.intro}</p>
+          <p className="text-fg-muted">
+            {MESSAGES.intro} {MESSAGES.sharedComputer}
+          </p>
         </div>
         {hasRows && live.length > 0 ? (
           <ClearHistoryButton
