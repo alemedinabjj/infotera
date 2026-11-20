@@ -14,16 +14,17 @@ const REGION_CLASS = "flex flex-col gap-3";
  */
 export const Toaster = () => {
   const toasts = useToastStore((state) => state.toasts);
-  const { paused, handlers } = useRegionPause();
+  const { paused, handlers, regionRef, resync } = useRegionPause(toasts.length);
 
   return (
     <div
       data-toaster
+      ref={regionRef}
       {...handlers}
       className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--bottom-bar-height,0px)+1rem)] z-50 flex flex-col gap-3 sm:right-6 sm:bottom-[calc(var(--bottom-bar-height,0px)+1.5rem)] sm:left-auto sm:w-96 print:hidden"
     >
       <div role="status" aria-live="polite" className={REGION_CLASS}>
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} onExitComplete={resync}>
           {toasts
             .filter((item) => item.tone !== "error")
             .map((item) => (
@@ -32,7 +33,7 @@ export const Toaster = () => {
         </AnimatePresence>
       </div>
       <div role="alert" className={REGION_CLASS}>
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} onExitComplete={resync}>
           {toasts
             .filter((item) => item.tone === "error")
             .map((item) => (

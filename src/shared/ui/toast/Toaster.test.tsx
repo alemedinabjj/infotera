@@ -83,6 +83,22 @@ describe("Toaster", () => {
     expect(screen.getByText("com foco")).toBeInTheDocument();
   });
 
+  it("fechar com o foco no X não deixa a região pausada para sempre", () => {
+    render(<Toaster />);
+    act(() => {
+      toast.info("primeiro");
+    });
+    const close = screen.getByRole("button", { name: "Fechar notificação" });
+    act(() => close.focus());
+    fireEvent.click(close);
+    expect(screen.queryByText("primeiro")).not.toBeInTheDocument();
+    act(() => {
+      toast.info("segundo");
+    });
+    advance(5000);
+    expect(screen.queryByText("segundo")).not.toBeInTheDocument();
+  });
+
   it("mostra no máximo 3 (descarta o mais antigo)", () => {
     render(<Toaster />);
     act(() => {
