@@ -14,7 +14,8 @@
     "format": "biome check --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test --trace off"
+    "test:e2e": "playwright test --trace off",
+    "test:e2e:build": "playwright test --trace off e2e/pwa.build.spec.ts"
   },
   "overrides": {
     "playwright-core": "1.63.0"
