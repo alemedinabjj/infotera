@@ -3,6 +3,7 @@ import { amenitySchema } from "@/shared/api/schemas";
 import type { Locale } from "@/shared/i18n/config";
 import { availabilityStatus } from "@/shared/lib/availability";
 import { cancellationDetails } from "@/shared/lib/cancellation";
+import { formatClockTime } from "@/shared/lib/clock";
 import { type ComparisonRow, makeRow, NO, YES } from "@/shared/lib/comparison";
 import { formatBRL } from "@/shared/lib/currency";
 import { formatCount, formatRating, ratingLabel } from "@/shared/lib/format";
@@ -122,13 +123,13 @@ const makeTextRows = (locale: Locale) => {
         "check-in",
         m.rows.checkIn,
         "text",
-        hotels.map((hotel) => m.rows.checkInValue(hotel.checkInTime)),
+        hotels.map((hotel) => m.rows.checkInValue(formatClockTime(hotel.checkInTime, locale))),
       ),
       makeRow(
         "check-out",
         m.rows.checkOut,
         "text",
-        hotels.map((hotel) => m.rows.checkOutValue(hotel.checkOutTime)),
+        hotels.map((hotel) => m.rows.checkOutValue(formatClockTime(hotel.checkOutTime, locale))),
       ),
       makeRow("availability", m.rows.availability, "text", hotels.map(availabilityText)),
       makeRow(

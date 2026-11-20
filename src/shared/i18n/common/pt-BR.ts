@@ -128,6 +128,8 @@ export const ptBR = {
     optional: "(opcional)",
     skipToContent: "Pular para o conteúdo",
     homeLabel: "Infotera Hotéis, página inicial",
+    brand: "Infotera",
+    brandSuffix: "Hotéis",
     tryAgain: "Tentar de novo",
     closeNotification: "Fechar notificação",
     fixFields: ({ count }: { count: number }) =>

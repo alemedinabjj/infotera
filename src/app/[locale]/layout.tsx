@@ -41,6 +41,8 @@ const RootLayout = async ({ children, params }: LayoutProps<"/[locale]">) => {
           <AppProviders>
             <SiteHeader
               homeLabel={commonMessages.get(locale).ui.homeLabel}
+              brand={commonMessages.get(locale).ui.brand}
+              brandSuffix={commonMessages.get(locale).ui.brandSuffix}
               homeHref={localizePath(locale, "/")}
               actions={
                 <div className="flex items-center gap-1">

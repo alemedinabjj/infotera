@@ -1,6 +1,7 @@
 import type { CancellationPolicy } from "@/shared/api/schemas";
 import type { Locale } from "@/shared/i18n/config";
 import { cancellationDetails } from "@/shared/lib/cancellation";
+import { formatClockTime } from "@/shared/lib/clock";
 import { checkoutMessages } from "../i18n/messages";
 
 export type TermsSection = { title: string; paragraphs: string[] };
@@ -26,7 +27,12 @@ export const termsSections = (
     },
     {
       title: t.schedule.title,
-      paragraphs: [t.schedule.text(checkInTime ?? "15:00", checkOutTime ?? "12:00")],
+      paragraphs: [
+        t.schedule.text(
+          formatClockTime(checkInTime ?? "15:00", locale),
+          formatClockTime(checkOutTime ?? "12:00", locale),
+        ),
+      ],
     },
     { title: t.data.title, paragraphs: [t.data.text] },
   ];

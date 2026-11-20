@@ -4,7 +4,14 @@ import { SiteHeader } from "./SiteHeader";
 
 describe("SiteHeader: logo", () => {
   it("abaixo de xs mostra só 'Infotera', sem quebrar linha, e o nome acessível segue completo", () => {
-    render(<SiteHeader homeLabel="Infotera Hotéis, página inicial" homeHref="/" />);
+    render(
+      <SiteHeader
+        homeLabel="Infotera Hotéis, página inicial"
+        homeHref="/"
+        brand="Infotera"
+        brandSuffix="Hotéis"
+      />,
+    );
     const link = screen.getByRole("link", { name: "Infotera Hotéis, página inicial" });
     expect(link.className).toContain("whitespace-nowrap");
     expect(link.textContent).toBe("Infotera Hotéis");
