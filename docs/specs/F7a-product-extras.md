@@ -982,3 +982,35 @@ com "Tentar de novo" e "Remover do histórico", na mesma altura mínima do skele
   grid 2 colunas, nenhum texto monetário quebrado (`whitespace-nowrap`).
 - **Zoom 200%:** a bandeja pode crescer (altura medida). O `<main>` e os toasts acompanham pela
   variável.
+
+## Ajustes pós-revisão (rodada de correções)
+
+Decisões que mudaram o comportamento depois da revisão (rotas e identificadores em inglês, textos em pt-BR):
+
+- **Preço com taxas (busca, hotel, checkout)**: o total em `/search` e `/hotel/[hotelId]` inclui taxa de serviço (10%)
+  e ISS (5%) pela mesma função pura do checkout (`feesOnBase` em `shared/lib/price-breakdown`, `stayTotalWithFees` em
+  `shared/lib/pricing`). Rótulo `total com taxas · 3 noites · 1 quarto`; a diária desce como `R$ 800 por noite, sem taxas`.
+  Card, hotel e checkout (sem cupom) mostram o mesmo número para 1 e 2 quartos.
+- **Favoritos**: o preço vem do quarto mais barato (`lowestNightlyPrice`, 1 `GET /rooms?hotelId=…` por página), como na busca e
+  na comparação; sem critérios de busca na página, só a diária (sem total). Falha dos quartos: "Preço indisponível no momento".
+- **Critérios de origem**: `/search` guarda a busca (`shared/lib/last-search`, `sessionStorage`, só destino/datas/hóspedes). A
+  bandeja monta `/compare?hotel=1&hotel=4&destination=…&checkIn=…` (`compareHref(ids, criteria)`); a tabela e os favoritos usam
+  `hotelHref(id, criteria)`. Sem critérios o link continua válido e compartilhável.
+- **Histórico**: entradas com `savedAt` > 30 dias expiram na leitura (regrava); aviso "Em computador compartilhado, limpe o
+  histórico ao terminar."; offline mostra só o alerta global (linha com placeholder, sem erro vermelho); "Está demorando…" após 5 s;
+  "Tentar de novo" mantém a linha, o foco e os nomes dos outros hotéis (`keepPreviousData`, `failedBefore`).
+- **Confirmação**: e-mail sempre mascarado (`j***@dominio.com`) e código curto legível (8 primeiros caracteres em maiúsculas)
+  acima do número completo.
+- **Comparação**: `keepPreviousData` nas duas consultas (remover não volta ao skeleton); hotel não encontrado sai de verdade da
+  URL e da bandeja (o aviso fica); `table-fixed` com colunas de hotel iguais e coluna de rótulos de 96 px abaixo de `sm`; o
+  título só recebe foco ao chegar por navegação dentro do app (`FocusOnMount afterNavigationOnly`), não em carga direta.
+- **Bandeja**: chips numa linha rolável; em viewport baixa (`max-height: 600px`) some título, dica e chips (uma linha só, ≤ 25% da
+  altura); dica "Limite de 3 hotéis" também abaixo de `sm`; reveals programáticos de foco são `behavior: "instant"`.
+- **Toasts**: a ação devolve o foco ao controle de origem (ou ao `returnFocus` informado); a região ficou no canto inferior
+  esquerdo (320 px) para não cobrir CTAs; favorito cita o hotel (`{Hotel} salvo nos favoritos.`).
+- **Checkout**: o cupom aplicado persiste (só o código) no rascunho e é revalidado ao restaurar ("Seu cupom {CÓDIGO} não vale
+  mais para esta reserva."); confirmar offline não chama a action ("Você está sem conexão. Nada foi cobrado. Tente de novo quando
+  a conexão voltar.") e a action expira em 15 s; falha de hotel/quarto mostra um único erro de conexão com um "Tentar de novo" e a
+  barra diz "Total não carregado — tente de novo"; `/checkout` sem seleção volta à home com "Escolha um quarto para continuar."
+  (`/?notice=choose-room`).
+- **Navegação lenta**: o card mostra o selo "Abrindo…" (`useLinkStatus`) enquanto o hotel carrega, além do `loading.tsx`.
