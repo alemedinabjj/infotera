@@ -38,7 +38,9 @@ const DefaultFallback = () => (
 
 /**
  * Foto remota (`next/image` + loader do Unsplash + blur). Imagem quebrada vira bloco cinza com
- * ícone, do mesmo tamanho (sem layout shift). Quem usa define o tamanho por `className`.
+ * ícone, do mesmo tamanho (sem layout shift). Quem usa define o tamanho por `className`. Pede com
+ * `crossOrigin="anonymous"` (o Unsplash responde com CORS): o service worker só guarda resposta 200
+ * legível (`CacheableResponsePlugin`), nunca a opaca (status 0), então sem isso a foto não ficaria offline.
  */
 export const RemoteImage = ({
   src,
@@ -64,6 +66,7 @@ export const RemoteImage = ({
           src={src}
           alt={alt}
           fill
+          crossOrigin="anonymous"
           sizes={sizes}
           placeholder={blur ? "blur" : "empty"}
           blurDataURL={blur ? BLUR_DATA_URL : undefined}

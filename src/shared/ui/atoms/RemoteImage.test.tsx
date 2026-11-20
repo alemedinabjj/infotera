@@ -11,6 +11,14 @@ describe("RemoteImage", () => {
     expect(img).toHaveAttribute("loading", "lazy");
   });
 
+  it("pede a foto com CORS, para o service worker poder guardar a resposta 200", () => {
+    render(<RemoteImage src={SRC} alt="Fachada" sizes="100vw" />);
+    expect(screen.getByRole("img", { name: "Fachada" })).toHaveAttribute(
+      "crossorigin",
+      "anonymous",
+    );
+  });
+
   it("priority carrega já, com prioridade alta", () => {
     render(<RemoteImage src={SRC} alt="Fachada" sizes="100vw" priority />);
     const img = screen.getByRole("img", { name: "Fachada" });
