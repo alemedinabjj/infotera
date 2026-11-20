@@ -349,6 +349,9 @@ mapa, quando oferecer instalação) é função pura testada.
     sempre por `localizePath`/helpers, nunca string `"/..."` crua"; "`<html lang>` vem do locale"
     (substitui "define `lang="pt-BR"`"); "metadata por locale" (substitui "título em pt-BR");
     comandos novos (`test:e2e:build`).
+    **Registrado na entrega:** `locale` obrigatório (sem default) nos formatadores e em `model/`;
+    catraca em `COPY_BASELINE = 0` com lista curada de palavras pt sem acento; `/` e `/en` saem do
+    build como o segmento SSG `/[locale]` (`/pt-BR`, `/en-US`) reescrito pelo proxy.
 
 ## Costuras com outras fases
 
