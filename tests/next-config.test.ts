@@ -37,7 +37,7 @@ describe("next.config", () => {
 
   it("a CSP base vale para tudo menos /checkout (que usa a do proxy)", async () => {
     const rules = headersSchema.parse(await nextConfig.headers?.());
-    const rule = rules.find((r) => r.source !== "/:path*");
+    const rule = rules.find((r) => r.headers.some((h) => h.key === "Content-Security-Policy"));
     expect(rule?.headers).toEqual([
       {
         key: "Content-Security-Policy",
@@ -47,7 +47,20 @@ describe("next.config", () => {
     const matcher = new RegExp(`^${rule?.source}$`);
     expect(matcher.test("/checkout")).toBe(false);
     expect(matcher.test("/checkout/")).toBe(false);
+    expect(matcher.test("/en/checkout")).toBe(false);
+    expect(matcher.test("/en/checkout/")).toBe(false);
     expect(matcher.test("/checkoutx")).toBe(true);
     expect(matcher.test("/search")).toBe(true);
+    expect(matcher.test("/en/search")).toBe(true);
+  });
+
+  it("o service worker nunca é guardado pelo navegador (no-cache)", async () => {
+    const rules = headersSchema.parse(await nextConfig.headers?.());
+    const rule = rules.find((r) => r.source === "/serwist/:path*");
+    expect(rule?.headers).toEqual([{ key: "Cache-Control", value: "no-cache" }]);
+  });
+
+  it("a versão do build vai para o env público (buster do cache e do service worker)", () => {
+    expect(nextConfig.env?.NEXT_PUBLIC_APP_VERSION).toMatch(/^\d+\.\d+\.\d+\+\S+$/);
   });
 });
