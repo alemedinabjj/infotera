@@ -4,12 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useReducer } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
 import type { Room } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { type RoomSelection, useBookingDraftActions } from "@/shared/stores/booking-draft";
 import {
   availableHint,
-  CONFIRM_FAILED_HINT,
-  CONFIRMING_HINT,
+  confirmFailedHint,
+  confirmingHint,
   initialRoomCountState,
   limitHint,
   roomCountBounds,
@@ -24,6 +25,7 @@ import {
  */
 export const useRoomCount = (selection: RoomSelection, room: Room | undefined) => {
   const queryClient = useQueryClient();
+  const locale = useLocale();
   const { setRoomCount } = useBookingDraftActions();
   const [state, dispatch] = useReducer(
     roomCountReducer,
@@ -35,7 +37,7 @@ export const useRoomCount = (selection: RoomSelection, room: Room | undefined) =
     setRoomCount(state.value);
   }, [state.value, setRoomCount]);
 
-  const bounds = room ? roomCountBounds(selection.criteria, room) : null;
+  const bounds = room ? roomCountBounds(selection.criteria, room, locale) : null;
 
   const change = (value: number) => {
     if (!room) return;
@@ -46,13 +48,13 @@ export const useRoomCount = (selection: RoomSelection, room: Room | undefined) =
       .then((fresh) =>
         fresh.available >= value
           ? dispatch({ type: "confirmed", seq, value })
-          : dispatch({ type: "rejected", seq, note: availableHint(fresh.available) }),
+          : dispatch({ type: "rejected", seq, note: availableHint(fresh.available, locale) }),
       )
-      .catch(() => dispatch({ type: "rejected", seq, note: CONFIRM_FAILED_HINT }));
+      .catch(() => dispatch({ type: "rejected", seq, note: confirmFailedHint(locale) }));
   };
 
   let hint: string | null = null;
-  if (state.status === "confirming") hint = CONFIRMING_HINT;
+  if (state.status === "confirming") hint = confirmingHint(locale);
   else if (state.note) hint = state.note;
   else if (bounds) hint = limitHint(bounds, state.value);
 

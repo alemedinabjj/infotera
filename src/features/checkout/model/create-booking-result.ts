@@ -1,9 +1,13 @@
 import type { ApiErrorKind } from "@/shared/api/http";
-import { pluralize } from "@/shared/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import { formatCents } from "@/shared/lib/price-breakdown";
+import { checkoutMessages } from "../i18n/messages";
+import type { CheckoutMessages } from "../i18n/pt-BR";
 import type { CheckoutFieldPath } from "./checkout.schema";
 import type { CouponRejection } from "./coupons";
 import type { PriceQuote } from "./price";
+
+type SubmitMessages = CheckoutMessages["submit"];
 
 /** Retorno da Server Action. A action **não lança**: o Next esconde mensagens em produção. */
 export type CreateBookingResult =
@@ -35,69 +39,63 @@ type FeedbackContext = {
 };
 
 /** Eco em toast, só quando a chamada da action falha no transporte (o alerta inline já está visível nos demais casos). */
-export const TRANSPORT_TOAST = "Não foi possível confirmar a reserva.";
+export const transportToast = (locale: Locale = DEFAULT_LOCALE): string =>
+  checkoutMessages.get(locale).submit.transportToast;
 
-const NOTHING_CHARGED = "Nada foi cobrado.";
-
-const unavailableFeedback = (available: number): SubmitFeedback =>
+const unavailableFeedback = (available: number, t: SubmitMessages): SubmitFeedback =>
   available === 0
     ? {
         tone: "warning",
-        title: "Este quarto esgotou enquanto você reservava",
-        description: `Escolha outro quarto no mesmo hotel. ${NOTHING_CHARGED}`,
+        title: t.soldOutTitle,
+        description: `${t.soldOutBody} ${t.nothingCharged}`,
         action: "view-rooms",
       }
     : {
         tone: "warning",
-        title: `Só ${pluralize(available, "quarto disponível", "quartos disponíveis")} agora`,
-        description: `Diminua a quantidade de quartos no resumo da reserva ou escolha outro quarto. ${NOTHING_CHARGED}`,
+        title: t.fewLeftTitle(available),
+        description: `${t.fewLeftBody} ${t.nothingCharged}`,
         action: "view-rooms",
       };
 
-const failedFeedback = (online: boolean): SubmitFeedback =>
+const failedFeedback = (online: boolean, t: SubmitMessages): SubmitFeedback =>
   online
-    ? {
-        tone: "danger",
-        title: "Não foi possível confirmar sua reserva",
-        description:
-          "Nenhuma cobrança foi feita. Seus dados foram mantidos; tente de novo em instantes.",
-        action: "retry",
-      }
-    : {
-        tone: "warning",
-        title: "Você está sem conexão.",
-        description: "Nada foi cobrado. Tente de novo quando a conexão voltar.",
-        action: "retry",
-      };
+    ? { tone: "danger", title: t.failedTitle, description: t.failedBody, action: "retry" }
+    : { tone: "warning", title: t.offlineTitle, description: t.offlineBody, action: "retry" };
 
 /** Mensagem e ação de cada resultado que não é `created` (switch exaustivo). Nada vem do servidor. */
-export const submitFeedback = (result: FailedResult, context: FeedbackContext): SubmitFeedback => {
+export const submitFeedback = (
+  result: FailedResult,
+  context: FeedbackContext,
+  locale: Locale = DEFAULT_LOCALE,
+): SubmitFeedback => {
+  const t = checkoutMessages.get(locale).submit;
+  const money = (cents: number) => formatCents(cents, locale);
   switch (result.status) {
     case "price-changed":
       return {
         tone: "warning",
-        title: "O total da reserva mudou",
-        description: `Passou de ${formatCents(context.previousTotalCents)} para ${formatCents(result.quote.totalCents)}. Confira o novo valor e confirme de novo. ${NOTHING_CHARGED}`,
+        title: t.priceChangedTitle,
+        description: `${t.priceChangedBody(money(context.previousTotalCents), money(result.quote.totalCents))} ${t.nothingCharged}`,
         action: "none",
       };
     case "unavailable":
-      return unavailableFeedback(result.available);
+      return unavailableFeedback(result.available, t);
     case "coupon-invalid":
       return {
         tone: "warning",
-        title: `O cupom ${context.couponCode ?? "informado"} não vale mais`,
-        description: `Removemos o desconto e o total agora é ${formatCents(context.totalWithoutCouponCents)}. Confira e confirme de novo. ${NOTHING_CHARGED}`,
+        title: t.couponTitle(context.couponCode),
+        description: `${t.couponBody(money(context.totalWithoutCouponCents))} ${t.nothingCharged}`,
         action: "none",
       };
     case "invalid":
       return {
         tone: "warning",
-        title: "Confira os dados da reserva",
-        description: "Confira este dado e tente de novo.",
+        title: t.invalidTitle,
+        description: t.invalidField,
         action: "none",
       };
     case "failed":
-      return failedFeedback(context.online);
+      return failedFeedback(context.online, t);
     default: {
       const unreachable: never = result;
       return unreachable;

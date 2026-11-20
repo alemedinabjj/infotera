@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { useController, useFormContext } from "react-hook-form";
 import { AlertCircleIcon, Input, Select } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { CheckoutValues } from "../model/checkout.schema";
 import { applyMask } from "../model/masked-input";
 import {
@@ -25,6 +26,7 @@ const isCountry = (value: string): value is PhoneCountry =>
 export const PhoneField = () => {
   const { control, setValue } = useFormContext<CheckoutValues>();
   const deferBlur = useDeferBlur();
+  const t = useCheckoutMessages();
   const country = useController({ control, name: "contact.phoneCountry" });
   const phone = useController({ control, name: "contact.phone" });
   const id = useId();
@@ -34,10 +36,10 @@ export const PhoneField = () => {
 
   return (
     <fieldset data-reveal-block className="flex min-w-0 flex-col gap-1.5">
-      <legend className="mb-1.5 text-sm font-medium text-fg">Telefone</legend>
+      <legend className="mb-1.5 text-sm font-medium text-fg">{t.fields.phone}</legend>
       <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
         <Select
-          aria-label="País do telefone"
+          aria-label={t.fields.phoneCountry}
           autoComplete="tel-country-code"
           value={country.field.value}
           ref={country.field.ref}
@@ -52,7 +54,7 @@ export const PhoneField = () => {
         >
           {PHONE_COUNTRY_CODES.map((code) => (
             <option key={code} value={code}>
-              {PHONE_COUNTRIES[code].label}
+              {t.phone.countries[code].label}
             </option>
           ))}
         </Select>
@@ -63,7 +65,7 @@ export const PhoneField = () => {
           type="tel"
           inputMode="tel"
           autoComplete="tel-national"
-          aria-label="Número de telefone"
+          aria-label={t.fields.phoneNumber}
           aria-describedby={describedBy}
           aria-invalid={error ? true : undefined}
           placeholder={info.example}
@@ -83,7 +85,7 @@ export const PhoneField = () => {
         />
       </div>
       <p id={`${id}-description`} className="text-sm text-fg-muted">
-        {info.hint}
+        {t.phone.countries[country.field.value].hint}
       </p>
       {error ? (
         <p

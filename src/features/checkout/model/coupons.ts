@@ -1,6 +1,8 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import { type ISODate, isBeforeToday } from "@/shared/lib/dates";
 import { formatCents } from "@/shared/lib/price-breakdown";
 import { z } from "@/shared/lib/zod";
+import { checkoutMessages } from "../i18n/messages";
 import type { PriceDiscount } from "./price";
 
 export type Coupon = {
@@ -28,13 +30,15 @@ export const COUPONS: Record<string, Coupon> = {
   },
 };
 
-export const COUPON_FORMAT_MESSAGE = "Use de 4 a 12 letras ou números, sem espaços.";
+/** Mensagem de formato do código no idioma (campo do cupom). */
+export const couponFormatMessage = (locale: Locale = DEFAULT_LOCALE): string =>
+  checkoutMessages.get(locale).coupon.format;
 
 /** Código normalizado (trim + maiúsculas); espaços internos continuam e reprovam o formato. */
 export const normalizeCouponCode = (raw: string): string => raw.trim().toUpperCase();
 
 /** Formato de um código **já normalizado**: 4–12 letras ou números. */
-export const couponCodeSchema = z.string().regex(/^[A-Z0-9]{4,12}$/, COUPON_FORMAT_MESSAGE);
+export const couponCodeSchema = z.string().regex(/^[A-Z0-9]{4,12}$/, couponFormatMessage());
 
 export const findCoupon = (code: string): Coupon | null =>
   Object.hasOwn(COUPONS, code) ? (COUPONS[code] ?? null) : null;
@@ -67,16 +71,17 @@ export const evaluateCoupon = (coupon: Coupon | null, context: CouponContext): C
 };
 
 /** Texto do motivo (erro do campo e anúncios). */
-export const couponMessage = (reason: CouponRejection): string => {
+export const couponMessage = (reason: CouponRejection, locale: Locale = DEFAULT_LOCALE): string => {
+  const t = checkoutMessages.get(locale).coupon;
   switch (reason.kind) {
     case "not-found":
-      return "Cupom não encontrado. Confira o código.";
+      return t.notFound;
     case "expired":
-      return "Este cupom expirou.";
+      return t.expired;
     case "min-nights":
-      return `Válido para estadias a partir de ${reason.nights} noites.`;
+      return t.minNights(reason.nights);
     case "min-subtotal":
-      return `Válido para reservas a partir de ${formatCents(reason.cents)}.`;
+      return t.minSubtotal(formatCents(reason.cents, locale));
     default: {
       const unreachable: never = reason;
       return unreachable;
@@ -85,7 +90,9 @@ export const couponMessage = (reason: CouponRejection): string => {
 };
 
 /** `10% de desconto` / `R$ 50,00 de desconto`. */
-export const couponBenefit = (coupon: Coupon): string =>
-  coupon.discount.kind === "percent"
-    ? `${coupon.discount.bps / 100}% de desconto`
-    : `${formatCents(coupon.discount.cents)} de desconto`;
+export const couponBenefit = (coupon: Coupon, locale: Locale = DEFAULT_LOCALE): string => {
+  const t = checkoutMessages.get(locale).coupon;
+  return coupon.discount.kind === "percent"
+    ? t.percentOff(coupon.discount.bps / 100)
+    : t.amountOff(formatCents(coupon.discount.cents, locale));
+};

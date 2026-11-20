@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { revealBlock } from "@/shared/lib/scroll";
 import { Alert, Button, buttonClassName } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { SubmitState } from "../hooks/useSubmitBooking";
 
 type SubmitErrorProps = {
@@ -28,6 +29,7 @@ export const SubmitError = ({
   priceRetrying,
 }: SubmitErrorProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  const t = useCheckoutMessages();
   useEffect(() => {
     ref.current?.focus({ preventScroll: true });
     // Depois do commit: o alerta INTEIRO (não só o título) fica acima da barra fixa e abaixo do header.
@@ -40,21 +42,21 @@ export const SubmitError = ({
       <div ref={ref} tabIndex={-1}>
         <Alert
           tone="danger"
-          title="Não foi possível calcular o total"
+          title={t.submit.priceUnavailableTitle}
           action={
             <Button
               variant="secondary"
               size="sm"
               className="self-start"
               loading={priceRetrying}
-              loadingText="Tentando…"
+              loadingText={t.trying}
               onClick={onReloadPrice}
             >
-              Tentar de novo
+              {t.retry}
             </Button>
           }
         >
-          Carregue o preço do quarto de novo para confirmar a reserva.
+          {t.submit.priceUnavailableBody}
         </Alert>
       </div>
     );
@@ -72,17 +74,17 @@ export const SubmitError = ({
               size="sm"
               className="self-start"
               loading={retrying}
-              loadingText="Tentando…"
+              loadingText={t.trying}
               onClick={onRetry}
             >
-              Tentar de novo
+              {t.retry}
             </Button>
           ) : feedback.action === "view-rooms" ? (
             <Link
               href={backHref}
               className={`${buttonClassName({ variant: "secondary", size: "sm" })} self-start`}
             >
-              Ver quartos
+              {t.viewRooms}
             </Link>
           ) : undefined
         }

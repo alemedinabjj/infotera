@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { useController, useFormContext } from "react-hook-form";
 import { AlertCircleIcon, Button, Checkbox } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { CheckoutValues } from "../model/checkout.schema";
 import type { TermsSection } from "../model/terms";
 import { TermsDialog } from "./TermsDialog";
@@ -16,6 +17,7 @@ export const TermsField = ({ sections }: { sections: TermsSection[] }) => {
   const { field, fieldState } = useController({ control, name: "termsAccepted" });
   const [open, setOpen] = useState(false);
   const errorId = useId();
+  const t = useCheckoutMessages().terms;
   const error = fieldState.error?.message;
 
   return (
@@ -23,14 +25,14 @@ export const TermsField = ({ sections }: { sections: TermsSection[] }) => {
       <Checkbox
         ref={field.ref}
         name={field.name}
-        label="Li e aceito os termos e condições da reserva, incluindo a política de cancelamento."
+        label={t.checkbox}
         checked={field.value}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
         onChange={(event) => field.onChange(event.target.checked)}
       />
       <Button variant="ghost" size="sm" className="self-start" onClick={() => setOpen(true)}>
-        Ler termos e condições
+        {t.read}
       </Button>
       {error ? (
         <p id={errorId} className="flex animate-fade-in items-start gap-1.5 text-sm text-danger">

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-
-const SUFFIX = "Infotera Hotéis";
+import { BRAND_NAME } from "@/shared/lib/brand";
 
 /**
  * Título do documento por passo/estado. Efeito em vez de `<title>`: o `metadata` da rota define o
@@ -10,6 +9,6 @@ const SUFFIX = "Infotera Hotéis";
  */
 export const useDocumentTitle = (title: string): void => {
   useEffect(() => {
-    document.title = `${title} | ${SUFFIX}`;
+    document.title = `${title} | ${BRAND_NAME}`;
   }, [title]);
 };

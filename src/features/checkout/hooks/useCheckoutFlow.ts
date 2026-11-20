@@ -4,6 +4,8 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Hotel, Room } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { type RoomSelection, useBookingDraftActions } from "@/shared/stores/booking-draft";
 import { readDraftCouponCode } from "./checkout-initial";
 import { useCheckoutForm } from "./useCheckoutForm";
@@ -27,6 +29,7 @@ type FlowOptions = {
  */
 export const useCheckoutFlow = ({ selection, hotel, room, onLeaving }: FlowOptions) => {
   const router = useRouter();
+  const locale = useLocale();
   const { clearSelection } = useBookingDraftActions();
   const roomCount = useRoomCount(selection, room.data);
   const [restoredCoupon] = useState(readDraftCouponCode);
@@ -42,7 +45,7 @@ export const useCheckoutFlow = ({ selection, hotel, room, onLeaving }: FlowOptio
     onCreated: (bookingId) => {
       onLeaving(current);
       checkout.clearDraft();
-      router.replace(`/confirmation/${bookingId}`);
+      router.replace(localizePath(locale, `/confirmation/${bookingId}`));
       clearSelection();
     },
     onCouponRejected: (code, reason) => {

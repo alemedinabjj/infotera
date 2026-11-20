@@ -1,7 +1,7 @@
 import { isValidElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CheckoutPage } from "@/features/checkout";
-import Page, { metadata } from "./page";
+import Page, { generateMetadata } from "./page";
 
 const connection = vi.hoisted(() => vi.fn(async () => undefined));
 vi.mock("next/server", () => ({ connection }));
@@ -14,8 +14,11 @@ describe("/checkout", () => {
     expect(element.type).toBe(CheckoutPage);
   });
 
-  it("título e noindex", () => {
-    expect(metadata.title).toBe("Finalizar reserva | Infotera Hotéis");
-    expect(metadata.robots).toEqual({ index: false });
+  it("título no idioma da rota e noindex", async () => {
+    const pt = await generateMetadata({ params: Promise.resolve({ locale: "pt-BR" }) });
+    expect(pt.title).toBe("Finalizar reserva | Infotera Hotéis");
+    expect(pt.robots).toEqual({ index: false });
+    const en = await generateMetadata({ params: Promise.resolve({ locale: "en-US" }) });
+    expect(en.title).toBe("Complete your booking | Infotera Hotéis");
   });
 });

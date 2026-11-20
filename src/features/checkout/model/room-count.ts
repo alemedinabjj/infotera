@@ -1,5 +1,8 @@
 import type { Room } from "@/shared/api/schemas";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { formatUnit } from "@/shared/i18n/units";
 import { guestsPerRoom, SEARCH_LIMITS, type SearchCriteria } from "@/shared/lib/search-params";
+import { checkoutMessages } from "../i18n/messages";
 
 export type RoomCountBounds = {
   min: number;
@@ -12,8 +15,8 @@ export type RoomCountBounds = {
 
 type CriteriaGuests = Pick<SearchCriteria, "adults" | "children">;
 
-export const availableHint = (available: number): string =>
-  `Só ${available} ${available === 1 ? "quarto disponível" : "quartos disponíveis"}.`;
+export const availableHint = (available: number, locale: Locale = DEFAULT_LOCALE): string =>
+  checkoutMessages.get(locale).roomCount.available(available);
 
 /**
  * Limites da quantidade de quartos no checkout. Mínimo: o que acomoda os hóspedes
@@ -23,16 +26,15 @@ export const availableHint = (available: number): string =>
 export const roomCountBounds = (
   criteria: CriteriaGuests,
   room: Pick<Room, "available" | "maxGuests">,
+  locale: Locale = DEFAULT_LOCALE,
 ): RoomCountBounds => {
+  const t = checkoutMessages.get(locale).roomCount;
   const guests = criteria.adults + criteria.children;
   const min = Math.max(1, Math.ceil(guests / room.maxGuests));
   const limits = [
-    { value: criteria.adults, hint: "Cada quarto precisa de pelo menos 1 adulto." },
-    { value: room.available, hint: availableHint(room.available) },
-    {
-      value: SEARCH_LIMITS.maxRooms,
-      hint: `Máximo de ${SEARCH_LIMITS.maxRooms} quartos por reserva.`,
-    },
+    { value: criteria.adults, hint: t.needsAdult },
+    { value: room.available, hint: availableHint(room.available, locale) },
+    { value: SEARCH_LIMITS.maxRooms, hint: t.maxRooms(SEARCH_LIMITS.maxRooms) },
   ];
   const binding = limits.reduce((best, limit) => (limit.value < best.value ? limit : best));
   return {
@@ -40,7 +42,11 @@ export const roomCountBounds = (
     max: Math.max(min, binding.value),
     minHint:
       min > 1
-        ? `Este quarto acomoda até ${room.maxGuests} hóspedes: ${guests} hóspedes precisam de pelo menos ${min} quartos.`
+        ? t.minRooms(
+            formatUnit(room.maxGuests, "guest", locale),
+            formatUnit(guests, "guest", locale),
+            formatUnit(min, "room", locale),
+          )
         : null,
     maxHint: binding.hint,
   };
@@ -57,8 +63,11 @@ export const limitHint = (bounds: RoomCountBounds, value: number): string | null
 export const guestsFor = (criteria: CriteriaGuests & { rooms: number }): number =>
   guestsPerRoom(criteria);
 
-export const CONFIRM_FAILED_HINT = "Não foi possível confirmar a disponibilidade. Tente de novo.";
-export const CONFIRMING_HINT = "Confirmando disponibilidade…";
+/** Motivos de uma confirmação que falhou e de uma em andamento (região viva do stepper). */
+export const confirmFailedHint = (locale: Locale = DEFAULT_LOCALE): string =>
+  checkoutMessages.get(locale).roomCount.confirmFailed;
+export const confirmingHint = (locale: Locale = DEFAULT_LOCALE): string =>
+  checkoutMessages.get(locale).roomCount.confirming;
 
 export type RoomCountState = {
   /** Valor exibido (e usado no preço): otimista. */
