@@ -20,12 +20,12 @@ const expectNoViolations = async (page: Page) => {
 
 /**
  * O número aparece uma vez na tela. O React transmite o conteúdo da rota num `<div hidden>` que só
- * sai do DOM quando troca o skeleton: `getByText` também casa esse nó oculto, por isso o texto é
- * procurado dentro do `main` (o que a pessoa vê e o leitor de tela lê) e, depois de estabilizar, o
- * id tem de existir uma única vez no documento inteiro.
+ * sai do DOM quando troca o skeleton: `getByText` também casa esse nó oculto (e o código curto, que
+ * no id curto do json-server é igual ao número), por isso o número é lido pelo id dentro do `main`
+ * (o que a pessoa vê e o leitor de tela lê) e, depois de estabilizar, o id existe uma única vez.
  */
 const expectBookingNumber = async (page: Page, id: string) => {
-  await expect(page.getByRole("main").getByText(id, { exact: true })).toBeVisible();
+  await expect(page.getByRole("main").locator("#numero-reserva")).toHaveText(id);
   await expect(page.locator("#numero-reserva")).toHaveCount(1);
 };
 
