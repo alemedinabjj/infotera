@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { searchHref } from "@/shared/lib/links";
 import { FAVORITES_PATH } from "@/shared/saved";
 import { Alert, buttonClassName } from "@/shared/ui";
@@ -17,6 +19,7 @@ type CompareNoticeProps = {
 /** Avisos acima da tabela: "< 2 hotéis" e "hotel não encontrado". */
 export const CompareNotice = ({ notFound, needMore, destination }: CompareNoticeProps) => {
   const MESSAGES = useComparisonMessages();
+  const locale = useLocale();
   return (
     <>
       {notFound > 0 ? <Alert tone="info">{MESSAGES.notFound(notFound)}</Alert> : null}
@@ -27,13 +30,13 @@ export const CompareNotice = ({ notFound, needMore, destination }: CompareNotice
           action={
             <div className="flex flex-wrap gap-3">
               <Link
-                href={destination ? searchHref(destination, null) : "/"}
+                href={localizePath(locale, destination ? searchHref(destination, null) : "/")}
                 className={buttonClassName({ variant: "secondary", size: "sm" })}
               >
                 {destination ? MESSAGES.needTwo.search(destination) : MESSAGES.needTwo.searchAny}
               </Link>
               <Link
-                href={FAVORITES_PATH}
+                href={localizePath(locale, FAVORITES_PATH)}
                 className={buttonClassName({ variant: "ghost", size: "sm" })}
               >
                 {MESSAGES.needTwo.favorites}

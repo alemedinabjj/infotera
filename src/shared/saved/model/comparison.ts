@@ -1,4 +1,6 @@
 import { z } from "@/shared/lib/zod";
+import type { Locale } from "../../i18n/config";
+import { localizePath } from "../../i18n/paths";
 import { type SearchCriteria, serializeSearchCriteria } from "../../lib/search-params";
 import { COMPARE_PATH } from "./routes";
 
@@ -41,9 +43,10 @@ export const toggleCompare = (
 /**
  * `/compare?hotel=1&hotel=4`: único lugar que monta a URL da comparação. Com `criteria` (a busca de
  * origem) leva destino, datas e hóspedes, para os links da tabela abrirem o hotel com as datas; sem
- * eles o link continua válido e compartilhável.
+ * eles o link continua válido e compartilhável. O caminho é público: `/en/compare` em inglês.
  */
 export const compareHref = (
+  locale: Locale,
   ids: readonly number[],
   criteria: SearchCriteria | null = null,
 ): string => {
@@ -53,5 +56,5 @@ export const compareHref = (
     for (const [key, value] of serializeSearchCriteria(criteria)) params.append(key, value);
   }
   const query = params.toString();
-  return query ? `${COMPARE_PATH}?${query}` : COMPARE_PATH;
+  return localizePath(locale, query ? `${COMPARE_PATH}?${query}` : COMPARE_PATH);
 };

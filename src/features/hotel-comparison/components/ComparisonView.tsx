@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { compareHref, useComparison } from "@/shared/saved";
 import {
@@ -21,6 +23,7 @@ import { HotelColumnHeader } from "./HotelColumnHeader";
 
 const EmptyCompare = () => {
   const MESSAGES = useComparisonMessages();
+  const locale = useLocale();
   const tray = useComparison();
   return (
     <EmptyState
@@ -28,12 +31,18 @@ const EmptyCompare = () => {
       description={MESSAGES.empty.description}
       action={
         <>
-          <Link href="/" className={buttonClassName({ variant: "primary" })}>
+          <Link
+            href={localizePath(locale, "/")}
+            className={buttonClassName({ variant: "primary" })}
+          >
             {MESSAGES.empty.search}
           </Link>
           {tray.length >= 2 ? (
             <Link
-              href={compareHref(tray.map((entry) => entry.id))}
+              href={compareHref(
+                locale,
+                tray.map((entry) => entry.id),
+              )}
               className={buttonClassName({ variant: "secondary" })}
             >
               {MESSAGES.empty.tray(tray.length)}
@@ -53,6 +62,7 @@ type BodyProps = {
 
 const Body = ({ state, ids, criteria }: BodyProps) => {
   const MESSAGES = useComparisonMessages();
+  const locale = useLocale();
   switch (state.kind) {
     case "empty":
       return <EmptyCompare />;
@@ -94,7 +104,7 @@ const Body = ({ state, ids, criteria }: BodyProps) => {
                   <HotelColumnHeader
                     hotel={hotel}
                     criteria={criteria}
-                    onRemove={(id) => removeColumn(ids, id, criteria)}
+                    onRemove={(id) => removeColumn(locale, ids, id, criteria)}
                   />
                 ),
               }))}

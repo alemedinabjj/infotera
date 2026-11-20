@@ -1,5 +1,6 @@
 "use client";
 
+import type { Locale } from "@/shared/i18n/config";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { compareHref, comparisonActions } from "@/shared/saved";
@@ -12,6 +13,7 @@ export const COMPARE_TITLE_ID = "compare-title";
  * que tinham o foco somem.
  */
 export const removeColumn = (
+  locale: Locale,
   ids: readonly number[],
   id: number,
   criteria: SearchCriteria | null,
@@ -20,6 +22,7 @@ export const removeColumn = (
     null,
     "",
     compareHref(
+      locale,
       ids.filter((item) => item !== id),
       criteria,
     ),
@@ -35,6 +38,7 @@ export const removeColumn = (
  * precisa ser verdade). Não mexe no foco: ninguém clicou em nada.
  */
 export const dropMissingIds = (
+  locale: Locale,
   ids: readonly number[],
   missing: readonly number[],
   criteria: SearchCriteria | null,
@@ -44,6 +48,7 @@ export const dropMissingIds = (
     null,
     "",
     compareHref(
+      locale,
       ids.filter((id) => !gone.has(id)),
       criteria,
     ),

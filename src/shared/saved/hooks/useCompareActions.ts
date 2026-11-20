@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLocale } from "../../i18n/client";
 import { readLastSearch } from "../../lib/last-search";
 import { toast } from "../../ui/toast/toast-store";
 import { useSavedMessages } from "../hooks/useSavedMessages";
@@ -19,6 +20,7 @@ type CompareActions = {
 export const useCompareActions = (): CompareActions => {
   const MESSAGES = useSavedMessages().compare;
   const router = useRouter();
+  const locale = useLocale();
 
   const toggle = (entry: CompareEntry) => {
     const result = comparisonActions.toggle(entry);
@@ -37,7 +39,7 @@ export const useCompareActions = (): CompareActions => {
           key: "compare:limit",
           action: {
             label: MESSAGES.viewAction,
-            onClick: () => router.push(compareHref(ids, readLastSearch())),
+            onClick: () => router.push(compareHref(locale, ids, readLastSearch())),
             navigates: true,
           },
         });

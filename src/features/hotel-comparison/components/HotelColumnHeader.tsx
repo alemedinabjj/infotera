@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import type { Hotel } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { hotelHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { FavoriteButton } from "@/shared/saved";
@@ -18,6 +20,7 @@ type HotelColumnHeaderProps = {
 /** Cabeçalho de coluna: foto, nome (link para o hotel), coração e "Remover". */
 export const HotelColumnHeader = ({ hotel, criteria, onRemove }: HotelColumnHeaderProps) => {
   const MESSAGES = useComparisonMessages();
+  const locale = useLocale();
   return (
     <div className="flex min-w-36 flex-col gap-2 font-normal">
       <RemoteImage
@@ -28,7 +31,7 @@ export const HotelColumnHeader = ({ hotel, criteria, onRemove }: HotelColumnHead
       />
       <div className="flex items-start justify-between gap-1">
         <Link
-          href={hotelHref(hotel.id, criteria)}
+          href={localizePath(locale, hotelHref(hotel.id, criteria))}
           className="font-semibold text-fg hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           {hotel.name}

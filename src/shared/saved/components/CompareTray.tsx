@@ -3,6 +3,8 @@
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useId } from "react";
+import { useHydrated } from "../../hooks/useHydrated";
+import { useLocale } from "../../i18n/client";
 import { useLastSearch } from "../../lib/last-search";
 import { motionPreset } from "../../lib/motion";
 import { Button } from "../../ui/atoms/Button";
@@ -42,6 +44,7 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
   const saved = useSavedMessages();
   const MESSAGES = saved.tray;
   const lastSearch = useLastSearch();
+  const locale = useLocale();
   const titleId = useId();
   const measure = useBottomBarInset();
   const { remove } = useCompareActions();
@@ -87,6 +90,7 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
         <CompareTrayAction
           count={items.length}
           href={compareHref(
+            locale,
             items.map((item) => item.id),
             lastSearch,
           )}
@@ -102,9 +106,10 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
  */
 export const CompareTray = () => {
   const pathname = usePathname();
+  const hydrated = useHydrated();
   const items = useComparison();
   const announcement = useCompareAnnouncer((state) => state.message);
-  const visible = !isTrayHiddenOn(pathname) && items.length > 0;
+  const visible = hydrated && !isTrayHiddenOn(pathname) && items.length > 0;
 
   return (
     <>
