@@ -1,4 +1,6 @@
+import { commonMessages } from "../i18n/common/messages";
 import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+import { plural } from "../i18n/messages";
 
 /** `pluralize(1, "noite", "noites")` → `"1 noite"`; 0 e n > 1 usam o plural. */
 export const pluralize = (count: number, singular: string, plural: string): string =>
@@ -27,21 +29,35 @@ export const formatCount = (count: number, locale: Locale = DEFAULT_LOCALE): str
 
 type GuestCounts = { adults: number; children: number; rooms: number };
 
+const unitText = (
+  count: number,
+  unit: keyof ReturnType<typeof commonMessages.get>["units"],
+  locale: Locale,
+): string =>
+  `${formatCount(count, locale)} ${plural(count, commonMessages.get(locale).units[unit])}`;
+
 /** `"2 adultos, 1 criança · 1 quarto"`; omite crianças quando zero. */
-export const formatGuests = ({ adults, children, rooms }: GuestCounts): string => {
+export const formatGuests = (
+  { adults, children, rooms }: GuestCounts,
+  locale: Locale = DEFAULT_LOCALE,
+): string => {
   const people = [
-    pluralize(adults, "adulto", "adultos"),
-    ...(children > 0 ? [pluralize(children, "criança", "crianças")] : []),
+    unitText(adults, "adult", locale),
+    ...(children > 0 ? [unitText(children, "child", locale)] : []),
   ].join(", ");
-  return `${people} · ${pluralize(rooms, "quarto", "quartos")}`;
+  return `${people} · ${unitText(rooms, "room", locale)}`;
 };
 
-export type RatingLabel = "Excelente" | "Muito bom" | "Bom" | "Regular";
+export type RatingLabel = "excellent" | "veryGood" | "good" | "regular";
 
-/** Rótulo qualitativo da nota: ≥ 4,5 Excelente, ≥ 4,0 Muito bom, ≥ 3,5 Bom, abaixo Regular. */
-export const ratingLabel = (rating: number): RatingLabel => {
-  if (rating >= 4.5) return "Excelente";
-  if (rating >= 4) return "Muito bom";
-  if (rating >= 3.5) return "Bom";
-  return "Regular";
+/** Faixa qualitativa da nota: ≥ 4,5 excelente, ≥ 4,0 muito bom, ≥ 3,5 bom, abaixo regular. */
+export const ratingBand = (rating: number): RatingLabel => {
+  if (rating >= 4.5) return "excellent";
+  if (rating >= 4) return "veryGood";
+  if (rating >= 3.5) return "good";
+  return "regular";
 };
+
+/** Rótulo qualitativo da nota no idioma (Excelente/Muito bom/Bom/Regular). */
+export const ratingLabel = (rating: number, locale: Locale = DEFAULT_LOCALE): string =>
+  commonMessages.get(locale).rating[ratingBand(rating)];

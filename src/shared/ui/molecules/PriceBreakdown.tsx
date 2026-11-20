@@ -1,4 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useLocale } from "../../i18n/client";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { cn } from "../../lib/cn";
 import {
   formatCents,
@@ -19,16 +23,19 @@ type PriceBreakdownProps = {
   totalClassName?: string;
 };
 
-const Row = ({ line }: { line: PriceLine }) => (
-  <div className="flex items-start justify-between gap-3">
-    <dt className="min-w-0 text-sm text-fg">{priceLineLabel(line)}</dt>
-    <dd
-      className={`shrink-0 text-right text-sm font-medium whitespace-nowrap tabular-nums ${line.kind === "discount" ? "text-success" : "text-fg"}`}
-    >
-      {priceLineAmount(line)}
-    </dd>
-  </div>
-);
+const Row = ({ line }: { line: PriceLine }) => {
+  const locale = useLocale();
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <dt className="min-w-0 text-sm text-fg">{priceLineLabel(line, locale)}</dt>
+      <dd
+        className={`shrink-0 text-right text-sm font-medium whitespace-nowrap tabular-nums ${line.kind === "discount" ? "text-success" : "text-fg"}`}
+      >
+        {priceLineAmount(line, locale)}
+      </dd>
+    </div>
+  );
+};
 
 /**
  * Detalhamento do preço em `<dl>`: estadia → desconto → taxa de serviço → ISS → total. Só
@@ -41,6 +48,8 @@ export const PriceBreakdown = ({
   showTaxNote = true,
   totalClassName,
 }: PriceBreakdownProps) => {
+  const locale = useLocale();
+  const t = useCommonMessages().price;
   const [stay, ...rest] = lines;
   return (
     <div className="flex flex-col gap-2">
@@ -61,13 +70,13 @@ export const PriceBreakdown = ({
       >
         <dl>
           <div className="flex items-start justify-between gap-3">
-            <dt className="text-base font-semibold text-fg">Total</dt>
+            <dt className="text-base font-semibold text-fg">{t.total}</dt>
             <dd className="shrink-0 text-2xl font-bold whitespace-nowrap text-fg tabular-nums">
-              {formatCents(totalCents)}
+              {formatCents(totalCents, locale)}
             </dd>
           </div>
         </dl>
-        {showTaxNote ? <p className="text-sm text-fg-muted">Impostos e taxas incluídos.</p> : null}
+        {showTaxNote ? <p className="text-sm text-fg-muted">{t.taxesIncluded}</p> : null}
       </div>
     </div>
   );

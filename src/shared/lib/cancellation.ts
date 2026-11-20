@@ -1,4 +1,6 @@
 import type { CancellationPolicy } from "../api/schemas";
+import { commonMessages } from "../i18n/common/messages";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
 
 export type CancellationDetails = {
   label: string;
@@ -11,36 +13,18 @@ export type CancellationDetails = {
  * **texto ilustrativo do produto** (prazos fixos por categoria), centralizados aqui para trocar
  * por dados reais quando existirem.
  */
-export const cancellationDetails = (policy: CancellationPolicy): CancellationDetails => {
+export const cancellationDetails = (
+  policy: CancellationPolicy,
+  locale: Locale = DEFAULT_LOCALE,
+): CancellationDetails => {
+  const t = commonMessages.get(locale).cancellation;
   switch (policy) {
     case "free":
-      return {
-        label: "Cancelamento grátis",
-        tone: "success",
-        details: [
-          "Cancele grátis até 48 horas antes do check-in.",
-          "Depois desse prazo, cobramos a primeira diária.",
-          "Se você não comparecer, cobramos a primeira diária.",
-        ],
-      };
+      return { label: t.free.label, tone: "success", details: t.free.details };
     case "moderate":
-      return {
-        label: "Cancelamento com reembolso parcial",
-        tone: "neutral",
-        details: [
-          "Cancele até 7 dias antes do check-in e receba 50% do valor de volta.",
-          "Depois desse prazo, não há reembolso.",
-        ],
-      };
+      return { label: t.moderate.label, tone: "neutral", details: t.moderate.details };
     case "strict":
-      return {
-        label: "Sem reembolso em caso de cancelamento",
-        tone: "warning",
-        details: [
-          "Esta tarifa não tem reembolso em caso de cancelamento.",
-          "Mudança de datas depende de disponibilidade e pode ter custo.",
-        ],
-      };
+      return { label: t.strict.label, tone: "warning", details: t.strict.details };
     default: {
       const unreachable: never = policy;
       return unreachable;

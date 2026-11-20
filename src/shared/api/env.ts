@@ -1,7 +1,6 @@
 import { z } from "@/shared/lib/zod";
 
-const ERROR_MESSAGE =
-  "NEXT_PUBLIC_API_URL ausente ou inválida. Copie .env.example para .env.local.";
+const ERROR_MESSAGE = "NEXT_PUBLIC_API_URL is missing or invalid. Copy .env.example to .env.local.";
 
 const envSchema = z.object({
   NEXT_PUBLIC_API_URL: z

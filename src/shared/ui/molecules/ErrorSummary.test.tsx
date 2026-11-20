@@ -2,14 +2,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ErrorSummary } from "./ErrorSummary";
-import { describeErrorCount } from "./error-count";
-
-describe("describeErrorCount", () => {
-  it("concorda no singular e no plural", () => {
-    expect(describeErrorCount(1)).toBe("Corrija 1 campo para continuar");
-    expect(describeErrorCount(3)).toBe("Corrija 3 campos para continuar");
-  });
-});
 
 describe("ErrorSummary", () => {
   const items = [

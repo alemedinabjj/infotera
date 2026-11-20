@@ -1,22 +1,6 @@
 import type { Amenity, PropertyType } from "@/shared/api/schemas";
-
-const AMENITY_LABELS: Record<Amenity, string> = {
-  wifi: "Wi-Fi",
-  breakfast: "Café da manhã",
-  pool: "Piscina",
-  parking: "Estacionamento",
-  beach_access: "Acesso à praia",
-  restaurant: "Restaurante",
-  bar: "Bar",
-  gym: "Academia",
-  spa: "Spa",
-  room_service: "Serviço de quarto",
-  kids_club: "Clube infantil",
-  concierge: "Concierge",
-  valet: "Manobrista",
-  business_center: "Centro de negócios",
-  lounge_access: "Acesso ao lounge",
-};
+import { commonMessages } from "../i18n/common/messages";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
 
 /** Ordem de exibição das comodidades no filtro (as mais buscadas primeiro). */
 export const AMENITY_DISPLAY_ORDER = [
@@ -37,13 +21,8 @@ export const AMENITY_DISPLAY_ORDER = [
   "lounge_access",
 ] as const satisfies readonly Amenity[];
 
-export const amenityLabel = (amenity: Amenity): string => AMENITY_LABELS[amenity];
-
-const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
-  hotel: "Hotel",
-  pousada: "Pousada",
-  resort: "Resort",
-};
+export const amenityLabel = (amenity: Amenity, locale: Locale = DEFAULT_LOCALE): string =>
+  commonMessages.get(locale).amenities[amenity];
 
 /** Ordem de exibição dos tipos de hospedagem. */
 export const PROPERTY_TYPE_DISPLAY_ORDER = [
@@ -52,4 +31,5 @@ export const PROPERTY_TYPE_DISPLAY_ORDER = [
   "resort",
 ] as const satisfies readonly PropertyType[];
 
-export const propertyTypeLabel = (type: PropertyType): string => PROPERTY_TYPE_LABELS[type];
+export const propertyTypeLabel = (type: PropertyType, locale: Locale = DEFAULT_LOCALE): string =>
+  commonMessages.get(locale).propertyTypes[type];

@@ -1,4 +1,5 @@
 import { z } from "@/shared/lib/zod";
+import { commonMessages } from "../i18n/common/messages";
 import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
 
 /** Data de calendário no formato `YYYY-MM-DD` (sem hora e sem fuso). */
@@ -26,7 +27,7 @@ export const isValidISODate = (value: string): boolean => parseParts(value) !== 
 
 /** Schema de fronteira para datas `YYYY-MM-DD` válidas. */
 export const isoDateSchema = z.string().refine(isValidISODate, {
-  message: "Data inválida. Use o formato AAAA-MM-DD.",
+  message: commonMessages.get(DEFAULT_LOCALE).validation.invalidDate,
 });
 
 const pad = (n: number, size = 2): string => String(n).padStart(size, "0");
@@ -36,7 +37,7 @@ const formatUTC = (date: Date): ISODate =>
 
 const toUTCms = (value: ISODate): number => {
   const parts = parseParts(value);
-  if (!parts) throw new RangeError(`Data inválida: ${value}`);
+  if (!parts) throw new RangeError(`Invalid date: ${value}`);
   return Date.UTC(parts.year, parts.month - 1, parts.day);
 };
 

@@ -1,7 +1,13 @@
-import { formatBRL } from "../../lib/currency";
-import { pluralize } from "../../lib/format";
+"use client";
 
-const money = (value: number): string => formatBRL(value, { cents: !Number.isInteger(value) });
+import { useLocale } from "../../i18n/client";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
+import type { Locale } from "../../i18n/config";
+import { formatUnit } from "../../i18n/units";
+import { formatBRL } from "../../lib/currency";
+
+const money = (value: number, locale: Locale): string =>
+  formatBRL(value, { cents: !Number.isInteger(value), locale });
 
 type PriceTagProps =
   | {
@@ -39,58 +45,61 @@ type PriceTagProps =
 
 /** Preço do card (design system §5.1). O valor nunca quebra: `whitespace-nowrap`. */
 export const PriceTag = (props: PriceTagProps) => {
+  const locale = useLocale();
+  const t = useCommonMessages().price;
   switch (props.variant) {
     case "nightly":
       return (
         <p className="flex flex-col items-end">
-          <span className="text-sm text-fg-subtle">a partir de</span>
+          <span className="text-sm text-fg-subtle">{t.from}</span>
           <span className="text-xl font-bold whitespace-nowrap text-fg tabular-nums">
-            {money(props.nightly)}
+            {money(props.nightly, locale)}
           </span>
-          <span className="text-sm text-fg-muted">por noite</span>
+          <span className="text-sm text-fg-muted">{t.perNight}</span>
         </p>
       );
     case "stay":
       return (
         <p className="flex flex-col items-end">
           <span className="text-xl font-bold whitespace-nowrap text-fg tabular-nums">
-            {formatBRL(props.total)}
+            {formatBRL(props.total, { locale })}
           </span>
           <span className="text-sm text-fg-muted">
-            total com taxas · {pluralize(props.nights, "noite", "noites")} ·{" "}
-            {pluralize(props.rooms, "quarto", "quartos")}
+            {t.totalWithFees} · {formatUnit(props.nights, "night", locale)} ·{" "}
+            {formatUnit(props.rooms, "room", locale)}
           </span>
           <span className="text-sm text-fg-subtle">
-            {props.exactNightly ? null : "a partir de "}
-            <span className="whitespace-nowrap tabular-nums">{money(props.nightly)}</span> por
-            noite, sem taxas
+            {props.exactNightly ? null : `${t.from} `}
+            <span className="whitespace-nowrap tabular-nums">{money(props.nightly, locale)}</span>{" "}
+            {t.perNight}, {t.withoutFees}
           </span>
         </p>
       );
     case "nightly-inline":
       return (
         <p className="flex flex-wrap items-baseline gap-x-1">
-          <span className="text-sm text-fg-subtle">a partir de</span>{" "}
+          <span className="text-sm text-fg-subtle">{t.from}</span>{" "}
           <span className="text-2xl font-bold whitespace-nowrap text-fg tabular-nums">
-            {money(props.nightly)}
+            {money(props.nightly, locale)}
           </span>{" "}
-          <span className="text-sm text-fg-muted">por noite</span>
+          <span className="text-sm text-fg-muted">{t.perNight}</span>
         </p>
       );
     case "room-nightly":
       return (
         <p className="flex flex-col items-end">
           <span className="text-xl font-bold whitespace-nowrap text-fg tabular-nums">
-            {money(props.nightly)}
+            {money(props.nightly, locale)}
           </span>
-          <span className="text-sm text-fg-muted">por noite</span>
+          <span className="text-sm text-fg-muted">{t.perNight}</span>
         </p>
       );
     case "nightly-line":
       return (
         <p className="text-sm text-fg-subtle">
-          {props.exact ? null : "a partir de "}
-          <span className="whitespace-nowrap tabular-nums">{money(props.nightly)}</span> por noite
+          {props.exact ? null : `${t.from} `}
+          <span className="whitespace-nowrap tabular-nums">{money(props.nightly, locale)}</span>{" "}
+          {t.perNight}
         </p>
       );
     default: {

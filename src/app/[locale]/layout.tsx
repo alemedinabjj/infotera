@@ -3,7 +3,9 @@ import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { LanguageSwitch, OfflineBanner, ServiceWorkerRegistrar } from "@/features/app-shell";
 import { I18nProvider } from "@/shared/i18n/client";
+import { commonMessages } from "@/shared/i18n/common/messages";
 import { isLocale, LOCALES } from "@/shared/i18n/config";
+import { localizePath } from "@/shared/i18n/paths";
 import { BRAND_PRIMARY } from "@/shared/lib/brand";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import { CompareTray } from "@/shared/saved/components/CompareTray";
@@ -35,6 +37,8 @@ const RootLayout = async ({ children, params }: LayoutProps<"/[locale]">) => {
         <I18nProvider locale={locale}>
           <AppProviders>
             <SiteHeader
+              homeLabel={commonMessages.get(locale).ui.homeLabel}
+              homeHref={localizePath(locale, "/")}
               actions={
                 <div className="flex items-center gap-1">
                   <SavedNav />

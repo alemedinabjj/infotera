@@ -89,7 +89,7 @@ para `shared/` quando aparecer o segundo uso.
 - `Dialog focusableBody` (corpo rolável vira região focável com foco inicial), `QuantityStepper locked`
   (`aria-disabled` nos dois botões), `Toaster data-toaster`, ícones `credit-card`/`lock`/`tag`, e o CSS da barra de
   ação fixa (`[data-action-bar]`) em `globals.css`.
-- `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`) e exporta `describeErrorCount`.
+- `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`).
 - `lib/scroll.ts`: `revealBelowHeader` (topo acima do header), `revealNearest` e `revealBlock` (revela um
   **bloco** entre o header e a barra fixa `[data-action-bar]` medida no DOM; usa `revealDelta`, função pura).
   `Field` marca o contêiner com `data-reveal-block` para o foco revelar rótulo, controle e erro inteiros.

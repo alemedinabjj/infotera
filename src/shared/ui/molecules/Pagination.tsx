@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { cn } from "../../lib/cn";
 import { getPaginationRange } from "../../lib/pagination";
 import { ChevronLeftIcon, ChevronRightIcon } from "../icons";
@@ -85,23 +88,28 @@ const PageItem = ({
 export const Pagination = ({
   page,
   totalPages,
-  label = "Paginação",
-  previousLabel = "Anterior",
-  nextLabel = "Próxima",
-  summaryLabel = (current, total) => `Página ${current} de ${total}`,
+  label,
+  previousLabel,
+  nextLabel,
+  summaryLabel,
   className,
   ...mode
 }: PaginationProps) => {
+  const t = useCommonMessages().pagination;
   if (totalPages <= 1) return null;
+  const summary = summaryLabel ?? ((current, total) => t.summary({ page: current, total }));
 
   return (
-    <nav aria-label={label} className={cn("flex items-center justify-center gap-1", className)}>
+    <nav
+      aria-label={label ?? t.label}
+      className={cn("flex items-center justify-center gap-1", className)}
+    >
       <PageItem {...mode} target={page - 1} disabled={page <= 1}>
         <ChevronLeftIcon className="size-4" />
-        {previousLabel}
+        {previousLabel ?? t.previous}
       </PageItem>
       <p className="px-2 text-base text-fg-muted tabular-nums sm:hidden">
-        {summaryLabel(page, totalPages)}
+        {summary(page, totalPages)}
       </p>
       <ul className="hidden items-center gap-1 sm:flex">
         {getPaginationRange({ page, totalPages }).map((item) => (
@@ -115,7 +123,7 @@ export const Pagination = ({
                 {...mode}
                 target={item}
                 current={item === page}
-                ariaLabel={`Página ${item}`}
+                ariaLabel={t.page({ page: item })}
               >
                 {item}
               </PageItem>
@@ -124,7 +132,7 @@ export const Pagination = ({
         ))}
       </ul>
       <PageItem {...mode} target={page + 1} disabled={page >= totalPages}>
-        {nextLabel}
+        {nextLabel ?? t.next}
         <ChevronRightIcon className="size-4" />
       </PageItem>
     </nav>

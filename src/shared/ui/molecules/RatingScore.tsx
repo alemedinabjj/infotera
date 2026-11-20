@@ -1,4 +1,9 @@
-import { formatRating, pluralize, ratingLabel } from "../../lib/format";
+"use client";
+
+import { useLocale } from "../../i18n/client";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
+import { formatUnit } from "../../i18n/units";
+import { formatRating, ratingLabel } from "../../lib/format";
 import { Stars } from "../atoms/Stars";
 
 type RatingScoreProps = {
@@ -24,16 +29,22 @@ export const RatingScore = ({
   showLabel = true,
   size = "md",
 }: RatingScoreProps) => {
-  if (reviewCount === 0) return <p className="text-sm text-fg-subtle">Sem avaliações</p>;
+  const locale = useLocale();
+  const t = useCommonMessages().rating;
+  if (reviewCount === 0) return <p className="text-sm text-fg-subtle">{t.none}</p>;
   const standalone = reviewCount === undefined;
 
   return (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-      <span className="sr-only">Nota </span>
+      <span className="sr-only">{t.score} </span>
       <span className={`${NOTE_SIZE[size]} font-semibold text-fg tabular-nums`}>
-        {standalone && Number.isInteger(rating) ? rating : formatRating(rating)}
+        {standalone && Number.isInteger(rating) ? rating : formatRating(rating, locale)}
       </span>
-      <span className="sr-only"> de 5{standalone ? "" : ","}</span>
+      <span className="sr-only">
+        {" "}
+        {t.outOf}
+        {standalone ? "" : ","}
+      </span>
       <Stars value={rating} decorative />
       {standalone ? null : (
         <>
@@ -42,14 +53,16 @@ export const RatingScore = ({
           <span className="inline-flex items-center gap-x-2 whitespace-nowrap">
             {showLabel ? (
               <>
-                <span className="text-sm font-medium text-fg-muted">{ratingLabel(rating)}</span>
+                <span className="text-sm font-medium text-fg-muted">
+                  {ratingLabel(rating, locale)}
+                </span>
                 <span aria-hidden="true" className="text-sm text-fg-subtle">
                   ·
                 </span>
               </>
             ) : null}
             <span className="text-sm text-fg-subtle">
-              {pluralize(reviewCount, "avaliação", "avaliações")}
+              {formatUnit(reviewCount, "review", locale)}
             </span>
           </span>
         </>

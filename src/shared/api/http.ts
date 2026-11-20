@@ -79,9 +79,9 @@ const send = async (
     // Cancelamento do chamador (ex.: TanStack Query) é relançado como está.
     if (signal?.aborted) throw error;
     if (timeout.aborted || isTimeoutError(error)) {
-      throw new ApiError("timeout", null, "A requisição excedeu o tempo limite.", error);
+      throw new ApiError("timeout", null, "The request timed out.", error);
     }
-    throw new ApiError("network", null, "Falha de rede ao chamar a API.", error);
+    throw new ApiError("network", null, "Network failure calling the API.", error);
   }
 
   if (!response.ok) {
@@ -107,14 +107,24 @@ const parseBody = async <T>(
     // Cancelamento do chamador durante a leitura do corpo é relançado como está.
     if (signal?.aborted) throw error;
     if (isTimeoutError(error)) {
-      throw new ApiError("timeout", response.status, "A requisição excedeu o tempo limite.", error);
+      throw new ApiError("timeout", response.status, "The request timed out.", error);
     }
-    throw new ApiError("parse", response.status, "Resposta da API fora do contrato.", error);
+    throw new ApiError(
+      "parse",
+      response.status,
+      "API response does not match the contract.",
+      error,
+    );
   }
   try {
     return schema.parse(data);
   } catch (error) {
-    throw new ApiError("parse", response.status, "Resposta da API fora do contrato.", error);
+    throw new ApiError(
+      "parse",
+      response.status,
+      "API response does not match the contract.",
+      error,
+    );
   }
 };
 

@@ -79,7 +79,7 @@ export const SearchHeader = ({
             variant="ghost"
             size="sm"
             leftIcon={<LinkIcon className="size-4" />}
-            onClick={copyCurrentUrl}
+            onClick={() => void copyCurrentUrl()}
           >
             Copiar link
           </Button>

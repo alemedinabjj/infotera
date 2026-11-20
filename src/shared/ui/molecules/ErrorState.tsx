@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { cn } from "../../lib/cn";
 import { Button } from "../atoms/Button";
 import { AlertCircleIcon } from "../icons";
@@ -25,13 +28,14 @@ export const ErrorState = ({
   description,
   onRetry,
   retrying = false,
-  retryLabel = "Tentar de novo",
+  retryLabel,
   variant = "inline",
   action,
   headingLevel = 2,
   className,
 }: ErrorStateProps) => {
   const Heading = `h${headingLevel}` as const;
+  const t = useCommonMessages().ui;
   return (
     <div
       role="alert"
@@ -55,7 +59,7 @@ export const ErrorState = ({
               loading={retrying}
               loadingText="Tentando…"
             >
-              {retryLabel}
+              {retryLabel ?? t.tryAgain}
             </Button>
           ) : null}
           {action}

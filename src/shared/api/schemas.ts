@@ -1,4 +1,6 @@
 import { z } from "@/shared/lib/zod";
+import { commonMessages } from "../i18n/common/messages";
+import { DEFAULT_LOCALE } from "../i18n/config";
 import { isoDateSchema } from "../lib/dates";
 
 /**
@@ -9,7 +11,9 @@ import { isoDateSchema } from "../lib/dates";
 /** Fotos só vêm de hosts conhecidos (a CSP da F5 libera os mesmos): nada de URL arbitrária em `<img>`. */
 const photoUrlSchema = z.url({ protocol: /^https$/, hostname: /^images\.unsplash\.com$/ });
 const avatarUrlSchema = z.url({ protocol: /^https$/, hostname: /^i\.pravatar\.cc$/ });
-const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Horário inválido. Use HH:MM.");
+const timeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, commonMessages.get(DEFAULT_LOCALE).validation.invalidTime);
 const countSchema = z.number().int().nonnegative();
 
 export const amenitySchema = z.enum([

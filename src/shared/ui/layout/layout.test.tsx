@@ -9,7 +9,7 @@ describe("SkipLink + SiteHeader", () => {
     render(
       <>
         <SkipLink />
-        <SiteHeader />
+        <SiteHeader homeLabel="Infotera Hotéis, página inicial" homeHref="/" />
       </>,
     );
     await userEvent.tab();
@@ -19,7 +19,7 @@ describe("SkipLink + SiteHeader", () => {
   });
 
   it("o header tem link para a home", () => {
-    render(<SiteHeader />);
+    render(<SiteHeader homeLabel="Infotera Hotéis, página inicial" homeHref="/" />);
     expect(screen.getByRole("link", { name: /Infotera Hotéis/ })).toHaveAttribute("href", "/");
   });
 });
