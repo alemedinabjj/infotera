@@ -146,7 +146,7 @@ docs/         enunciado, mapa do teste, specs por feature, design system
 ## Qualidade
 
 **Testes.**
-- Vitest + Testing Library: cerca de 1.700 casos em ~280 arquivos, cobrindo a lógica de `model/` e `shared/lib` (datas, preço, filtros ↔ URL, schemas Zod, validadores, regras de cache), hooks e componentes. A lógica pura nasce com TDD.
+- Vitest + Testing Library: 2.506 testes em 285 arquivos, cobrindo a lógica de `model/` e `shared/lib` (datas, preço, filtros ↔ URL, schemas Zod, validadores, regras de cache), hooks e componentes. A lógica pura nasce com TDD.
 - Playwright: mais de 600 testes em 64 arquivos, rodando em desktop e mobile (Pixel 7). Cobrem o fluxo de reserva completo, i18n, PWA e offline, mapas, comparação, favoritos e histórico. Nove arquivos têm testes `@prod`, que só fazem sentido contra `next build && next start` (PPR, ISR, nonce da CSP, soft 404 sem JS).
 - axe (`@axe-core/playwright`) nas telas principais e nos estados de erro.
 - Cenários de lentidão e falha: `_delay` e `_fail` da mock-api para requests do navegador, e o proxy de controle (`e2e/helpers`, fixture `serverApi`) para atrasar, falhar ou segurar requests feitos pelo servidor do Next, como o `POST /bookings` dentro da Server Action.
