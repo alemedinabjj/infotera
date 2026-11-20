@@ -115,3 +115,14 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
 - Segunda entrada pública `client.ts` (`PhotoModalError`, `PhotoModalLoading`, `PhotoNotFound`, para `error.tsx`/`loading.tsx`/`not-found.tsx`). `PhotoNotFound` não linka para outra foto (seria interceptado) e pega o id do hotel por `useParams`.
 - Trade-offs: reload na foto + "Voltar para o hotel" perde as datas (a galeria não depende de `searchParams`); cartão de erro do modal usa o anel `focus` padrão (claro).
 - **Sem `loading.tsx` e sem Suspense nos similares (critério 5)**: o React põe fora do fluxo (`<div hidden id="S:…">`) toda boundary concluída maior que `progressiveChunkSize` (~12,8 KB); com o hotel inteiro num `loading.tsx` o conteúdo só aparecia com o script de troca. Os similares são `"use cache"` e já resolvem no prerender. Só os buracos da estadia suspendem. A página da foto também não tem `loading.tsx` (tem `generateStaticParams` e `instant = false`) e passa sem JS.
+
+## F7c, rodada 4 (HTML sem JS, foco e avisos)
+- **Paginação das avaliações** (`ReviewsPager`): os botões nascem `disabled` (`useHydrated`, snapshot de servidor `false`) e só habilitam depois de hidratar; o React troca o
+  fallback pelo pager com o script inline antes do JS rodar e um clique nesse intervalo se perderia. `e2e/hotel-details.hydration.prod.spec.ts` segura os chunks por `page.route`.
+- `settle(promise, { resource, hotelId })` registra `console.warn` estruturado (recurso, hotel, `kind` e `status` do `ApiError`; nunca corpo nem mensagem). Igual ao `logFailure` dos similares.
+- `useRefreshRetry` guarda o h2 **da própria `<section>`** no clique (`anchorRef`) e só o foca no cleanup se `isConnected` e `checkVisibility()`: o Activity também dispara o cleanup ao
+  esconder a rota, e `getElementById` poderia achar o h2 (mesmo id) de outro hotel.
+- "Tentar de novo" que falha de novo: `useStillFailing(retrying)` + `StillFailingNotice` (`role="status"` sempre montado, `sr-only`) em `SectionRefreshError`, `SectionError` e
+  `PhotoOpenError` (lógica em `model/retry-feedback.ts`). Cartão offline com a conexão de volta: título neutro `Conexão de volta` (`photoOpenStatus`). Limite: no `PhotoModalError`
+  (`error.tsx`) o cartão remonta a cada falha e o estado se perde, então não há aviso de "ainda" ali.
+- Página cheia sem JS: `<noscript><style>` esconde as setas (`data-photo-controls`); "Voltar para o hotel" usa anel de foco por dentro (`-outline-offset-2`).
