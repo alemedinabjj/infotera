@@ -21,15 +21,22 @@ export const persistedDraftSchema = z.object({
   companions: z.array(
     z.object({ kind: z.enum(["adult", "child"]), firstName: z.string(), lastName: z.string() }),
   ),
+  /** Código do cupom aplicado (não é PII). Revalidado ao restaurar: nunca confiamos no desconto. */
+  coupon: z.string().max(40).optional(),
 });
 
 export type PersistedDraft = z.infer<typeof persistedDraftSchema>;
 
 /**
  * Rascunho a gravar. A **whitelist é explícita** (campo por campo): um campo novo de cartão nunca
- * vaza por padrão. Fora: cartão, validade, CVV, documento, idade da criança, cupom e termos.
+ * vaza por padrão. Fora: cartão, validade, CVV, documento, idade da criança e termos. O **código** do
+ * cupom entra (não é dado pessoal); o desconto em si é sempre recalculado.
  */
-export const toPersistedDraft = (values: CheckoutValues, step: CheckoutStep): PersistedDraft => ({
+export const toPersistedDraft = (
+  values: CheckoutValues,
+  step: CheckoutStep,
+  couponCode: string | null = null,
+): PersistedDraft => ({
   v: CHECKOUT_DRAFT_VERSION,
   step,
   contact: {
@@ -44,6 +51,7 @@ export const toPersistedDraft = (values: CheckoutValues, step: CheckoutStep): Pe
     firstName,
     lastName,
   })),
+  ...(couponCode ? { coupon: couponCode } : {}),
 });
 
 export type RestoredDraft = {

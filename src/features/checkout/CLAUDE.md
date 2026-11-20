@@ -51,7 +51,9 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
   pressionado; ErrorSummary e SubmitError remontados por `key`.
 
 ## Segurança e privacidade (obrigatório)
-- **Nunca** persistir número do cartão, CVV, validade, documento, idade, cupom nem aceite. Rascunho = `toPersistedDraft`
+- **Nunca** persistir número do cartão, CVV, validade, documento, idade nem aceite. O **código do cupom** aplicado
+  PODE ser persistido (não é PII); ao restaurar, `useCoupon` revalida pela mesma consulta/regras e, se não vale mais,
+  mostra o aviso inline "Seu cupom {CÓDIGO} não vale mais para esta reserva.". Rascunho = `toPersistedDraft`
   (whitelist explícita) no `sessionStorage` (`infotera:checkout-draft`), debounce 500 ms, apagado após `created`.
 - `usePaymentWipe`: `pagehide` limpa cartão, validade, CVV e documento; volta do bfcache cai no passo de pagamento com aviso.
 - O payload do `POST /bookings` leva só `cardLast4`; o documento é validado e descartado.

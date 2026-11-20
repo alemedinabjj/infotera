@@ -18,13 +18,17 @@ import {
 } from "../model/coupons";
 import { calculatePrice } from "../model/price";
 
+/** Aviso quando o cupom guardado no rascunho deixou de valer (outra data, outro quarto, expirou). */
+export const restoredCouponMessage = (code: string): string =>
+  `Seu cupom ${code} não vale mais para esta reserva.`;
+
 export const COUPON_LOOKUP_FAILED = "Não foi possível validar o cupom. Tente de novo.";
 
 export type CouponView =
   | { kind: "idle" }
   | { kind: "validating"; code: string }
   | { kind: "applied"; coupon: Coupon }
-  | { kind: "error"; code: string; message: string };
+  | { kind: "error"; code: string; message: string; restored?: true };
 
 /** Resultado de aplicar `coupon` (já consultado) a esta reserva. */
 const settle = (
@@ -32,6 +36,7 @@ const settle = (
   coupon: Coupon | null,
   room: Room,
   criteria: SearchCriteria,
+  restored = false,
 ): CouponView => {
   const nights = nightsBetween(criteria.checkIn, criteria.checkOut);
   const subtotalCents = calculatePrice({
@@ -42,6 +47,8 @@ const settle = (
   const result = evaluateCoupon(coupon, { today: todayISO(), nights, subtotalCents });
   if (result.ok && coupon) return { kind: "applied", coupon };
   const reason: CouponRejection = result.ok ? { kind: "not-found" } : result.reason;
+  if (restored)
+    return { kind: "error", code, message: restoredCouponMessage(code), restored: true };
   return { kind: "error", code, message: couponMessage(reason) };
 };
 
@@ -50,9 +57,15 @@ const settle = (
  * código (reaplicar é instantâneo, sem "Aplicando…") e cancelamento quando o código muda. A
  * elegibilidade é reavaliada por `buildQuote` quando os quartos mudam.
  */
-export const useCoupon = (roomId: number, criteria: SearchCriteria) => {
+export const useCoupon = (
+  roomId: number,
+  criteria: SearchCriteria,
+  restoredCode: string | null,
+) => {
   const queryClient = useQueryClient();
-  const [view, setView] = useState<CouponView>({ kind: "idle" });
+  const [view, setView] = useState<CouponView>(
+    restoredCode ? { kind: "validating", code: restoredCode } : { kind: "idle" },
+  );
   const token = useRef(0);
   // Os critérios mudam enquanto o cupom valida (quartos otimistas): a consulta assenta com os atuais.
   const latestCriteria = useRef(criteria);
@@ -61,19 +74,29 @@ export const useCoupon = (roomId: number, criteria: SearchCriteria) => {
   });
   const roomKey = roomQueryOptions(roomId).queryKey;
 
-  const lookup = async (code: string): Promise<void> => {
+  const lookup = async (code: string, restored = false): Promise<void> => {
     const mine = ++token.current;
     setView({ kind: "validating", code });
     try {
       const coupon = await queryClient.fetchQuery(couponQueryOptions(code));
       const room = await queryClient.ensureQueryData(roomQueryOptions(roomId));
-      if (mine === token.current) setView(settle(code, coupon, room, latestCriteria.current));
+      if (mine === token.current)
+        setView(settle(code, coupon, room, latestCriteria.current, restored));
     } catch {
       if (mine === token.current) {
         setView({ kind: "error", code, message: COUPON_LOOKUP_FAILED });
       }
     }
   };
+
+  // Rascunho com cupom: revalida (mesma consulta e regras) antes de aplicar; se não vale, avisa.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: só na montagem
+  useEffect(() => {
+    if (!restoredCode) return;
+    const code = normalizeCouponCode(restoredCode);
+    if (couponCodeSchema.safeParse(code).success) void lookup(code, true);
+    else setView({ kind: "error", code, message: restoredCouponMessage(code), restored: true });
+  }, []);
 
   const apply = (raw: string): void => {
     const code = normalizeCouponCode(raw);
@@ -114,6 +137,9 @@ export const useCoupon = (roomId: number, criteria: SearchCriteria) => {
   return {
     view,
     coupon: view.kind === "applied" ? view.coupon : null,
+    /** Código a guardar no rascunho: aplicado ou em validação. */
+    savedCode:
+      view.kind === "applied" ? view.coupon.code : view.kind === "validating" ? view.code : null,
     apply,
     cancel,
     remove,

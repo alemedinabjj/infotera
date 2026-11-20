@@ -94,6 +94,48 @@ describe("rascunho (critérios 33–35)", () => {
     expect(screen.getByLabelText("Nome")).toHaveValue("Ana");
   });
 
+  it("recarregar mantém o cupom aplicado (revalidado) e o desconto", async () => {
+    const user = setup();
+    const first = renderCheckout();
+    await user.click(screen.getByRole("button", { name: /Tenho um cupom/ }));
+    await user.type(screen.getByLabelText("Cupom de desconto"), "BEMVINDO10");
+    await user.click(screen.getByRole("button", { name: /Aplicar\s*cupom/ }));
+    await act(async () => vi.advanceTimersByTimeAsync(1300));
+    expect(await screen.findByText("BEMVINDO10 · 10% de desconto")).toBeVisible();
+    expect(JSON.parse(sessionStorage.getItem(KEY) ?? "{}")).toMatchObject({
+      coupon: "BEMVINDO10",
+    });
+    first.unmount();
+    renderCheckout();
+    await act(async () => vi.advanceTimersByTimeAsync(1300));
+    expect(await screen.findByText("BEMVINDO10 · 10% de desconto")).toBeVisible();
+  });
+
+  it("recarregar com cupom que não vale mais mostra o aviso inline e não aplica desconto", async () => {
+    sessionStorage.setItem(
+      KEY,
+      JSON.stringify({
+        v: 1,
+        step: "personal",
+        contact: {
+          firstName: "Ana",
+          lastName: "Souza",
+          email: "a@b.co",
+          phoneCountry: "BR",
+          phone: "",
+        },
+        companions: [],
+        coupon: "VERAO2024",
+      }),
+    );
+    renderCheckout();
+    await act(async () => vi.advanceTimersByTimeAsync(1300));
+    expect(
+      await screen.findByText("Seu cupom VERAO2024 não vale mais para esta reserva."),
+    ).toBeVisible();
+    expect(screen.queryByText(/Desconto \(/)).not.toBeInTheDocument();
+  });
+
   it("recarregar com criança: passo 1 pede a idade e o passo 2 mostra o aviso do cartão", async () => {
     await seedSelection(makeSelection({ adults: 1, children: 1 }));
     const user = setup();

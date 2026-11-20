@@ -12,10 +12,15 @@ export const DRAFT_DEBOUNCE_MS = 500;
 /**
  * Persistência do rascunho (grava o passo mais adiante alcançado) no `sessionStorage` com debounce de 500 ms e *flush* no `pagehide`.
  * O que vai ao storage é decidido por `toPersistedDraft` (whitelist): nunca cartão, CVV, validade,
- * documento, idade, cupom nem aceite. `clear` apaga e **para** a gravação (reserva criada).
+ * documento, idade nem aceite (o código do cupom é gravado; o desconto é revalidado ao restaurar). `clear` apaga e **para** a gravação (reserva criada).
  */
-export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, reached: CheckoutStep) => {
+export const useCheckoutDraft = (
+  form: UseFormReturn<CheckoutValues>,
+  reached: CheckoutStep,
+  couponCode: string | null,
+) => {
   const stepRef = useRef(reached);
+  const couponRef = useRef(couponCode);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const stopped = useRef(false);
   const mounted = useRef(false);
@@ -25,7 +30,7 @@ export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, reached: C
     if (stopped.current || !dirty.current) return;
     createStorage("session").write(
       CHECKOUT_DRAFT_KEY,
-      toPersistedDraft(form.getValues(), stepRef.current),
+      toPersistedDraft(form.getValues(), stepRef.current, couponRef.current),
     );
   }, [form]);
 
@@ -41,6 +46,12 @@ export const useCheckoutDraft = (form: UseFormReturn<CheckoutValues>, reached: C
     if (mounted.current) schedule();
     mounted.current = true;
   }, [reached, schedule]);
+
+  useEffect(() => {
+    if (couponRef.current === couponCode) return;
+    couponRef.current = couponCode;
+    schedule();
+  }, [couponCode, schedule]);
 
   useEffect(() => {
     const subscription = form.watch(schedule);

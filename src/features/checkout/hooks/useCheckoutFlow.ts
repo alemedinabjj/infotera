@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { type RoomSelection, useBookingDraftActions } from "@/shared/stores/booking-draft";
+import { readDraftCouponCode } from "./checkout-initial";
 import { useCheckoutForm } from "./useCheckoutForm";
 import { useCoupon } from "./useCoupon";
 import { usePriceQuote } from "./usePriceQuote";
@@ -28,9 +29,10 @@ export const useCheckoutFlow = ({ selection, hotel, room, onLeaving }: FlowOptio
   const router = useRouter();
   const { clearSelection } = useBookingDraftActions();
   const roomCount = useRoomCount(selection, room.data);
-  const coupon = useCoupon(selection.roomId, roomCount.criteria);
+  const [restoredCoupon] = useState(readDraftCouponCode);
+  const coupon = useCoupon(selection.roomId, roomCount.criteria, restoredCoupon);
   const price = usePriceQuote(room, roomCount.criteria, coupon.coupon);
-  const checkout = useCheckoutForm(roomCount.criteria);
+  const checkout = useCheckoutForm(roomCount.criteria, coupon.savedCode);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const current: RoomSelection = { ...selection, criteria: roomCount.criteria };
 
