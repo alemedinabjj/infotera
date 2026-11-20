@@ -8,7 +8,7 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 - `params` e `searchParams` são `Promise` no Next 16: `const { hotelId } = await params`.
 - Valide `params`/`searchParams` com o schema da feature antes de usar. Valor inválido → `notFound()` ou redirect.
 - Cada rota com dado remoto tem `loading.tsx` (skeleton da feature) e `error.tsx` (`"use client"`, com botão de retry via `reset`).
-- `metadata`/`generateMetadata` em toda página (título em pt-BR).
+- `generateMetadata` em toda página, com o título no idioma da rota (`params.locale`; dicionário da feature ou `common.routes`).
 - `app/[locale]/layout.tsx` é o layout raiz: valida `[locale]` (`isLocale`, `dynamicParams = false`), define `<html lang={locale}>`, monta `I18nProvider` e os providers.
 
 ## Rotas por idioma (F7b)

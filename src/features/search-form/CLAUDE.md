@@ -90,3 +90,7 @@ index.ts                    export { SearchForm }
 - Componente: combobox (debounce, ARIA, teclado, loading, vazio, erro), datas, hóspedes, form (submit
   inválido/válido, `initialCriteria`), recentes.
 - E2E `e2e/search-form.spec.ts`: fluxo por teclado, recentes, `_delay`, `_fail`, axe, 320 px.
+
+## F7b (i18n)
+- `i18n/{pt-BR,en-US,messages}.ts` + `hooks/useSearchFormMessages`. Funções do `model/` aceitam `locale` (padrão pt-BR): `guestHints`, `describeResultCount`,
+  `formatCheckOutAdjusted`, `summarizeErrors`, `makeSearchFormSchema(today, locale)`, `makeSearchFormResolver(locale)`. Mensagens de validação: `searchMessages(locale)` (shared).

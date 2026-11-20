@@ -92,7 +92,11 @@ features/<nome>/
   complexidade cognitiva até 15. Passou do limite → extraia subcomponente, hook ou função em `model/`.
 - Acessibilidade não é opcional: label em todo input, foco visível, navegação por teclado, `aria-live` para loading/erro, contraste AA, nada quebrado no mobile (320px).
 - Toda tela com dado remoto tem os 4 estados: loading (skeleton), erro (com retry), vazio, sucesso.
-- Identificadores e código em inglês; textos da UI e documentação em pt-BR.
+- Identificadores e código em inglês; documentação em pt-BR. **Texto de UI só em `i18n/`** (pt-BR é a fonte, en-US é obrigatório:
+  chave faltando = erro de compilação). Rotas vivem em `app/[locale]/`; links internos sempre por `localizePath(locale, "/rota")`
+  (nunca string `"/..."` crua nem `usePathname()` em render); `<html lang>` vem do locale; formatadores recebem `locale`.
+  A catraca `src/i18n-guard.test.ts` conta o texto que ainda está fora do dicionário (hoje: checkout, booking-confirmation,
+  hotel-details, favoritos/comparação/histórico) e só pode descer.
 - Não commitar `node_modules`, `.env`, `mock-api/db.json`.
 
 ## Fluxo de trabalho com os agentes

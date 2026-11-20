@@ -133,6 +133,7 @@ para `shared/` quando aparecer o segundo uso.
   `next/root-params`), `cookie`, `common/` (dicionário comum + `useCommonMessages`). Rotas: pt-BR sem prefixo, en-US em `/en`; o `app/[locale]` recebe a
   URL reescrita pelo `proxy.ts`. **Nunca derive `href` de `usePathname()` em render** (rewrite do proxy): use `localizePath(useLocale(), "/rota")`.
   Todo texto novo nasce em `i18n/` (a catraca `src/i18n-guard.test.ts` conta o que ainda está fora).
+- **Traduzido (parte 2)**: `i18n/common` (erros, rótulos de comodidade/tipo/cama, disponibilidade, cancelamento, preço, paginação, `routes.*`), `i18n/units` (`formatUnit`), `saved/i18n`. Os helpers de `lib/` aceitam `locale` (padrão pt-BR). `SiteHeader` recebe `homeLabel`/`homeHref`; `copyCurrentUrl(locale)`.
 - Formatadores (`formatBRL`, `formatRating`, `formatDate`, `formatDateRange`, `formatCount`) aceitam `locale` (opcional, padrão pt-BR).
 - **Mapa**: `lib/map-tiles` (`TILE_ORIGIN`/`TILE_URL`/`MAX_ZOOM`/`tileUrl`, única fonte da CSP e do cache do SW), `lib/geo` (`boundsOf`, `fitPlan`, `osmLink`),
   `ui/map/` (`InteractiveMapImpl` react-leaflet + `MapMarkerElement` (DOM por `textContent`, nunca HTML) + `map.css` + `useInteractiveMap` que carrega o

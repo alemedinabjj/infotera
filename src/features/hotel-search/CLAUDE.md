@@ -176,3 +176,5 @@ index.ts                  API pública usada por app/search
 - `i18n/` já existe só com a seção `map` (a tradução do resto da feature entra na parte 2 da F7b).
 - **Hidratação**: `useHotelResults`/`useHotelFeed` tratam "sem dado" até `useHydrated()` (o cache persistido só existe no cliente; sem isto a lista
   restaurada divergia do HTML do servidor).
+- **i18n**: dicionário completo (`list`, `feed`, `controls`, `distance`, `page`, `map`). `describe*`, `sortLabel`, `formatDistanceFromCenter`, `describePriceSummary`, `searchPageTitle`
+  aceitam `locale`. O card localiza o link (`localizePath`) e usa `formatUnit`.
