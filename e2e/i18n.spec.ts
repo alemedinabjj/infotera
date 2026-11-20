@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { analyzeAccessibility } from "./helpers/axe";
 import { criteria, seedSelection } from "./helpers/checkout";
 import { noHorizontalScroll } from "./helpers/hotel-details";
-import { criteriaQuery } from "./helpers/hotel-search";
+import { API_URL, criteriaQuery, searchPath } from "./helpers/hotel-search";
+import { portugueseLeftovers } from "./helpers/language";
 
 /** Caminho + query do `Location` (relativo ou absoluto). */
 const locationOf = (headers: Record<string, string>): string => {
@@ -100,4 +102,60 @@ test("em 320 px o cabeçalho cabe sem rolagem horizontal e o seletor tem alvo de
     expect(box?.height).toBeGreaterThanOrEqual(44);
     expect(box?.width).toBeGreaterThanOrEqual(44);
   }
+});
+
+test.describe("idioma do texto em inglês", () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, "roda no desktop");
+  });
+
+  // Nomes próprios da API (hotéis, destinos) e a marca não são traduzidos.
+  const PROPER = ["Infotera Hotéis", "Português", "Rio de Janeiro, RJ", "São Paulo, SP"];
+
+  test("home em inglês: sem português, com lang e sem violações de acessibilidade", async ({
+    page,
+  }) => {
+    await page.goto("/en");
+    await expect(page.getByRole("heading", { level: 1, name: "Find your hotel" })).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
+    expect(await portugueseLeftovers(page, PROPER)).toEqual([]);
+    expect((await analyzeAccessibility(page)).violations).toEqual([]);
+  });
+
+  test("busca em inglês: lista, filtros e mapa sem português, links em /en e axe", async ({
+    page,
+    request,
+  }) => {
+    const names: unknown = await (
+      await request.get(`${API_URL}/hotels?destination=${encodeURIComponent("Rio de Janeiro, RJ")}`)
+    ).json();
+    const hotelNames = Array.isArray(names)
+      ? names.flatMap((item) =>
+          item && typeof item === "object" && "name" in item && typeof item.name === "string"
+            ? [item.name]
+            : [],
+        )
+      : [];
+    await page.goto(`/en${searchPath("map=1")}`);
+    await expect(page.getByRole("heading", { level: 2, name: /hotels found/ })).toBeVisible();
+    await expect(page.getByRole("article").first()).toBeVisible();
+    await expect(page.locator(".leaflet-marker-icon > span").first()).toBeVisible();
+    const hrefs = await page
+      .getByRole("article")
+      .locator("a[data-hotel-link]")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) expect(href).toMatch(/^\/en\/hotel\//);
+    expect(await portugueseLeftovers(page, [...PROPER, ...hotelNames])).toEqual([]);
+    expect((await analyzeAccessibility(page)).violations).toEqual([]);
+  });
+
+  test("em 320 px a home e a busca em inglês não têm rolagem horizontal", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    for (const path of ["/en", `/en${searchPath()}`]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      expect(await noHorizontalScroll(page)).toBe(true);
+    }
+  });
 });
