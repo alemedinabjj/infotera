@@ -1,12 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useId, useRef, useState } from "react";
-import { useResetOnHide } from "@/shared/hooks/useResetOnHide";
+import { useId } from "react";
 import { useLocale } from "@/shared/i18n/client";
 import { Dialog } from "@/shared/ui";
+import { useCloseOnce } from "../hooks/useCloseOnce";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
-import { restorePhotoFocus, usePhotoOpener } from "../hooks/usePhotoOpener";
 import { usePhotoViewer } from "../hooks/usePhotoViewer";
 import { useSwipe } from "../hooks/useSwipe";
 import { photoAlt } from "../model/gallery";
@@ -31,36 +29,19 @@ type PhotoModalProps = {
 export const PhotoModal = ({ hotelId, name, images, initialIndex }: PhotoModalProps) => {
   const t = useHotelDetailsMessages().gallery;
   const locale = useLocale();
-  const router = useRouter();
   const total = images.length;
   const viewer = usePhotoViewer({ hotelId, total, initialIndex, locale });
   const swipe = useSwipe(viewer.go);
-  const [open, setOpen] = useState(true);
-  const closing = useRef(false);
+  const { open, requestClose, onClosed } = useCloseOnce();
   const counterId = useId();
-  usePhotoOpener();
-  // Activity esconde a rota em vez de desmontar: o modal preservado volta aberto, não fechado.
-  useResetOnHide(() => {
-    closing.current = false;
-    setOpen(true);
-  });
   const src = images[viewer.index];
   const several = total > 1;
-
-  const requestClose = () => {
-    if (closing.current) return;
-    closing.current = true;
-    setOpen(false);
-  };
 
   return (
     <Dialog
       open={open}
       onClose={requestClose}
-      onClosed={() => {
-        restorePhotoFocus();
-        router.back();
-      }}
+      onClosed={onClosed}
       onKeyDown={viewer.onKeyDown}
       size="full"
       title={t.lightboxTitle({ name })}

@@ -3,3 +3,4 @@
  * importar o `index.ts`: ele leva as funções `"use cache"` e o loader do build junto).
  */
 export { PhotoModalError } from "./components/PhotoModalError";
+export { PhotoModalLoading } from "./components/PhotoModalLoading";

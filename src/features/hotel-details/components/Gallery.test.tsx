@@ -1,6 +1,14 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { renderWithProviders } from "@/shared/testing/render";
 import { Gallery } from "./Gallery";
+
+vi.mock(
+  "next/navigation",
+  async () => (await import("@/shared/testing/next-navigation")).navigationMock,
+);
+
+const render = renderWithProviders;
 
 const photos = (count: number) =>
   Array.from({ length: count }, (_, i) => `https://images.unsplash.com/photo-${i + 1}`);
