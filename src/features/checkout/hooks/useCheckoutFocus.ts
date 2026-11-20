@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { revealBlock } from "@/shared/lib/scroll";
+import { keepBlockRevealed } from "@/shared/lib/scroll-follow";
 import type { CheckoutFieldPath, CheckoutValues } from "../model/checkout.schema";
 
 /** Atributo que marca o contêiner de um campo (rótulo, controle, descrição e erro). */
@@ -34,6 +35,9 @@ export const useCheckoutFocus = (
     if (headingTick === 0) return;
     headingRef.current?.focus({ preventScroll: true });
     revealBlock(titleRef.current);
+    // O resumo da reserva e o total chegam depois e empurram o título de volta para baixo do header
+    // ou da barra: o bloco acompanha o layout até ele assentar (ou até a pessoa rolar).
+    return keepBlockRevealed(titleRef.current);
   }, [headingTick]);
 
   useEffect(() => {
