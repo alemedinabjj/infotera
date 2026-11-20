@@ -3,6 +3,7 @@ import { osmLink } from "@/shared/lib/geo";
 import { OSM_COPYRIGHT_URL, tileUrl } from "@/shared/lib/map-tiles";
 import { MapPinIcon } from "@/shared/ui";
 import { staticMapLayout } from "../model/static-map";
+import { InteractiveLocationMap } from "./InteractiveLocationMap";
 import { MapTile } from "./MapTile";
 import { Section } from "./Section";
 
@@ -12,8 +13,8 @@ type StaticMapProps = { hotel: Hotel };
 
 /**
  * Mapa estático (RSC, sem JS): tiles do OpenStreetMap posicionados em % por `staticMapLayout` e o
- * marcador no ponto. Isolado para trocar por Leaflet/provedor depois. A atribuição fica fora do
- * `role="img"` (filhos de `img` são apresentacionais e o link sumiria).
+ * marcador no ponto. É a base da moldura de `InteractiveLocationMap` (o Leaflet entra por cima).
+ * A atribuição fica fora do `role="img"` (filhos de `img` são apresentacionais e o link sumiria).
  */
 const StaticMap = ({ hotel }: StaticMapProps) => {
   const map = staticMapLayout({
@@ -24,7 +25,7 @@ const StaticMap = ({ hotel }: StaticMapProps) => {
     height: 320,
   });
   return (
-    <div className="relative aspect-[2/1] overflow-hidden rounded-card border border-border bg-surface-sunken">
+    <>
       <div role="img" aria-label={`Mapa: ${hotel.address}`} className="absolute inset-0">
         {map.tiles.map((tile) => (
           <MapTile
@@ -54,7 +55,7 @@ const StaticMap = ({ hotel }: StaticMapProps) => {
           © colaboradores do OpenStreetMap
         </a>
       </p>
-    </div>
+    </>
   );
 };
 
@@ -62,7 +63,9 @@ const StaticMap = ({ hotel }: StaticMapProps) => {
 export const LocationMap = ({ hotel }: { hotel: Hotel }) => (
   <Section id="localizacao" title="Localização">
     <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6">
-      <StaticMap hotel={hotel} />
+      <InteractiveLocationMap hotel={hotel} zoom={ZOOM}>
+        <StaticMap hotel={hotel} />
+      </InteractiveLocationMap>
       <div className="flex flex-col items-start gap-1">
         <p className="flex items-start gap-1 text-sm text-fg">
           <MapPinIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-fg-muted" />

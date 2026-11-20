@@ -26,6 +26,7 @@ export type InteractiveMapProps = {
   renderPopup?: (id: string) => ReactNode;
   /** Primeiro lote de tiles carregado (a ilha do hotel troca o mapa estático nesse momento). */
   onTilesLoad?: () => void;
+  /** O lote terminou e **nenhum** tile veio (sem rede, bloqueio): quem chamou mantém o plano B. */
   onTilesError?: () => void;
   labels: MapLabels;
   className?: string;
@@ -58,7 +59,7 @@ const FitToMarkers = ({ markers, reduced }: { markers: readonly MapMarker[] } & 
   return null;
 };
 
-/** Nome, descrição e rótulos no contêiner focável do Leaflet (leitor de tela anuncia ao focar). */
+/** Nome e descrição no contêiner focável do Leaflet (o leitor de tela anuncia ao focar) e `data-zoom`. */
 const MapAccessibility = ({ labels, hintId }: { labels: MapLabels; hintId: string }) => {
   const map = useMap();
   useEffect(() => {
@@ -67,6 +68,16 @@ const MapAccessibility = ({ labels, hintId }: { labels: MapLabels; hintId: strin
     container.setAttribute("aria-label", labels.region);
     container.setAttribute("aria-describedby", hintId);
   }, [map, labels.region, hintId]);
+  // `data-zoom` expõe o nível atual (os testes E2E leem; tiles em cache não geram novo request).
+  useEffect(() => {
+    const container = map.getContainer();
+    const publish = () => container.setAttribute("data-zoom", String(map.getZoom()));
+    publish();
+    map.on("zoomend", publish);
+    return () => {
+      map.off("zoomend", publish);
+    };
+  }, [map]);
   return null;
 };
 
@@ -209,6 +220,12 @@ export const InteractiveMapImpl = ({
 }: InteractiveMapProps) => {
   const reduced = useReducedMotion() ?? false;
   const hintId = useId();
+  const tileCounts = useRef({ ok: 0, failed: 0 });
+  // `load` do Leaflet vale também quando todos os tiles falharam: só conta como carregado se algum veio.
+  const onLoad = () => {
+    if (tileCounts.current.ok > 0) onTilesLoad?.();
+    else if (tileCounts.current.failed > 0) onTilesError?.();
+  };
   const idsKey = markers.map((marker) => marker.id).join("|");
   return (
     <div className={cn("group/map relative isolate z-0", className)}>
@@ -228,7 +245,15 @@ export const InteractiveMapImpl = ({
           url={TILE_URL}
           maxZoom={MAX_ZOOM}
           crossOrigin="anonymous"
-          eventHandlers={{ load: () => onTilesLoad?.(), tileerror: () => onTilesError?.() }}
+          eventHandlers={{
+            tileload: () => {
+              tileCounts.current.ok += 1;
+            },
+            tileerror: () => {
+              tileCounts.current.failed += 1;
+            },
+            load: onLoad,
+          }}
         />
         <ZoomControl zoomInTitle={labels.zoomIn} zoomOutTitle={labels.zoomOut} />
         <MapAccessibility labels={labels} hintId={hintId} />
