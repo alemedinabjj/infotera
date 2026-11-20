@@ -4,7 +4,7 @@ import { analyzeAccessibility } from "./helpers/axe";
 import { noHorizontalScroll } from "./helpers/hotel-details";
 import { API_URL, cardByName, cards, hotelName, searchPath } from "./helpers/hotel-search";
 
-const mapButton = (page: Page) => page.getByRole("button", { name: /^(Mostrar|Ocultar) mapa$/ });
+const mapButton = (page: Page) => page.getByRole("button", { name: "Mapa", exact: true });
 const markers = (page: Page) => page.locator(".leaflet-marker-icon");
 /** O invólucro do marcador tem tamanho zero (é só o foco e os atributos): a pílula é o que se vê e clica. */
 const marker = (page: Page, id: number) =>
@@ -24,7 +24,7 @@ test.beforeEach(({ isMobile }, testInfo) => {
 });
 
 test.describe("mapa dos resultados", () => {
-  test("Mostrar mapa grava map=1 sem nova entrada no histórico e mostra um marcador por hotel", async ({
+  test("ligar o mapa grava map=1 sem nova entrada no histórico e mostra um marcador por hotel", async ({
     page,
   }) => {
     await page.goto(searchPath());
@@ -35,7 +35,7 @@ test.describe("mapa dos resultados", () => {
     await expect(page).toHaveURL(/[?&]map=1/);
     expect(await page.evaluate(() => history.length)).toBe(before);
     await expect(mapButton(page)).toHaveAttribute("aria-pressed", "true");
-    await expect(mapButton(page)).toHaveText("Ocultar mapa");
+    await expect(mapButton(page)).toHaveText("Mapa");
     await expect(page.locator(MAP)).toBeVisible();
     await expect(markers(page)).toHaveCount(10);
     await expect(cards(page)).toHaveCount(10);

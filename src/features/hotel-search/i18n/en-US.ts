@@ -98,8 +98,7 @@ export const enUS: HotelSearchMessages = {
     more: "more",
   },
   map: {
-    show: "Show map",
-    hide: "Hide map",
+    toggle: "Map",
     region: "Results map",
     skip: "Skip map",
     loading: "Loading map…",

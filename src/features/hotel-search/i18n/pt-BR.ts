@@ -102,8 +102,7 @@ export const ptBR = {
     more: "a mais",
   },
   map: {
-    show: "Mostrar mapa",
-    hide: "Ocultar mapa",
+    toggle: "Mapa",
     region: "Mapa dos resultados",
     skip: "Pular o mapa",
     loading: "Carregando mapa…",
