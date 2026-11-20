@@ -14,6 +14,7 @@ export type FilterChange =
   | { type: "toggleAmenity"; value: Amenity }
   | { type: "setSort"; value: SortOption }
   | { type: "setView"; value: ListMode }
+  | { type: "toggleMap" }
   | { type: "clear" };
 
 const toggle = <T>(list: readonly T[], value: T): T[] =>
@@ -33,9 +34,11 @@ const applyChange = (filters: SearchFilters, change: FilterChange): SearchFilter
       return { ...filters, sort: change.value };
     case "setView":
       return { ...filters, view: change.value };
+    case "toggleMap":
+      return { ...filters, map: !filters.map };
     case "clear":
-      // Ordenar e escolher o modo de exibição não são filtrar: sobrevivem.
-      return { ...DEFAULT_FILTERS, sort: filters.sort, view: filters.view };
+      // Ordenar, escolher o modo de exibição e abrir o mapa não são filtrar: sobrevivem.
+      return { ...DEFAULT_FILTERS, sort: filters.sort, view: filters.view, map: filters.map };
     default: {
       const unreachable: never = change;
       return unreachable;
@@ -44,10 +47,11 @@ const applyChange = (filters: SearchFilters, change: FilterChange): SearchFilter
 };
 
 /**
- * Reducer puro das mudanças de filtro. Toda ação volta para a página 1. A lista resultante é
- * normalizada (ordem do enum, sem duplicatas) por `serializeSearchFilters` ao gravar na URL.
+ * Reducer puro das mudanças de filtro. Toda ação volta para a página 1, exceto abrir/fechar o mapa
+ * (só muda como a página atual é exibida). A lista resultante é normalizada (ordem do enum, sem
+ * duplicatas) por `serializeSearchFilters` ao gravar na URL.
  */
-export const applyFilterChange = (filters: SearchFilters, change: FilterChange): SearchFilters => ({
-  ...applyChange(filters, change),
-  page: 1,
-});
+export const applyFilterChange = (filters: SearchFilters, change: FilterChange): SearchFilters =>
+  change.type === "toggleMap"
+    ? applyChange(filters, change)
+    : { ...applyChange(filters, change), page: 1 };

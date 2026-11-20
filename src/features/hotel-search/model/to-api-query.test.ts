@@ -36,6 +36,7 @@ describe("toHotelsApiQuery", () => {
           amenities: [],
           sort: "rating-desc",
           view: "pages",
+          map: false,
           page: 2,
         },
         "rating-desc",

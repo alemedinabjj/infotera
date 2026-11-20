@@ -57,6 +57,18 @@ describe("applyFilterChange", () => {
     );
   });
 
+  it("toggleMap abre e fecha o mapa e não volta a página para 1", () => {
+    const opened = applyFilterChange(ON_PAGE_3, { type: "toggleMap" });
+    expect(opened.map).toBe(true);
+    expect(opened.page).toBe(3);
+    expect(applyFilterChange(opened, { type: "toggleMap" })).toEqual({ ...opened, map: false });
+  });
+
+  it("clear mantém o mapa aberto", () => {
+    const withMap = { ...ON_PAGE_3, map: true };
+    expect(applyFilterChange(withMap, { type: "clear" }).map).toBe(true);
+  });
+
   it("clear zera preço, nota, tipos e comodidades e mantém ordenação e modo", () => {
     expect(applyFilterChange(ON_PAGE_3, { type: "clear" })).toEqual({
       ...DEFAULT_FILTERS,
