@@ -158,6 +158,20 @@ test("/hotel/999/photos/1: 'Hotel não encontrado' da F4, não 'Foto não encont
   await expect(page).toHaveTitle("Hotel não encontrado | Infotera Hotéis");
 });
 
+test.describe("página cheia sem JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("a foto da URL aparece e as setas (que não fazem nada sem JS) ficam escondidas", async ({
+    page,
+  }) => {
+    await page.goto("/hotel/1/photos/2");
+    await expect(page.getByRole("heading", { level: 1, name: `Fotos de ${NAME}` })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Voltar para o hotel" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Próxima foto" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Foto anterior" })).toBeHidden();
+  });
+});
+
 test.describe("acessibilidade e 320 px (critérios 27 e 28)", () => {
   test("axe no modal aberto e na página cheia; sem scroll horizontal", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });

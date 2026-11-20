@@ -94,6 +94,25 @@ test.describe("modal da foto: ciclos de abrir e fechar (critérios 14 e 15)", ()
     await expect(page).toHaveURL(/\/hotel\/1\?/);
   });
 
+  test("avançar a foto, fechar com Esc e reabrir por 'Ver todas' volta à Foto 1 de 5", async ({
+    page,
+  }) => {
+    await page.goto(hotelPath(1));
+    await waitForHydration(page);
+    await openAll(page);
+    await expectOpenModal(page, "Foto 1 de 5");
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    await expectOpenModal(page, "Foto 3 de 5");
+    await page.keyboard.press("Escape");
+    await expect(dialog(page)).toBeHidden();
+    await expect(page).toHaveURL(/\/hotel\/1\?/);
+
+    await openAll(page);
+    await expectOpenModal(page, "Foto 1 de 5");
+    await expect(page).toHaveURL(/\/hotel\/1\/photos\/1$/);
+  });
+
   test("página cheia: Próxima, Voltar para o hotel e Voltar do navegador mostram a foto da URL", async ({
     page,
   }) => {

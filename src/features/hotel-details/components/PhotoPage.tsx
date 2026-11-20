@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Hotel } from "@/shared/api/schemas";
 import type { Locale } from "@/shared/i18n/config";
 import { localizePath } from "@/shared/i18n/paths";
+import { cn } from "@/shared/lib/cn";
 import { buttonClassName, ChevronLeftIcon } from "@/shared/ui";
 import { hotelDetailsMessages } from "../i18n/messages";
 import { PhotoViewer } from "./PhotoViewer";
@@ -22,8 +23,12 @@ export const PhotoPage = ({ locale, hotel, index }: PhotoPageProps) => {
     <div className="flex w-full flex-col gap-4 lg:mx-auto lg:max-w-4xl">
       <Link
         href={localizePath(locale, `/hotel/${hotel.id}`)}
-        // `-ml-4` compensa o padding do ghost: o texto alinha com o h1 e com a moldura.
-        className={`${buttonClassName({ variant: "ghost" })} -ml-4 self-start`}
+        // `-ml-4` compensa o padding do ghost (texto alinhado ao h1 e à moldura); o anel de foco fica por dentro
+        // (`-outline-offset-2`), senão `-ml-4` o corta na borda da tela abaixo de `sm`.
+        className={cn(
+          buttonClassName({ variant: "ghost" }),
+          "-ml-4 self-start focus-visible:-outline-offset-2",
+        )}
       >
         <ChevronLeftIcon aria-hidden="true" className="size-5" />
         {t.photoPage.back}

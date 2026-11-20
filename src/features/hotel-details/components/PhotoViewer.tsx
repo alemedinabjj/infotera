@@ -10,6 +10,8 @@ import { photoPageTitle } from "../model/photo-route";
 import { PhotoControls } from "./PhotoControls";
 import { PhotoFrame, PhotoNeighbors } from "./PhotoFrame";
 
+const HIDE_CONTROLS_RULE = "[data-photo-controls]{display:none!important}";
+
 type PhotoViewerProps = {
   hotelId: number;
   name: string;
@@ -73,6 +75,10 @@ export const PhotoViewer = ({
           counterId={counterId}
         />
       ) : null}
+      {/* Sem JS as setas não fazem nada: o `<noscript>` as esconde (a foto da URL continua à mostra). */}
+      <noscript>
+        <style>{HIDE_CONTROLS_RULE}</style>
+      </noscript>
       {several ? <PhotoNeighbors images={images} index={viewer.index} /> : null}
     </div>
   );

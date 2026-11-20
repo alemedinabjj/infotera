@@ -31,7 +31,7 @@ export const PhotoControls = ({
   // Anel branco no modal (o `primary` sobre `bg-fg` não passa 3:1); na página, o anel `focus` padrão.
   const arrow = variant === "overlay" ? "text-fg" : undefined;
   return (
-    <div className={cn("flex items-center justify-between", className)}>
+    <div data-photo-controls="" className={cn("flex items-center justify-between", className)}>
       <IconButton
         aria-label={t.previous}
         variant={variant}
