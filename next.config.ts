@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
   // PPR: no 16.x é `cacheComponents` (F7c, Decisão 1). `partialPrefetching` evita o warning da doc.
   cacheComponents: true,
   partialPrefetching: true,
+  // A única Server Action é a reserva: o maior envio possível (3 quartos, hóspedes, contato, cupom) fica
+  // bem abaixo de 16 KB. O padrão (1 MB) só convidaria abuso.
+  experimental: { serverActions: { bodySizeLimit: "64kb" } },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
