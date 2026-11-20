@@ -1,11 +1,11 @@
 "use client";
 
 import type { UseQueryResult } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { useLocale } from "@/shared/i18n/client";
 import { localizePath } from "@/shared/i18n/paths";
+import { assignLocation } from "@/shared/lib/navigation";
 import { type RoomSelection, useBookingDraftActions } from "@/shared/stores/booking-draft";
 import { readDraftCouponCode } from "./checkout-initial";
 import { useCheckoutForm } from "./useCheckoutForm";
@@ -24,11 +24,10 @@ type FlowOptions = {
 
 /**
  * Junta as peças do checkout: quartos (optimistic), cupom, preço, formulário de 3 passos e envio.
- * Ao criar a reserva: congela a seleção, apaga o rascunho, `router.replace` para a confirmação e
+ * Ao criar a reserva: congela a seleção, apaga o rascunho, carga de documento para a confirmação (`assignLocation`) e
  * só então limpa o `booking-draft` (a página não redireciona para `/`: o gate está em `leaving`).
  */
 export const useCheckoutFlow = ({ selection, hotel, room, onLeaving }: FlowOptions) => {
-  const router = useRouter();
   const locale = useLocale();
   const { clearSelection } = useBookingDraftActions();
   const roomCount = useRoomCount(selection, room.data);
@@ -45,7 +44,8 @@ export const useCheckoutFlow = ({ selection, hotel, room, onLeaving }: FlowOptio
     onCreated: (bookingId) => {
       onLeaving(current);
       checkout.clearDraft();
-      router.replace(localizePath(locale, `/confirmation/${bookingId}`));
+      // Carga de documento: descarta o heap da página que tinha o cartão (Activity, F7c Decisão 10).
+      assignLocation(localizePath(locale, `/confirmation/${bookingId}`));
       clearSelection();
     },
     onCouponRejected: (code, reason) => {

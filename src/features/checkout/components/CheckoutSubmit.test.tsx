@@ -1,7 +1,7 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { navigationSpies } from "@/shared/testing/next-navigation";
+import { assignLocation } from "@/shared/lib/navigation";
 import { useToastStore } from "@/shared/ui/toast/toast-store";
 import { createBookingAction } from "../api/create-booking.action";
 import { calculatePrice } from "../model/price";
@@ -20,6 +20,7 @@ vi.mock(
   "next/navigation",
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
 );
+vi.mock("@/shared/lib/navigation", () => ({ assignLocation: vi.fn(), reloadPage: vi.fn() }));
 vi.mock("../api/create-booking.action", () => ({ createBookingAction: vi.fn() }));
 
 const action = vi.mocked(createBookingAction);
@@ -32,7 +33,7 @@ const consoleSpies = ["log", "info", "warn", "error", "debug"].map((method) =>
 beforeEach(async () => {
   for (const spy of consoleSpies) spy.mockImplementation(() => undefined);
   action.mockReset();
-  navigationSpies.replace.mockClear();
+  vi.mocked(assignLocation).mockClear();
   useToastStore.setState({ toasts: [] });
   stubLoadedDocument();
   happyApi();
@@ -89,14 +90,12 @@ describe("envio (critério 28)", () => {
     });
   });
 
-  it("sucesso: replace para a confirmação, storage limpo e nenhum redirect para `/`", async () => {
+  it("sucesso: carga de documento para a confirmação, storage limpo e nenhum redirect para `/`", async () => {
     const user = await toConfirm();
     action.mockResolvedValue({ status: "created", bookingId: ID });
     await clickButton(user, "Confirmar reserva");
-    await waitFor(() =>
-      expect(navigationSpies.replace).toHaveBeenCalledWith(`/confirmation/${ID}`),
-    );
-    expect(navigationSpies.replace).not.toHaveBeenCalledWith("/");
+    await waitFor(() => expect(assignLocation).toHaveBeenCalledWith(`/confirmation/${ID}`));
+    expect(assignLocation).not.toHaveBeenCalledWith("/");
     expect(sessionStorage.getItem("infotera:checkout-draft")).toBeNull();
     expect(sessionStorage.getItem("infotera:booking-draft")).toBeNull();
     // O formulário continua na tela (estado `leaving`), ainda em "Confirmando reserva…".
@@ -120,7 +119,7 @@ describe("falhas e retry (critério 30)", () => {
 
     action.mockResolvedValueOnce({ status: "created", bookingId: ID });
     await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
-    await waitFor(() => expect(navigationSpies.replace).toHaveBeenCalled());
+    await waitFor(() => expect(assignLocation).toHaveBeenCalled());
     const [first, second] = action.mock.calls.map((call) => call[0]);
     expect(first).toMatchObject({ attemptId: expect.stringMatching(/^[0-9a-f-]{36}$/) });
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
@@ -138,7 +137,7 @@ describe("falhas e retry (critério 30)", () => {
     action.mockResolvedValueOnce({ status: "created", bookingId: ID });
     online.mockReturnValue(true);
     await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
-    await waitFor(() => expect(navigationSpies.replace).toHaveBeenCalled());
+    await waitFor(() => expect(assignLocation).toHaveBeenCalled());
     online.mockRestore();
   });
 
