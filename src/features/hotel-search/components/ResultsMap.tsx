@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { Hotel } from "@/shared/api/schemas";
 import { useOnline } from "@/shared/hooks/useOnline";
 import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
@@ -126,6 +126,18 @@ export const ResultsMap = (props: ResultsMapProps) => {
   const load = useInteractiveMap(online);
   const revealCard = useMapSync((state) => state.revealCard);
   const firstId = props.hotels[0]?.id;
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Depois de "Tentar de novo" o botão some com o alerta: quando o mapa chega, o foco vai para ele (nunca para o `body`).
+  const failed = useRef(false);
+  useEffect(() => {
+    if (load.status === "error") failed.current = true;
+    if (load.status !== "ready" || !failed.current) return;
+    failed.current = false;
+    panelRef.current
+      ?.querySelector<HTMLElement>(".leaflet-container")
+      ?.focus({ preventScroll: true });
+  }, [load.status]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -138,7 +150,7 @@ export const ResultsMap = (props: ResultsMapProps) => {
           if (firstId !== undefined) revealCard?.(firstId);
         }}
       />
-      <div id={props.id} className={PANEL}>
+      <div id={props.id} ref={panelRef} className={PANEL}>
         <PanelBody {...props} load={load} online={online} />
       </div>
     </div>

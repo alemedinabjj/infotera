@@ -203,6 +203,8 @@ test.describe("estados do painel", () => {
     await alert.getByRole("button", { name: "Tentar de novo" }).click();
     await expect(markers(page).first().locator("span")).toBeVisible();
     await expect(alert).toHaveCount(0);
+    // O botão de retry sumiu com o alerta: o foco vai para o mapa, não para o body.
+    await expect(page.locator(MAP)).toBeFocused();
   });
 
   test("lista com erro: o painel some e o botão continua pressionado", async ({ page }) => {
