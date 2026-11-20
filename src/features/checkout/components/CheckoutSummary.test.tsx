@@ -87,14 +87,17 @@ describe("erro por seção (critério 9)", () => {
     });
     renderCheckout();
     await user.type(await screen.findByLabelText("Nome"), "Ana");
-    expect(await screen.findByText("Não foi possível carregar o preço.")).toBeVisible();
-    expect(screen.getByText("Quarto indisponível no momento")).toBeVisible();
-    expect(screen.getByText("Total indisponível")).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { name: "Não foi possível carregar os dados da reserva." }),
+    ).toBeVisible();
+    expect(screen.queryByText("Quarto indisponível no momento")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Tentar de novo" })).toHaveLength(1);
+    expect(screen.getAllByText("Total não carregado — tente de novo")).toHaveLength(2);
     failing = false;
     await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
     await waitFor(() => expect(plain(summary().textContent)).toContain("TotalR$ 4.140,00"));
     expect(screen.getByLabelText("Nome")).toHaveValue("Ana");
-    expect(screen.queryByText("Não foi possível carregar o preço.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Total não carregado — tente de novo")).not.toBeInTheDocument();
   });
 
   it("erro do hotel: só o topo do resumo mostra erro; datas e preço seguem", async () => {
@@ -107,7 +110,7 @@ describe("erro por seção (critério 9)", () => {
     });
     renderCheckout();
     expect(
-      await screen.findByRole("heading", { name: "Não foi possível carregar os dados do hotel." }),
+      await screen.findByRole("heading", { name: "Não foi possível carregar os dados da reserva." }),
     ).toBeVisible();
     expect(plain(summary().textContent)).toContain("TotalR$ 4.140,00");
     expect(plain(summary().textContent)).toContain("3 noites");

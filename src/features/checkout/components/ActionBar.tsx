@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { formatCents } from "@/shared/lib/price-breakdown";
 import { Skeleton } from "@/shared/ui";
 import type { CheckoutPrice } from "../hooks/checkout-price";
-import { describeNightsAndRooms } from "../model/price-labels";
+import { describeNightsAndRooms, TOTAL_NOT_LOADED } from "../model/price-labels";
 
 type ActionBarProps = {
   price: CheckoutPrice;
@@ -16,7 +16,7 @@ const TotalValue = ({ price }: { price: CheckoutPrice }) => {
     case "loading":
       return <Skeleton className="h-7 w-28" />;
     case "error":
-      return <span className="text-sm text-fg-muted">Total indisponível</span>;
+      return <span className="text-sm font-normal text-fg-muted">{TOTAL_NOT_LOADED}</span>;
     case "ready":
       return <span>{formatCents(price.result.quote.totalCents)}</span>;
     default: {
