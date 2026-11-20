@@ -15,6 +15,17 @@ test.beforeEach(async ({ page }) => {
 
 const loadingDialog = (page: Page) => page.getByRole("dialog", { name: "Fotos do hotel" });
 
+/**
+ * Atrasa só os requests RSC da foto 1 (header `rsc`; o documento e os assets passam direto). Vale
+ * **antes** de abrir o hotel: no build o Next já prefetch a rota ao ver o link, e é esse prefetch lento
+ * que o clique espera.
+ */
+const slowPhotoRoute = (page: Page) =>
+  page.route(/\/hotel\/1\/photos\/1/, async (route) => {
+    if (route.request().headers().rsc) await new Promise((r) => setTimeout(r, SLOW_MS));
+    await route.continue();
+  });
+
 const openHotel = async (page: Page, hotelId: number) => {
   await page.goto(hotelPath(hotelId));
   await waitForHydration(page);
@@ -25,12 +36,8 @@ test.describe("rota da foto lenta (critério 18)", () => {
   test("o modal de carregamento aparece na hora do clique, com Fechar, spinner e texto", async ({
     page,
   }) => {
+    await slowPhotoRoute(page);
     const seeAll = await openHotel(page, 1);
-    // Só o request RSC da navegação (header `rsc`); o documento e os assets passam direto.
-    await page.route(/\/hotel\/1\/photos\/1/, async (route) => {
-      if (route.request().headers().rsc) await new Promise((r) => setTimeout(r, SLOW_MS));
-      await route.continue();
-    });
     const clickedAt = Date.now();
     await seeAll.click();
     const loading = loadingDialog(page);
@@ -46,11 +53,8 @@ test.describe("rota da foto lenta (critério 18)", () => {
   });
 
   test("Fechar durante o carregamento volta ao hotel e o foco volta ao link", async ({ page }) => {
+    await slowPhotoRoute(page);
     const seeAll = await openHotel(page, 1);
-    await page.route(/\/hotel\/1\/photos\/1/, async (route) => {
-      if (route.request().headers().rsc) await new Promise((r) => setTimeout(r, SLOW_MS));
-      await route.continue();
-    });
     await seeAll.click();
     await loadingDialog(page).getByRole("button", { name: "Fechar" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);

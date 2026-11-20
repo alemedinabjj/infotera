@@ -27,6 +27,10 @@ const expectOpenModal = async (page: Page, counter: string) => {
   expect(await isModal(page)).toBe(true);
 };
 
+/** Contador do visualizador da página cheia (o grupo evita casar com a cópia ainda oculta do HTML em streaming). */
+const counter = (page: Page, text: string) =>
+  page.getByRole("group", { name: `Fotos de ${NAME}` }).getByText(text, { exact: true });
+
 /** Alterna os gatilhos: "Ver todas" (ciclos ímpares) e a foto principal (pares); as duas abrem a foto 1. */
 const openAll = async (page: Page, cycle = 1) => {
   const link =
@@ -94,14 +98,14 @@ test.describe("modal da foto: ciclos de abrir e fechar (critérios 14 e 15)", ()
     page,
   }) => {
     await page.goto("/hotel/1/photos/3");
-    await expect(page.getByText("Foto 3 de 5", { exact: true })).toBeVisible();
+    await expect(counter(page, "Foto 3 de 5")).toBeVisible();
     await page.getByRole("button", { name: "Próxima foto" }).click();
-    await expect(page.getByText("Foto 4 de 5", { exact: true })).toBeVisible();
+    await expect(counter(page, "Foto 4 de 5")).toBeVisible();
     await page.getByRole("link", { name: "Voltar para o hotel" }).click();
     await expect(page).toHaveURL(/\/hotel\/1$/);
     await page.goBack();
     await expect(page).toHaveURL(/\/hotel\/1\/photos\/4$/);
-    await expect(page.getByText("Foto 4 de 5", { exact: true })).toBeVisible();
+    await expect(counter(page, "Foto 4 de 5")).toBeVisible();
     await expect(page).toHaveTitle(`Foto 4 de 5 · ${NAME} | Infotera Hotéis`);
   });
 });
