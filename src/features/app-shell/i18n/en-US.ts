@@ -12,8 +12,9 @@ export const enUS: AppShellMessages = {
   install: {
     title: "Install Infotera Hotéis",
     description: "Open your searches faster, even offline.",
-    install: "Install",
+    install: "Install app",
     dismiss: "Not now",
+    dismissed: "No problem. You can install it later from the browser menu.",
     installed: "App installed.",
   },
   update: {

@@ -13,8 +13,9 @@ export const ptBR = {
   install: {
     title: "Instale o Infotera Hotéis",
     description: "Abra suas buscas mais rápido, até sem internet.",
-    install: "Instalar",
+    install: "Instalar app",
     dismiss: "Agora não",
+    dismissed: "Tudo bem. Você pode instalar depois pelo menu do navegador.",
     installed: "App instalado.",
   },
   update: {
