@@ -18,10 +18,14 @@ export type MapMarker = {
 export type MapLabels = {
   /** Nome da região do mapa (`aria-label` do contêiner focável). */
   region: string;
-  /** Dica visível de teclado, ligada por `aria-describedby`. */
-  hint: string;
   zoomIn: string;
   zoomOut: string;
   closePopup: string;
   attribution: string;
+};
+
+/** O que o popup recebe para se montar: como fechar e o id do título (`aria-labelledby` do diálogo). */
+export type PopupApi = {
+  close: () => void;
+  titleId: string;
 };

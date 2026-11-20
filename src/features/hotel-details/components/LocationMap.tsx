@@ -5,7 +5,11 @@ import { osmLink } from "@/shared/lib/geo";
 import { OSM_COPYRIGHT_URL, tileUrl } from "@/shared/lib/map-tiles";
 import { MapPinIcon } from "@/shared/ui";
 import { hotelDetailsMessages } from "../i18n/messages";
-import { staticMapLayout } from "../model/static-map";
+import {
+  STATIC_MAP_FRAMES,
+  type StaticMap as StaticMapLayout,
+  staticMapLayout,
+} from "../model/static-map";
 import { InteractiveLocationMap } from "./InteractiveLocationMap";
 import { MapTile } from "./MapTile";
 import { Section } from "./Section";
@@ -14,45 +18,58 @@ const ZOOM = 15;
 
 type StaticMapProps = { hotel: Hotel; locale: Locale };
 
+type CanvasProps = {
+  layout: StaticMapLayout;
+  label: string;
+  /** Visibilidade por breakpoint: só uma das proporções aparece (a outra é `display: none`). */
+  className: string;
+};
+
+/** Tiles do OpenStreetMap posicionados em % e o marcador no ponto, numa proporção. */
+const StaticCanvas = ({ layout, label, className }: CanvasProps) => (
+  <div role="img" aria-label={label} className={`absolute inset-0 ${className}`}>
+    {layout.tiles.map((tile) => (
+      <MapTile
+        key={`${tile.x}/${tile.y}`}
+        src={tileUrl(tile)}
+        style={{
+          left: `${tile.leftPct}%`,
+          top: `${tile.topPct}%`,
+          width: `${tile.sizePct.w}%`,
+          height: `${tile.sizePct.h}%`,
+        }}
+      />
+    ))}
+    <MapPinIcon
+      aria-hidden="true"
+      className="absolute size-8 -translate-x-1/2 -translate-y-full text-primary"
+      style={{ left: `${layout.marker.leftPct}%`, top: `${layout.marker.topPct}%` }}
+    />
+  </div>
+);
+
 /**
- * Mapa estático (RSC, sem JS): tiles do OpenStreetMap posicionados em % por `staticMapLayout` e o
- * marcador no ponto. É a base da moldura de `InteractiveLocationMap` (o Leaflet entra por cima).
- * A atribuição fica fora do `role="img"` (filhos de `img` são apresentacionais e o link sumiria).
+ * Mapa estático (RSC, sem JS), na proporção da moldura: 4:3 abaixo de `sm` e 2:1 a partir de `sm`
+ * (a troca é CSS, sem layout shift; o canvas oculto não carrega os tiles). É a base da moldura de
+ * `InteractiveLocationMap` (o Leaflet entra por cima). A atribuição fica fora do `role="img"`
+ * (filhos de `img` são apresentacionais e o link sumiria).
  */
 const StaticMap = ({ hotel, locale }: StaticMapProps) => {
   const t = hotelDetailsMessages.get(locale).location;
-  const map = staticMapLayout({
-    lat: hotel.latitude,
-    lon: hotel.longitude,
-    zoom: ZOOM,
-    width: 640,
-    height: 320,
-  });
+  const label = t.mapRegion({ address: hotel.address });
+  const at = { lat: hotel.latitude, lon: hotel.longitude, zoom: ZOOM };
   return (
     <>
-      <div
-        role="img"
-        aria-label={t.mapRegion({ address: hotel.address })}
-        className="absolute inset-0"
-      >
-        {map.tiles.map((tile) => (
-          <MapTile
-            key={`${tile.x}/${tile.y}`}
-            src={tileUrl(tile)}
-            style={{
-              left: `${tile.leftPct}%`,
-              top: `${tile.topPct}%`,
-              width: `${tile.sizePct.w}%`,
-              height: `${tile.sizePct.h}%`,
-            }}
-          />
-        ))}
-        <MapPinIcon
-          aria-hidden="true"
-          className="absolute size-8 -translate-x-1/2 -translate-y-full text-primary"
-          style={{ left: `${map.marker.leftPct}%`, top: `${map.marker.topPct}%` }}
-        />
-      </div>
+      <StaticCanvas
+        layout={staticMapLayout({ ...at, ...STATIC_MAP_FRAMES.compact })}
+        label={label}
+        className="sm:hidden"
+      />
+      <StaticCanvas
+        layout={staticMapLayout({ ...at, ...STATIC_MAP_FRAMES.wide })}
+        label={label}
+        className="hidden sm:block"
+      />
       <p className="absolute right-0 bottom-0 bg-surface/90 px-2 py-0.5 text-xs">
         <a
           href={OSM_COPYRIGHT_URL}

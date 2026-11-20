@@ -10,7 +10,10 @@ vi.mock(
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
 );
 vi.mock("@/shared/hooks/useOnline", () => ({ useOnline: () => true }));
-vi.mock("@/shared/ui/map", () => ({ useInteractiveMap: () => ({ status: "loading" }) }));
+vi.mock("@/shared/ui/map", () => ({
+  useInteractiveMap: () => ({ status: "loading" }),
+  MapHint: ({ id }: { id: string }) => <p id={id} />,
+}));
 
 const hotels = [makeHotel({ id: 1 }), makeHotel({ id: 2, name: "Outro" })];
 

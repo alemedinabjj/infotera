@@ -14,6 +14,11 @@ const enabledCalls = vi.hoisted((): boolean[] => []);
 
 vi.mock("@/shared/hooks/useOnline", () => ({ useOnline: () => state.online }));
 vi.mock("@/shared/ui/map", () => ({
+  MapHint: ({ id, text, active }: { id: string; text: string; active?: boolean }) => (
+    <p id={id} data-testid="hint">
+      {active ? text : null}
+    </p>
+  ),
   useInteractiveMap: (enabled: boolean): InteractiveMapLoad => {
     enabledCalls.push(enabled);
     return enabled ? state.load : { status: "idle" };
@@ -138,7 +143,7 @@ describe("InteractiveLocationMap", () => {
   });
 
   it("chunk com erro ou carregando: o estático continua", () => {
-    state.load = { status: "error", retry: vi.fn() };
+    state.load = { status: "error", retry: vi.fn(), retrying: false };
     renderMap();
     arriveInViewport();
     expect(screen.queryByTestId("leaflet")).not.toBeInTheDocument();
@@ -159,6 +164,36 @@ describe("InteractiveLocationMap", () => {
         tone: "default",
       },
     ]);
+  });
+
+  it("a dica de teclado fica fora da moldura, reservada, e só tem texto com o mapa interativo visível", () => {
+    const { container } = renderMap();
+    const hint = screen.getByTestId("hint");
+    expect(hint).toBeEmptyDOMElement();
+    expect(container.querySelector(".aspect-\\[4\\/3\\]")?.contains(hint)).toBe(false);
+    arriveInViewport();
+    expect(lastProps?.hintId).toBe(hint.id);
+    act(() => lastProps?.onTilesLoad?.());
+    expect(screen.getByTestId("hint")).toHaveTextContent("Setas movem o mapa; + e − mudam o zoom.");
+  });
+
+  it("a moldura é 4:3 abaixo de sm e 2:1 a partir de sm", () => {
+    const { container } = renderMap();
+    const frame = container.querySelector("[class*='aspect-']");
+    expect(frame?.className).toContain("aspect-[4/3] ");
+    expect(frame?.className).toContain("sm:aspect-[2/1]");
+  });
+
+  it("o popup mostra só o nome do hotel, nomeando o diálogo pelo id recebido", () => {
+    renderMap();
+    arriveInViewport();
+    render(
+      <div>
+        {lastProps?.renderPopup?.(String(hotel.id), { close: vi.fn(), titleId: "titulo" })}
+      </div>,
+    );
+    expect(screen.getByRole("heading", { name: hotel.name })).toHaveAttribute("id", "titulo");
+    expect(screen.queryByText(hotel.address)).not.toBeInTheDocument();
   });
 
   it("em en-US os rótulos vêm em inglês", () => {

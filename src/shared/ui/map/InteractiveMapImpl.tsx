@@ -2,24 +2,15 @@
 
 import "leaflet/dist/leaflet.css";
 import "./map.css";
-import type { Marker as LeafletMarker, PopupEvent } from "leaflet";
 import { useReducedMotion } from "motion/react";
-import {
-  memo,
-  type ReactNode,
-  useEffect,
-  useEffectEvent,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { AttributionControl, MapContainer, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { cn } from "../../lib/cn";
 import { FIT_MAX_ZOOM, FIT_PADDING, fitPlan, type LatLng } from "../../lib/geo";
-import { MAX_ZOOM, OSM_COPYRIGHT_URL, TILE_URL } from "../../lib/map-tiles";
-import { createMarkerIcon, decorateMarkerElement } from "./MapMarkerElement";
-import type { MapLabels, MapMarker } from "./types";
+import { MAX_ZOOM, TILE_URL } from "../../lib/map-tiles";
+import { attributionHtml } from "./attribution";
+import { MarkerItem } from "./MapMarkerItem";
+import type { MapLabels, MapMarker, PopupApi } from "./types";
 
 const DEFAULT_CENTER: LatLng = { lat: -14.235, lng: -51.9253 };
 const DEFAULT_ZOOM = 4;
@@ -32,13 +23,19 @@ export type InteractiveMapProps = {
   activeId?: string | null;
   onActiveChange?: (id: string | null) => void;
   onSelect?: (id: string) => void;
-  /** Conteúdo do popup do marcador (sem ele o marcador não abre popup); `close` fecha o popup. */
-  renderPopup?: (id: string, close: () => void) => ReactNode;
+  /**
+   * Conteúdo do popup do marcador (sem ele o marcador não abre popup). Receba `popup.titleId` no título
+   * (nomeia o diálogo) e `popup.close` para fechar. O botão × é do mapa. Passe uma função estável
+   * (`useCallback`): o `memo` dos marcadores depende dela.
+   */
+  renderPopup?: (id: string, popup: PopupApi) => ReactNode;
   /** Primeiro lote de tiles carregado (a ilha do hotel troca o mapa estático nesse momento). */
   onTilesLoad?: () => void;
   /** O lote terminou e **nenhum** tile veio (sem rede, bloqueio): quem chamou mantém o plano B. */
   onTilesError?: () => void;
   labels: MapLabels;
+  /** Id da dica de teclado (`MapHint`, fora da moldura): vira o `aria-describedby` do contêiner. */
+  hintId: string;
   className?: string;
 };
 
@@ -70,14 +67,14 @@ const FitToMarkers = ({ markers, reduced }: { markers: readonly MapMarker[] } & 
 };
 
 /** Nome e descrição no contêiner focável do Leaflet (o leitor de tela anuncia ao focar) e `data-zoom`. */
-const MapAccessibility = ({ labels, hintId }: { labels: MapLabels; hintId: string }) => {
+const MapAccessibility = ({ region, hintId }: { region: string; hintId: string }) => {
   const map = useMap();
   useEffect(() => {
     const container = map.getContainer();
     container.setAttribute("role", "region");
-    container.setAttribute("aria-label", labels.region);
+    container.setAttribute("aria-label", region);
     container.setAttribute("aria-describedby", hintId);
-  }, [map, labels.region, hintId]);
+  }, [map, region, hintId]);
   // `data-zoom` expõe o nível atual (os testes E2E leem; tiles em cache não geram novo request).
   useEffect(() => {
     const container = map.getContainer();
@@ -91,151 +88,13 @@ const MapAccessibility = ({ labels, hintId }: { labels: MapLabels; hintId: strin
   return null;
 };
 
-type MarkerItemProps = {
-  marker: MapMarker;
-  active: boolean;
-  closeLabel: string;
-  onActiveChange: ((id: string | null) => void) | undefined;
-  onSelect: ((id: string) => void) | undefined;
-  renderPopup: ((id: string, close: () => void) => ReactNode) | undefined;
-};
-
-const FOCUSABLE = "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])";
-
-type PopupBodyProps = {
-  focusOnMount: boolean;
-  closeLabel: string;
-  /** Esc dentro do popup (conteúdo ou botão ×). */
-  onEscape: () => void;
-  children: ReactNode;
-};
-
-/**
- * Conteúdo do popup. O Leaflet só monta o conteúdo (portal do React) depois de abrir, então é aqui
- * que dá para: nomear o botão × (o Leaflet fixa "Close popup" em inglês), tratar o Esc (o teclado do
- * mapa só escuta com o contêiner focado) e, aberto por teclado, levar o foco ao primeiro controle
- * (senão o próximo Tab iria para o marcador seguinte).
- */
-const PopupBody = ({ focusOnMount, closeLabel, onEscape, children }: PopupBodyProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const handleEscape = useEffectEvent(onEscape);
-
-  useEffect(() => {
-    const popup = ref.current?.closest(".leaflet-popup");
-    popup?.querySelector(".leaflet-popup-close-button")?.setAttribute("aria-label", closeLabel);
-    const onKeyDown = (event: Event) => {
-      if (event instanceof KeyboardEvent && event.key === "Escape") handleEscape();
-    };
-    popup?.addEventListener("keydown", onKeyDown);
-    return () => popup?.removeEventListener("keydown", onKeyDown);
-  }, [closeLabel]);
-
-  useEffect(() => {
-    if (focusOnMount) {
-      ref.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
-    }
-  }, [focusOnMount]);
-
-  return <div ref={ref}>{children}</div>;
-};
-
-/** Um marcador. `active` vem por seletor, então passar o mouse re-renderiza só dois itens. */
-const MarkerItem = memo(function MarkerItem({
-  marker,
-  active,
-  closeLabel,
-  onActiveChange,
-  onSelect,
-  renderPopup,
-}: MarkerItemProps) {
-  const { id, label, variant, text, tone, position } = marker;
-  const ref = useRef<LeafletMarker | null>(null);
-  const [openedByKeyboard, setOpenedByKeyboard] = useState(false);
-  const notifyActive = useEffectEvent((value: string | null) => onActiveChange?.(value));
-  const notifySelect = useEffectEvent(() => onSelect?.(id));
-  // O ícone depende só do que é desenhado; o destaque é CSS (`data-active`).
-  const icon = useMemo(() => createMarkerIcon({ variant, text, tone }), [variant, text, tone]);
-
-  useEffect(() => {
-    const element = ref.current?.getElement();
-    decorateMarkerElement(element, { id, label }, active);
-    if (!element) return;
-    const enter = () => notifyActive(id);
-    const leave = () => notifyActive(null);
-    // O Leaflet abre o popup no `keypress` Enter sem avisar quem abriu: o `keydown` marca a origem.
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") ref.current?.closePopup();
-      if (event.key !== "Enter") return;
-      setOpenedByKeyboard(true);
-      notifySelect();
-    };
-    element.addEventListener("focus", enter);
-    element.addEventListener("blur", leave);
-    element.addEventListener("keydown", onKeyDown);
-    return () => {
-      element.removeEventListener("focus", enter);
-      element.removeEventListener("blur", leave);
-      element.removeEventListener("keydown", onKeyDown);
-    };
-  }, [id, label, active]);
-
-  /** Esc ou × devolvem o foco ao marcador (o Leaflet 1.9 não devolve); clique fora não rouba foco. */
-  const onPopupClose = (event: PopupEvent) => {
-    const focused = document.activeElement;
-    const insidePopup = Boolean(event.popup.getElement()?.contains(focused));
-    if (insidePopup || focused === document.body) ref.current?.getElement()?.focus();
-  };
-
-  return (
-    <Marker
-      ref={ref}
-      position={position}
-      icon={icon}
-      keyboard
-      zIndexOffset={active ? 1000 : 0}
-      eventHandlers={{
-        click: () => {
-          setOpenedByKeyboard(false);
-          onSelect?.(id);
-        },
-        mouseover: () => onActiveChange?.(id),
-        mouseout: () => onActiveChange?.(null),
-        popupclose: onPopupClose,
-      }}
-    >
-      {renderPopup ? (
-        <Popup>
-          <PopupBody
-            focusOnMount={openedByKeyboard}
-            closeLabel={closeLabel}
-            onEscape={() => ref.current?.closePopup()}
-          >
-            {renderPopup(id, () => ref.current?.closePopup())}
-          </PopupBody>
-        </Popup>
-      ) : null}
-    </Marker>
-  );
-});
-
-const Attribution = ({ text }: { text: string }) => (
-  <p className="absolute right-0 bottom-0 z-[1000] bg-surface/90 px-2 py-0.5 text-xs">
-    <a
-      href={OSM_COPYRIGHT_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-primary underline"
-    >
-      {text}
-    </a>
-  </p>
-);
-
 /**
  * Mapa interativo genérico (Leaflet + tiles OSM). Não sabe o que é hotel: recebe marcadores com
- * texto pronto. Contêiner `isolate relative z-0` (o Leaflet usa z-index até 1000), roda do mouse
- * rola a página (zoom por botões, `+`/`-`, duplo clique e pinça), animações desligadas com
- * `prefers-reduced-motion`, marcador focável com Enter abrindo o popup.
+ * texto pronto. Contêiner `relative z-0` dentro do wrapper `isolate` de quem usa (o Leaflet usa
+ * z-index até 1000 e nada dele pode passar sobre o header); nenhum `z-*` nosso aqui dentro: a
+ * atribuição é o controle nativo. Roda do mouse rola a página (zoom por botões, `+`/`-`, duplo
+ * clique e pinça), animações desligadas com `prefers-reduced-motion`, marcador focável com Enter ou
+ * Espaço abrindo o popup.
  */
 export const InteractiveMapImpl = ({
   center,
@@ -248,10 +107,10 @@ export const InteractiveMapImpl = ({
   onTilesLoad,
   onTilesError,
   labels,
+  hintId,
   className,
 }: InteractiveMapProps) => {
   const reduced = useReducedMotion() ?? false;
-  const hintId = useId();
   const tileCounts = useRef({ ok: 0, failed: 0 });
   // `load` do Leaflet vale também quando todos os tiles falharam: só conta como carregado se algum veio.
   const onLoad = () => {
@@ -260,7 +119,7 @@ export const InteractiveMapImpl = ({
   };
   const idsKey = markers.map((marker) => marker.id).join("|");
   return (
-    <div className={cn("group/map relative isolate z-0", className)}>
+    <div className={cn("relative z-0", className)}>
       <MapContainer
         center={center ?? DEFAULT_CENTER}
         zoom={zoom}
@@ -268,6 +127,7 @@ export const InteractiveMapImpl = ({
         scrollWheelZoom={false}
         zoomControl={false}
         attributionControl={false}
+        zoomSnap={0.5}
         zoomAnimation={!reduced}
         fadeAnimation={!reduced}
         markerZoomAnimation={!reduced}
@@ -276,6 +136,7 @@ export const InteractiveMapImpl = ({
         <TileLayer
           url={TILE_URL}
           maxZoom={MAX_ZOOM}
+          attribution={attributionHtml(labels.attribution)}
           crossOrigin="anonymous"
           eventHandlers={{
             tileload: () => {
@@ -288,7 +149,8 @@ export const InteractiveMapImpl = ({
           }}
         />
         <ZoomControl zoomInTitle={labels.zoomIn} zoomOutTitle={labels.zoomOut} />
-        <MapAccessibility labels={labels} hintId={hintId} />
+        <AttributionControl prefix={false} />
+        <MapAccessibility region={labels.region} hintId={hintId} />
         {center ? null : <FitToMarkers key={idsKey} markers={markers} reduced={reduced} />}
         {markers.map((marker) => (
           <MarkerItem
@@ -302,13 +164,6 @@ export const InteractiveMapImpl = ({
           />
         ))}
       </MapContainer>
-      <p
-        id={hintId}
-        className="pointer-events-none absolute inset-x-2 top-2 z-[1000] rounded-control bg-surface/95 px-2 py-1 text-center text-xs text-fg-muted opacity-0 shadow-card group-focus-within/map:opacity-100"
-      >
-        {labels.hint}
-      </p>
-      <Attribution text={labels.attribution} />
     </div>
   );
 };

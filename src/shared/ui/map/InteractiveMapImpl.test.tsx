@@ -1,12 +1,11 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { InteractiveMapImpl, type InteractiveMapProps } from "./InteractiveMapImpl";
-import type { MapLabels, MapMarker } from "./types";
+import type { MapLabels, MapMarker, PopupApi } from "./types";
 
 const labels: MapLabels = {
   region: "Mapa dos resultados",
-  hint: "Setas movem o mapa; + e − mudam o zoom.",
   zoomIn: "Ampliar o mapa",
   zoomOut: "Reduzir o mapa",
   closePopup: "Fechar",
@@ -25,12 +24,16 @@ const marker = (id: string, overrides: Partial<MapMarker> = {}): MapMarker => ({
 
 const renderMap = (props: Partial<InteractiveMapProps> = {}) =>
   render(
-    <InteractiveMapImpl
-      markers={[marker("1"), marker("2")]}
-      labels={labels}
-      className="h-80 w-96"
-      {...props}
-    />,
+    <>
+      <p id="dica">Setas movem o mapa; + e − mudam o zoom.</p>
+      <InteractiveMapImpl
+        markers={[marker("1"), marker("2")]}
+        labels={labels}
+        hintId="dica"
+        className="h-80 w-96"
+        {...props}
+      />
+    </>,
   );
 
 /** Enter como o navegador manda: `keydown` e depois `keypress` (o Leaflet abre o popup no segundo). */
@@ -83,23 +86,118 @@ describe("InteractiveMapImpl (Leaflet real no jsdom)", () => {
     expect(onActiveChange).toHaveBeenLastCalledWith(null);
   });
 
-  it("Enter abre o popup com o foco dentro; Esc fecha e o foco volta ao marcador", async () => {
+  const popupContent = (id: string, { titleId }: PopupApi) => (
+    <>
+      <h3 id={titleId}>Hotel {id}</h3>
+      <a href={`/hotel/${id}`}>Ver hotel {id}</a>
+      <button type="button">Mostrar na lista</button>
+    </>
+  );
+
+  it("Enter abre o popup com o foco no primeiro controle; Esc fecha e o foco volta ao marcador", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    renderMap({
-      onSelect,
-      renderPopup: (id) => <a href={`/hotel/${id}`}>Ver hotel {id}</a>,
-    });
+    renderMap({ onSelect, renderPopup: popupContent });
     const first = markerButton(/Hotel 1,/);
     act(() => first.focus());
     pressEnter(first);
     expect(onSelect).toHaveBeenCalledWith("1");
     const link = await screen.findByRole("link", { name: "Ver hotel 1" });
     expect(link).toHaveFocus();
-    expect(screen.getByRole("button", { name: "Fechar" })).toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("link", { name: "Ver hotel 1" })).not.toBeInTheDocument();
     expect(markerButton(/Hotel 1,/)).toHaveFocus();
+  });
+
+  it("Espaço abre o popup como o Enter, sem rolar a página", async () => {
+    renderMap({ renderPopup: popupContent });
+    const first = markerButton(/Hotel 1,/);
+    act(() => first.focus());
+    const notPrevented = fireEvent.keyDown(first, { key: " ", keyCode: 32 });
+    expect(notPrevented).toBe(false);
+    expect(await screen.findByRole("link", { name: "Ver hotel 1" })).toHaveFocus();
+  });
+
+  it("o marcador declara aria-haspopup e aria-expanded; o popup é um diálogo nomeado pelo título", async () => {
+    renderMap({ renderPopup: popupContent });
+    const first = markerButton(/Hotel 1,/);
+    expect(first).toHaveAttribute("aria-haspopup", "dialog");
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    act(() => first.focus());
+    pressEnter(first);
+    const dialog = await screen.findByRole("dialog", { name: "Hotel 1" });
+    expect(dialog).not.toHaveAttribute("aria-modal");
+    expect(markerButton(/Hotel 1,/)).toHaveAttribute("aria-expanded", "true");
+    expect(markerButton(/Hotel 2,/)).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("o × é o último controle (44 px, nome traduzido) e devolve o foco ao marcador", async () => {
+    const user = userEvent.setup();
+    renderMap({ renderPopup: popupContent });
+    const first = markerButton(/Hotel 1,/);
+    act(() => first.focus());
+    pressEnter(first);
+    const dialog = await screen.findByRole("dialog");
+    const close = within(dialog).getByRole("button", { name: "Fechar" });
+    expect(close).toHaveClass("size-11");
+    expect(dialog.querySelector(".leaflet-popup-close-button")).toBeNull();
+    expect(Array.from(dialog.querySelectorAll("a, button")).at(-1)).toBe(close);
+    await user.click(close);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(markerButton(/Hotel 1,/)).toHaveFocus();
+  });
+
+  it("Tab no último controle fecha e foca o próximo marcador", async () => {
+    const user = userEvent.setup();
+    renderMap({ renderPopup: popupContent });
+    const first = markerButton(/Hotel 1,/);
+    act(() => first.focus());
+    pressEnter(first);
+    await screen.findByRole("dialog");
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Mostrar na lista" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Fechar" })).toHaveFocus();
+    await user.tab();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(markerButton(/Hotel 2,/)).toHaveFocus();
+  });
+
+  it("Tab no último controle do último marcador volta ao próprio marcador", async () => {
+    const user = userEvent.setup();
+    renderMap({ renderPopup: popupContent });
+    const second = markerButton(/Hotel 2,/);
+    act(() => second.focus());
+    pressEnter(second);
+    await screen.findByRole("dialog");
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(markerButton(/Hotel 2,/)).toHaveFocus();
+  });
+
+  it("Shift+Tab no primeiro controle fecha e volta ao marcador", async () => {
+    const user = userEvent.setup();
+    renderMap({ renderPopup: popupContent });
+    const first = markerButton(/Hotel 1,/);
+    act(() => first.focus());
+    pressEnter(first);
+    await screen.findByRole("dialog");
+    await user.tab({ shift: true });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(markerButton(/Hotel 1,/)).toHaveFocus();
+  });
+
+  it("reabrir o mesmo marcador leva o foco ao popup de novo", async () => {
+    const user = userEvent.setup();
+    renderMap({ renderPopup: popupContent });
+    const first = markerButton(/Hotel 1,/);
+    act(() => first.focus());
+    pressEnter(first);
+    await screen.findByRole("dialog");
+    await user.keyboard("{Escape}");
+    pressEnter(markerButton(/Hotel 1,/));
+    expect(await screen.findByRole("link", { name: "Ver hotel 1" })).toHaveFocus();
   });
 
   it("sem renderPopup o marcador não abre popup", async () => {

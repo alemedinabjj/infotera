@@ -1,5 +1,6 @@
 import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeHotel, makeSearchCriteria } from "@/shared/testing/fixtures";
 import { renderWithProviders } from "@/shared/testing/render";
@@ -17,11 +18,19 @@ const state: { online: boolean; load: InteractiveMapLoad } = vi.hoisted(() => ({
   load: { status: "loading" },
 }));
 vi.mock("@/shared/hooks/useOnline", () => ({ useOnline: () => state.online }));
-vi.mock("@/shared/ui/map", () => ({ useInteractiveMap: () => state.load }));
+vi.mock("@/shared/ui/map", () => ({
+  useInteractiveMap: () => state.load,
+  MapHint: ({ id, text, active }: { id: string; text: string; active?: boolean }) => (
+    <p id={id} data-testid="hint">
+      {active ? text : null}
+    </p>
+  ),
+}));
 
 /** Mapa de mentira: cada marcador é um botão (o Leaflet real é coberto no E2E e no teste do shared). */
 const FakeMap = ({ markers, activeId, onActiveChange, renderPopup }: InteractiveMapProps) => (
-  <div data-testid="fake-map">
+  // biome-ignore lint/a11y/noNoninteractiveTabindex: o contêiner do Leaflet real é focável (tabindex 0)
+  <div data-testid="fake-map" className="leaflet-container" tabIndex={0}>
     {markers.map((marker) => (
       <div key={marker.id}>
         <button
@@ -33,7 +42,9 @@ const FakeMap = ({ markers, activeId, onActiveChange, renderPopup }: Interactive
         >
           {marker.text}
         </button>
-        {activeId === marker.id ? renderPopup?.(marker.id, () => undefined) : null}
+        {activeId === marker.id
+          ? renderPopup?.(marker.id, { close: () => undefined, titleId: `titulo-${marker.id}` })
+          : null}
       </div>
     ))}
   </div>
@@ -47,6 +58,19 @@ const criteria = makeSearchCriteria();
 
 const renderMap = () =>
   renderWithProviders(<ResultsMap id="painel" hotels={hotels} criteria={criteria} />);
+
+/** O `mock` do hook lê `state.load`; o botão só força um novo render do painel. */
+const Harness = () => {
+  const [, refresh] = useState(0);
+  return (
+    <>
+      <button type="button" onClick={() => refresh((count) => count + 1)}>
+        atualizar
+      </button>
+      <ResultsMap id="painel" hotels={hotels} criteria={criteria} />
+    </>
+  );
+};
 
 describe("ResultsMap", () => {
   beforeEach(() => {
@@ -102,27 +126,78 @@ describe("ResultsMap", () => {
     expect(reveal).toHaveBeenCalledWith(1);
   });
 
-  it("carregando o chunk: skeleton e 'Carregando mapa…' numa região viva", () => {
+  it("carregando o chunk: skeleton e 'Carregando mapa…' numa região viva, painel ocupado", () => {
     state.load = { status: "loading" };
     renderMap();
     expect(screen.getByRole("status")).toHaveTextContent("Carregando mapa…");
+    expect(document.getElementById("painel")).toHaveAttribute("aria-busy", "true");
   });
 
-  it("falha do chunk: alerta com 'Tentar de novo' que pede o chunk de novo", async () => {
+  it("falha do chunk: o painel encolhe para o alerta, sem moldura, e o botão pede o chunk de novo", async () => {
     const retry = vi.fn();
-    state.load = { status: "error", retry };
+    state.load = { status: "error", retry, retrying: false };
     renderMap();
-    expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível carregar o mapa.");
-    await userEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Não foi possível carregar o mapa.");
+    expect(alert).toHaveTextContent("A lista abaixo continua disponível.");
+    expect(screen.queryByTestId("fake-map")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("hint")).not.toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Tentar de novo" });
+    expect(button).toHaveClass("w-full", "sm:w-auto");
+    await userEvent.click(button);
     expect(retry).toHaveBeenCalledTimes(1);
   });
 
-  it("offline sem o chunk: aviso de que o mapa precisa de internet", () => {
+  it("retry em andamento: o botão mostra 'Tentando…' e não aceita novo clique", () => {
+    state.load = { status: "error", retry: vi.fn(), retrying: true };
+    renderMap();
+    const button = screen.getByRole("button", { name: "Tentando…" });
+    expect(button).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("retry com sucesso: o foco vai para o contêiner do mapa", async () => {
+    state.load = { status: "error", retry: vi.fn(), retrying: true };
+    renderWithProviders(<Harness />);
+    state.load = { status: "ready", Map: FakeMap };
+    await userEvent.click(screen.getByRole("button", { name: "atualizar" }));
+    expect(screen.getByTestId("fake-map")).toHaveFocus();
+  });
+
+  it("sem falha anterior, o mapa pronto não rouba o foco", () => {
+    renderMap();
+    expect(screen.getByTestId("fake-map")).not.toHaveFocus();
+  });
+
+  it("offline sem o chunk: só o aviso (sem moldura) e a lista abaixo segue disponível", () => {
     state.online = false;
     state.load = { status: "idle" };
     renderMap();
     expect(
-      screen.getByText("O mapa precisa de internet. A lista continua disponível."),
+      screen.getByText("O mapa precisa de internet. A lista abaixo continua disponível."),
     ).toBeInTheDocument();
+    expect(screen.queryByTestId("fake-map")).not.toBeInTheDocument();
+  });
+
+  it("'Pular o mapa' é o primeiro filho do painel e só existe com o mapa pronto", () => {
+    renderMap();
+    expect(document.getElementById("painel")?.firstElementChild).toBe(
+      screen.getByRole("link", { name: "Pular o mapa" }),
+    );
+  });
+
+  it("a dica fica abaixo da moldura, ligada ao mapa pelo mesmo id", () => {
+    renderMap();
+    const hint = screen.getByTestId("hint");
+    expect(hint).toHaveTextContent(
+      "Setas movem o mapa; + e − mudam o zoom; Tab percorre os hotéis.",
+    );
+    const frame = screen.getByTestId("fake-map").parentElement;
+    expect(frame?.contains(hint)).toBe(false);
+  });
+
+  it("o título do popup recebe o id que nomeia o diálogo", () => {
+    renderMap();
+    act(() => useMapSync.getState().setActive(1));
+    expect(screen.getByRole("heading", { name: "Hotel Um" })).toHaveAttribute("id", "titulo-1");
   });
 });
