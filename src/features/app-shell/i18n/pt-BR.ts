@@ -1,4 +1,8 @@
 export const ptBR = {
+  manifest: {
+    /** O manifest é um só (o Next aceita `manifest` apenas na raiz de `app/`): descrição em pt-BR. */
+    description: "Busque, compare e reserve hotéis com preço claro do início ao fim.",
+  },
   languageSwitch: {
     /** Nome do idioma de destino, no próprio idioma (aparece no link). */
     targetName: "English",

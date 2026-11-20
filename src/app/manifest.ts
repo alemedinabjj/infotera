@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { appShellMessages } from "@/features/app-shell";
 import { BRAND_CANVAS, BRAND_NAME, BRAND_PRIMARY, BRAND_SHORT_NAME } from "@/shared/lib/brand";
 
 /**
@@ -9,7 +10,7 @@ import { BRAND_CANVAS, BRAND_NAME, BRAND_PRIMARY, BRAND_SHORT_NAME } from "@/sha
 const manifest = (): MetadataRoute.Manifest => ({
   name: BRAND_NAME,
   short_name: BRAND_SHORT_NAME,
-  description: "Busque, compare e reserve hotéis com preço claro do início ao fim.",
+  description: appShellMessages.get("pt-BR").manifest.description,
   start_url: "/",
   scope: "/",
   display: "standalone",

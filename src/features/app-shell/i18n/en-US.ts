@@ -1,6 +1,9 @@
 import type { AppShellMessages } from "./pt-BR";
 
 export const enUS: AppShellMessages = {
+  manifest: {
+    description: "Search, compare and book hotels with clear pricing from start to finish.",
+  },
   languageSwitch: {
     targetName: "Português",
     targetShort: "PT",
