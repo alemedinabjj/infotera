@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { LanguageSwitch, OfflineBanner } from "@/features/app-shell";
 import { I18nProvider } from "@/shared/i18n/client";
 import { isLocale, LOCALES } from "@/shared/i18n/config";
+import { BRAND_PRIMARY } from "@/shared/lib/brand";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import { CompareTray } from "@/shared/saved/components/CompareTray";
 import { SavedNav } from "@/shared/saved/components/SavedNav";
@@ -21,6 +22,8 @@ export const metadata: Metadata = {
   title: "Infotera Hotéis",
   description: "Busque, compare e reserve hotéis com preço claro do início ao fim.",
 };
+
+export const viewport: Viewport = { themeColor: BRAND_PRIMARY };
 
 const RootLayout = async ({ children, params }: LayoutProps<"/[locale]">) => {
   const { locale } = await params;
