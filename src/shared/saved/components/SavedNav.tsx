@@ -79,7 +79,7 @@ export const SavedNav = () => {
   const pathname = usePathname();
   const count = useFavoriteCount();
   return (
-    <nav aria-label="Atalhos" className="flex items-center gap-1">
+    <nav aria-label={MESSAGES.label} className="flex items-center gap-1">
       <NavLink
         href={FAVORITES_PATH}
         current={pathname === FAVORITES_PATH}

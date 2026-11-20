@@ -38,7 +38,7 @@ export const CompareTrayAction = ({ count, href }: CompareTrayActionProps) => {
     >
       {MESSAGES.action}
       <span aria-hidden="true" className="hidden sm:inline">
-        {count} hotéis
+        {MESSAGES.actionCount(count)}
       </span>
     </Link>
   );

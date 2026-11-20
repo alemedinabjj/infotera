@@ -31,12 +31,14 @@ export const SAVED_MESSAGES = {
         ? `1 de ${MAX_COMPARE} hotéis · escolha mais 1`
         : `${count} de ${MAX_COMPARE} hotéis`,
     action: "Comparar",
+    actionCount: (count: number) => `${count} hotéis`,
     actionLabel: (count: number) => `Comparar ${count} hotéis`,
     clearLabel: "Limpar comparação",
     clear: "Limpar",
     removeChip: (name: string) => `Remover ${name} da comparação`,
   },
   nav: {
+    label: "Atalhos",
     favorites: "Favoritos",
     myBookings: "Minhas reservas",
     favoritesLabel: (count: number) =>
