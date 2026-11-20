@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { makeBooking } from "@/shared/testing/fixtures";
-import { describeGuests } from "./guests";
+import { describeGuests, maskEmail } from "./guests";
 
 describe("describeGuests", () => {
   it("titular, adulto e criança com o papel", () => {
     const view = describeGuests(makeBooking());
-    expect(view.holderEmail).toBe("ana.souza@exemplo.com");
+    expect(view.holderEmail).toBe("a***@exemplo.com");
     expect(view.lines.map((line) => [line.name, line.roleLabel])).toEqual([
       ["Ana Souza", "titular"],
       ["Bruno Souza", "adulto"],
@@ -51,5 +51,18 @@ describe("describeGuests", () => {
   it("e-mail vazio não vira frase", () => {
     const booking = makeBooking({ guests: [{ firstName: "Ana", lastName: "Souza", email: "" }] });
     expect(describeGuests(booking).holderEmail).toBeNull();
+  });
+});
+
+describe("maskEmail", () => {
+  it("mostra só a primeira letra e o domínio", () => {
+    expect(maskEmail("joao@dominio.com")).toBe("j***@dominio.com");
+  });
+
+  it("sem usuário, sem domínio ou vazio vira null", () => {
+    expect(maskEmail("@dominio.com")).toBeNull();
+    expect(maskEmail("joao@")).toBeNull();
+    expect(maskEmail("semarroba")).toBeNull();
+    expect(maskEmail(undefined)).toBeNull();
   });
 });

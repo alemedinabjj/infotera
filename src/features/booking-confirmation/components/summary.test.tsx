@@ -19,7 +19,7 @@ describe("ConfirmationHeader", () => {
     expect(heading).toHaveFocus();
     expect(heading).toHaveAttribute("tabindex", "-1");
     expect(screen.getByText(/Enviamos os detalhes para/)).toHaveTextContent(
-      "Enviamos os detalhes para ana.souza@exemplo.com.",
+      "Enviamos os detalhes para a***@exemplo.com.",
     );
     expect(
       screen.getByText("Reserva feita em 19/11/2026, 12:04 (horário de Brasília)"),

@@ -37,7 +37,7 @@ test.describe("conteúdo (critérios 1, 2, 3 e 5)", () => {
 
     const heading = page.getByRole("heading", { level: 1, name: "Reserva confirmada" });
     await expect(heading).toBeFocused();
-    await expect(page.getByText("Enviamos os detalhes para ana.souza@exemplo.com.")).toBeVisible();
+    await expect(page.getByText("Enviamos os detalhes para a***@exemplo.com.")).toBeVisible();
     await expect(
       page.getByText(/Reserva feita em \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2} \(horário de Brasília\)/),
     ).toBeVisible();

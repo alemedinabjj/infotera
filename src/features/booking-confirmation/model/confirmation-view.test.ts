@@ -33,7 +33,7 @@ describe("toBookingView", () => {
         "tax",
       ]);
     }
-    expect(view.guests.holderEmail).toBe("ana.souza@exemplo.com");
+    expect(view.guests.holderEmail).toBe("a***@exemplo.com");
   });
 
   it("noites saem das datas da reserva, no singular também", () => {
