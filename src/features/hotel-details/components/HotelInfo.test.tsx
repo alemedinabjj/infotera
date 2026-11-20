@@ -1,7 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { seedHotel } from "@/shared/testing/seed";
+import { loadInteractiveMap } from "@/shared/ui/map/loader";
 import { HotelOverview } from "./HotelOverview";
 import { HotelPolicies } from "./HotelPolicies";
 import { LocationMap } from "./LocationMap";
@@ -78,6 +79,13 @@ describe("LocationMap (critério 14)", () => {
     }
     expect(tiles[0]).toHaveAttribute("src", expect.stringContaining("tile.openstreetmap.org/15/"));
     expect(container.querySelector("svg[aria-hidden='true'].text-primary")).toBeInTheDocument();
+  });
+
+  it("pede o chunk do mapa, mas o Leaflet de verdade não monta no teste (o estático fica)", async () => {
+    const { container } = render(<LocationMap hotel={hotel} locale="pt-BR" />);
+    await waitFor(() => expect(vi.mocked(loadInteractiveMap)).toHaveBeenCalled());
+    expect(container.querySelector(".leaflet-container")).toBeNull();
+    expect(screen.getAllByRole("img", { name: /Mapa:/ })).toHaveLength(2);
   });
 
   it("atribuição fora do role=img e link do OSM em nova aba, avisado no nome", () => {

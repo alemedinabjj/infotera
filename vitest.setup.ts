@@ -9,6 +9,14 @@ MotionGlobalConfig.skipAnimations = true;
 // `server-only` lança fora do bundler do Next; nos testes os módulos de servidor rodam em jsdom.
 vi.mock("server-only", () => ({}));
 
+// O chunk do Leaflet nunca carrega de verdade nos testes: sem `IntersectionObserver` o jsdom assume
+// "perto da viewport" e qualquer teste que renderiza um mapa disparava o `import()` real; o Leaflet
+// montava depois de o teste terminar e seus timers rodavam sobre um ambiente já desmontado (erros
+// não tratados, só sob carga). Quem testa o mapa usa `InteractiveMapImpl` direto ou mocka o `./loader`.
+vi.mock("@/shared/ui/map/loader", () => ({
+  loadInteractiveMap: vi.fn(() => new Promise<never>(() => undefined)),
+}));
+
 // jsdom não implementa showModal/close de <dialog>: polyfill mínimo (open + evento close).
 if (typeof HTMLDialogElement !== "undefined") {
   HTMLDialogElement.prototype.showModal = function showModal() {
