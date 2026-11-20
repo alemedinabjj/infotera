@@ -22,7 +22,11 @@ export const getHotelSnapshot = async (id: number): Promise<HotelSnapshot> => {
   try {
     return { kind: "found", hotel: await fetchHotel(id) };
   } catch (error) {
-    if (isApiError(error) && error.isNotFound()) return { kind: "not-found" };
+    if (isApiError(error) && error.isNotFound()) {
+      // Um id que ainda não existe pode passar a existir: o 404 não fica uma hora no cache.
+      cacheLife("minutes");
+      return { kind: "not-found" };
+    }
     throw error;
   }
 };

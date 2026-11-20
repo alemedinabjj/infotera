@@ -11,7 +11,12 @@ vi.mock("server-only", () => ({}));
 
 // `cacheLife`/`cacheTag` só existem dentro de um escopo `"use cache"` (compilado pelo Next): nos testes
 // as funções do catálogo rodam como funções comuns.
-vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
+// Mock parcial: o resto de `next/cache` continua real.
+vi.mock("next/cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/cache")>()),
+  cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
+}));
 
 // O chunk do Leaflet nunca carrega de verdade nos testes: sem `IntersectionObserver` o jsdom assume
 // "perto da viewport" e qualquer teste que renderiza um mapa disparava o `import()` real; o Leaflet

@@ -8,8 +8,6 @@ import {
   getSimilarHotelsSnapshot,
 } from "./catalog.cached";
 
-vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
-
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
     status,
@@ -40,6 +38,8 @@ describe("getHotelSnapshot", () => {
   it("404 vira not-found", async () => {
     stubFetch(() => json({ error: "Not Found" }, 404));
     expect(await getHotelSnapshot(999)).toEqual({ kind: "not-found" });
+    // O 404 não pode ficar uma hora no cache: o menor perfil vence.
+    expect(cacheLife).toHaveBeenLastCalledWith("minutes");
   });
 
   it("500 é relançado: erro nunca vai para o cache", async () => {
