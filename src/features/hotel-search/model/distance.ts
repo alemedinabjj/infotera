@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { hotelSearchMessages } from "../i18n/messages";
 export type GeoPoint = { latitude: number; longitude: number };
 
 const EARTH_RADIUS_KM = 6371;
@@ -42,8 +44,8 @@ export const sortByDistance = <T extends GeoPoint & { id: number }>(
   );
 };
 
-const numberFormat = (fractionDigits: number): Intl.NumberFormat =>
-  new Intl.NumberFormat("pt-BR", {
+const numberFormat = (fractionDigits: number, locale: Locale): Intl.NumberFormat =>
+  new Intl.NumberFormat(locale, {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   });
@@ -52,14 +54,15 @@ const numberFormat = (fractionDigits: number): Intl.NumberFormat =>
  * Texto do card. Abaixo de 1 km arredonda para 50 m; de 1 km em diante, uma casa (inteiro a partir
  * de 10 km). A unidade é escolhida depois de arredondar (0,975 km vira `1,0 km`; 9,96 km vira `10 km`).
  */
-export const formatDistanceFromCenter = (km: number): string => {
+export const formatDistanceFromCenter = (km: number, locale: Locale = DEFAULT_LOCALE): string => {
+  const t = hotelSearchMessages.get(locale).distance;
   const meters = Math.round((km * 1000) / 50) * 50;
-  if (meters < 100) return "a menos de 100 m do ponto central";
-  if (meters < 1000) return `a ${numberFormat(0).format(meters)} m do ponto central`;
+  if (meters < 100) return t.lessThan100;
+  if (meters < 1000) return t.meters({ value: numberFormat(0, locale).format(meters) });
   const tenths = Math.round(km * 10) / 10;
   return tenths < 10
-    ? `a ${numberFormat(1).format(tenths)} km do ponto central`
-    : `a ${numberFormat(0).format(Math.round(km))} km do ponto central`;
+    ? t.km({ value: numberFormat(1, locale).format(tenths) })
+    : t.km({ value: numberFormat(0, locale).format(Math.round(km)) });
 };
 
 /** Fatia 1-based; página fora do intervalo devolve lista vazia. */

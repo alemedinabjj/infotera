@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocale } from "@/shared/i18n/client";
 import { cn } from "@/shared/lib/cn";
 import { Button, Dialog, FilterIcon, Spinner } from "@/shared/ui";
 import { useCloseOnDesktop } from "../hooks/useCloseOnDesktop";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import type { FilterChange } from "../model/filter-change";
 import type { ResultsView } from "../model/results-view";
 import { describeSheetAction } from "../model/results-view";
@@ -35,14 +37,16 @@ export const FiltersDrawer = ({
   announcement,
 }: FiltersDrawerProps) => {
   useCloseOnDesktop(open, onClose);
-  const action = describeSheetAction(view, total);
+  const t = useHotelSearchMessages().controls;
+  const locale = useLocale();
+  const action = describeSheetAction(view, total, locale);
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      title="Filtros"
-      closeLabel="Fechar filtros"
+      title={t.filters}
+      closeLabel={t.closeFilters}
       placement="sheet"
       closeOnBackdrop
       initialFocus="input[type='range']"
@@ -75,14 +79,17 @@ export const FiltersDrawer = ({
 type FiltersTriggerProps = { activeCount: number; onClick: () => void; className?: string };
 
 /** Gatilho do sheet (só abaixo de `lg`): `Filtros` ou `Filtros (3)`. */
-export const FiltersTrigger = ({ activeCount, onClick, className }: FiltersTriggerProps) => (
-  <Button
-    variant="secondary"
-    aria-haspopup="dialog"
-    className={cn("lg:hidden", className)}
-    leftIcon={<FilterIcon className="size-5" />}
-    onClick={onClick}
-  >
-    {activeCount > 0 ? `Filtros (${activeCount})` : "Filtros"}
-  </Button>
-);
+export const FiltersTrigger = ({ activeCount, onClick, className }: FiltersTriggerProps) => {
+  const t = useHotelSearchMessages().controls;
+  return (
+    <Button
+      variant="secondary"
+      aria-haspopup="dialog"
+      className={cn("lg:hidden", className)}
+      leftIcon={<FilterIcon className="size-5" />}
+      onClick={onClick}
+    >
+      {activeCount > 0 ? t.filtersWithCount({ count: activeCount }) : t.filters}
+    </Button>
+  );
+};

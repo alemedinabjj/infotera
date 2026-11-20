@@ -40,7 +40,7 @@ export const buildMapMarkers = ({
   messages,
 }: BuildMarkersInput): MapMarker[] =>
   items.map((hotel): MapMarker => {
-    const pricing = deriveCardPricing(hotel, criteria, roomsById.get(hotel.id));
+    const pricing = deriveCardPricing(hotel, criteria, roomsById.get(hotel.id), locale);
     const base = {
       id: markerIdOf(hotel.id),
       position: { lat: hotel.latitude, lng: hotel.longitude },

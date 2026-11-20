@@ -41,7 +41,7 @@ export const useMapMarkers = (
     const pricingById = new Map(
       hotels.map((hotel) => [
         hotel.id,
-        deriveCardPricing(hotel, criteria, roomsById.get(hotel.id)),
+        deriveCardPricing(hotel, criteria, roomsById.get(hotel.id), locale),
       ]),
     );
     return {

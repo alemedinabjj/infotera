@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/shared/i18n/client";
 import {
   type AnnouncementSnapshot,
   describeFeedAnnouncement,
@@ -14,6 +15,7 @@ import type { FeedState } from "./results-model";
  * troca de filtro e quando não há nada novo (a contagem inicial é anunciada pelo texto geral).
  */
 export const useFeedAnnouncement = (feed: FeedState | null, total: number): string => {
+  const locale = useLocale();
   const progress = {
     key: feed?.queryKey ?? "",
     batches: feed?.batches ?? 0,
@@ -32,5 +34,6 @@ export const useFeedAnnouncement = (feed: FeedState | null, total: number): stri
     loaded: progress.loaded,
     total,
     footer: feed.footer,
+    locale,
   });
 };

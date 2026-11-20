@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import type { ISODate } from "@/shared/lib/dates";
 import {
   parseDestinationParam,
@@ -6,6 +7,7 @@ import {
   searchCriteriaToQueryString,
 } from "@/shared/lib/search-params";
 import { describeStay } from "@/shared/lib/stay-summary";
+import { hotelSearchMessages } from "../i18n/messages";
 
 /** Os três modos da página `/search`, derivados só dos critérios da URL (nunca dos filtros). */
 export type SearchPage =
@@ -35,15 +37,18 @@ export const parseSearchPage = (input: SearchPageInput): SearchPage => {
 
 const SITE = "Infotera Hotéis";
 
+const pageMessages = (locale: Locale) => hotelSearchMessages.get(locale).page;
+
 /** `<title>` da página: `Hotéis em Rio de Janeiro, RJ | Infotera Hotéis`. */
-export const searchPageTitle = (page: SearchPage): string => {
+export const searchPageTitle = (page: SearchPage, locale: Locale = DEFAULT_LOCALE): string => {
+  const t = pageMessages(locale);
   switch (page.kind) {
     case "missing-destination":
-      return `Buscar hotéis | ${SITE}`;
+      return `${t.metaMissing} | ${SITE}`;
     case "browse":
-      return `Hotéis em ${page.destination} | ${SITE}`;
+      return `${t.metaFor({ destination: page.destination })} | ${SITE}`;
     case "stay":
-      return `Hotéis em ${page.criteria.destination} | ${SITE}`;
+      return `${t.metaFor({ destination: page.criteria.destination })} | ${SITE}`;
     default: {
       const unreachable: never = page;
       return unreachable;
@@ -73,8 +78,12 @@ type StayCriteria = Extract<SearchPage, { kind: "stay" }>["criteria"];
  * Resumo sob o título: `12–15 dez · 3 noites · 2 adultos · 1 quarto` (o ano só aparece quando a
  * estadia não é no ano de `today`). Sem datas: `Datas não definidas`.
  */
-export const describeSearchSummary = (criteria: StayCriteria | null, today: ISODate): string =>
-  criteria ? describeStay(criteria, today) : "Datas não definidas";
+export const describeSearchSummary = (
+  criteria: StayCriteria | null,
+  today: ISODate,
+  locale: Locale = DEFAULT_LOCALE,
+): string =>
+  criteria ? describeStay(criteria, today, locale) : pageMessages(locale).datesUndefined;
 
 /** Chave de remontagem dos formulários/cabeçalho: muda quando os critérios mudam (nova busca). */
 export const searchPageKey = (page: SearchPage): string => {

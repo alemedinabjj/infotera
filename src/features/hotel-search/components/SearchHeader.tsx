@@ -1,9 +1,11 @@
 "use client";
 
 import { type ReactNode, useRef, useState } from "react";
+import { useLocale } from "@/shared/i18n/client";
 import { cn } from "@/shared/lib/cn";
 import { Alert, Button, ChevronDownIcon, copyCurrentUrl, LinkIcon } from "@/shared/ui";
 import { useFocusAfterEdit } from "../hooks/useFocusAfterEdit";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 
 /** `id` do `h2` do painel: o formulário o usa como `labelledBy`. */
 export const SEARCH_EDIT_HEADING_ID = "search-edit-heading";
@@ -24,17 +26,23 @@ type SearchHeaderProps = {
   editForm: ReactNode;
 };
 
-const BrowseNotice = () => (
-  <Alert tone="info" title="Escolha as datas da estadia">
-    Com datas e hóspedes, mostramos o preço total e a disponibilidade de cada hotel.
-  </Alert>
-);
+const BrowseNotice = () => {
+  const t = useHotelSearchMessages().page;
+  return (
+    <Alert tone="info" title={t.browseTitle}>
+      {t.browseBody}
+    </Alert>
+  );
+};
 
-const PastDatesNotice = () => (
-  <Alert tone="warning" title="As datas desta busca já passaram">
-    Preços e disponibilidade podem ter mudado. Use "Alterar busca" para escolher novas datas.
-  </Alert>
-);
+const PastDatesNotice = () => {
+  const t = useHotelSearchMessages().page;
+  return (
+    <Alert tone="warning" title={t.pastTitle}>
+      {t.pastBody}
+    </Alert>
+  );
+};
 
 /**
  * Topo da página: h1 com o destino, resumo da busca, "Alterar busca" (disclosure com o formulário
@@ -47,6 +55,8 @@ export const SearchHeader = ({
   pastDates,
   editForm,
 }: SearchHeaderProps) => {
+  const t = useHotelSearchMessages().page;
+  const locale = useLocale();
   const [open, setOpen] = useState(mode === "browse");
   const headingRef = useRef<HTMLHeadingElement>(null);
   useFocusAfterEdit(headingRef);
@@ -56,7 +66,7 @@ export const SearchHeader = ({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-fg lg:text-3xl">
-            Hotéis em {destination}
+            {t.title({ destination })}
           </h1>
           <p className="mt-1 text-sm text-fg-muted tabular-nums">{summary}</p>
         </div>
@@ -73,22 +83,22 @@ export const SearchHeader = ({
             }
             onClick={() => setOpen((current) => !current)}
           >
-            Alterar busca
+            {t.editSearch}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             leftIcon={<LinkIcon className="size-4" />}
-            onClick={() => void copyCurrentUrl()}
+            onClick={() => void copyCurrentUrl(locale)}
           >
-            Copiar link
+            {t.copyLink}
           </Button>
         </div>
       </div>
       {open ? (
         <div id={PANEL_ID} className="flex flex-col gap-4">
           <h2 id={SEARCH_EDIT_HEADING_ID} className="sr-only">
-            Alterar busca
+            {t.editSearch}
           </h2>
           {mode === "browse" ? <BrowseNotice /> : null}
           {editForm}

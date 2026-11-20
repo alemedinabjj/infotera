@@ -1,4 +1,6 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import { getTotalPages } from "@/shared/lib/pagination";
+import { hotelSearchMessages } from "../i18n/messages";
 import { PAGE_SIZE } from "./search-filters";
 
 /** Fatos da query que decidem o que a seção de resultados mostra. */
@@ -53,31 +55,50 @@ export const deriveResultsView = (input: ResultsViewInput): ResultsView => {
   return { kind: "results", stale: isPlaceholderData, offlineWithData: ownData && isPaused };
 };
 
+const msgs = (locale: Locale) => hotelSearchMessages.get(locale).list;
+
 /** `Nenhum hotel encontrado` · `1 hotel encontrado` · `14 hotéis encontrados`. */
-export const describeResultCount = (total: number): string => {
-  if (total <= 0) return "Nenhum hotel encontrado";
-  if (total === 1) return "1 hotel encontrado";
-  return `${total.toLocaleString("pt-BR")} hotéis encontrados`;
+export const describeResultCount = (total: number, locale: Locale = DEFAULT_LOCALE): string => {
+  if (total <= 0) return msgs(locale).none;
+  if (total === 1) return msgs(locale).one;
+  return msgs(locale).many({ count: total });
 };
 
 /** `Mostrando 10 de 14` (feed: sem faixa nem página). */
-export const describeLoadedCount = (loaded: number, total: number): string =>
-  `Mostrando ${loaded.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")}`;
+export const describeLoadedCount = (
+  loaded: number,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => msgs(locale).loaded({ loaded, total });
 
 /** Complemento só para leitor de tela: `, página 2 de 2` (vazio com 1 página). */
-export const describePageSuffix = (page: number, total: number): string => {
+export const describePageSuffix = (
+  page: number,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => {
   const totalPages = getTotalPages(total, PAGE_SIZE);
-  return totalPages > 1 ? `, página ${page} de ${totalPages}` : "";
+  return totalPages > 1 ? msgs(locale).pageSuffix({ page, total: totalPages }) : "";
 };
 
 /** `Mostrando 11–14 de 14`. */
-export const describeVisibleRange = (page: number, total: number): string => {
+export const describeVisibleRange = (
+  page: number,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => {
   const first = (page - 1) * PAGE_SIZE + 1;
   const last = Math.min(page * PAGE_SIZE, total);
-  return `Mostrando ${first}–${last} de ${total.toLocaleString("pt-BR")}`;
+  return msgs(locale).range({ first, last, total });
 };
 
-type AnnouncementInput = { view: ResultsView; slow: boolean; total: number; destination: string };
+type AnnouncementInput = {
+  view: ResultsView;
+  slow: boolean;
+  total: number;
+  destination: string;
+  locale?: Locale;
+};
 
 /**
  * Texto do anunciador `aria-live`: carregando → demorando → resultado. Erro, offline e troca em
@@ -88,16 +109,18 @@ export const describeAnnouncement = ({
   slow,
   total,
   destination,
+  locale = DEFAULT_LOCALE,
 }: AnnouncementInput): string => {
+  const t = msgs(locale);
   switch (view.kind) {
     case "loading":
-      return slow ? "Está demorando mais que o normal…" : "Carregando hotéis…";
+      return slow ? t.slow : t.loading;
     case "results":
-      return view.stale ? "" : describeResultCount(total);
+      return view.stale ? "" : describeResultCount(total, locale);
     case "empty-filters":
-      return "Nenhum hotel com esses filtros";
+      return t.emptyFilters;
     case "empty-destination":
-      return `Nenhum hotel em ${destination}`;
+      return t.emptyDestination({ destination });
     case "error":
     case "offline":
     case "out-of-range":
@@ -120,19 +143,26 @@ export type ToolbarStatus =
 /** Como a lista está sendo mostrada: por página, ou acumulada (feed) com `loaded` hotéis. */
 export type Listing = { mode: "pages"; page: number } | { mode: "infinite"; loaded: number };
 
-type ToolbarInput = { view: ResultsView; slow: boolean; total: number; listing: Listing };
+type ToolbarInput = {
+  view: ResultsView;
+  slow: boolean;
+  total: number;
+  listing: Listing;
+  locale?: Locale;
+};
 
 /** Sufixo de página (só leitor de tela) e linha de status do resultado, por modo. */
 const describeListing = (
   listing: Listing,
   total: number,
+  locale: Locale,
 ): { srSuffix: string; statusText: string } =>
   listing.mode === "pages"
     ? {
-        srSuffix: describePageSuffix(listing.page, total),
-        statusText: describeVisibleRange(listing.page, total),
+        srSuffix: describePageSuffix(listing.page, total, locale),
+        statusText: describeVisibleRange(listing.page, total, locale),
       }
-    : { srSuffix: "", statusText: describeLoadedCount(listing.loaded, total) };
+    : { srSuffix: "", statusText: describeLoadedCount(listing.loaded, total, locale) };
 
 /** Título (h2, alvo de foco) e linha de status da toolbar para cada visão. */
 export const describeToolbar = ({
@@ -140,7 +170,9 @@ export const describeToolbar = ({
   slow,
   total,
   listing,
+  locale = DEFAULT_LOCALE,
 }: ToolbarInput): { heading: ToolbarHeading; status: ToolbarStatus } => {
+  const t = msgs(locale);
   switch (view.kind) {
     case "loading":
     case "out-of-range":
@@ -148,28 +180,28 @@ export const describeToolbar = ({
         heading: { kind: "skeleton" },
         status: {
           kind: "spinner",
-          text: slow ? "Está demorando mais que o normal…" : "Carregando hotéis…",
+          text: slow ? t.slow : t.loading,
         },
       };
     case "results": {
-      const { srSuffix, statusText } = describeListing(listing, total);
+      const { srSuffix, statusText } = describeListing(listing, total, locale);
       return {
-        heading: { kind: "text", text: describeResultCount(total), srSuffix },
+        heading: { kind: "text", text: describeResultCount(total, locale), srSuffix },
         status: view.stale
-          ? { kind: "spinner", text: "Atualizando resultados…" }
+          ? { kind: "spinner", text: t.updatingResults }
           : { kind: "text", text: statusText },
       };
     }
     case "empty-destination":
     case "empty-filters":
       return {
-        heading: { kind: "text", text: "Nenhum hotel encontrado", srSuffix: "" },
+        heading: { kind: "text", text: t.none, srSuffix: "" },
         status: { kind: "none" },
       };
     case "error":
     case "offline":
       return {
-        heading: { kind: "text", text: "Resultados indisponíveis", srSuffix: "" },
+        heading: { kind: "text", text: t.unavailable, srSuffix: "" },
         status: { kind: "none" },
       };
     default: {
@@ -185,22 +217,27 @@ export type SheetAction = { text: string; updating: boolean };
  * Rótulo do botão primário do sheet de filtros: `Ver 14 hotéis`, `Ver 1 hotel`, `Ver resultados`
  * (0 resultados, erro, offline) e `Atualizando…` enquanto a lista troca (continua clicável).
  */
-export const describeSheetAction = (view: ResultsView, total: number): SheetAction => {
+export const describeSheetAction = (
+  view: ResultsView,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): SheetAction => {
+  const t = msgs(locale);
   switch (view.kind) {
     case "loading":
     case "out-of-range":
-      return { text: "Atualizando…", updating: true };
+      return { text: t.sheetUpdating, updating: true };
     case "results":
-      if (view.stale) return { text: "Atualizando…", updating: true };
+      if (view.stale) return { text: t.sheetUpdating, updating: true };
       return {
-        text: total === 1 ? "Ver 1 hotel" : `Ver ${total.toLocaleString("pt-BR")} hotéis`,
+        text: total === 1 ? t.sheetOne : t.sheetMany({ count: total }),
         updating: false,
       };
     case "empty-destination":
     case "empty-filters":
     case "error":
     case "offline":
-      return { text: "Ver resultados", updating: false };
+      return { text: t.sheetSee, updating: false };
     default: {
       const unreachable: never = view;
       return unreachable;

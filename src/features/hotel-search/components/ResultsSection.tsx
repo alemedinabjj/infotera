@@ -1,8 +1,11 @@
+"use client";
+
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { getTotalPages } from "@/shared/lib/pagination";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { Alert, Pagination, WifiOffIcon } from "@/shared/ui";
 import type { FeedState } from "../hooks/results-model";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import { usePagesReveal } from "../hooks/usePagesReveal";
 import type { GeoPoint } from "../model/distance";
 import type { ResultsView } from "../model/results-view";
@@ -45,18 +48,14 @@ type ResultsContentProps = ResultsSectionProps & {
 
 /** Visão `results`: aviso offline, painel do mapa (se aberto) e a lista (páginas) ou o feed. */
 const ResultsContent = (props: ResultsContentProps) => {
+  const t = useHotelSearchMessages().list;
   const { view } = props;
   usePagesReveal(props.feed === null);
   return (
     <>
       {view.offlineWithData ? (
-        <Alert
-          tone="warning"
-          title="Você está sem internet."
-          icon={<OfflineIcon />}
-          className="mb-4"
-        >
-          Os resultados podem estar desatualizados.
+        <Alert tone="warning" title={t.offlineTitle} icon={<OfflineIcon />} className="mb-4">
+          {t.offlineStale}
         </Alert>
       ) : null}
       {props.mapOpen ? (
@@ -98,6 +97,7 @@ const ResultsContent = (props: ResultsContentProps) => {
 
 /** Escolhe o que mostrar para cada visão (`switch` exaustivo); não decide nada além disso. */
 export const ResultsSection = (props: ResultsSectionProps) => {
+  const t = useHotelSearchMessages().list;
   const { view } = props;
   switch (view.kind) {
     case "loading":
@@ -112,8 +112,8 @@ export const ResultsSection = (props: ResultsSectionProps) => {
     case "offline":
       return (
         <RevealOnMount>
-          <Alert tone="warning" title="Você está sem internet." icon={<OfflineIcon />}>
-            Os hotéis aparecem assim que a conexão voltar.
+          <Alert tone="warning" title={t.offlineTitle} icon={<OfflineIcon />}>
+            {t.offlineNoData}
           </Alert>
         </RevealOnMount>
       );

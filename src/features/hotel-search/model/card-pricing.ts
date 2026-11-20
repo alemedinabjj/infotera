@@ -1,4 +1,5 @@
 import type { Hotel, Room } from "@/shared/api/schemas";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import {
   type AvailabilityDescription,
   type AvailabilityStatus,
@@ -45,6 +46,7 @@ export const deriveCardPricing = (
   hotel: Hotel,
   criteria: SearchCriteria | null,
   rooms?: readonly Room[],
+  locale: Locale = DEFAULT_LOCALE,
 ): CardPricing => {
   const requestedRooms = criteria?.rooms ?? 1;
   const guests = criteria ? criteria.adults + criteria.children : 0;
@@ -63,6 +65,7 @@ export const deriveCardPricing = (
     requestedRooms,
     hasDates: criteria !== null,
     guests,
+    locale,
   });
   if (!criteria || !(status === "available" || status === "scarce")) {
     return { status, availability, nightly, stay: null };

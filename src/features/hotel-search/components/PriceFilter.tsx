@@ -1,6 +1,8 @@
 "use client";
 
 import { useId } from "react";
+import { useLocale } from "@/shared/i18n/client";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import { usePriceDraft } from "../hooks/usePriceDraft";
 import type { FilterChange } from "../model/filter-change";
 import {
@@ -27,6 +29,7 @@ type ThumbProps = {
 
 const Thumb = ({ thumb, label, value, onMove }: ThumbProps) => {
   const id = useId();
+  const locale = useLocale();
   return (
     <div className="flex flex-col">
       <label htmlFor={id} className="text-sm font-medium text-fg">
@@ -39,7 +42,7 @@ const Thumb = ({ thumb, label, value, onMove }: ThumbProps) => {
         max={PRICE_RANGE.max}
         step={PRICE_RANGE.step}
         value={value}
-        aria-valuetext={priceValueText(thumb, value)}
+        aria-valuetext={priceValueText(thumb, value, locale)}
         onChange={(event) => onMove(event.currentTarget.valueAsNumber)}
         className="h-11 w-full cursor-pointer accent-primary"
       />
@@ -52,18 +55,20 @@ const Thumb = ({ thumb, label, value, onMove }: ThumbProps) => {
  * (e a lista) só 400 ms depois do último movimento.
  */
 export const PriceFilter = ({ filters, onChange }: PriceFilterProps) => {
+  const t = useHotelSearchMessages().controls;
+  const locale = useLocale();
   const url: PriceDraft = { min: filters.minPrice, max: filters.maxPrice };
   const { draft, move } = usePriceDraft(url, priceResetKey(filters), ({ min, max }) =>
     onChange({ type: "setPrice", min, max }),
   );
 
   return (
-    <FilterGroup legend="Preço por noite">
+    <FilterGroup legend={t.priceLegend}>
       <p aria-hidden="true" className="mb-1 text-base font-semibold text-fg tabular-nums">
-        {describePriceSummary(draft)}
+        {describePriceSummary(draft, locale)}
       </p>
-      <Thumb thumb="min" label="Mínimo" value={draft.min} onMove={(value) => move("min", value)} />
-      <Thumb thumb="max" label="Máximo" value={draft.max} onMove={(value) => move("max", value)} />
+      <Thumb thumb="min" label={t.min} value={draft.min} onMove={(value) => move("min", value)} />
+      <Thumb thumb="max" label={t.max} value={draft.max} onMove={(value) => move("max", value)} />
     </FilterGroup>
   );
 };

@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { hotelSearchMessages } from "../i18n/messages";
 /** Rodapé do feed (rolagem contínua), um estado por vez. */
 export type FeedFooter =
   | { kind: "more" }
@@ -34,10 +36,13 @@ type AnnouncementInput = {
   loaded: number;
   total: number;
   footer: FeedFooter;
+  locale?: Locale;
 };
 
-const pluralLoaded = (count: number): string =>
-  count === 1 ? "Mais 1 hotel carregado" : `Mais ${count} hotéis carregados`;
+const pluralLoaded = (count: number, locale: Locale): string => {
+  const t = hotelSearchMessages.get(locale).feed;
+  return count === 1 ? t.addedOne : t.addedMany({ count });
+};
 
 /**
  * Texto do anunciador do feed quando o lote chega: `Mais 4 hotéis carregados. Mostrando 14 de 14.`.
@@ -49,6 +54,7 @@ export const describeFeedAnnouncement = ({
   loaded,
   total,
   footer,
+  locale = DEFAULT_LOCALE,
 }: AnnouncementInput): string => {
   switch (footer.kind) {
     // "Carregando mais hotéis…" já é lido pelo botão (`aria-live`/estado): sem anúncio duplicado.
@@ -59,7 +65,7 @@ export const describeFeedAnnouncement = ({
     case "end": {
       const added = loaded - previousLoaded;
       if (previousLoaded <= 0 || added <= 0) return "";
-      return `${pluralLoaded(added)}. Mostrando ${loaded.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")}.`;
+      return `${pluralLoaded(added, locale)}. ${hotelSearchMessages.get(locale).feed.showing({ loaded, total })}`;
     }
     default: {
       const unreachable: never = footer;
