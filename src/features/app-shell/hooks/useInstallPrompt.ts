@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createStorage } from "@/shared/lib/storage";
 import {
   INSTALL_DISMISSED_KEY,
@@ -51,7 +51,8 @@ export const useInstallPrompt = (): InstallPrompt => {
     storage.read(INSTALL_DISMISSED_KEY, installDismissedSchema, null),
   );
   const [dismissedNow, setDismissedNow] = useState(false);
-  const [now] = useState(() => Date.now());
+  // Sem evento não há cartão: o relógio só é lido no cliente, quando o prompt existe (o prerender não pode ler `Date.now()`).
+  const now = useMemo(() => (event === null ? 0 : Date.now()), [event]);
   const prompting = useRef(false);
 
   const dismiss = () => {

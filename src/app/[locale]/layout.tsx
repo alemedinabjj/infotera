@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { LanguageSwitch, OfflineBanner, ServiceWorkerRegistrar } from "@/features/app-shell";
 import { I18nProvider } from "@/shared/i18n/client";
 import { commonMessages } from "@/shared/i18n/common/messages";
@@ -20,7 +21,6 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 
 /** Os dois idiomas são conhecidos no build; qualquer outro valor de `[locale]` é 404. */
 export const generateStaticParams = () => LOCALES.map((locale) => ({ locale }));
-export const dynamicParams = false;
 
 export const generateMetadata = async ({ params }: LayoutProps<"/[locale]">): Promise<Metadata> => {
   const locale = await localeOf(params);
@@ -62,8 +62,10 @@ const RootLayout = async ({ children, params }: LayoutProps<"/[locale]">) => {
             >
               {children}
             </main>
-            <CompareTray />
-            <ServiceWorkerRegistrar />
+            <Suspense fallback={null}>
+              <CompareTray />
+              <ServiceWorkerRegistrar />
+            </Suspense>
           </AppProviders>
         </I18nProvider>
       </body>

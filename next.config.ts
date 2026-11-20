@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_APP_VERSION: APP_VERSION },
   poweredByHeader: false,
   agentRules: false,
+  // PPR: no 16.x é `cacheComponents` (F7c, Decisão 1). `partialPrefetching` evita o warning da doc.
+  cacheComponents: true,
+  partialPrefetching: true,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },

@@ -14,6 +14,14 @@ export const generateMetadata = async ({
 };
 
 /**
+ * Casca vazia de propósito: nonce de CSP exige renderização por request e "PPR is incompatible with
+ * nonce-based CSP". Com `cacheComponents` isso exige `instant = false`. Nunca crie `loading.tsx` nem
+ * `<Suspense>` acima do `connection()`.
+ * @see node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/02-route-segment-config/instant.md
+ */
+export const instant = false;
+
+/**
  * `/checkout` e `/en/checkout`. Renderização dinâmica (`connection()`): o `proxy.ts` gera um nonce
  * por request e a CSP estrita só vale em página dinâmica. A seleção vive no cliente
  * (`sessionStorage`).
