@@ -64,7 +64,7 @@ e isso agora é verificado no build.
 
 ## Decisões
 
-1. **Ligar `cacheComponents` (revoga a Decisão 5 da F0) com `partialPrefetching: true`.**
+1. **Ligar `cacheComponents` (revoga a Decisão 5 da F0) com `partialPrefetching` explícito (`false` desde a rodada 4: ver "Rodada de correções da galeria").**
    No 16.x, PPR **é** `cacheComponents`: `experimental.ppr` e `experimental_ppr` foram removidos. A
    doc pede `partialPrefetching` explícito, e deixar sem valor gera warning. A F0 desligou porque
    todo dado era por request. Isso deixou de valer com a F4: hotel, quartos, avaliações e similares
@@ -175,13 +175,13 @@ e isso agora é verificado no build.
    app/hotel/[hotelId]/@modal/(.)photos/[photo]/page.tsx  modal (Dialog size="full" + PhotoViewer)
    app/hotel/[hotelId]/@modal/(.)photos/[photo]/loading.tsx · error.tsx
    app/hotel/[hotelId]/photos/[photo]/page.tsx            página cheia (h1 + PhotoViewer)
-   app/hotel/[hotelId]/photos/[photo]/loading.tsx · not-found.tsx
+   app/hotel/[hotelId]/photos/[photo]/not-found.tsx       (sem loading.tsx: ver a rodada de correções)
    ```
    O ganho é real, não decorativo: Voltar do navegador fecha o modal (é o que se espera no celular,
    onde o lightbox ocupa a tela toda). A foto tem URL compartilhável. Reload mantém o contexto.
    Sem JS, as miniaturas são links que funcionam (melhoria progressiva).
    - `[photo]` é **1-based** (`/photos/3` = 3ª foto). `parsePhotoParam(raw, total)` é puro: só
-     `^[1-9]\d{0,2}$` dentro de `1..total`. O resto vira `notFound()` na página cheia e `null` no
+     `^[1-9]\d{0,2}$` dentro de `1..total`. O resto vira "Foto não encontrada" **inline** na página cheia (sem `notFound()`) e `null` no
      modal.
    - **Setas não navegam:** `PhotoViewer` (cliente, usado no modal **e** na página cheia) troca o
      índice em estado local e chama `window.history.replaceState(null, "", photoHref(id, i))`. O Next
@@ -426,7 +426,7 @@ Comparar quartos · Comentários p.1 · Similares (links dos cards = mesmo link 
 | Tela/área | Loading | Erro | Vazio / inválido | Sucesso | Offline / lento |
 |---|---|---|---|---|---|
 | Modal da foto (rota carregando) | Mesma moldura do Dialog `full` aberta na hora: título genérico `Fotos do hotel`, "Fechar", corpo `bg-fg` com `Spinner` + `Carregando foto…` **visível** (padrão do `LightboxPhoto`; bloco claro de skeleton sobre fundo escuro seria um flash), corpo com `aria-busy="true"`, footer `h-16` vazio reservado | Mesma moldura; no corpo, um cartão claro centralizado (`bg-surface rounded-card p-6 max-w-sm w-[calc(100%-2rem)]`) com `ErrorState` `Não foi possível abrir a foto` · `Verifique sua conexão e tente de novo.` + `Tentar de novo` (secondary, `reset()` + `router.refresh()`) e `Fechar` (ghost, mesmo fluxo de fechar). O cartão claro evita texto `fg-muted` sobre `bg-fg` | Índice inválido: o modal não abre (`null`); a página por trás fica como estava | Foto, contador, setas. Troca de foto instantânea | `navigator.onLine === false` no erro: título `Você está sem internet` · `A foto abre assim que a conexão voltar.` (mesmos botões). Foto que não baixa: `Não foi possível carregar esta foto.` sobre a moldura, setas seguem (F4) |
-| Página cheia da foto | Skeleton claro com a geometria final: `h-11 w-44` (voltar), `h-7 w-3/4` (h1), bloco `aspect-[4/3] sm:aspect-video rounded-card`, linha `h-11` com 2 blocos `size-11` nas pontas e `h-5 w-28` no meio. `aria-busy` + `sr-only aria-live="polite"` `Carregando foto…` | `error.tsx` do hotel (F4: `Não foi possível abrir o hotel`) | **Foto não encontrada** (índice fora de `1..total`, `0`, `abc`, `01`): `EmptyState` de página, h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto deste hotel.` (o `not-found.tsx` não recebe `params`: sem o nome do hotel; o id vem de `useParams`) + `ButtonLink primary` `Ver o hotel` (`/hotel/{id}`). Hotel inexistente: `Hotel não encontrado` da F4 | h1, foto, controles, título da aba `Foto 3 de 5 · {hotel} \| Infotera Hotéis` (atualizado a cada troca) | Sem cache: página offline `public` da F7b |
+| Página cheia da foto | **Sem skeleton de página** (não há `loading.tsx`: o HTML já traz h1 e foto, também sem JS); a foto tem o overlay `Carregando foto…` (`PhotoFrame`), que o `<noscript>` esconde sem JS | `error.tsx` do hotel (F4: `Não foi possível abrir o hotel`) | **Foto não encontrada** (índice fora de `1..total`, `0`, `abc`, `01`): `EmptyState` de página, h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto deste hotel.` (renderizado inline pela página, com `PhotoNotFoundView`; o `not-found.tsx` cliente usa `useParams`) + `ButtonLink primary` `Ver o hotel` (`/hotel/{id}`). Hotel inexistente: `Hotel não encontrado` da F4 (h1 `Hotel não encontrado`, link `Fazer nova busca`). Os dois são `200` + `noindex`, com HTML do servidor | h1, foto, controles, título da aba `Foto 3 de 5 · {hotel} \| Infotera Hotéis` (atualizado a cada troca) | Sem cache: página offline `public` da F7b |
 | Buracos da página do hotel | Fallbacks estáticos (sem pulso), `aria-hidden` | Não há: são cálculos sobre dados já na casca, sem request | Sem datas: `Escolha as datas para reservar` + formulário aberto (F4) e `Escolher datas` em cada quarto | Total, detalhe, motivo e botão no lugar reservado | JS desligado: fallbacks ficam; nome, fotos, diárias, comentários e similares visíveis |
 | Server Action acima de 64 KB | — | Inalcançável pela UI. Se acontecer (requisição forjada), mostra o erro de envio da F5 (`Não foi possível confirmar sua reserva` · `Nenhuma cobrança foi feita. Seus dados foram mantidos; tente de novo em instantes.`). Sem texto novo, sem citar tamanho | — | — | — |
 
@@ -888,12 +888,31 @@ Novo token: **nenhum**.
 - **Service worker:** `/hotel/:id/photos/:photo` é rota pública (rede primeiro e página offline do
   idioma), igual ao hotel.
 - **Página cheia sem JS (critério 19).** Sem `loading.tsx` próprio e com todas as fotos em
-  `generateStaticParams`; o `PhotoFrame` esconde o "Carregando foto…" com `<noscript>`. **Pendência
-  fora desta frente:** o `loading.tsx` de `hotel/[hotelId]` envolve a página da foto num Suspense e o
-  HTML do build entrega o conteúdo em um segmento outlined (`<div hidden id="S:…">`) que só o JS revela.
-  Sem esse arquivo (verificado numa cópia do projeto), a página da foto e a miniatura sem JS passam. O
-  arquivo é da frente da página do hotel: o Suspense do skeleton precisa sair de `loading.tsx` (por
-  exemplo para dentro da própria página do hotel, ou um route group `(details)` só para ela).
-- **404 da foto:** `notFound()` com o `not-found.tsx` da rota (UI "Foto não encontrada"). O status HTTP
-  continua 200 nos params não gerados no build: sob PPR a casca já saiu quando o `notFound()` roda.
-  `dynamicParams = false` daria 404 de verdade, mas é incompatível com `cacheComponents`.
+  `generateStaticParams`; o `PhotoFrame` esconde o "Carregando foto…" com `<noscript>`. A pendência do
+  `loading.tsx` de `hotel/[hotelId]` (Suspense que jogava o conteúdo num `<div hidden id="S:…">` que só o JS
+  revela) está **resolvida**: o arquivo saiu na Decisão do critério 5 e a página da foto e as miniaturas
+  passam sem JS. As setas (Anterior/Próxima) não fazem nada sem JS: um `<noscript><style>` as esconde
+  (`data-photo-controls`), e a foto da URL continua à mostra.
+- **"Não encontrado" renderizado no servidor (rodada 4).** Verificado no Next 16.4.6: sob `cacheComponents`
+  todo `notFound()` (do layout, da página ou do `generateMetadata`) sai como `<html id="__next_error__">` com
+  `<body>` vazio e o conteúdo só no cliente (sem JS: tela em branco e sem título), e com
+  `partialPrefetching: true` a 1ª visita a um id fora do `generateStaticParams` (`/hotel/61`, `/hotel/abc`,
+  `/hotel/1/photos/9`) recebe uma casca de 0 byte (`pt-BR/hotel/[hotelId].html` vazio) e o mesmo HTML de
+  erro. Não há posição do `notFound()` que mude isso (nem `<noscript>`: o corpo inteiro é vazio). Correção:
+  (a) `partialPrefetching: false` (explícito, sem warning), que faz a 1ª visita esperar a página; (b) as rotas
+  não chamam `notFound()`: renderizam o "não encontrado" **inline** (`HotelNotFound`, `PhotoNotFoundView`,
+  `RouteNotFound` no `[...rest]`) com `robots: { index: false }` no `generateMetadata`. O HTML do servidor
+  traz header, h1, link de saída e título (`Hotel não encontrado | …`). Custo: o status passa a `200`
+  (soft 404 + `noindex`; `dynamicParams = false` daria 404 de verdade, mas é incompatível com
+  `cacheComponents`). `e2e/not-found.prod.spec.ts` prova sem JS para `/hotel/61`, `/hotel/999`, `/hotel/abc`,
+  `/hotel/999/photos/1`, `/hotel/1/photos/9`, `/hotel/1/photos/abc`, `/rota-inexistente` e as de `/en`.
+  Hotel inexistente na rota da foto mostra o "Hotel não encontrado" da F4, não "Foto não encontrada".
+  `confirmation/[bookingId]` mantém `notFound()` (fora desta rodada: tem PII e não é a página pública).
+- **Cartão de erro do modal.** Só aparece quando o **render** do slot quebra. Uma resposta RSC 500 vira
+  navegação de documento em produção (o Next recarrega a URL em vez de mostrar o `error.tsx`); em dev o
+  cartão aparece. Por isso `e2e/hotel-photos.states.spec.ts` (U6) roda só em dev.
+- **Verificação manual do ISR com `/rooms` falhando na revalidação** (`next start`, hotel 2, regra do proxy de
+  controle devolvendo 500 em `/rooms?hotelId=2`): depois de 62 s a visita servida stale disparou a
+  revalidação (`hits: 1` no proxy) e, 65 s depois, outra (`hits: 2`); nas duas a página **continuou com os
+  quartos em cache** (nome do quarto presente, sem "Não foi possível carregar os quartos"). A revalidação que
+  falha não substitui a página boa (fica a versão antiga até a API voltar).
