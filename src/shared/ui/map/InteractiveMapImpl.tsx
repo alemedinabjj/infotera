@@ -4,7 +4,16 @@ import "leaflet/dist/leaflet.css";
 import "./map.css";
 import type { Marker as LeafletMarker, PopupEvent } from "leaflet";
 import { useReducedMotion } from "motion/react";
-import { memo, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  type ReactNode,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { cn } from "../../lib/cn";
 import { FIT_MAX_ZOOM, FIT_PADDING, fitPlan, type LatLng } from "../../lib/geo";
@@ -93,16 +102,40 @@ type MarkerItemProps = {
 
 const FOCUSABLE = "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
+type PopupBodyProps = {
+  focusOnMount: boolean;
+  closeLabel: string;
+  /** Esc dentro do popup (conteúdo ou botão ×). */
+  onEscape: () => void;
+  children: ReactNode;
+};
+
 /**
- * Conteúdo do popup. O Leaflet só monta o conteúdo (portal do React) depois de abrir; aberto por
- * teclado, o foco vai para o primeiro controle (senão o próximo Tab iria para o marcador seguinte).
+ * Conteúdo do popup. O Leaflet só monta o conteúdo (portal do React) depois de abrir, então é aqui
+ * que dá para: nomear o botão × (o Leaflet fixa "Close popup" em inglês), tratar o Esc (o teclado do
+ * mapa só escuta com o contêiner focado) e, aberto por teclado, levar o foco ao primeiro controle
+ * (senão o próximo Tab iria para o marcador seguinte).
  */
-const PopupBody = ({ focusOnMount, children }: { focusOnMount: boolean; children: ReactNode }) => {
+const PopupBody = ({ focusOnMount, closeLabel, onEscape, children }: PopupBodyProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  const handleEscape = useEffectEvent(onEscape);
+
   useEffect(() => {
-    if (focusOnMount)
+    const popup = ref.current?.closest(".leaflet-popup");
+    popup?.querySelector(".leaflet-popup-close-button")?.setAttribute("aria-label", closeLabel);
+    const onKeyDown = (event: Event) => {
+      if (event instanceof KeyboardEvent && event.key === "Escape") handleEscape();
+    };
+    popup?.addEventListener("keydown", onKeyDown);
+    return () => popup?.removeEventListener("keydown", onKeyDown);
+  }, [closeLabel]);
+
+  useEffect(() => {
+    if (focusOnMount) {
       ref.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
+    }
   }, [focusOnMount]);
+
   return <div ref={ref}>{children}</div>;
 };
 
@@ -118,6 +151,8 @@ const MarkerItem = memo(function MarkerItem({
   const { id, label, variant, text, tone, position } = marker;
   const ref = useRef<LeafletMarker | null>(null);
   const [openedByKeyboard, setOpenedByKeyboard] = useState(false);
+  const notifyActive = useEffectEvent((value: string | null) => onActiveChange?.(value));
+  const notifySelect = useEffectEvent(() => onSelect?.(id));
   // O ícone depende só do que é desenhado; o destaque é CSS (`data-active`).
   const icon = useMemo(() => createMarkerIcon({ variant, text, tone }), [variant, text, tone]);
 
@@ -125,14 +160,14 @@ const MarkerItem = memo(function MarkerItem({
     const element = ref.current?.getElement();
     decorateMarkerElement(element, { id, label }, active);
     if (!element) return;
-    const enter = () => onActiveChange?.(id);
-    const leave = () => onActiveChange?.(null);
+    const enter = () => notifyActive(id);
+    const leave = () => notifyActive(null);
     // O Leaflet abre o popup no `keypress` Enter sem avisar quem abriu: o `keydown` marca a origem.
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") ref.current?.closePopup();
       if (event.key !== "Enter") return;
       setOpenedByKeyboard(true);
-      onSelect?.(id);
+      notifySelect();
     };
     element.addEventListener("focus", enter);
     element.addEventListener("blur", leave);
@@ -142,16 +177,7 @@ const MarkerItem = memo(function MarkerItem({
       element.removeEventListener("blur", leave);
       element.removeEventListener("keydown", onKeyDown);
     };
-  }, [id, label, active, onActiveChange, onSelect]);
-
-  const onPopupOpen = (event: PopupEvent) => {
-    const popup = event.popup.getElement();
-    popup?.querySelector(".leaflet-popup-close-button")?.setAttribute("aria-label", closeLabel);
-    // O teclado do mapa só escuta com o contêiner focado; com o foco no popup o Esc é nosso.
-    popup?.addEventListener("keydown", (keyEvent) => {
-      if (keyEvent.key === "Escape") event.popup.close();
-    });
-  };
+  }, [id, label, active]);
 
   /** Esc ou × devolvem o foco ao marcador (o Leaflet 1.9 não devolve); clique fora não rouba foco. */
   const onPopupClose = (event: PopupEvent) => {
@@ -174,13 +200,16 @@ const MarkerItem = memo(function MarkerItem({
         },
         mouseover: () => onActiveChange?.(id),
         mouseout: () => onActiveChange?.(null),
-        popupopen: onPopupOpen,
         popupclose: onPopupClose,
       }}
     >
       {renderPopup ? (
         <Popup>
-          <PopupBody focusOnMount={openedByKeyboard}>
+          <PopupBody
+            focusOnMount={openedByKeyboard}
+            closeLabel={closeLabel}
+            onEscape={() => ref.current?.closePopup()}
+          >
             {renderPopup(id, () => ref.current?.closePopup())}
           </PopupBody>
         </Popup>
