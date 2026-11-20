@@ -4,6 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/shared/testing/render";
 import { PhotoViewer } from "./PhotoViewer";
 
+vi.mock(
+  "next/navigation",
+  async () => (await import("@/shared/testing/next-navigation")).navigationMock,
+);
+
 const NAME = "Hotel Copacabana Palace";
 const photos = (count: number) =>
   Array.from({ length: count }, (_, i) => `https://images.unsplash.com/photo-${i + 1}`);

@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { bookingPath, createBooking } from "./helpers/booking";
 import {
   clickPrimary,
   criteria,
@@ -60,7 +61,7 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     test.skip(isMobile, "o fluxo do cartão roda no desktop");
   });
 
-  test("ao sair pelo logo, os campos do pagamento já estão vazios com a rota escondida; no Voltar também (critério 22)", async ({
+  test("ao sair pelo logo, nada do formulário (cartão nem hóspedes) fica no documento; o Voltar traz um checkout novo (critério 22)", async ({
     page,
   }) => {
     await goToPayment(page);
@@ -71,25 +72,26 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeVisible();
 
-    // A rota do checkout está escondida, mas anexada: nenhum campo guarda dígito algum.
-    await expect.poll(() => paymentValues(page)).toEqual(PAYMENT_FIELDS.map(() => ""));
-    const leaked = await page.evaluate(
-      () =>
-        Array.from(document.querySelectorAll("input")).filter(
-          (input) => /\d{6}/.test(input.value) && input.name.startsWith("payment."),
-        ).length,
-    );
-    expect(leaked).toBe(0);
+    // A rota do checkout foi desmontada (`WipeOnHide`): nenhum campo, nem vazio, sobra no documento.
+    await expect.poll(() => paymentValues(page)).toEqual(PAYMENT_FIELDS.map(() => null));
+    const typed = () =>
+      page.evaluate(() =>
+        Array.from(document.querySelectorAll("input"))
+          .map((input) => input.value)
+          .filter((value) => /Bruno|Ana|ana@exemplo/.test(value)),
+      );
+    await expect.poll(typed).toEqual([]);
 
     await page.goBack();
     await expect(page).toHaveURL(/\/checkout$/);
-    await expect(page.getByLabel("Número do cartão")).toHaveValue("");
-    await expect(page.getByLabel("Validade")).toHaveValue("");
-    await expect(page.getByLabel("CVV")).toHaveValue("");
-    await expect(page.getByRole("textbox", { name: "CPF" })).toHaveValue("");
+    // Começa de novo: passo dos hóspedes, sem o que foi digitado.
+    await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeHidden();
+    const holder = page.getByRole("group", { name: "Hóspede 1 · titular da reserva" });
+    await expect(holder.getByLabel("Nome", { exact: true })).toHaveValue("");
+    await expect(page.getByLabel("Número do cartão")).toHaveCount(0);
   });
 
-  test("o resumo do cartão na revisão sai do DOM ao esconder a rota e o Voltar leva ao pagamento (critério 22)", async ({
+  test("o resumo do cartão na revisão sai do DOM ao esconder a rota e o Voltar começa um checkout novo (critério 22)", async ({
     page,
   }) => {
     await goToPayment(page);
@@ -104,14 +106,14 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await logo(page).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeVisible();
-    // A rota escondida continua anexada: nada do cartão pode ter ficado no texto dela.
+    // A rota some do documento: nada do cartão pode ter ficado no texto dela.
     for (const secret of secrets) await expect.poll(html).not.toContain(secret);
 
     await page.goBack();
     await expect(page).toHaveURL(/\/checkout$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
-    await expect(page.getByText(/os dados do cartão não ficam salvos/)).toBeVisible();
-    await expect(page.getByLabel("Número do cartão")).toHaveValue("");
+    await expect(page.getByRole("heading", { level: 2, name: "Revise e confirme" })).toBeHidden();
+    await expect(page.getByLabel("Número do cartão")).toHaveCount(0);
+    await expect(page.getByText(/Visa •••• 1111/)).toHaveCount(0);
   });
 
   test("o termo de aceite aberto aparece fechado ao voltar (critério 25)", async ({ page }) => {
@@ -127,9 +129,43 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await expect(page).toHaveURL(/\/$/);
     await page.goBack();
     await expect(page).toHaveURL(/\/checkout$/);
-    // O cartão foi apagado ao esconder a rota: a revisão não volta, o pagamento sim (critério 22).
-    await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
+    // O checkout é desmontado ao sair: o termo não volta aberto (nem o cartão, critério 22).
     await expect(terms).toBeHidden();
+    await expect(page.getByLabel("Número do cartão")).toHaveCount(0);
+  });
+});
+
+test.describe("confirmação: a reserva não fica no DOM escondido @prod", () => {
+  test("ao sair, o documento não guarda hóspedes, e-mail nem número da reserva; o Voltar a traz de volta", async ({
+    page,
+    request,
+  }) => {
+    const id = await createBooking(request);
+    await page.goto(bookingPath(id));
+    await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
+    // Sem os `<script>`: no carregamento direto o HTML traz o payload RSC inline (`self.__next_f.push`), inerte e
+    // idêntico ao "ver código-fonte". O que o teste cobre é a árvore de elementos que o Activity preserva.
+    const html = () =>
+      page.evaluate(() => {
+        const clone = document.body.cloneNode(true);
+        if (clone instanceof HTMLElement)
+          for (const node of clone.querySelectorAll("script")) node.remove();
+        return clone instanceof HTMLElement ? clone.innerHTML : "";
+      });
+    const secrets = ["Ana Souza", "Bruno Souza", "a***@exemplo.com", id, "Cartão final 1111"];
+    for (const secret of secrets) await expect.poll(html).toContain(secret);
+
+    await logo(page).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeVisible();
+    // A rota escondida continua anexada, mas sem conteúdo: o wipe roda no cleanup, depois de esconder.
+    for (const secret of secrets) await expect.poll(html).not.toContain(secret);
+    await expect(page.getByText("Sua reserva está confirmada.")).toHaveCount(0);
+
+    await page.goBack();
+    await expect(page).toHaveURL(bookingPath(id));
+    await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
+    await expect(page.getByText("Ana Souza")).toBeVisible();
   });
 });
 

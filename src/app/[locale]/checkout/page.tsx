@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { CheckoutPage, checkoutPageTitle } from "@/features/checkout";
 import { localeOf } from "@/shared/i18n/params";
+import { WipeOnHide } from "@/shared/ui";
 
 export const generateMetadata = async ({
   params,
@@ -28,7 +29,11 @@ export const instant = false;
  */
 const Page = async () => {
   await connection();
-  return <CheckoutPage />;
+  return (
+    <WipeOnHide>
+      <CheckoutPage />
+    </WipeOnHide>
+  );
 };
 
 export default Page;

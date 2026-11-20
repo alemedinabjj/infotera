@@ -7,6 +7,7 @@ import {
   parseBookingId,
 } from "@/features/booking-confirmation";
 import { localeOf } from "@/shared/i18n/params";
+import { WipeOnHide } from "@/shared/ui";
 
 export const generateMetadata = async ({
   params,
@@ -24,7 +25,11 @@ const ConfirmationPage = async ({ params }: PageProps<"/[locale]/confirmation/[b
   await connection();
   const id = parseBookingId((await params).bookingId);
   if (id === null) notFound();
-  return <BookingConfirmation id={id} />;
+  return (
+    <WipeOnHide>
+      <BookingConfirmation id={id} />
+    </WipeOnHide>
+  );
 };
 
 export default ConfirmationPage;

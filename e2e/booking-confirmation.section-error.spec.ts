@@ -17,6 +17,17 @@ type Failing = keyof typeof TITLES;
 
 const retryButton = (page: Page) => page.getByRole("button", { name: "Tentar de novo" });
 
+/**
+ * Espera a página terminar de chegar: o React streama a seção hotel/quarto num `<div hidden id="S:n">` e
+ * só depois a move para o lugar (com um intervalo de reveal). Nesse meio tempo o mesmo texto existe duas
+ * vezes no documento (modo estrito do Playwright) e um clique no "Tentar de novo" ainda não tem handler.
+ * O botão de copiar é uma ilha do mesmo documento: ele aparecer prova a hidratação.
+ */
+const settled = async (page: Page) => {
+  await page.getByRole("button", { name: "Copiar número da reserva" }).waitFor();
+  await expect(page.locator('div[hidden][id^="S:"]')).toHaveCount(0);
+};
+
 const nameOf = async (page: Page, path: string): Promise<string> => {
   const body: unknown = await (await page.request.get(`${API_URL}${path}`)).json();
   if (
@@ -50,6 +61,7 @@ test.describe("hotel e quarto falham no servidor (critérios 13 e 19)", () => {
     if (failing !== "room") await serverApi.failServerRequests(hotelRequest(hotelId));
     if (failing !== "hotel") await serverApi.failServerRequests(roomRequest(roomId));
     await page.goto(bookingPath(id));
+    await settled(page);
     return { hotelId, roomId, names };
   };
 
