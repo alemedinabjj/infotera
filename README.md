@@ -2,7 +2,7 @@
 
 Sistema de reserva de hotéis (busca, detalhe, checkout e confirmação) feito para o desafio frontend em [`docs/TEST_FRONTEND.md`](docs/TEST_FRONTEND.md), com Next.js 16, TypeScript strict e a `mock-api` fornecida.
 
-- Demo: https://\<preencher\>.vercel.app
+- Demo: https://infotera-alemedinabjjs-projects.vercel.app
 - API (Render): https://infotera-mock-api.onrender.com
 
 A API roda no plano free do Render e dorme depois de ~15 min sem uso. O primeiro request depois disso pode levar cerca de 1 minuto (cold start). Se a demo parecer travada na primeira visita, espere ou recarregue.
