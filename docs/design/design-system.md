@@ -1208,6 +1208,8 @@ Confirmação: `Copiar número da reserva` / `Copiado` · `Ver página do hotel`
 | Avaliações offline na troca de página | Alert warning (`WifiOffIcon`): `Você está sem internet.` · `As avaliações aparecem assim que a conexão voltar.` | — |
 | Similares não carregaram (recomendação) | `Não foi possível carregar hotéis similares.` | link `Ver hotéis em {destino}` (sem retry) |
 | Foto do lightbox quebrada | `Não foi possível carregar esta foto.` | — (setas seguem) |
+| Modal da foto não abriu (F7c) | Cartão claro sobre o modal: `Não foi possível abrir a foto` · `Verifique sua conexão e tente de novo.` (offline: `Você está sem internet` · `A foto abre assim que a conexão voltar.`) | `Tentar de novo` + `Fechar` |
+| Foto não encontrada (F7c) | h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto de {hotel}.` | `Ver o hotel` |
 | Envio da reserva offline | Alert warning: `Você está sem internet` · `Assim que a conexão voltar, tente de novo. Nada foi cobrado e seus dados foram mantidos.` + toast `Não foi possível confirmar a reserva.` | `Tentar de novo` |
 | Preço mudou no envio | Alert warning: `O total da reserva mudou` · `Passou de R$ 4.140,00 para R$ 4.320,00. Confira o novo valor e confirme de novo. Nada foi cobrado.` | (o próprio `Confirmar reserva`) |
 | Cupom recusado no envio | Alert warning: `O cupom BEMVINDO10 não vale mais` · `Removemos o desconto e o total agora é R$ 4.140,00. Confira e confirme de novo. Nada foi cobrado.` | — |
@@ -1342,7 +1344,7 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | molecules | Field (+ campo composto), Stepper, Alert, ErrorSummary, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação, PriceBreakdown | F1 (Combobox/DateRange na F2; ErrorSummary nasce na F2 e sobe na F5; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso; PriceBreakdown nasce na F5 e sobe na F6) |
 | organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`, `focusableBody`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4; `focusableBody` na F5) |
 | F7b | LanguageSwitch, OfflineBar, InstallCard, UpdateToast (Toast `info` persistente) e OfflinePage em `features/app-shell`; MapPanel, MapToggle, PriceMarker e MapPopup em `shared/ui/map` + `features/hotel-search` (§9) | F7b |
-| feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, StepIndicator, CouponForm, ActionBar (barra fixa), BookingNumber/CopyBookingNumber (valor copiável), StayDetails (hotel/quarto em streaming) | F3–F6, compondo os acima (ActionBar sobe para shared no 2º uso) |
+| feature | HotelCard, RoomCard, SimilarHotelCard, Gallery + PhotoViewer/PhotoModal/PhotoPage (F7c, substituem o Lightbox), SectionNav, StepIndicator, CouponForm, ActionBar (barra fixa), BookingNumber/CopyBookingNumber (valor copiável), StayDetails (hotel/quarto em streaming) | F3–F6, compondo os acima (ActionBar sobe para shared no 2º uso) |
 
 ## Ajustes pós-revisão (F7a)
 
@@ -1572,3 +1574,33 @@ Resultados                              Hotel
 - Horários em 12h (`From 3:00 PM`, `Until 12:00 PM`), §6.1.
 - Chaves que saem: `map.show`/`map.hide` (viram `map.toggle` "Mapa"/"Map"), `popupRating` (vira
   `RatingScore`), `languageSwitch.label` (sem `aria-label`).
+
+### 9.11 Galeria por rota (F7c): PhotoViewer, PhotoModal, PhotoPage
+
+Sem token novo. Comportamento completo na spec `docs/specs/F7c-nextjs-extras.md` (## UI/UX).
+
+- **PhotoViewer** (cliente): foto atual (`object-contain` sobre `bg-fg`), setas, contador
+  `w-28 text-center tabular-nums aria-live="polite"`, teclas `←`/`→`/`Home`/`End`, arrastar no celular,
+  pré-carga das vizinhas. Trocar de foto = `replaceState`, **sem animação** e sem mover o foco. Com 1 foto:
+  sem setas, contador e gesto.
+- **PhotoModal**: `Dialog size="full"` (§5.3) + PhotoViewer. `aria-describedby` = contador. Foco inicial
+  "Próxima foto" (1 foto: "Fechar"). Esc/Fechar → saída 200 ms `ease-exit` → foco no gatilho → volta no
+  histórico (uma vez só). Voltar do navegador: some sem animação, foco no gatilho (ou na foto principal).
+  Loading: mesma moldura, título `Fotos do hotel`, `Spinner` + `Carregando foto…` visível. Erro: cartão
+  `bg-surface rounded-card p-6 max-w-sm` centralizado com `ErrorState` (texto escuro sobre claro, anel
+  `focus` padrão dentro do cartão).
+- **PhotoPage** (tema claro): `ButtonLink ghost` "Voltar para o hotel" (`ChevronLeftIcon`) → h1
+  `Fotos de {hotel}` (`text-xl lg:text-2xl`) → moldura `rounded-card bg-fg aspect-[4/3] sm:aspect-video`
+  (`lg:max-w-4xl lg:mx-auto`) → linha de controles em fluxo com `IconButton secondary`. Teclas só com foco
+  dentro do visualizador (`role="group"` rotulado pelo h1). Skeleton com a mesma geometria.
+- **Buracos de PPR** (página do hotel): fallbacks com a geometria final, `aria-hidden`, **sem pulso**
+  (`animate-none`): resolvem na mesma resposta e, sem JS, não podem sugerir um carregamento infinito.
+
+| Texto | pt-BR | en-US |
+|---|---|---|
+| Título do modal carregando | `Fotos do hotel` | `Hotel photos` |
+| Erro ao abrir | `Não foi possível abrir a foto` · `Verifique sua conexão e tente de novo.` | `We couldn't open the photo` · `Check your connection and try again.` |
+| Offline ao abrir | `Você está sem internet` · `A foto abre assim que a conexão voltar.` | `You're offline` · `The photo will open once you're back online.` |
+| Link da página cheia | `Voltar para o hotel` | `Back to hotel` |
+| Título da aba | `Foto 3 de 5 · {hotel} \| Infotera Hotéis` | `Photo 3 of 5 · {hotel} \| Infotera Hotéis` |
+| Foto inexistente | `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto de {hotel}.` · `Ver o hotel` | `Photo not found` · `This address doesn't match any photo of {hotel}.` · `View hotel` |

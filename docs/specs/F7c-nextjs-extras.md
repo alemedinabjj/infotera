@@ -293,6 +293,282 @@ e isso agora é verificado no build.
 - `next.config.ts`: `cacheComponents: true`, `partialPrefetching: true`,
   `experimental.serverActions.bodySizeLimit: "64kb"`. Nada de `cacheLife` customizado: só presets.
 
+## UI/UX
+
+Fonte dos tokens, componentes e microcopy (pt e en): `docs/design/design-system.md` §1.1 (anel branco
+sobre `bg-fg`), §1.8 (motion), §5.3 (Dialog `full`), §6.5 e **§9.11 (galeria por rota, nova)**.
+Nenhum token novo: tudo sai do que já existe. Esta seção decide o comportamento visível e **prevalece
+sobre a Decisão 4 (geometria dos buracos), a Decisão 6 (foco e fechamento) e os critérios 18 e 29 onde
+divergir**.
+
+> **Rotas com locale.** O app vive em `app/[locale]/…` (F7b): pt-BR sem prefixo, en-US em `/en`. Toda
+> URL desta seção vale nos dois (`/hotel/1/photos/3` e `/en/hotel/1/photos/3`). O `photoHref` recebe o
+> locale (ou usa o helper de href localizado da F7b); nunca monta `/hotel/…` sem prefixo em en-US.
+
+### Decisões de UX
+
+1. **Um único visualizador, dois invólucros.** `PhotoViewer` é a mesma peça no modal (fundo `bg-fg`,
+   tela cheia) e na página cheia (tema claro, dentro do layout normal). Muda só a moldura; teclas,
+   contador, gesto, foto quebrada e pré-carga das vizinhas são os da F4.
+2. **Fechar nunca sai do hotel.** Esc, "Fechar" e Voltar do navegador fazem a mesma coisa: somem o modal
+   e o foco volta à foto que o abriu. Um modal aberto gera **um** `router.back()` no máximo (Esc duas
+   vezes, ou Esc + clique em "Fechar" durante a saída, não podem voltar duas entradas e tirar o
+   usuário da página do hotel).
+3. **Trocar de foto não é navegar.** Setas, teclas e arrastar trocam a foto na hora, sem animação de
+   deslize, sem request e sem entrada nova no histórico (`replaceState`). Voltar continua a significar
+   "sair da galeria", que é o que se espera no celular.
+4. **Casca primeiro, sem nada pular.** Na página do hotel, o que é do hotel e do quarto (incluindo a
+   diária) chega no HTML estático. Só o que depende da estadia entra depois, em lugares já reservados
+   com a altura final. Os fallbacks dos buracos **não pulsam** (`animate-none`): eles se resolvem na
+   mesma resposta, e com JS desligado um pulso infinito diria "carregando" para sempre.
+5. **Limite de corpo da Server Action não ganha mensagem nova.** Pela interface, o maior envio possível
+   fica abaixo de 16 KB e o teto é 64 KB. O caso só acontece com requisição forjada, e cai no erro de
+   envio que já existe (F5).
+
+### Layout
+
+**Página do hotel, galeria (casca)**: igual à F4. Muda só a semântica: foto principal, miniaturas e
+"Ver todas as fotos (5)" passam de `<button>` a **link** (`PhotoLink`, `next/link`, `scroll={false}`)
+para `/hotel/{id}/photos/{n}`, com o mesmo visual e os mesmos nomes (`Abrir foto 3 de 5`). "Ver todas
+as fotos" vira `ButtonLink secondary sm` para a foto 1. No celular (< `sm`) só a principal aparece,
+como antes.
+
+**Modal da foto** (`PhotoModal` = `Dialog size="full"` + `PhotoViewer`)
+```
+320px (retrato)                         ≥1024px
+┌──────────────────────────────┐        ┌──────────────────────────────────────────────────────┐
+│ Fotos de Hotel Copa…     [×] │ h-14   │ Fotos de Hotel Copacabana Palace                  [×] │ h-14
+├──────────────────────────────┤        ├──────────────────────────────────────────────────────┤
+│                              │        │                                                      │
+│        (foto inteira,        │ flex-1 │               (foto inteira, object-contain,         │
+│        object-contain)       │        │                centralizada, fundo bg-fg)            │
+│                              │        │                                                      │
+├──────────────────────────────┤        ├──────────────────────────────────────────────────────┤
+│ [<]       Foto 3 de 5    [>] │ h-16   │ [<]                  Foto 3 de 5                  [>] │ h-16
+└──────────────────────────────┘        └──────────────────────────────────────────────────────┘
+          + safe-area-inset-bottom
+```
+- Geometria do Dialog `full` (DS §5.3), sem mudança: `h-dvh`, header `h-14`, footer `h-16` com
+  `pb-[env(safe-area-inset-bottom)]`. Em 320 px: 44 + `w-28` (112) + 44 = 200 px na linha do footer, sem
+  scroll horizontal. Celular deitado (altura 320): 120 px de barras, 200 px de foto.
+- Título `truncate` (nome longo corta com reticências; o nome completo continua no nome acessível).
+- Ordem de leitura e de foco: título → Fechar → Foto anterior → (contador, não focável) → Próxima foto.
+- Hotel com 1 foto: sem footer (nem setas, nem contador, nem gesto). Foco inicial em "Fechar".
+
+**Página cheia da foto** (`PhotoPage`, aberta por URL, reload ou link compartilhado)
+```
+320px                                   ≥1024px
+[header do site]                        [header do site]
+[< Voltar para o hotel]   ghost, h-11   [< Voltar para o hotel]
+Fotos de Hotel Copacabana               Fotos de Hotel Copacabana Palace            (h1 text-2xl)
+Palace                 (h1 text-xl)     ┌──────────────────────────────────────┐
+┌────────────────────────┐              │                                      │  max-w-4xl mx-auto
+│ (foto, bg-fg,          │ aspect-[4/3] │   (foto, bg-fg, object-contain)      │  aspect-video
+│  object-contain)       │              │                                      │  rounded-card
+└────────────────────────┘              └──────────────────────────────────────┘
+[<]      Foto 3 de 5      [>]           [<]          Foto 3 de 5           [>]
+[footer do site]                        [footer do site]
+```
+- Container padrão (§4.1), `main` com `py-6 lg:py-10`, pilha `flex flex-col gap-4`.
+- "Voltar para o hotel": `ButtonLink ghost` com `ChevronLeftIcon` em `leftIcon`, alinhado à esquerda,
+  **antes** do h1 (é a saída da página, como um breadcrumb). Vai para `/hotel/{id}` no locale atual.
+- Moldura da foto: `relative w-full overflow-hidden rounded-card bg-fg aspect-[4/3] sm:aspect-video`;
+  a partir de `lg`, `max-w-4xl mx-auto` (a foto inteira cabe acima da dobra num notebook de 768 px de
+  altura). Mesma geometria no skeleton.
+- Linha de controles **fora** da foto, em fluxo: `flex items-center justify-between`, mesma largura da
+  moldura. Setas `IconButton secondary` (44 px; tema claro, anel `focus` normal). Contador central
+  `w-28 text-center tabular-nums text-fg-muted`, `aria-live="polite"`.
+- Hotel com 1 foto: sem a linha de controles.
+- Sem miniaturas nem preço nesta página: ela é a foto. O caminho para reservar é o link do topo (o
+  hotel mostra preço e quartos). Decisão consciente para não duplicar a galeria.
+
+**Página do hotel, buracos dinâmicos** (geometria final, do topo para baixo)
+```
+Casca estática (HTML do build)               Buraco (fallback → conteúdo, mesma altura)
+Breadcrumb: Início › Resultados › Hotel      "Resultados" = mesmo link sem critérios → com critérios
+Cabeçalho: nome, nota, endereço,
+  "a partir de R$ 800 por noite"
+Galeria · Visão geral · Comodidades …
+Quartos (h2)
+                                             HotelStayBar: card p-4  [h-5 w-20]
+                                                                     [h-6 w-64 max-w-full]
+                                                                     [h-11 w-60] (botão sm)
+RoomCard: foto, nome, specs, comodidades,
+  selo (escassez/esgotado)
+                                             total: [h-7 w-28] + detalhe: [h-5 w-40] (à direita)
+  "R$ 800 por noite, sem taxas" (sempre)
+                                             motivo (só quando existe) + botão [h-11 w-full sm:w-56 sm:ml-auto]
+Comparar quartos · Comentários p.1 · Similares (links dos cards = mesmo link sem critérios)
+```
+- **Diária fora do buraco.** A linha `R$ 800 por noite, sem taxas` (3ª linha do `PriceTag stay`) fica na
+  casca em todos os estados: com JS desligado ela é o preço do quarto (critério 5), e o buraco só
+  acrescenta **acima** dela o total em destaque e `total com taxas · 3 noites · 1 quarto`. Sem datas
+  ou com quarto não reservável, o buraco não acrescenta preço (vale a diária, como a variante
+  `nightly-line` da F4). Isso **substitui a variante `room-nightly`** no card do quarto: a diária tem
+  um só formato, com ou sem datas (o "a partir de" grande continua no cabeçalho do hotel). O
+  `PriceTag` ganha a variante `stay-total` (só as 2 primeiras linhas); `stay` continua para os
+  outros usos.
+- **Skeleton do `HotelStayBar` = geometria do caso com datas** (o fluxo vindo da busca). No acesso
+  direto sem datas, o aviso + formulário aberto da F4 é mais alto; ele chega na mesma resposta e fica
+  abaixo da dobra no celular e no desktop (a seção Quartos vem depois da galeria e da visão geral).
+- **Skeleton do `RoomStayAction` = geometria do quarto reservável** (total + detalhe + botão). Os
+  estados com motivo (`too-small`, `insufficient`, `sold-out`, `past-dates`) mudam a altura do próprio
+  card, também abaixo da dobra. O critério 6 (CLS 0) mede o fluxo com critérios válidos e quarto
+  disponível; os demais não podem mover nada **acima** da seção Quartos.
+- Os fallbacks são `aria-hidden` e sem texto. Não há região viva nos buracos (seriam N anúncios, um por
+  quarto). Quem usa leitor de tela encontra o conteúdo final ao chegar nele.
+- `/search` e `/confirmation/[bookingId]`: a casca é o `loading.tsx` que já existe (skeletons da F3 e
+  da F6). Nada muda visualmente. `/checkout` continua sem casca (carga normal).
+- `/hotel/61` (fora do build): `HotelDetailsSkeleton` da F4 → "Hotel não encontrado". Sem mudança.
+
+### Estados
+
+| Tela/área | Loading | Erro | Vazio / inválido | Sucesso | Offline / lento |
+|---|---|---|---|---|---|
+| Modal da foto (rota carregando) | Mesma moldura do Dialog `full` aberta na hora: título genérico `Fotos do hotel`, "Fechar", corpo `bg-fg` com `Spinner` + `Carregando foto…` **visível** (padrão do `LightboxPhoto`; bloco claro de skeleton sobre fundo escuro seria um flash), corpo com `aria-busy="true"`, footer `h-16` vazio reservado | Mesma moldura; no corpo, um cartão claro centralizado (`bg-surface rounded-card p-6 max-w-sm w-[calc(100%-2rem)]`) com `ErrorState` `Não foi possível abrir a foto` · `Verifique sua conexão e tente de novo.` + `Tentar de novo` (secondary, `reset()` + `router.refresh()`) e `Fechar` (ghost, mesmo fluxo de fechar). O cartão claro evita texto `fg-muted` sobre `bg-fg` | Índice inválido: o modal não abre (`null`); a página por trás fica como estava | Foto, contador, setas. Troca de foto instantânea | `navigator.onLine === false` no erro: título `Você está sem internet` · `A foto abre assim que a conexão voltar.` (mesmos botões). Foto que não baixa: `Não foi possível carregar esta foto.` sobre a moldura, setas seguem (F4) |
+| Página cheia da foto | Skeleton claro com a geometria final: `h-11 w-44` (voltar), `h-7 w-3/4` (h1), bloco `aspect-[4/3] sm:aspect-video rounded-card`, linha `h-11` com 2 blocos `size-11` nas pontas e `h-5 w-28` no meio. `aria-busy` + `sr-only aria-live="polite"` `Carregando foto…` | `error.tsx` do hotel (F4: `Não foi possível abrir o hotel`) | **Foto não encontrada** (índice fora de `1..total`, `0`, `abc`, `01`): `EmptyState` de página, h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto de {hotel}.` + `ButtonLink primary` `Ver o hotel` (`/hotel/{id}`). Hotel inexistente: `Hotel não encontrado` da F4 | h1, foto, controles, título da aba `Foto 3 de 5 · {hotel} \| Infotera Hotéis` (atualizado a cada troca) | Sem cache: página offline `public` da F7b |
+| Buracos da página do hotel | Fallbacks estáticos (sem pulso), `aria-hidden` | Não há: são cálculos sobre dados já na casca, sem request | Sem datas: `Escolha as datas para reservar` + formulário aberto (F4) e `Escolher datas` em cada quarto | Total, detalhe, motivo e botão no lugar reservado | JS desligado: fallbacks ficam; nome, fotos, diárias, comentários e similares visíveis |
+| Server Action acima de 64 KB | — | Inalcançável pela UI. Se acontecer (requisição forjada), mostra o erro de envio da F5 (`Não foi possível confirmar sua reserva` · `Nenhuma cobrança foi feita. Seus dados foram mantidos; tente de novo em instantes.`). Sem texto novo, sem citar tamanho | — | — | — |
+
+O "Foto não encontrada" **não** linka para outra foto: um `<Link>` de `/photos/abc` para `/photos/1`
+seria interceptado e abriria o modal por cima da página de erro.
+
+### Interações
+
+**Abrir (da página do hotel)**
+- Clique/Enter numa foto (ou "Ver todas as fotos"): URL vira `/hotel/{id}/photos/{n}` (entrada nova no
+  histórico), o modal abre sobre a página, **sem rolar**, com fade de entrada (preset `dialog-full`).
+  O link clicado é registrado como gatilho (`data-photo-opener`) no `onClick`, antes da navegação.
+- Foco inicial: "Próxima foto" (com 1 foto, "Fechar"). O `<dialog>` tem `aria-describedby` = id do
+  contador, então o leitor anuncia `Fotos de Hotel Copacabana Palace, diálogo, Foto 3 de 5` ao abrir.
+- Se o modal passou pelo loading, a entrada anima **uma vez** (a troca loading → conteúdo não refaz o
+  fade nem mexe na moldura). O foco vai para "Fechar" no loading e passa para "Próxima foto" quando a
+  foto chega, só se continuar em "Fechar" (não arrancamos o foco de quem já se moveu).
+
+**Dentro do modal**
+- `←`/`→` (e as setas na tela, e arrastar na horizontal no celular): foto anterior/próxima, dando a
+  volta. `Home`/`End`: primeira/última. A URL troca por `replaceState`, o contador anuncia
+  `Foto 4 de 5`, o foco fica onde estava. Sem animação de troca.
+- `Tab` circula só dentro do modal (Fechar → anterior → próxima). O fundo é inerte.
+- Zoom do navegador (pinça) continua liberado.
+
+**Fechar**
+- Esc ou "Fechar": animação de saída (200 ms `ease-exit`; com reduced motion só fade ≤ 150 ms) →
+  `dialog.close()` → foco no gatilho → `router.back()`. A URL volta a ser a de antes de abrir (com os
+  critérios), qualquer que tenha sido a foto vista. Cliques/teclas durante a saída são ignorados.
+- **Voltar do navegador** (botão, gesto do Android/iOS): o modal some na hora, sem animação (quem
+  anima é o navegador), e o foco volta ao gatilho.
+- **Avançar** depois de fechar: o modal reabre na foto em que estava (a URL guardada é a da última
+  foto vista).
+- Gatilho para o foco, em ordem: o link registrado, se ainda estiver no DOM e visível; senão o link
+  da foto principal (ex.: modal reaberto por Avançar, ou miniatura escondida porque a tela encolheu
+  para < `sm`). Nunca `body`.
+- Rolagem: a página por trás está exatamente onde estava (sem salto ao abrir nem ao fechar).
+
+**Página cheia**
+- Setas na tela e teclas (`←`/`→`/`Home`/`End`) com foco em qualquer controle do visualizador
+  (`onKeyDown` no contêiner `role="group"` com `aria-labelledby` = h1). Não capturamos as setas no
+  documento: elas continuam rolando a página. Arrastar na foto troca no celular.
+- Trocar de foto: `replaceState` + `document.title` atualizado; contador anunciado; foco fica no
+  botão. Nada de `<Link>` entre fotos.
+- "Voltar para o hotel" leva a `/hotel/{id}` sem critérios (trade-off da Decisão 6). Voltar do
+  navegador volta para onde a pessoa estava antes (outro site, por exemplo).
+- Esc não faz nada (é uma página).
+- Trocar o idioma no header: carga de documento para a mesma foto no outro idioma (a URL atual já
+  tem o índice certo, por causa do `replaceState`).
+
+**Página do hotel (PPR)**
+- Nada é clicável no fallback (skeleton sem foco e sem `href` vazio). Os links de fallback do
+  breadcrumb e dos similares **são** clicáveis: levam ao destino sem critérios, que é o comportamento
+  correto enquanto os critérios não chegaram.
+- Prefetch por intenção no card da busca: nenhum sinal visual novo. O selo "Abrindo…" da F7a continua
+  valendo quando o clique acontece antes do prefetch terminar.
+
+### Microcopy
+
+Os textos do visualizador já existem em `hotelDetailsMessages.gallery` (F4). Novos (`gallery` e
+`photoPage`), pt-BR / en-US:
+
+| Chave | pt-BR | en-US |
+|---|---|---|
+| `gallery.modalLoadingTitle` | `Fotos do hotel` | `Hotel photos` |
+| `gallery.openError` | `Não foi possível abrir a foto` | `We couldn't open the photo` |
+| `gallery.openErrorBody` | `Verifique sua conexão e tente de novo.` | `Check your connection and try again.` |
+| `gallery.offlineTitle` | `Você está sem internet` | `You're offline` |
+| `gallery.offlineBody` | `A foto abre assim que a conexão voltar.` | `The photo will open once you're back online.` |
+| `photoPage.back` | `Voltar para o hotel` | `Back to hotel` |
+| `photoPage.metaTitle` | `Foto {n} de {total} · {hotel} \| Infotera Hotéis` | `Photo {n} of {total} · {hotel} \| Infotera Hotéis` |
+| `photoPage.notFoundTitle` | `Foto não encontrada` | `Photo not found` |
+| `photoPage.notFoundBody` | `Este endereço não corresponde a nenhuma foto de {hotel}.` | `This address doesn't match any photo of {hotel}.` |
+| `photoPage.viewHotel` | `Ver o hotel` | `View hotel` |
+| `photoPage.metaNotFound` | `Foto não encontrada \| Infotera Hotéis` | `Photo not found \| Infotera Hotéis` |
+
+Reusados sem mudança: `Fotos de {hotel}` / `Photos of {hotel}` (título do modal **e** h1 da página),
+`Foto {n} de {total}` / `Photo {n} of {total}`, `{hotel}, foto {n} de {total}` (alt),
+`Abrir foto {n} de {total}`, `Foto anterior`/`Previous photo`, `Próxima foto`/`Next photo`,
+`Fechar`/`Close`, `Tentar de novo`/`Try again`, `Carregando foto…`/`Loading photo…`,
+`Não foi possível carregar esta foto.`/`We couldn't load this photo.`, `Ver todas as fotos ({n})`.
+O nome do hotel vem da API em português: em `/en`, o h1, o título do modal e o alt marcam o trecho
+com `lang="pt-BR"` (`contentLang`, F7b) quando o nome for um elemento próprio; no texto composto o
+nome fica como está (nome próprio).
+
+### Acessibilidade
+
+- **Alvos**: Fechar, setas e "Voltar para o hotel" ≥ 44 px; links de foto são a foto inteira.
+- **Foco visível**: no modal, anel branco (`outline-fg-on-primary`, 17.28:1 sobre `bg-fg`, DS §1.1);
+  na página cheia, anel `focus` padrão (setas são `secondary` sobre `canvas`). O cartão de erro no
+  modal é claro e usa o anel padrão dentro dele (o seletor `[&_:focus-visible]` do Dialog `full`
+  precisa ceder dentro do cartão: `outline-focus` explícito nos botões do `ErrorState`).
+- **Roles**: modal = `<dialog>` nativo `aria-labelledby` (título) + `aria-describedby` (contador). Página
+  = h1 + `role="group"` do visualizador rotulado pelo h1. Contador `aria-live="polite"` nos dois. Alt da
+  foto atual `{hotel}, foto 3 de 5`; vizinhas pré-carregadas em `hidden` com `alt=""`.
+- **Foco nunca cai no `body`**: fechar (Esc, botão, Voltar) → gatilho ou foto principal; erro do modal
+  → "Tentar de novo" recebe o foco quando o `ErrorState` aparece (`role="alert"` anuncia o texto).
+- **Teclado**: tudo do critério 13–16 funciona só com teclado. A página cheia não sequestra as setas
+  fora do visualizador.
+- **Reduced motion**: o preset `dialog-full` já é só fade (200 ms); com `prefers-reduced-motion` o
+  fade cai para ≤ 150 ms (política do DS §1.8, que prevalece sobre o "sem fade" do critério 29).
+  Troca de foto nunca anima. Spinner para e o texto `Carregando foto…` fica. Buracos sem pulso em
+  qualquer modo.
+- **320 px**: sem scroll horizontal no modal, na página cheia, no "Foto não encontrada" e no
+  skeleton (axe + verificação visual, critérios 27–28).
+- **Leitor de tela e PPR**: fallbacks `aria-hidden`; nenhum anúncio quando total/botão chegam. O "a
+  partir de" do cabeçalho está na casca, então o preço sempre existe para quem chega primeiro.
+
+### Componentes
+
+Reusados: `Dialog size="full"` (uma só mudança: prop nova `describedBy` → `aria-describedby`), `IconButton` (`overlay` no modal, `secondary` na página), `ButtonLink`
+(`leftIcon`), `RemoteImage`, `Spinner`, `Skeleton`, `ErrorState`, `EmptyState`, `PriceTag`
+(+ variante `stay-total`), `LightboxPhoto` (vira `PhotoFrame`: mesmo estado carregando/quebrada),
+`useSwipe`, regras puras de `model/gallery.ts`.
+Novos (feature `hotel-details`, DS §9.11): `PhotoViewer`, `PhotoModal`, `PhotoPage`, `PhotoLink`,
+`PhotoSkeleton` (variantes `modal` e `page`), `PhotoNotFound`, `RoomStayAction` +
+`RoomStayActionSkeleton`, `HotelStayBarSkeleton`, `StayAwareLink`. Nenhum vai para `shared/ui` (um uso só).
+Novo token: **nenhum**.
+
+### Critérios de UI complementares
+
+- U1. Em 320 px, modal com 5 fotos: footer numa linha (setas 44 px nas pontas, contador no meio),
+  título truncado, sem scroll horizontal; com 1 foto, sem footer e foco inicial em "Fechar".
+- U2. Abrir o modal anuncia o nome do diálogo e `Foto n de N` (`aria-describedby`); trocar de foto
+  anuncia só o contador e não move o foco.
+- U3. Esc duas vezes seguidas (ou Esc + "Fechar" durante a saída) volta **uma** entrada: a página do
+  hotel continua na tela, com a mesma URL de antes de abrir.
+- U4. Fechar por Voltar em < `sm` depois de abrir por "Ver todas as fotos": foco em "Ver todas as
+  fotos". Reabrir por Avançar e fechar: foco na foto principal.
+- U5. Página cheia: "Voltar para o hotel" antes do h1; setas abaixo da foto; ←/→ com foco no
+  visualizador trocam a foto e o título da aba; ←/→ com foco fora dele rolam a página.
+- U6. Modal com a rota falhando (RSC 500): cartão claro com `Não foi possível abrir a foto`,
+  `Tentar de novo` focado e `Fechar` funcionando como Esc. Offline: `Você está sem internet`.
+- U7. Página do hotel com critérios e JS ligado: total e botão aparecem no lugar do skeleton sem
+  mover nada acima de "Quartos" (CLS 0); com JS desligado, cada quarto mostra
+  `R$ … por noite, sem taxas` e os fallbacks não pulsam.
+- U8. Sem datas, cada quarto mostra a diária no mesmo formato de linha (`R$ … por noite, sem taxas`)
+  e `Escolher datas`; o "a partir de" grande fica só no cabeçalho.
+- U9. Em `/en/hotel/1/photos/3`: h1 `Photos of Hotel Copacabana Palace`, `Back to hotel`, aba
+  `Photo 3 of 5 · Hotel Copacabana Palace | Infotera Hotéis`; links das fotos em `/en/hotel/1` levam a
+  `/en/hotel/1/photos/n`.
+
 ## Critérios de aceite
 
 **Build e forma das rotas**
