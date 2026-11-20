@@ -8,7 +8,6 @@ export const ptBR = {
     targetName: "English",
     /** Sigla visível em telas muito estreitas. */
     targetShort: "EN",
-    label: "Mudar idioma para English",
   },
   install: {
     title: "Instale o Infotera Hotéis",

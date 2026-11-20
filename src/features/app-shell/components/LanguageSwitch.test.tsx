@@ -27,14 +27,17 @@ describe("LanguageSwitch", () => {
 
   it("em pt-BR oferece English, com lang e hreflang do destino", () => {
     renderSwitch("pt-BR");
-    const link = screen.getByRole("link", { name: "Mudar idioma para English" });
+    // Sem aria-label: o nome vem do conteúdo e começa pelo texto visível abaixo de `xs` (label-in-name).
+    const link = screen.getByRole("link", { name: "EN English" });
+    expect(link).not.toHaveAttribute("aria-label");
     expect(link).toHaveAttribute("hreflang", "en-US");
+    expect(screen.getByText("EN")).toHaveClass("xs:hidden");
     expect(screen.getByText("English")).toHaveAttribute("lang", "en-US");
   });
 
   it("em en-US oferece Português", () => {
     renderSwitch("en-US");
-    const link = screen.getByRole("link", { name: "Switch language to Português" });
+    const link = screen.getByRole("link", { name: "PT Português" });
     expect(link).toHaveAttribute("hreflang", "pt-BR");
     expect(screen.getByText("Português")).toHaveAttribute("lang", "pt-BR");
   });

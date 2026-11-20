@@ -17,9 +17,9 @@ export const SiteHeader = ({ actions, homeLabel, homeHref }: SiteHeaderProps) =>
       <Link
         href={homeHref}
         aria-label={homeLabel}
-        className="rounded-control text-lg font-bold text-fg hover:text-primary"
+        className="rounded-control text-lg font-bold whitespace-nowrap text-fg hover:text-primary"
       >
-        Infotera Hotéis
+        Infotera<span className="hidden xs:inline"> Hotéis</span>
       </Link>
       {actions}
     </div>

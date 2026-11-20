@@ -64,7 +64,7 @@ test.describe("seletor de idioma", () => {
   test("troca para Português preservando a página, o cookie e a seleção", async ({ page }) => {
     await seedSelection(page, { hotelId: 1, roomId: 1, criteria: criteria() });
     await page.goto(`/en/hotel/1?${criteriaQuery()}`);
-    const link = page.getByRole("link", { name: "Switch language to Português" });
+    const link = page.getByRole("link", { name: /Português$/ });
     // O href real só existe depois de hidratar: é o sinal de que o clique já é tratado.
     await expect(link).toHaveAttribute("href", `/hotel/1?${criteriaQuery()}`);
     await link.click();
@@ -80,7 +80,7 @@ test.describe("seletor de idioma", () => {
     page,
   }) => {
     await page.goto("/search?destination=Rio");
-    const link = page.getByRole("link", { name: "Mudar idioma para English" });
+    const link = page.getByRole("link", { name: /English$/ });
     await expect(link).toHaveAttribute("href", "/en/search?destination=Rio");
     await link.click();
     await expect(page).toHaveURL("/en/search?destination=Rio");
