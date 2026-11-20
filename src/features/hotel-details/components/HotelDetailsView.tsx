@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import type { Locale } from "@/shared/i18n/config";
 import type { SearchCriteria } from "@/shared/lib/search-params";
@@ -13,6 +12,7 @@ import { hotelBreadcrumb } from "../model/breadcrumb";
 import { Breadcrumb } from "./Breadcrumb";
 import { Gallery } from "./Gallery";
 import { HotelHeader } from "./HotelHeader";
+import { HotelNotFound } from "./HotelNotFound";
 import { HotelOverview } from "./HotelOverview";
 import { HotelPolicies } from "./HotelPolicies";
 import { HotelStayBar } from "./HotelStayBar";
@@ -46,7 +46,7 @@ type HotelDetailsViewProps = {
  * `/hotel/[hotelId]`. Server Component: catálogo (hotel, quartos, 1ª página de avaliações) em
  * paralelo, de funções `"use cache"`, então a página é uma casca estática revalidada (PPR + ISR). O
  * que depende da estadia entra por três tipos de buraco: `HotelStayBar`, `RoomStayAction` por quarto
- * e links com critérios (`StayAware`). Hotel inexistente → `notFound()`.
+ * e links com critérios (`StayAware`). Hotel inexistente → "não encontrado" inline (`200` + `noindex`, ver `HotelPage`).
  */
 export const HotelDetailsView = async ({
   locale,
@@ -60,7 +60,7 @@ export const HotelDetailsView = async ({
     settle(getHotelRoomsSnapshot(hotelId)),
     settle(getFirstReviewsSnapshot(hotelId)),
   ]);
-  if (snapshot.kind === "not-found") notFound();
+  if (snapshot.kind === "not-found") return <HotelNotFound locale={locale} />;
   const { hotel } = snapshot;
   const t = hotelDetailsMessages.get(locale);
 

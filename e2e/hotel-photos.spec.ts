@@ -149,6 +149,15 @@ test.describe("página cheia da foto (critérios 16, 17 e 19)", () => {
   }
 });
 
+test("/hotel/999/photos/1: 'Hotel não encontrado' da F4, não 'Foto não encontrada'", async ({
+  page,
+}) => {
+  await page.goto("/hotel/999/photos/1");
+  await expect(page.getByRole("heading", { level: 1, name: "Hotel não encontrado" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Foto não encontrada" })).toHaveCount(0);
+  await expect(page).toHaveTitle("Hotel não encontrado | Infotera Hotéis");
+});
+
 test.describe("acessibilidade e 320 px (critérios 27 e 28)", () => {
   test("axe no modal aberto e na página cheia; sem scroll horizontal", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });

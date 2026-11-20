@@ -23,9 +23,13 @@ const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_APP_VERSION: APP_VERSION },
   poweredByHeader: false,
   agentRules: false,
-  // PPR: no 16.x é `cacheComponents` (F7c, Decisão 1). `partialPrefetching` evita o warning da doc.
+  // PPR: no 16.x é `cacheComponents` (F7c, Decisão 1). `partialPrefetching` fica **explicitamente** desligado
+  // (valor omitido gera warning): ligado, a 1ª visita a um id fora do `generateStaticParams` (`/hotel/61`,
+  // `/hotel/abc`) recebe uma casca de 0 byte e o HTML vira `<html id="__next_error__">` com o corpo só no
+  // cliente. Desligado, a 1ª visita espera a página e o HTML do "não encontrado" (header, h1, link e
+  // título) sai do servidor, também sem JavaScript.
   cacheComponents: true,
-  partialPrefetching: true,
+  partialPrefetching: false,
   // A única Server Action é a reserva: o maior envio possível (3 quartos, hóspedes, contato, cupom) fica
   // bem abaixo de 16 KB. O padrão (1 MB) só convidaria abuso.
   experimental: { serverActions: { bodySizeLimit: "64kb" } },

@@ -4,6 +4,7 @@ export { HotelDetailsView } from "./components/HotelDetailsView";
 export { HotelNotFound } from "./components/HotelNotFound";
 export { PhotoModal } from "./components/PhotoModal";
 export { PhotoModalLoading } from "./components/PhotoModalLoading";
+export { PhotoNotFoundView } from "./components/PhotoNotFoundView";
 export { PhotoPage } from "./components/PhotoPage";
 export { type DatesFormLabels, datesFormLabels } from "./model/dates-form-labels";
 export { parseHotelId } from "./model/hotel-id";

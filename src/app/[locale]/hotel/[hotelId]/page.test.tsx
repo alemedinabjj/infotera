@@ -1,17 +1,13 @@
 import { isValidElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HotelDetailsView } from "@/features/hotel-details";
+import { HotelDetailsView, HotelNotFound } from "@/features/hotel-details";
 import { seedHotel } from "@/shared/testing/seed";
 import HotelPage, { generateMetadata } from "./page";
 
-vi.mock("next/navigation", async () => ({
-  ...(await import("@/shared/testing/next-navigation")).navigationMock,
-  notFound: () => {
-    throw Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK;404"), {
-      digest: "NEXT_HTTP_ERROR_FALLBACK;404",
-    });
-  },
-}));
+vi.mock(
+  "next/navigation",
+  async () => (await import("@/shared/testing/next-navigation")).navigationMock,
+);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -33,13 +29,14 @@ const CRITERIA = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("HotelPage", () => {
-  it("id inválido: notFound sem chamar a API (critério 2)", async () => {
+  it("id inválido: 'não encontrado' inline (HTML do servidor) sem chamar a API (critério 2)", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     for (const id of ["abc", "0", "01", "1.5"]) {
-      await expect(HotelPage(props(id))).rejects.toMatchObject({
-        digest: "NEXT_HTTP_ERROR_FALLBACK;404",
-      });
+      const element = await HotelPage(props(id));
+      expect(isValidElement(element)).toBe(true);
+      if (!isValidElement(element)) return;
+      expect(element.type).toBe(HotelNotFound);
     }
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -88,7 +85,10 @@ describe("generateMetadata (critérios 1 e 2)", () => {
       "fetch",
       vi.fn(async () => json({ error: "Not Found" }, 404)),
     );
-    const expected = { title: "Hotel não encontrado | Infotera Hotéis" };
+    const expected = {
+      title: "Hotel não encontrado | Infotera Hotéis",
+      robots: { index: false },
+    };
     expect(await generateMetadata(props("abc"))).toEqual(expected);
     expect(await generateMetadata(props("999"))).toMatchObject(expected);
   });

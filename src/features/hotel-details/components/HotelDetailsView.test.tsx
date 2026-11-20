@@ -1,20 +1,17 @@
 import { screen } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeReview } from "@/shared/testing/fixtures";
 import { renderWithProviders } from "@/shared/testing/render";
 import { seedHotel, seedRooms } from "@/shared/testing/seed";
 import { setStayCriteria } from "../testing/stay-aware";
 import { HotelDetailsView } from "./HotelDetailsView";
+import { HotelNotFound } from "./HotelNotFound";
 
-vi.mock("next/navigation", async () => ({
-  ...(await import("@/shared/testing/next-navigation")).navigationMock,
-  notFound: () => {
-    throw Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK;404"), {
-      digest: "NEXT_HTTP_ERROR_FALLBACK;404",
-    });
-  },
-}));
+vi.mock(
+  "next/navigation",
+  async () => (await import("@/shared/testing/next-navigation")).navigationMock,
+);
 // Os RSC assíncronos (similares, barra da estadia, links) têm teste próprio.
 vi.mock("./SimilarHotels", () => ({ SimilarHotels: () => <p>similares</p> }));
 vi.mock("./HotelStayBar", () => ({ HotelStayBar: () => <p>barra da estadia</p> }));
@@ -71,11 +68,14 @@ describe("HotelDetailsView: catálogo em paralelo", () => {
     expect(snapshots.reviews).toHaveBeenCalledWith(7);
   });
 
-  it("hotel not-found vira notFound()", async () => {
+  it("hotel not-found renderiza o 'não encontrado' inline (HTML do servidor, não notFound())", async () => {
     snapshots.hotel.mockResolvedValue({ kind: "not-found" });
     snapshots.rooms.mockResolvedValue([]);
     snapshots.reviews.mockResolvedValue({ page: { items: [], total: 0 }, fetchedAt: 1 });
-    await expect(view(999)).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+    const element = await view(999);
+    expect(isValidElement(element)).toBe(true);
+    if (!isValidElement(element)) return;
+    expect(element.type).toBe(HotelNotFound);
   });
 
   it("erro do catálogo é relançado (error.tsx da rota)", async () => {

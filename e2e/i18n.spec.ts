@@ -33,9 +33,21 @@ test.describe("rotas por idioma", () => {
     expect(locationOf(en.headers())).toBe("/en/hotel/1");
   });
 
-  test("caminho desconhecido no idioma é 404", async ({ request }) => {
-    expect((await request.get("/en/xyz")).status()).toBe(404);
-    expect((await request.get("/xyz")).status()).toBe(404);
+  test("caminho desconhecido no idioma: 'não encontrado' no HTML do servidor, com noindex", async ({
+    request,
+  }) => {
+    // Sob `cacheComponents` todo `notFound()` vira HTML vazio (`__next_error__`); por isso é página
+    // inline: `200` + `noindex`, com h1 no idioma já no HTML.
+    for (const [path, heading] of [
+      ["/en/xyz", "Page not found"],
+      ["/xyz", "Página não encontrada"],
+    ] as const) {
+      const response = await request.get(path);
+      expect(response.status()).toBe(200);
+      const html = await response.text();
+      expect(html).toContain('<meta name="robots" content="noindex"');
+      expect(html).toMatch(new RegExp(`<h1[^>]*>${heading}</h1>`));
+    }
   });
 
   test("cookie en-US redireciona (307) para /en; sem cookie, Accept-Language é ignorado", async ({
