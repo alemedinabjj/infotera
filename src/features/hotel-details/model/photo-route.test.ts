@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhotoParam, photoHref, photoPageTitle } from "./photo-route";
+import { parsePhotoParam, photoHref, photoIndexFromPath, photoPageTitle } from "./photo-route";
 
 describe("parsePhotoParam", () => {
   it.each([
@@ -61,5 +61,25 @@ describe("photoPageTitle", () => {
     expect(photoPageTitle({ kind: "not-found" }, "en-US")).toBe(
       "Photo not found | Infotera Hotéis",
     );
+  });
+});
+
+describe("photoIndexFromPath", () => {
+  it.each([
+    ["/hotel/1/photos/3", 5, 2],
+    ["/en/hotel/1/photos/5", 5, 4],
+    ["/hotel/1/photos/1/", 5, 0],
+  ])("lê a foto de %s (índice %i)", (pathname, total, index) => {
+    expect(photoIndexFromPath(pathname, total)).toBe(index);
+  });
+
+  it.each([
+    ["/hotel/1", 5],
+    ["/hotel/1/photos/9", 5],
+    ["/hotel/1/photos/abc", 5],
+    ["/", 5],
+    ["", 5],
+  ])("devolve null para %j", (pathname, total) => {
+    expect(photoIndexFromPath(pathname, total)).toBeNull();
   });
 });
