@@ -1,94 +1,38 @@
-"use client";
-
-import type { ReactNode } from "react";
-import { cn } from "@/shared/lib/cn";
-import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
-import { Alert, Button, ChevronDownIcon, cardClassName } from "@/shared/ui";
-import { useFocusAfterDates } from "../hooks/useFocusAfterDates";
-import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
-import { STAY_EDIT_TITLE_ID } from "../model/sections";
-import { useStayEdit } from "./StayEditContext";
-
-const PANEL_ID = "stay-edit-panel";
+import { type ReactNode, Suspense } from "react";
+import type { Locale } from "@/shared/i18n/config";
+import { isBeforeToday, todayISO } from "@/shared/lib/dates";
+import type { SearchCriteria } from "@/shared/lib/search-params";
+import { describeStay } from "@/shared/lib/stay-summary";
+import { HotelStayBarSkeleton } from "./HotelStayBarSkeleton";
+import { StayBarView } from "./StayBarView";
 
 type HotelStayBarProps = {
-  /** `null`: acesso direto, sem datas. */
-  criteria: SearchCriteria | null;
-  /** `12–15 dez · 3 noites · 2 adultos · 1 quarto` (só com critérios). */
-  summary: string | null;
-  /** O check-in já passou (calculado no servidor, igual à F3: o aviso já vem no HTML). */
-  pastDates: boolean;
-  /** O `SearchForm` da F2, montado por `app/` (feature não importa feature). */
-  datesForm: ReactNode;
+  locale: Locale;
+  /** Promessa dos critérios da URL (pendente na casca). */
+  criteria: Promise<SearchCriteria | null>;
+  /** O `SearchForm` da F2 montado por `app/` para os critérios resolvidos (feature não importa feature). */
+  renderDatesForm: (criteria: SearchCriteria | null) => ReactNode;
 };
 
-const Panel = ({ children }: { children: ReactNode }) => {
-  const t = useHotelDetailsMessages().stayBar;
+const ResolvedStayBar = async ({ locale, criteria, renderDatesForm }: HotelStayBarProps) => {
+  const resolved = await criteria;
+  const today = todayISO();
   return (
-    <div id={PANEL_ID}>
-      <h3 id={STAY_EDIT_TITLE_ID} className="sr-only">
-        {t.change}
-      </h3>
-      {children}
-    </div>
-  );
-};
-
-const MissingDates = ({ datesForm }: { datesForm: ReactNode }) => {
-  const t = useHotelDetailsMessages().stayBar;
-  return (
-    <div className="flex flex-col gap-4">
-      <Alert tone="info" title={t.missingTitle}>
-        {t.missingBody}
-      </Alert>
-      <Panel>{datesForm}</Panel>
-    </div>
+    <StayBarView
+      criteria={resolved}
+      summary={resolved ? describeStay(resolved, today, locale) : null}
+      pastDates={resolved ? isBeforeToday(resolved.checkIn, today) : false}
+      datesForm={renderDatesForm(resolved)}
+    />
   );
 };
 
 /**
- * Barra da estadia no topo de "Quartos". Com critérios: resumo + "Alterar datas e hóspedes"
- * (disclosure; o painel abre **abaixo** do botão). Sem critérios: aviso e o formulário sempre
- * aberto. Enviar o formulário fecha o painel (os critérios mudam) e leva o foco ao h2 "Quartos".
+ * Buraco 1 do PPR: resumo da estadia, aviso "Escolha as datas" e o formulário. Espera os critérios
+ * dentro do Suspense; o fallback é um skeleton da mesma altura (caso com datas).
  */
-export const HotelStayBar = ({ criteria, summary, pastDates, datesForm }: HotelStayBarProps) => {
-  const t = useHotelDetailsMessages().stayBar;
-  const key = criteria ? searchCriteriaToQueryString(criteria) : "none";
-  const { open, toggle } = useStayEdit();
-  useFocusAfterDates(key);
-
-  if (criteria === null) return <MissingDates datesForm={datesForm} />;
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div
-        className={cardClassName({
-          className: "gap-3 p-4 sm:flex-row sm:items-center sm:justify-between",
-        })}
-      >
-        <div>
-          <p className="text-sm font-medium text-fg-muted">{t.stay}</p>
-          <p className="text-base font-semibold text-fg tabular-nums">{summary}</p>
-        </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-expanded={open}
-          aria-controls={PANEL_ID}
-          rightIcon={
-            <ChevronDownIcon className={cn("size-4 transition-transform", open && "rotate-180")} />
-          }
-          onClick={toggle}
-        >
-          {t.change}
-        </Button>
-      </div>
-      {open ? <Panel>{datesForm}</Panel> : null}
-      {pastDates ? (
-        <Alert tone="warning" title={t.pastTitle}>
-          {t.pastBody}
-        </Alert>
-      ) : null}
-    </div>
-  );
-};
+export const HotelStayBar = (props: HotelStayBarProps) => (
+  <Suspense fallback={<HotelStayBarSkeleton />}>
+    <ResolvedStayBar {...props} />
+  </Suspense>
+);

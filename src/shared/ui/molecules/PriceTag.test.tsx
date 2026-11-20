@@ -43,10 +43,20 @@ describe("PriceTag", () => {
     expect(screen.getByText("R$ 800")).toHaveClass("text-2xl");
   });
 
-  it("room-nightly: valor e 'por noite', sem 'a partir de'", () => {
-    const { container } = render(<PriceTag locale="pt-BR" variant="room-nightly" nightly={1200} />);
-    expect(container).toHaveTextContent("R$ 1.200por noite");
-    expect(container).not.toHaveTextContent("a partir de");
+  it("stay-total: total e detalhe, sem a linha da diária", () => {
+    const { container } = render(
+      <PriceTag locale="pt-BR" variant="stay-total" total={2400} nights={3} rooms={1} />,
+    );
+    expect(container).toHaveTextContent("R$ 2.400");
+    expect(container).toHaveTextContent("3 noites");
+    expect(container).not.toHaveTextContent("por noite");
+  });
+
+  it("nightly-line withoutFees: acrescenta ', sem taxas' à diária exata", () => {
+    const { container } = render(
+      <PriceTag locale="pt-BR" variant="nightly-line" nightly={800} exact withoutFees />,
+    );
+    expect(container).toHaveTextContent("R$ 800 por noite, sem taxas");
   });
 
   it("nightly-line exact: diária do quarto sem 'a partir de'", () => {

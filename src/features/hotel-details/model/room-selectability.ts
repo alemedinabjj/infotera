@@ -110,3 +110,16 @@ export const selectabilityBadge = (
     }
   }
 };
+
+/**
+ * Selo que é do **quarto**, não da estadia (vai na casca estática): esgotado ou "Apenas N quartos!"
+ * quando restam poucos (`SCARCE_THRESHOLD`). Os motivos que dependem dos critérios (ex.: pede mais
+ * quartos que os disponíveis) ficam no texto do buraco.
+ */
+export const roomStaticBadge = (room: Room, locale: Locale): SelectabilityBadge | null =>
+  selectabilityBadge(
+    room.available <= 0
+      ? { kind: "sold-out" }
+      : { kind: "selectable", scarce: room.available <= SCARCE_THRESHOLD ? room.available : null },
+    locale,
+  );

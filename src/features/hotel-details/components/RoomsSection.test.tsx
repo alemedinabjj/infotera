@@ -1,17 +1,17 @@
-import { hydrate } from "@tanstack/react-query";
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import { formatBRL } from "@/shared/lib/currency";
 import { addDays, todayISO } from "@/shared/lib/dates";
 import { useBookingDraft } from "@/shared/stores/booking-draft";
 import { makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
-import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
+import { renderWithProviders } from "@/shared/testing/render";
 import { seedRooms } from "@/shared/testing/seed";
+import { setStayCriteria } from "../testing/stay-aware";
 import { RoomsSection } from "./RoomsSection";
 import { StayEditProvider } from "./StayEditContext";
 
+vi.mock("./StayAware", async () => (await import("../testing/stay-aware")).stayAwareMock);
 vi.mock(
   "next/navigation",
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
@@ -32,33 +32,36 @@ const plain = (value: string) => value.replaceAll("\u00a0", " ");
 const assignLocation = vi.hoisted(() => vi.fn<(path: string) => void>());
 vi.mock("@/shared/lib/navigation", () => ({ assignLocation }));
 
-const renderRooms = ({
+const renderRooms = async ({
   hotelId = 1,
   rooms = seedRooms(hotelId),
   search = criteria,
   hotelAvailableRooms = 12,
-  pastDates = false,
 }: {
   hotelId?: number;
   rooms?: Rooms;
   search?: typeof criteria | null;
   hotelAvailableRooms?: number;
-  pastDates?: boolean;
 } = {}) => {
-  const queryClient = makeTestQueryClient();
-  queryClient.setQueryData(hotelRoomsQueryOptions(hotelId).queryKey, rooms);
-  return renderWithProviders(
-    <StayEditProvider criteriaKey="a">
-      <RoomsSection
-        hotelId={hotelId}
-        hotelAvailableRooms={hotelAvailableRooms}
-        cancellationPolicy="free"
-        criteria={search}
-        pastDates={pastDates}
-      />
-    </StayEditProvider>,
-    { queryClient },
-  );
+  setStayCriteria(search);
+  let view: ReturnType<typeof renderWithProviders> | null = null;
+  // `await act` com o render dentro: o Suspense dos buracos resolve a promessa dos critérios.
+  await act(async () => {
+    view = renderWithProviders(
+      <StayEditProvider>
+        <RoomsSection
+          locale="pt-BR"
+          hotelId={hotelId}
+          rooms={rooms}
+          hotelAvailableRooms={hotelAvailableRooms}
+          cancellationPolicy="free"
+          criteria={Promise.resolve(search)}
+        />
+      </StayEditProvider>,
+    );
+  });
+  if (view === null) throw new Error("render falhou");
+  return view;
 };
 
 const card = (name: string) =>
@@ -69,11 +72,14 @@ beforeEach(() => {
   sessionStorage.clear();
   useBookingDraft.setState({ selection: null });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  setStayCriteria(null);
+});
 
 describe("RoomsSection: com critérios (critério 15)", () => {
-  it("foto, nome, fatos, comodidades, cancelamento, diária e total", () => {
-    renderRooms();
+  it("foto, nome, fatos, comodidades, cancelamento, diária e total", async () => {
+    await renderRooms();
     const suite = card("Suíte Deluxe Ocean View");
     expect(suite).toHaveTextContent("45 m²");
     expect(within(suite).getByText("Até 3 hóspedes")).toBeInTheDocument();
@@ -86,11 +92,11 @@ describe("RoomsSection: com critérios (critério 15)", () => {
     expect(suite).toHaveTextContent("R$ 1.200 por noite, sem taxas");
     expect(suite).not.toHaveTextContent("a partir de");
     expect(card("Quarto Standard")).toHaveTextContent(plain(formatBRL(2760, { locale: "pt-BR" })));
-    expect(screen.getAllByText("2 tipos de quarto")).toHaveLength(2); // status visível + anunciador
+    expect(screen.getAllByText("2 tipos de quarto")).toHaveLength(1);
   });
 
-  it("as comodidades restantes ficam num details abaixo (nada acima se move)", () => {
-    renderRooms();
+  it("as comodidades restantes ficam num details abaixo (nada acima se move)", async () => {
+    await renderRooms();
     const details = card("Suíte Deluxe Ocean View").querySelector("details");
     expect(details).not.toBeNull();
     expect(within(details as HTMLElement).getByText("Cofre")).toBeInTheDocument();
@@ -100,7 +106,7 @@ describe("RoomsSection: com critérios (critério 15)", () => {
 describe("RoomsSection: selecionar (critério 16)", () => {
   it("grava no booking-draft e navega para /checkout; segundo clique é ignorado", async () => {
     const user = userEvent.setup();
-    renderRooms();
+    await renderRooms();
     const button = within(card("Suíte Deluxe Ocean View")).getByRole("button", {
       name: "Selecionar quarto: Suíte Deluxe Ocean View",
     });
@@ -121,7 +127,7 @@ describe("RoomsSection: selecionar (critério 16)", () => {
 
   it("durante a navegação o botão mostra 'Selecionando…' e o card fica selecionado", async () => {
     const user = userEvent.setup();
-    renderRooms();
+    await renderRooms();
     await user.click(
       within(card("Suíte Deluxe Ocean View")).getByRole("button", { name: /Selecionar quarto/ }),
     );
@@ -134,7 +140,7 @@ describe("RoomsSection: selecionar (critério 16)", () => {
 describe("RoomsSection: bfcache", () => {
   it("pageshow persistido zera o 'Selecionando…'", async () => {
     const user = userEvent.setup();
-    renderRooms();
+    await renderRooms();
     await user.click(
       within(card("Suíte Deluxe Ocean View")).getByRole("button", { name: /Selecionar quarto/ }),
     );
@@ -147,8 +153,8 @@ describe("RoomsSection: bfcache", () => {
 });
 
 describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
-  it("1 quarto restante: 'Apenas 1 quarto!' e continua selecionável (hotel 7)", () => {
-    renderRooms({ hotelId: 7 });
+  it("1 quarto restante: 'Apenas 1 quarto!' e continua selecionável (hotel 7)", async () => {
+    await renderRooms({ hotelId: 7 });
     const room = card("Ocean Suite Premium");
     expect(within(room).getByText("Apenas 1 quarto!")).toBeInTheDocument();
     expect(within(room).getByRole("button", { name: /Selecionar quarto/ })).not.toHaveAttribute(
@@ -156,8 +162,8 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
     );
   });
 
-  it("hotel esgotado: alert com link, badge, botão 'Esgotado' aria-disabled e sem total (hotel 19)", () => {
-    renderRooms({ hotelId: 19 });
+  it("hotel esgotado: alert com link, badge, botão 'Esgotado' aria-disabled e sem total (hotel 19)", async () => {
+    await renderRooms({ hotelId: 19 });
     const alert = screen
       .getByText("Este hotel está esgotado nestas datas")
       .closest("[role]") as HTMLElement;
@@ -176,7 +182,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
 
   it("3 adultos num quarto: o Standard (máx. 2) bloqueia com o motivo e o foco fica", async () => {
     const user = userEvent.setup();
-    renderRooms({ search: { ...criteria, adults: 3 } });
+    await renderRooms({ search: { ...criteria, adults: 3 } });
     const standard = card("Quarto Standard");
     const button = within(standard).getByRole("button", { name: /Selecionar quarto/ });
     expect(button).toHaveAttribute("aria-disabled", "true");
@@ -195,7 +201,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
 
   it("3 quartos com 2 disponíveis: badge e motivo, sem selecionar", async () => {
     const user = userEvent.setup();
-    renderRooms({
+    await renderRooms({
       rooms: [
         makeRoom({ id: 5, name: "Quarto Duplo", available: 2, maxGuests: 4 }),
         makeRoom({ id: 6, name: "Quarto Triplo", available: 9, maxGuests: 4 }),
@@ -203,7 +209,7 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
       search: { ...criteria, rooms: 3, adults: 3 },
     });
     const room = card("Quarto Duplo");
-    expect(within(room).getByText("Só 2 disponíveis")).toBeInTheDocument();
+    expect(within(room).getByText("Apenas 2 quartos!")).toBeInTheDocument();
     const button = within(room).getByRole("button", { name: /Selecionar quarto/ });
     expect(button).toHaveAccessibleDescription(
       "Sua busca pede 3 quartos. Diminua a quantidade de quartos ou escolha outro tipo.",
@@ -212,8 +218,8 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
     expect(assignLocation).not.toHaveBeenCalled();
   });
 
-  it("hotel com um só tipo de quarto não sugere 'outro tipo'", () => {
-    renderRooms({
+  it("hotel com um só tipo de quarto não sugere 'outro tipo'", async () => {
+    await renderRooms({
       rooms: [makeRoom({ id: 5, name: "Quarto Duplo", available: 2, maxGuests: 4 })],
       search: { ...criteria, rooms: 3, adults: 3 },
     });
@@ -225,8 +231,8 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
 });
 
 describe("RoomsSection: sem critérios (critério 21)", () => {
-  it("diária e botão 'Escolher datas', sem total", () => {
-    renderRooms({ search: null });
+  it("diária e botão 'Escolher datas', sem total", async () => {
+    await renderRooms({ search: null });
     const suite = card("Suíte Deluxe Ocean View");
     expect(suite).toHaveTextContent("R$ 1.200");
     expect(suite).toHaveTextContent("por noite");
@@ -239,7 +245,7 @@ describe("RoomsSection: sem critérios (critério 21)", () => {
     const input = document.createElement("input");
     input.name = "checkIn";
     document.body.append(input);
-    renderRooms({ search: null });
+    await renderRooms({ search: null });
     await user.click(
       within(card("Suíte Deluxe Ocean View")).getByRole("button", { name: /Escolher datas/ }),
     );
@@ -247,8 +253,8 @@ describe("RoomsSection: sem critérios (critério 21)", () => {
     input.remove();
   });
 
-  it("sem estoque e sem datas, o motivo diz 'no momento'", () => {
-    renderRooms({ hotelId: 19, search: null, hotelAvailableRooms: 0 });
+  it("sem estoque e sem datas, o motivo diz 'no momento'", async () => {
+    await renderRooms({ hotelId: 19, search: null, hotelAvailableRooms: 0 });
     expect(screen.getAllByText("Sem quartos disponíveis no momento.").length).toBeGreaterThan(0);
     // O aviso do hotel esgotado fica no topo de "Quartos" (HotelDetailsView), antes do formulário.
     expect(
@@ -260,7 +266,9 @@ describe("RoomsSection: sem critérios (critério 21)", () => {
 describe("RoomsSection: datas passadas", () => {
   it("o botão vira 'Escolher datas' com o motivo visível e abre o formulário de datas", async () => {
     const user = userEvent.setup();
-    renderRooms({ pastDates: true });
+    await renderRooms({
+      search: { ...criteria, checkIn: addDays(todayISO(), -3), checkOut: addDays(todayISO(), -1) },
+    });
     const suite = card("Suíte Deluxe Ocean View");
     expect(within(suite).getByText("As datas desta busca já passaram.")).toBeVisible();
     expect(within(suite).queryByRole("button", { name: /Selecionar quarto/ })).toBeNull();
@@ -277,105 +285,13 @@ describe("RoomsSection: datas passadas", () => {
   });
 });
 
-describe("RoomsSection: contagem de tipos", () => {
-  it("a linha visível é aria-hidden (o anunciador fala uma vez só)", async () => {
-    renderRooms();
-    const visible = await screen.findAllByText("2 tipos de quarto");
-    expect(visible.some((node) => node.getAttribute("aria-hidden") === "true")).toBe(true);
-    expect(visible.some((node) => node.getAttribute("aria-live") === "polite")).toBe(true);
-  });
-});
-
-describe("RoomsSection: estados (critérios 23–24)", () => {
-  it("loading: skeleton aria-busy, 'Carregando quartos…' e 'demorando' depois de 5 s", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    vi.stubGlobal("fetch", () => new Promise<Response>(() => undefined));
-    const { container } = renderWithProviders(
-      <StayEditProvider criteriaKey="a">
-        <RoomsSection
-          hotelId={1}
-          hotelAvailableRooms={3}
-          cancellationPolicy="free"
-          criteria={criteria}
-          pastDates={false}
-        />
-      </StayEditProvider>,
-    );
-    expect(container.querySelector("[aria-busy='true']")).toBeInTheDocument();
-    expect(screen.getAllByText("Carregando quartos…").length).toBeGreaterThan(0);
-    act(() => vi.advanceTimersByTime(5000));
-    expect(await screen.findByText("Está demorando mais que o normal…")).toBeInTheDocument();
-    vi.useRealTimers();
-  });
-
-  it("sem quartos: vazio com link para similares", () => {
-    renderRooms({ rooms: [] });
+describe("RoomsSection: estados", () => {
+  it("sem quartos: vazio com link para similares", async () => {
+    await renderRooms({ rooms: [] });
     expect(screen.getByRole("heading", { name: "Nenhum quarto para reserva" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver hotéis similares" })).toHaveAttribute(
       "href",
       "#similares",
     );
-  });
-
-  it("falha na hidratação (SSR rejeitado) cai no erro com retry e os quartos entram no lugar", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const user = userEvent.setup();
-    const queryClient = makeTestQueryClient();
-    const rejected = Promise.reject(new Error("redacted"));
-    rejected.catch(() => undefined);
-    hydrate(queryClient, {
-      mutations: [],
-      queries: [
-        {
-          queryKey: hotelRoomsQueryOptions(1).queryKey,
-          queryHash: JSON.stringify(hotelRoomsQueryOptions(1).queryKey),
-          state: {
-            data: undefined,
-            dataUpdateCount: 0,
-            dataUpdatedAt: 0,
-            error: null,
-            errorUpdateCount: 0,
-            errorUpdatedAt: 0,
-            fetchFailureCount: 0,
-            fetchFailureReason: null,
-            fetchMeta: null,
-            isInvalidated: false,
-            status: "pending",
-            fetchStatus: "fetching",
-          },
-          dehydratedAt: Date.now(),
-          promise: rejected,
-        },
-      ],
-    });
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response(JSON.stringify(seedRooms(1)), { status: 200 })),
-    );
-    renderWithProviders(
-      <>
-        <h2 id="quartos-titulo" tabIndex={-1}>
-          Quartos
-        </h2>
-        <StayEditProvider criteriaKey="a">
-          <RoomsSection
-            hotelId={1}
-            hotelAvailableRooms={12}
-            cancellationPolicy="free"
-            criteria={criteria}
-            pastDates={false}
-          />
-        </StayEditProvider>
-      </>,
-      { queryClient },
-    );
-    expect(
-      await screen.findByRole("heading", { name: "Não foi possível carregar os quartos." }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
-    expect(
-      await screen.findByRole("heading", { name: "Suíte Deluxe Ocean View" }),
-    ).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("heading", { name: "Quartos" })).toHaveFocus());
   });
 });

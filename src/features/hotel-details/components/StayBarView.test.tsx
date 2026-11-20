@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { markFocusAfterNavigation } from "@/shared/lib/focus-after-navigation";
 import { makeSearchCriteria } from "@/shared/testing/fixtures";
-import { HotelStayBar } from "./HotelStayBar";
+import { StayBarView } from "./StayBarView";
 import { StayEditProvider } from "./StayEditContext";
 
 const criteria = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" });
@@ -16,15 +16,12 @@ const Form = () => (
   </form>
 );
 
-const Bar = ({
-  keyOf = "a",
-  ...props
-}: Partial<Parameters<typeof HotelStayBar>[0]> & { keyOf?: string }) => (
-  <StayEditProvider criteriaKey={keyOf}>
+const Bar = (props: Partial<Parameters<typeof StayBarView>[0]>) => (
+  <StayEditProvider>
     <h2 id="quartos-titulo" tabIndex={-1}>
       Quartos
     </h2>
-    <HotelStayBar
+    <StayBarView
       criteria={criteria}
       summary={SUMMARY}
       pastDates={false}
@@ -34,10 +31,10 @@ const Bar = ({
   </StayEditProvider>
 );
 
-const renderBar = (props: Partial<Parameters<typeof HotelStayBar>[0]> = {}) =>
+const renderBar = (props: Partial<Parameters<typeof StayBarView>[0]> = {}) =>
   render(<Bar {...props} />);
 
-describe("HotelStayBar: sem critérios (critério 21)", () => {
+describe("StayBarView: sem critérios (critério 21)", () => {
   it("aviso e formulário já abertos, sem disclosure", () => {
     renderBar({ criteria: null, summary: null });
     expect(screen.getByText("Escolha as datas para reservar")).toBeInTheDocument();
@@ -57,7 +54,7 @@ describe("HotelStayBar: sem critérios (critério 21)", () => {
   });
 });
 
-describe("HotelStayBar: com critérios (critério 22)", () => {
+describe("StayBarView: com critérios (critério 22)", () => {
   it("resumo e disclosure fechado; abre o mesmo formulário abaixo do botão", async () => {
     const user = userEvent.setup();
     renderBar();
@@ -102,7 +99,6 @@ describe("HotelStayBar: com critérios (critério 22)", () => {
     window.history.replaceState(null, "", "/hotel/1?checkIn=2026-12-20");
     rerender(
       <Bar
-        keyOf="b"
         criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
         summary="20–22 dez · 2 noites · 2 adultos · 1 quarto"
       />,
@@ -123,7 +119,6 @@ describe("HotelStayBar: com critérios (critério 22)", () => {
     window.history.replaceState(null, "", "/hotel/1?checkIn=2026-12-20");
     rerender(
       <Bar
-        keyOf="b"
         criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
         summary="x"
       />,
@@ -136,7 +131,6 @@ describe("HotelStayBar: com critérios (critério 22)", () => {
     const { rerender } = renderBar();
     rerender(
       <Bar
-        keyOf="b"
         criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
         summary="x"
       />,
@@ -151,7 +145,6 @@ describe("HotelStayBar: com critérios (critério 22)", () => {
     await user.click(toggle);
     rerender(
       <Bar
-        keyOf="b"
         criteria={makeSearchCriteria({ checkIn: "2026-12-20", checkOut: "2026-12-22" })}
         summary="x"
       />,

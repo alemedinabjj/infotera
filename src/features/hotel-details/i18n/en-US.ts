@@ -33,7 +33,6 @@ export const enUS: HotelDetailsMessages = {
   },
   header: {
     featured: "Featured",
-    stay: ({ label }) => `Your stay: ${label}`,
     viewRooms: "View rooms",
     copyLink: "Copy link",
   },
@@ -83,6 +82,12 @@ export const enUS: HotelDetailsMessages = {
     openErrorBody: "Check your connection and try again.",
     offlineTitle: "You're offline",
     offlineBody: "The photo will open once you're back online.",
+  },
+  build: {
+    waiting: ({ attempt, total }) => `Waiting for the mock-api (attempt ${attempt}/${total})…`,
+    unreachable: ({ url }) =>
+      `Could not list the hotels for the build: the mock-api at ${url} did not respond. Start the API (cd mock-api && npm run server) or check NEXT_PUBLIC_API_URL.`,
+    noHotels: "The API listed no hotels: there is nothing to prerender.",
   },
   photoPage: {
     back: "Back to hotel",

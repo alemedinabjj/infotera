@@ -23,57 +23,71 @@ type StayEdit = {
   pickDates: () => void;
 };
 
-const StayEditContext = createContext<StayEdit | null>(null);
-
-type StayEditProviderProps = {
-  /** Critérios atuais em texto (`"none"` sem critérios): o painel vale só para eles. */
-  criteriaKey: string;
-  children: ReactNode;
+type StayEditStore = {
+  openFor: string | null;
+  toggle: (criteriaKey: string) => void;
+  pickDates: (criteriaKey: string) => void;
+  /** Cada consumidor informa os critérios que já resolveu (a chave só existe depois da promessa). */
+  observe: (criteriaKey: string) => void;
 };
+
+const StayEditContext = createContext<StayEditStore | null>(null);
 
 /**
  * Estado do painel de datas, compartilhado entre a barra da estadia e os botões "Escolher datas"
- * dos quartos. Critérios novos fecham o painel sozinhos; nesse fechamento, cliques no botão do
- * painel são ignorados por um instante: o conteúdo sobe sob o ponteiro e um 2º clique do envio não
- * pode reabri-lo.
+ * dos quartos. Os critérios chegam por promessa (buracos do PPR), então a chave vem dos
+ * consumidores (`useStayEdit(key)`) e o painel vale só para ela: critérios novos fecham o painel
+ * sozinhos. Nesse fechamento, cliques no botão do painel são ignorados por um instante: o conteúdo
+ * sobe sob o ponteiro e um 2º clique do envio não pode reabri-lo.
  */
-export const StayEditProvider = ({ criteriaKey, children }: StayEditProviderProps) => {
+export const StayEditProvider = ({ children }: { children: ReactNode }) => {
   const [openFor, setOpenFor] = useState<string | null>(null);
   const [focusRequests, setFocusRequests] = useState(0);
-  const open = openFor === criteriaKey;
-  const wasOpen = useRef(false);
+  const openForRef = useRef<string | null>(null);
+  const lastKey = useRef<string | null>(null);
   const closedBySubmitAt = useRef(0);
 
-  // Declarados nesta ordem: o 1º lê o `open` do render anterior, o 2º o atualiza.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: só reage à troca dos critérios
   useEffect(() => {
-    if (wasOpen.current) closedBySubmitAt.current = Date.now();
-  }, [criteriaKey]);
-  useEffect(() => {
-    wasOpen.current = open;
-  }, [open]);
-
+    openForRef.current = openFor;
+  });
   useEffect(() => {
     if (focusRequests > 0) focusCheckIn();
   }, [focusRequests]);
 
-  const toggle = useCallback(() => {
+  const observe = useCallback((key: string) => {
+    const previous = lastKey.current;
+    if (previous !== null && previous !== key && openForRef.current === previous) {
+      closedBySubmitAt.current = Date.now();
+    }
+    lastKey.current = key;
+  }, []);
+
+  const toggle = useCallback((key: string) => {
     if (Date.now() - closedBySubmitAt.current < GHOST_CLICK_MS) return;
-    setOpenFor((current) => (current === criteriaKey ? null : criteriaKey));
-  }, [criteriaKey]);
+    setOpenFor((current) => (current === key ? null : key));
+  }, []);
 
-  const pickDates = useCallback(() => {
-    setOpenFor(criteriaKey);
+  const pickDates = useCallback((key: string) => {
+    setOpenFor(key);
     setFocusRequests((count) => count + 1);
-  }, [criteriaKey]);
+  }, []);
 
-  const value = useMemo(() => ({ open, toggle, pickDates }), [open, toggle, pickDates]);
+  const value = useMemo(
+    () => ({ openFor, toggle, pickDates, observe }),
+    [openFor, toggle, pickDates, observe],
+  );
   return <StayEditContext value={value}>{children}</StayEditContext>;
 };
 
-/** Lê o painel de datas; só dentro de `StayEditProvider`. */
-export const useStayEdit = (): StayEdit => {
-  const value = useContext(StayEditContext);
-  if (value === null) throw new Error("useStayEdit must be used within StayEditProvider");
-  return value;
+/** Lê o painel de datas para os critérios `criteriaKey` (`"none"` sem critérios); só dentro de `StayEditProvider`. */
+export const useStayEdit = (criteriaKey: string): StayEdit => {
+  const store = useContext(StayEditContext);
+  if (store === null) throw new Error("useStayEdit must be used within StayEditProvider");
+  const { observe } = store;
+  useEffect(() => observe(criteriaKey), [observe, criteriaKey]);
+  return {
+    open: store.openFor === criteriaKey,
+    toggle: () => store.toggle(criteriaKey),
+    pickDates: () => store.pickDates(criteriaKey),
+  };
 };

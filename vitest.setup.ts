@@ -9,6 +9,10 @@ MotionGlobalConfig.skipAnimations = true;
 // `server-only` lança fora do bundler do Next; nos testes os módulos de servidor rodam em jsdom.
 vi.mock("server-only", () => ({}));
 
+// `cacheLife`/`cacheTag` só existem dentro de um escopo `"use cache"` (compilado pelo Next): nos testes
+// as funções do catálogo rodam como funções comuns.
+vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
+
 // O chunk do Leaflet nunca carrega de verdade nos testes: sem `IntersectionObserver` o jsdom assume
 // "perto da viewport" e qualquer teste que renderiza um mapa disparava o `import()` real; o Leaflet
 // montava depois de o teste terminar e seus timers rodavam sobre um ambiente já desmontado (erros

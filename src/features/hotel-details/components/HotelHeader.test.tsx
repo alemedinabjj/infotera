@@ -1,37 +1,33 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { hotelRoomsQueryOptions } from "@/shared/api/queries";
-import { makeHotel, makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
-import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
+import { makeHotel, makeSearchCriteria } from "@/shared/testing/fixtures";
+import { renderWithProviders } from "@/shared/testing/render";
 import { seedHotel, seedRooms } from "@/shared/testing/seed";
 import { Toaster } from "@/shared/ui";
 import { hotelBreadcrumb } from "../model/breadcrumb";
+import { setStayCriteria } from "../testing/stay-aware";
 import { Breadcrumb } from "./Breadcrumb";
 import { HotelHeader } from "./HotelHeader";
 import { SectionNav } from "./SectionNav";
 
+vi.mock("./StayAware", async () => (await import("../testing/stay-aware")).stayAwareMock);
 vi.mock(
   "next/navigation",
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
 );
 
-const renderHeader = (
-  hotelId: number,
-  rooms = seedRooms(hotelId),
-  stayLabel: string | null = null,
-) => {
-  const queryClient = makeTestQueryClient();
-  queryClient.setQueryData(hotelRoomsQueryOptions(hotelId).queryKey, rooms);
-  return renderWithProviders(
-    <HotelHeader locale="pt-BR" hotel={seedHotel(hotelId)} stayLabel={stayLabel}>
+const renderHeader = (hotelId: number, rooms = seedRooms(hotelId)) =>
+  renderWithProviders(
+    <HotelHeader locale="pt-BR" hotel={seedHotel(hotelId)} rooms={rooms}>
       <p>galeria</p>
     </HotelHeader>,
-    { queryClient },
   );
-};
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  setStayCriteria(null);
+});
 
 describe("HotelHeader (critério 7)", () => {
   it("h1, tipo, destino, endereço, nota e 'a partir de' pelos quartos", async () => {
@@ -52,20 +48,10 @@ describe("HotelHeader (critério 7)", () => {
     expect(container).toHaveTextContent("a partir de R$ 720 por noite");
   });
 
-  it("o resumo da estadia só aparece com critérios", () => {
-    const { container, unmount } = renderHeader(1);
-    expect(container).not.toHaveTextContent("Sua estadia");
-    unmount();
-    const withStay = renderHeader(1, seedRooms(1), "12–15 dez · 3 noites · 2 adultos · 1 quarto");
-    expect(withStay.container).toHaveTextContent(
-      "Sua estadia: 12–15 dez · 3 noites · 2 adultos · 1 quarto",
-    );
-  });
-
   it("destaque vira badge", () => {
     const hotel = makeHotel({ featured: true });
     renderWithProviders(
-      <HotelHeader locale="pt-BR" hotel={hotel} stayLabel={null}>
+      <HotelHeader locale="pt-BR" hotel={hotel} rooms={[]}>
         <p>galeria</p>
       </HotelHeader>,
     );
@@ -81,51 +67,6 @@ describe("HotelHeader (critério 7)", () => {
   it("sem quartos: aviso no lugar do preço", () => {
     const { container } = renderHeader(1, []);
     expect(container).toHaveTextContent("Sem quartos para reserva no momento.");
-  });
-
-  it("enquanto os quartos carregam: skeleton, sem texto de preço", () => {
-    vi.stubGlobal("fetch", () => new Promise<Response>(() => undefined));
-    const { container } = renderWithProviders(
-      <HotelHeader locale="pt-BR" hotel={makeHotel()} stayLabel={null}>
-        <p>galeria</p>
-      </HotelHeader>,
-    );
-    expect(container).not.toHaveTextContent("a partir de");
-    expect(container.querySelector("[aria-hidden='true'].animate-pulse")).toBeInTheDocument();
-  });
-
-  it("quartos com erro: texto discreto; a página segue", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response("{}", { status: 500 })),
-    );
-    const { container } = renderWithProviders(
-      <HotelHeader locale="pt-BR" hotel={makeHotel()} stayLabel={null}>
-        <p>galeria</p>
-      </HotelHeader>,
-    );
-    expect(await screen.findByText("Preços indisponíveis no momento.")).toBeInTheDocument();
-    expect(container).toHaveTextContent("Hotel Copacabana Palace");
-  });
-
-  it("quando o retry da seção Quartos dá certo, o preço entra no lugar", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response("{}", { status: 500 })),
-    );
-    const { queryClient, container } = renderWithProviders(
-      <HotelHeader locale="pt-BR" hotel={makeHotel()} stayLabel={null}>
-        <p>galeria</p>
-      </HotelHeader>,
-    );
-    await screen.findByText("Preços indisponíveis no momento.");
-    act(() =>
-      queryClient.setQueryData(hotelRoomsQueryOptions(1).queryKey, [
-        makeRoom({ pricePerNight: 650 }),
-      ]),
-    );
-    expect(await screen.findByText("R$ 650")).toBeInTheDocument();
-    expect(container).not.toHaveTextContent("Preços indisponíveis");
   });
 });
 
@@ -156,8 +97,13 @@ describe("Copiar link (critério 8)", () => {
 describe("Breadcrumb e SectionNav (critérios 6 e 11)", () => {
   it("itens, link do meio com critérios e último com aria-current", () => {
     const criteria = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" });
-    const crumb = hotelBreadcrumb(makeHotel(), criteria, "pt-BR");
-    render(<Breadcrumb {...crumb} />);
+    setStayCriteria(criteria);
+    render(
+      <Breadcrumb
+        build={(c) => hotelBreadcrumb(makeHotel(), c, "pt-BR")}
+        criteria={Promise.resolve(criteria)}
+      />,
+    );
     const nav = screen.getByRole("navigation", { name: "Você está aqui" });
     const list = within(nav).getByRole("list");
     expect(within(list).getByRole("link", { name: "Início" })).toHaveAttribute("href", "/");
@@ -174,7 +120,12 @@ describe("Breadcrumb e SectionNav (critérios 6 e 11)", () => {
   });
 
   it("sem critérios o link vai só com o destino", () => {
-    render(<Breadcrumb {...hotelBreadcrumb(makeHotel(), null, "pt-BR")} />);
+    render(
+      <Breadcrumb
+        build={(c) => hotelBreadcrumb(makeHotel(), c, "pt-BR")}
+        criteria={Promise.resolve(null)}
+      />,
+    );
     expect(
       screen.getAllByRole("link", { name: /Hotéis em Rio de Janeiro, RJ/ })[0],
     ).toHaveAttribute("href", "/search?destination=Rio+de+Janeiro%2C+RJ");

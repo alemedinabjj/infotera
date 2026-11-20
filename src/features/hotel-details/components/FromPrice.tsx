@@ -1,55 +1,30 @@
-"use client";
-
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useEffect } from "react";
-import { hotelRoomsQueryOptions } from "@/shared/api/queries";
-import { useLocale } from "@/shared/i18n/client";
+import type { Room } from "@/shared/api/schemas";
 import { commonMessages } from "@/shared/i18n/common/messages";
+import type { Locale } from "@/shared/i18n/config";
 import { lowestNightlyPrice } from "@/shared/lib/pricing";
-import { Badge, ErrorBoundary, PriceTag, Skeleton } from "@/shared/ui";
-import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
-
-const MUTED = "text-sm text-fg-muted";
-
-const FromPriceContent = ({ hotelId }: { hotelId: number }) => {
-  const t = useHotelDetailsMessages().fromPrice;
-  const locale = useLocale();
-  const soldOut = commonMessages.get(locale).availability.soldOut;
-  const { data: rooms } = useSuspenseQuery(hotelRoomsQueryOptions(hotelId));
-  const from = lowestNightlyPrice(rooms);
-  if (from === null) return <p className={MUTED}>{t.noRooms}</p>;
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <PriceTag locale={locale} variant="nightly-inline" nightly={from.price} />
-      {from.soldOut ? <Badge tone="danger">{soldOut}</Badge> : null}
-    </div>
-  );
-};
-
-/**
- * Falha dos quartos: texto discreto. Observa a mesma query (sem disparar request) e, quando o
- * "Tentar de novo" da seção Quartos der certo, reseta a própria boundary para o preço entrar.
- */
-const FromPriceError = ({ hotelId, reset }: { hotelId: number; reset: () => void }) => {
-  const t = useHotelDetailsMessages().fromPrice;
-  const query = useQuery({ ...hotelRoomsQueryOptions(hotelId), enabled: false });
-  const recovered = query.isSuccess;
-  useEffect(() => {
-    if (recovered) reset();
-  }, [recovered, reset]);
-  return <p className={MUTED}>{t.unavailable}</p>;
-};
+import { Badge, PriceTag } from "@/shared/ui";
+import { hotelDetailsMessages } from "../i18n/messages";
 
 /**
  * "a partir de R$ 800 por noite", calculado pelos quartos (não pelo `pricePerNight` do hotel, que
- * diverge). Ilha própria com Suspense: lê o mesmo cache da seção Quartos.
+ * diverge). Server Component sobre o snapshot do catálogo: entra na casca estática.
  */
-export const FromPrice = ({ hotelId }: { hotelId: number }) => (
-  <div className="min-h-8">
-    <ErrorBoundary fallback={({ reset }) => <FromPriceError hotelId={hotelId} reset={reset} />}>
-      <Suspense fallback={<Skeleton className="h-8 w-56" />}>
-        <FromPriceContent hotelId={hotelId} />
-      </Suspense>
-    </ErrorBoundary>
-  </div>
-);
+export const FromPrice = ({ locale, rooms }: { locale: Locale; rooms: readonly Room[] }) => {
+  const from = lowestNightlyPrice(rooms);
+  return (
+    <div className="min-h-8">
+      {from === null ? (
+        <p className="text-sm text-fg-muted">
+          {hotelDetailsMessages.get(locale).fromPrice.noRooms}
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <PriceTag locale={locale} variant="nightly-inline" nightly={from.price} />
+          {from.soldOut ? (
+            <Badge tone="danger">{commonMessages.get(locale).availability.soldOut}</Badge>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+};

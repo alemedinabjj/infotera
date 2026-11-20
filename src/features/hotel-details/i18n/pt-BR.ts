@@ -32,7 +32,6 @@ export const ptBR = {
   },
   header: {
     featured: "Destaque",
-    stay: ({ label }: { label: string }) => `Sua estadia: ${label}`,
     viewRooms: "Ver quartos",
     copyLink: "Copiar link",
   },
@@ -85,6 +84,13 @@ export const ptBR = {
     openErrorBody: "Verifique sua conexão e tente de novo.",
     offlineTitle: "Você está sem internet",
     offlineBody: "A foto abre assim que a conexão voltar.",
+  },
+  build: {
+    waiting: ({ attempt, total }: { attempt: number; total: number }) =>
+      `Aguardando a mock-api (tentativa ${attempt}/${total})…`,
+    unreachable: ({ url }: { url: string }) =>
+      `Não foi possível listar os hotéis para o build: a mock-api em ${url} não respondeu. Suba a API (cd mock-api && npm run server) ou confira NEXT_PUBLIC_API_URL.`,
+    noHotels: "A API não listou nenhum hotel: não há o que pré-renderizar.",
   },
   photoPage: {
     back: "Voltar para o hotel",

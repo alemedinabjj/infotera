@@ -43,6 +43,11 @@ const stubReviews = (override?: (page: number) => Promise<Response> | null) => {
   return fetchMock;
 };
 
+const first = (total = TOTAL) => ({
+  page: { items: total === 0 ? [] : reviewsFor(1), total },
+  fetchedAt: Date.now(),
+});
+
 const renderReviews = () =>
   renderWithProviders(
     <>
@@ -51,7 +56,13 @@ const renderReviews = () =>
         <h2 id="avaliacoes-titulo" tabIndex={-1}>
           Avaliações
         </h2>
-        <ReviewsSection hotelId={45} rating={4.7} reviewCount={2000} />
+        <ReviewsSection
+          locale="pt-BR"
+          hotelId={45}
+          rating={4.7}
+          reviewCount={2000}
+          first={first()}
+        />
       </section>
     </>,
   );
@@ -94,11 +105,11 @@ describe("ReviewsSection: primeira página (critério 28)", () => {
     expect(pageButton(1)).toHaveAttribute("aria-current", "page");
   });
 
-  it("enquanto carrega: skeleton aria-busy com 'Carregando avaliações…'", () => {
-    vi.stubGlobal("fetch", () => new Promise<Response>(() => undefined));
-    const { container } = renderReviews();
-    expect(container.querySelector("[aria-busy='true']")).toBeInTheDocument();
-    expect(screen.getByText("Carregando avaliações…")).toBeInTheDocument();
+  it("a página 1 vem do snapshot: nenhum request ao abrir", async () => {
+    const fetchMock = stubReviews();
+    renderReviews();
+    expect(await screen.findByText("Título 1")).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
@@ -148,12 +159,8 @@ describe("ReviewsSection: trocar de página (critério 29)", () => {
 
 describe("ReviewsSection: vazio (critério 30)", () => {
   it("EmptyState sem ação; a nota do hotel continua", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => json([], 0)),
-    );
     const { container } = renderWithProviders(
-      <ReviewsSection hotelId={6} rating={4.2} reviewCount={456} />,
+      <ReviewsSection locale="pt-BR" hotelId={6} rating={4.2} reviewCount={456} first={first(0)} />,
     );
     expect(
       await screen.findByRole("heading", { name: "Ainda sem comentários" }),

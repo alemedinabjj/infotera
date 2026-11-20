@@ -47,17 +47,24 @@ describe("HotelPage", () => {
   it("id válido: compõe a view com o id e os critérios da URL", async () => {
     const element = await HotelPage(props("1", CRITERIA));
     expect(isValidElement(element)).toBe(true);
-    if (!isValidElement<{ hotelId: number; criteria: unknown }>(element)) return;
+    if (!isValidElement<{ hotelId: number; criteria: Promise<unknown> }>(element)) return;
     expect(element.type).toBe(HotelDetailsView);
     expect(element.props.hotelId).toBe(1);
-    expect(element.props.criteria).toMatchObject({ checkIn: "2099-12-12", adults: 2 });
+    // Promessa sem `await` na página: é ela que vira buraco na casca (PPR).
+    expect(element.props.criteria).toBeInstanceOf(Promise);
+    await expect(element.props.criteria).resolves.toMatchObject({
+      checkIn: "2099-12-12",
+      adults: 2,
+    });
   });
 
   it("critérios inválidos ou ausentes viram null (a página pede as datas)", async () => {
     for (const search of [{}, { ...CRITERIA, adults: "x" }]) {
       const element = await HotelPage(props("1", search));
-      if (!isValidElement<{ criteria: unknown }>(element)) throw new Error("elemento esperado");
-      expect(element.props.criteria).toBeNull();
+      if (!isValidElement<{ criteria: Promise<unknown> }>(element)) {
+        throw new Error("elemento esperado");
+      }
+      await expect(element.props.criteria).resolves.toBeNull();
     }
   });
 });

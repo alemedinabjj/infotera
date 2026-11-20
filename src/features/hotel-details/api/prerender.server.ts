@@ -2,9 +2,12 @@ import { env } from "@/shared/api/env";
 import { apiGet } from "@/shared/api/http";
 import { hotelSchema } from "@/shared/api/schemas";
 import { z } from "@/shared/lib/zod";
+import { hotelDetailsMessages } from "../i18n/messages";
 import { backoffDelays, withRetry } from "../model/build-retry";
 import { type PrerenderParam, toPrerenderParams } from "../model/prerender";
 
+// Log do build: sempre em pt-BR (idioma do projeto).
+const t = hotelDetailsMessages.get("pt-BR").build;
 const hotelsSchema = z.array(hotelSchema);
 const ATTEMPTS = 8;
 const BASE_DELAY_MS = 2_000;
@@ -33,14 +36,10 @@ export const listPrerenderHotelIds = async ({
     {
       delays: backoffDelays(ATTEMPTS, BASE_DELAY_MS, MAX_DELAY_MS),
       sleep,
-      onRetry: ({ attempt, total }) =>
-        log(`Aguardando a mock-api (tentativa ${attempt}/${total})…`),
+      onRetry: ({ attempt, total }) => log(t.waiting({ attempt, total })),
     },
   ).catch((cause: unknown) => {
-    throw new Error(
-      `Não foi possível listar os hotéis para o build: a mock-api em ${env.NEXT_PUBLIC_API_URL} não respondeu. Suba a API (cd mock-api && npm run server) ou confira NEXT_PUBLIC_API_URL.`,
-      { cause },
-    );
+    throw new Error(t.unreachable({ url: env.NEXT_PUBLIC_API_URL }), { cause });
   });
   return toPrerenderParams(hotels);
 };

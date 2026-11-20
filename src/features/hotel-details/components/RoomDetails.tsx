@@ -1,3 +1,5 @@
+"use client";
+
 import type { CancellationPolicy, Room } from "@/shared/api/schemas";
 import { useLocale } from "@/shared/i18n/client";
 import { cancellationDetails } from "@/shared/lib/cancellation";

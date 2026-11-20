@@ -1,7 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeHotel, makeSearchCriteria } from "@/shared/testing/fixtures";
+import { setStayCriteria } from "../testing/stay-aware";
 import { SimilarHotels } from "./SimilarHotels";
+
+vi.mock("./StayAware", async () => (await import("../testing/stay-aware")).stayAwareMock);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -11,13 +14,19 @@ const props: Parameters<typeof SimilarHotels>[0] = {
   locale: "pt-BR",
   hotelId: 1,
   destination: "Rio de Janeiro, RJ",
-  criteria,
+  criteria: Promise.resolve(criteria),
 };
 
-const renderSimilar = async (overrides: Partial<typeof props> = {}) =>
-  render(await SimilarHotels({ ...props, ...overrides }));
+const renderSimilar = async (
+  overrides: Partial<typeof props> = {},
+  stay: typeof criteria | null = criteria,
+) => {
+  setStayCriteria(stay);
+  return render(await SimilarHotels({ ...props, ...overrides }));
+};
 
 afterEach(() => {
+  setStayCriteria(null);
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -73,7 +82,7 @@ describe("SimilarHotels (critérios 32–33)", () => {
       "fetch",
       vi.fn(async () => json([makeHotel({ id: 17, name: "Hotel Fasano" })])),
     );
-    await renderSimilar({ criteria: null });
+    await renderSimilar({}, null);
     expect(screen.getByRole("link", { name: "Hotel Fasano" })).toHaveAttribute("href", "/hotel/17");
   });
 

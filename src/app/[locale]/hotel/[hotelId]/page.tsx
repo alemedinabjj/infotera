@@ -2,16 +2,23 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   datesFormLabels,
+  getHotelSnapshot,
   HotelDetailsView,
   hotelPageTitle,
-  loadHotel,
+  listPrerenderHotelIds,
   parseHotelId,
   STAY_EDIT_TITLE_ID,
+  toStayCriteria,
 } from "@/features/hotel-details";
 import { localeOf } from "@/shared/i18n/params";
 import { alternatesFor } from "@/shared/i18n/paths";
-import { parseSearchCriteria } from "@/shared/lib/search-params";
 import { HotelDatesForm } from "./HotelDatesForm";
+
+/**
+ * ISR: todos os hotéis que a API lista viram HTML no build (com retry por causa do cold start da
+ * mock-api). Id fora da lista (`/hotel/61`) recebe a casca de fallback e é gerado sob demanda.
+ */
+export const generateStaticParams = () => listPrerenderHotelIds();
 
 export const generateMetadata = async ({
   params,
@@ -21,12 +28,12 @@ export const generateMetadata = async ({
   if (id === null) return { title: hotelPageTitle({ kind: "not-found" }, locale) };
   const alternates = { languages: alternatesFor(`/hotel/${id}`) };
   try {
-    const loaded = await loadHotel(id);
+    const snapshot = await getHotelSnapshot(id);
     return {
       alternates,
       title:
-        loaded.kind === "found"
-          ? hotelPageTitle({ kind: "found", name: loaded.hotel.name }, locale)
+        snapshot.kind === "found"
+          ? hotelPageTitle({ kind: "found", name: snapshot.hotel.name }, locale)
           : hotelPageTitle({ kind: "not-found" }, locale),
     };
   } catch {
@@ -36,26 +43,26 @@ export const generateMetadata = async ({
 };
 
 /**
- * `/hotel/[hotelId]`. Valida o id (sem chamar a API se for inválido), lê os critérios da URL e
- * compõe a feature; o formulário de datas (F2) entra por `renderDatesForm`.
+ * `/hotel/[hotelId]`. Valida o id (sem chamar a API se for inválido) e compõe a feature. Os critérios
+ * da URL seguem como **promessa sem `await`** (PPR): tudo o que depende deles é buraco na casca. O
+ * formulário de datas (F2) entra por `renderDatesForm`.
  */
 const HotelPage = async ({ params, searchParams }: PageProps<"/[locale]/hotel/[hotelId]">) => {
   const [{ hotelId: rawId }, locale] = await Promise.all([params, localeOf(params)]);
   const hotelId = parseHotelId(rawId);
   if (hotelId === null) notFound();
-  const parsed = parseSearchCriteria(await searchParams);
-  const criteria = parsed.success ? parsed.data : null;
+  const criteria = searchParams.then(toStayCriteria);
 
   return (
     <HotelDetailsView
       locale={locale}
       hotelId={hotelId}
       criteria={criteria}
-      renderDatesForm={(destination) => (
+      renderDatesForm={(destination, resolved) => (
         <HotelDatesForm
           hotelId={hotelId}
           destination={destination}
-          criteria={criteria}
+          criteria={resolved}
           labelledBy={STAY_EDIT_TITLE_ID}
           labels={datesFormLabels(locale)}
         />
