@@ -37,7 +37,13 @@ export const ServiceWorkerRegistrar = () => {
         action: {
           label: messages.reload,
           onClick: () => {
-            serwist.addEventListener("controlling", reloadPage);
+            // O `Serwist` não aceita `{ once: true }`: o listener se remove ao disparar (um clique
+            // repetido em "Atualizar" não empilha recargas).
+            const reloadOnce = () => {
+              serwist.removeEventListener("controlling", reloadOnce);
+              reloadPage();
+            };
+            serwist.addEventListener("controlling", reloadOnce);
             serwist.messageSkipWaiting();
           },
         },

@@ -101,7 +101,6 @@ const ResultsContent = (props: ResultsContentProps) => {
 /** Escolhe o que mostrar para cada visão (`switch` exaustivo); não decide nada além disso. */
 export const ResultsSection = (props: ResultsSectionProps) => {
   const t = useHotelSearchMessages().list;
-  const locale = useLocale();
   const { view } = props;
   switch (view.kind) {
     case "loading":
