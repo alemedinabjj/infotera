@@ -20,6 +20,11 @@ const firstRoomName = async (hotelId: number, request: APIRequestContext) => {
 };
 
 test.describe("falha inicial dos quartos (critério 24)", () => {
+  test.skip(
+    process.env.E2E_PROD === "1",
+    "só em dev: o build serve o hotel e os quartos do cache ISR, o servidor não chama a API",
+  );
+
   test("erro só na seção, 'Preços indisponíveis', o resto da página funciona e o axe passa", async ({
     page,
     request,

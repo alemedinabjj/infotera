@@ -84,7 +84,7 @@ e isso agora é verificado no build.
    | `/search` | `◐` | Casca = layout + `loading.tsx`. A lista é cliente e depende da URL |
    | `/hotel/[hotelId]` + `/hotel/1…60` | `◐` | Catálogo prerenderado. Buracos só para a estadia (Decisão 4) |
    | `/hotel/[hotelId]/photos/[photo]` | `◐` | Casca de fallback. O conteúdo é do cache do catálogo |
-   | `/checkout` | **`ƒ`** | Nonce da CSP (Decisão 7): casca vazia de propósito |
+   | `/checkout` | **`ƒ`** | Nonce da CSP (Decisão 7): casca vazia de propósito. A tabela do build imprime `ƒ`, mas no `prerender-manifest.json` a rota entra como `PARTIALLY_STATIC` com `htmlSize: 0` (casca sem HTML), não como `ƒ` puro |
    | `/confirmation/[bookingId]` | `◐` | Casca = layout + skeleton, **sem PII**. A reserva é sempre por request |
 
 3. **Dados do catálogo em funções `"use cache"` da feature `hotel-details`, nunca TanStack no
@@ -574,10 +574,12 @@ Novo token: **nenhum**.
 **Build e forma das rotas**
 1. Dado a mock-api no ar, quando rodo `npm run build`, então a saída lista `○ /`, `◐ /search`,
    `◐ /hotel/[hotelId]` com linhas `◐ /hotel/1`… (60 ids, agrupados como o Next imprimir),
-   `◐ /hotel/[hotelId]/photos/[photo]`, **`ƒ /checkout`** e `◐ /confirmation/[bookingId]`. Nenhuma
+   `◐ /hotel/[hotelId]/photos/[photo]`, **`ƒ /checkout`** (casca vazia: no manifest aparece como
+   `PARTIALLY_STATIC` com `htmlSize: 0`) e `◐ /confirmation/[bookingId]`. Nenhuma
    rota com `runtime` e nenhum warning de Edge.
 2. Dado o build pronto, então `.next/prerender-manifest.json` tem `/hotel/1` a `/hotel/60` em
-   `routes` e não tem nenhuma rota concreta começando com `/checkout` ou `/confirmation/`.
+   `routes` com `htmlSize > 0`; `/checkout` entra com `htmlSize: 0` (casca vazia) e não há nenhuma rota
+   concreta com `/confirmation/`.
 3. Dado a API fora do ar, quando rodo `npm run build`, então o log mostra
    `Aguardando a mock-api (tentativa n/8)…` e, ao esgotar, o build falha com a mensagem da Decisão 5
    (sem stack de `ApiError` como única pista).
@@ -814,10 +816,11 @@ Novo token: **nenhum**.
   trocar de foto": `page.on("request")` filtrando `rsc`/`_rsc` e `next-router-*`.
 - Só prod (`@prod`):
   - `nextjs.prod.spec.ts`: manifest (2); JS desligado (`test.use({ javaScriptEnabled: false })`) (5);
-    CLS com `PerformanceObserver` (6); `/hotel/61` e `/hotel/abc` (8); `x-nextjs-cache` (11); prefetch
-    por intenção com `page.waitForRequest` (26).
-  - `checkout.security.spec.ts` com `@prod` (20).
-  - `activity.spec.ts`: 21, 22, 24, 25.
+    CLS com `PerformanceObserver` (6); `/hotel/61` e `/hotel/abc` (8).
+  - `hotel-isr.prod.spec.ts`: ISR (11), ver "Critério 11" abaixo.
+  - `hotel-search.prefetch.spec.ts`: prefetch por intenção com `page.waitForRequest` (26).
+  - `checkout.security.spec.ts` com `@prod` (20); `booking-confirmation.spec.ts` (header `no-store`, 21).
+  - `activity.spec.ts`: 21, 22, 24, 25. `checkout.max-body.spec.ts` + `booking-request.size.test.ts`: 23.
 - Cenários de rede: `_delay`/`_fail` não alcançam fetch feito no servidor nem cache. Cobertura:
   - `?_delay=3000` no request **cliente** da página 2 de comentários (status "Atualizando…" mantido).
   - `page.route` para 500 no RSC do modal da foto → `error.tsx` do modal (critério 18).
@@ -825,7 +828,24 @@ Novo token: **nenhum**.
     com o comando registrado no PR, porque Playwright não controla o processo da API durante o build.
   - `npm run server -- --fail-rate 0.3` durante `next start`: a página do hotel continua abrindo do
     cache. Uma revalidação que falha não aparece para o usuário.
+  - Só rodam em dev (`test.skip` com `E2E_PROD=1`): `hotel-details.rooms-error.spec.ts` e o caso "RSC 500"
+    de `hotel-photos.states.spec.ts`. No build o hotel e os quartos vêm do cache ISR, então o servidor
+    não chama a API e a falha injetada no proxy nunca chega à página (o que é o objetivo da F7c).
 - axe em todas as telas novas (27).
+- **Critério 11 (header `x-nextjs-cache`).** No 16.4.6 o `next start` **não** manda `x-nextjs-cache` para
+  rotas com PPR; o hotel sai com `x-nextjs-postponed: 1` (casca prerenderizada + resume) e
+  `Cache-Control: private, no-cache, no-store`. O teste vira o plano B da tabela de Riscos (sem pular):
+  (1) o manifest guarda `initialRevalidateSeconds: 60` e `initialExpireSeconds: 3600` em `/pt-BR/hotel/N`;
+  (2) com a API presa pelo proxy de controle, o hotel abre da casca (`x-nextjs-postponed: 1`, h1 e
+  "Avaliações" visíveis) e, se `x-nextjs-cache` existir, não é `MISS`.
+  - **Verificação manual da revalidação em segundo plano** (`next start` com a API atrasada 5 s em
+    `/hotels/2` via proxy de controle, esperando 70 s depois do 1º acesso): 2 visitas seguidas a
+    `/hotel/2` responderam `200` em 0,04 s cada, e o proxy registrou `hits: 1` em `/hotels/2` (a
+    revalidação rodou uma vez, fora do caminho da resposta). Uma visita depois continuou em 0,04 s.
+- **Critério 23.** O corpo real da action é só o `BookingRequest` (referências, sem cartão): o E2E
+  `checkout.max-body` reserva 4 quartos × 5 hóspedes (16 adultos + 4 crianças, nomes de 60 letras) e o
+  corpo fica entre 3 KB e 64 KB. O unit `booking-request.size.test.ts` serializa também os
+  `CheckoutValues` máximos (campos sem teto no schema em 1.000 caracteres) e afirma < 64 KB.
 
 ## Riscos
 

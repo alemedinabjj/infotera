@@ -57,7 +57,7 @@ index.ts                 HotelDetailsView, HotelNotFound, loadHotel, parseHotelI
 Unit em `model/` e `api/` (seeds reais via `shared/testing/seed`); componente por seção; E2E em
 `e2e/hotel-details*.spec.ts`. Falhas do **servidor** (hotel, quartos e 1ª página de avaliações) passam pelo
 control-proxy do E2E: `serverApi.failServerRequests(hotelRoomsRequest(controlledHotel(parallelIndex)))` em
-`e2e/hotel-details.rooms-error.spec.ts` (falha inicial dos quartos, retry de seção, axe). Use sempre o hotel
+`e2e/hotel-details.rooms-error.spec.ts` (falha inicial dos quartos, retry de seção, axe; **só em dev**: no build os quartos vêm do cache ISR). Use sempre o hotel
 exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em paralelo.
 
 ## F7a (extras)
@@ -102,7 +102,7 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
   momento." no `FromPrice`) vai dentro de `RequestOnly` (Suspense + `await connection()`): nunca entra na casca estática. "Tentar de novo" = `useRefreshRetry` (`router.refresh()` em
   transition, botão fica em "Tentando…"; o foco vai ao h2 quando o componente desmonta depois de um retry). O `SectionBoundary`/`SectionError` (TanStack) ficou só para as páginas 2+ dos comentários.
 - Avaliações: p.1 em `ReviewsStatic` (cliente sem TanStack, fallback e casca) e `ReviewsPager` (TanStack com `initialData`/`initialDataUpdatedAt = fetchedAt`) sob Suspense.
-- **ISR**: `generateStaticParams = listPrerenderHotelIds` (todos os ids; 8 tentativas, 2 s → 15 s, `Aguardando a mock-api (tentativa n/8)…`; vazio ou esgotado = erro em pt-BR).
+- **ISR**: `generateStaticParams = listPrerenderHotelIds` (todos os ids; 8 tentativas, 2 s → 15 s, `Aguardando a mock-api (tentativa n/8)…`; vazio ou esgotado = erro em pt-BR). Só falha de rede, timeout ou 5xx é repetida (`isRetryableBuildError`); `ApiError` `parse` (schema) e 4xx/404 falham na hora. O 404 do hotel (`getHotelSnapshot`) usa `cacheLife("minutes")`, não `hours`.
   `npm run build` precisa da API no ar. `/hotel/61` é gerado sob demanda e vai direto a "não encontrado" (sem skeleton antes).
 - **Galeria como rota**: miniaturas são `PhotoLink` (`next/link`, `scroll={false}`, registra `data-photo-opener`). `PhotoModal` (`Dialog full`, prop nova `onClosed`/`describedBy`) fecha em
   `close()` → foco ao gatilho → **um** `router.back()`; `PhotoViewer` é a página cheia. Setas trocam o índice em estado e a URL por `history.replaceState` (sem request, sem entrada).

@@ -67,7 +67,7 @@ Estrutura interna de cada feature (crie só as pastas que usar):
 ```
 features/<nome>/
   CLAUDE.md      instruções da feature para a IA (leia antes de editar)
-  index.ts       API pública — a ÚNICA coisa que app/ pode importar
+  index.ts       API pública — o que app/ importa (exceção: `client.ts`, entrada só-cliente, ver abaixo)
   api/           query keys, queryOptions, mutations (TanStack Query)
   model/         schemas Zod, tipos e lógica pura (sem React) — 100% testável
   hooks/         hooks que ligam model + api + store
@@ -80,6 +80,11 @@ features/<nome>/
 - `app → features → shared`. Nunca o contrário.
 - Uma feature **não importa** outra feature. Estado ou tipo que duas features precisam vai para `shared/`.
 - `app/` importa features só pelo `index.ts` (`@/features/checkout`), nunca deep import.
+  **Exceção:** um arquivo `error.tsx`/`not-found.tsx` (`"use client"`) pode importar o `client.ts` da feature
+  (`@/features/hotel-details/client`), uma segunda entrada pública que reexporta só o que é seguro no
+  bundle do cliente. Motivo: com `cacheComponents` o `index.ts` leva funções `"use cache"` e o loader do
+  build (`server-only`) junto; importá-lo de um componente cliente quebraria o bundle. Hoje só
+  `hotel-details` tem `client.ts`; não crie outro sem o mesmo motivo.
 - Server Components por padrão. `"use client"` só no componente que tem interação, o mais folha possível.
 
 ## Regras de código (avaliadas pelo teste)
