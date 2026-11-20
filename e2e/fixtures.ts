@@ -19,15 +19,17 @@ export const test = base.extend<{ tiles: TileLog }>({
     async ({ context }, use) => {
       const log = await interceptTiles(context);
       const seen: string[] = [];
-      // `requestfinished`: um pedido que falha (rede cortada) não chegou ao OSM e não conta.
+      // `response` traz a resposta já pronta (sem ida ao navegador): esperar `request.response()` num
+      // listener assíncrono rejeitava quando o teste terminava e o contexto fechava com tiles em voo.
+      // Um pedido que falha (rede cortada) não tem resposta e não chegou ao OSM: não conta.
       // Resposta de um SW não conta: o `route` não a vê e o OSM está cortado na rede (ver acima).
-      context.on("requestfinished", async (request) => {
-        if (!isTileRequest(request.url())) return;
-        const response = await request.response();
-        if (!response?.fromServiceWorker()) seen.push(request.url());
+      context.on("response", (response) => {
+        if (isTileRequest(response.url()) && !response.fromServiceWorker()) {
+          seen.push(response.url());
+        }
       });
       await use(log);
-      // `mode: "abort"` derruba os pedidos interceptados (não chegam a `requestfinished`): `seen` pode ser menor.
+      // `mode: "abort"` derruba os pedidos interceptados (sem resposta): `seen` pode ser menor.
       const leaked = Math.max(0, seen.length - log.requests.length);
       expect(
         leaked,
