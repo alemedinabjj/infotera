@@ -126,7 +126,7 @@ describe("estados bloqueantes", () => {
     await seedSelection(makeSelection());
     renderCheckout();
     await waitFor(() => expect(useBookingDraft.getState().selection).toBeNull());
-    await waitFor(() => expect(navigationSpies.replace).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(navigationSpies.replace).toHaveBeenCalledWith("/?notice=choose-room"));
   });
 
   it("hotel 404 limpa a seleção", async () => {
