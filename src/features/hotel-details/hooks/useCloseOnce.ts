@@ -12,7 +12,8 @@ import { restorePhotoFocus, usePhotoOpener } from "./usePhotoOpener";
  * navegador desmonta o modal sem passar por aqui: `usePhotoOpener` devolve o foco no cleanup.
  *
  * Com `cacheComponents` o Next esconde a rota (Activity) em vez de desmontar: ao esconder, o estado
- * (fase de saída, trava) volta ao de aberto, para o modal reexibido pelo Avançar abrir de novo.
+ * (fase de saída, trava) volta ao de aberto, para o modal reexibido pelo Avançar abrir de novo, e o
+ * fim de saída que o `Dialog` sinaliza ao esconder (sem `requestClose`) não volta no histórico.
  */
 export const useCloseOnce = () => {
   const router = useRouter();
@@ -31,6 +32,9 @@ export const useCloseOnce = () => {
   };
 
   const onClosed = () => {
+    // O `Dialog` também chama `onClosed` quando o Activity esconde a rota (a saída é cortada): sem pedido
+    // de fechar não há o que desfazer, e um `back()` aqui tirava a pessoa da foto que o Avançar acabou de abrir.
+    if (!closing.current) return;
     restorePhotoFocus();
     router.back();
   };
