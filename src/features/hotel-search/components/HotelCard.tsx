@@ -18,6 +18,7 @@ import type { GeoPoint } from "../model/distance";
 import { CARD_IMAGE_SIZES } from "../model/image";
 import { HotelCardDistance } from "./HotelCardDistance";
 import { HotelCardFooter } from "./HotelCardFooter";
+import { OpeningIndicator } from "./OpeningIndicator";
 
 /** Posição do card no feed (padrão ARIA `feed`): tamanho do conjunto conhecido pelo total da API. */
 export type FeedItemProps = {
@@ -136,6 +137,7 @@ export const HotelCard = ({
             {...prefetch}
           >
             {hotel.name}
+            <OpeningIndicator />
           </Link>
         </h3>
         {/* Controle secundário: depois do link no DOM, acima do ::after. Em sm+ o canto da foto vem da
