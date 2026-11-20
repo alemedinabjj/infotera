@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import {
   FAVORITES_KEY,
   favoriteEntry,
@@ -8,6 +8,7 @@ import {
   readStorage,
   seedStorage,
 } from "./extras";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { cardByName, cards, hotelName, searchPath } from "./helpers/hotel-search";
 

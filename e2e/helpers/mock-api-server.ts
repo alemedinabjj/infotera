@@ -1,6 +1,6 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import path from "node:path";
-import { test as base } from "@playwright/test";
+import { test as base } from "../fixtures";
 
 type ServerOptions = { delay: number; failRate: number };
 

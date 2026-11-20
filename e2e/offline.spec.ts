@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./fixtures";
 import { acceptTermsViaDialog, clickPrimary, goToReview } from "./helpers/checkout";
 import { hotelPath, roomCard } from "./helpers/hotel-details";
 import { API_URL, cards, criteriaQuery, searchPath } from "./helpers/hotel-search";

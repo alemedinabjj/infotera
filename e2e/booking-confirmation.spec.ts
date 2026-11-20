@@ -1,5 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { formatDate } from "../src/shared/lib/dates";
+import { test } from "./fixtures";
 import { bookingPath, createBooking } from "./helpers/booking";
 import { criteria, seedSelection } from "./helpers/checkout";
 import { API_URL, CHECK_IN, CHECK_OUT, hotelName } from "./helpers/hotel-search";

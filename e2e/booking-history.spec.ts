@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { HISTORY_KEY, noHorizontalScroll, readStorage } from "./extras";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { bookingPath, createBooking } from "./helpers/booking";
 import { hotelName } from "./helpers/hotel-search";

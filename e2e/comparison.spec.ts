@@ -1,5 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { COMPARISON_KEY, noHorizontalScroll, trayTop } from "./extras";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { cards, searchPath } from "./helpers/hotel-search";
 

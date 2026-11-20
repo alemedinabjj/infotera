@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { addDays } from "../src/shared/lib/dates";
+import { test } from "./fixtures";
 import { applyCoupon, criteria, openCouponField, seedSelection } from "./helpers/checkout";
 import { CHECK_IN } from "./helpers/hotel-search";
 

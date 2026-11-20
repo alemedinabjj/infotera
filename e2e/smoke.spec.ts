@@ -1,5 +1,6 @@
-import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
+import { analyzeAccessibility } from "./helpers/axe";
 
 test("home: estrutura, headers de segurança, acessibilidade e 320px", async ({ page }) => {
   const response = await page.goto("/");
@@ -25,7 +26,7 @@ test("home: estrutura, headers de segurança, acessibilidade e 320px", async ({ 
     page.getByRole("banner").getByRole("link", { name: /Infotera Hotéis/ }),
   ).toHaveAttribute("href", "/");
 
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  const results = await analyzeAccessibility(page);
   expect(results.violations).toEqual([]);
 
   await page.setViewportSize({ width: 320, height: 640 });

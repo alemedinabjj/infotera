@@ -1,6 +1,7 @@
-import { type APIRequestContext, expect, test } from "@playwright/test";
+import { type APIRequestContext, expect } from "@playwright/test";
 import { formatBRL } from "../src/shared/lib/currency";
 import { stayTotalWithFees } from "../src/shared/lib/pricing";
+import { test } from "./fixtures";
 import {
   API_URL,
   CHECK_IN,

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { type APIRequestContext, test as base } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
+import { test as base } from "../fixtures";
 import { API_URL } from "./hotel-search";
 
 // Controle dos requests que o SERVIDOR do Next faz à mock-api (o `page.route` só vê o navegador).

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { type APIRequestContext, expect, type Page, test } from "@playwright/test";
+import { type APIRequestContext, expect, type Page } from "@playwright/test";
 import { FAVORITES_KEY, favoriteEntry, HISTORY_KEY, persisted, seedStorage } from "./extras";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { bookingPath, createBooking } from "./helpers/booking";
 import { API_URL } from "./helpers/hotel-search";

@@ -6,6 +6,11 @@ const TILE_PNG = Buffer.from(
   "base64",
 );
 
+const TILE_HOST = "https://tile.openstreetmap.org/";
+
+/** O pedido é para o servidor de tiles do OSM? */
+export const isTileRequest = (url: string): boolean => url.startsWith(TILE_HOST);
+
 export type TileLog = {
   /** URLs de tile pedidas pelo navegador (todas interceptadas: nenhuma chega ao OSM). */
   requests: string[];
@@ -20,7 +25,7 @@ export type TileLog = {
  */
 export const interceptTiles = async (context: BrowserContext): Promise<TileLog> => {
   const log: TileLog = { requests: [], mode: "ok" };
-  await context.route("https://tile.openstreetmap.org/**", async (route) => {
+  await context.route(`${TILE_HOST}**`, async (route) => {
     log.requests.push(route.request().url());
     if (log.mode === "abort") return route.abort();
     return route.fulfill({

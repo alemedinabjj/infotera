@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { addDays, todayISO } from "../src/shared/lib/dates";
+import { test } from "./fixtures";
 import { headerHeight, hotelPath, roomCard, waitForHydration } from "./helpers/hotel-details";
 import { CHECK_IN, CHECK_OUT, criteriaQuery } from "./helpers/hotel-search";
 

@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./fixtures";
 import { createBooking } from "./helpers/booking";
 import { collectCspViolations, criteria, seedSelection } from "./helpers/checkout";
 import { hotelPath } from "./helpers/hotel-details";
@@ -10,6 +11,9 @@ import { cards, searchPath } from "./helpers/hotel-search";
 // Fica de fora: o critério 42 (aviso de versão nova) precisa de dois builds; é coberto pelo teste de
 // componente do `ServiceWorkerRegistrar` e por verificação manual (README).
 
+// O `test` de `./fixtures` bloqueia service workers (o `page.route` não vê o que um SW pede). Aqui o
+// SW é o objeto do teste: liga de volta; a fixture `tiles` ainda falha se um tile escapar.
+test.use({ serviceWorkers: "allow" });
 test.skip(!process.env.PLAYWRIGHT_BASE_URL, "service worker só no build de produção");
 test.beforeEach(({ isMobile }) => {
   test.skip(isMobile, "o service worker é verificado no desktop");

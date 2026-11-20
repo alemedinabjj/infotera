@@ -1,4 +1,5 @@
-import { expect, type Page, type Request, type Route, test } from "@playwright/test";
+import { expect, type Page, type Request, type Route } from "@playwright/test";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { cardByName, cards, countHeading, hotelName, searchPath } from "./helpers/hotel-search";
 

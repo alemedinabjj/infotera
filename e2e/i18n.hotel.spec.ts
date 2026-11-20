@@ -1,4 +1,5 @@
-import { type APIRequestContext, expect, test } from "@playwright/test";
+import { type APIRequestContext, expect } from "@playwright/test";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { noHorizontalScroll, waitForHydration } from "./helpers/hotel-details";
 import { API_URL, criteriaQuery } from "./helpers/hotel-search";

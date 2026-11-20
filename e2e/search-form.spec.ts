@@ -1,5 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { addDays, todayISO } from "../src/shared/lib/dates";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 
 const checkIn = addDays(todayISO(), 7);

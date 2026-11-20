@@ -1,5 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { FAVORITES_KEY, favoriteEntry, persisted, seedStorage } from "./extras";
+import { test } from "./fixtures";
 import { criteria, fillPersonal, seedSelection } from "./helpers/checkout";
 import { hotelName, searchPath } from "./helpers/hotel-search";
 
