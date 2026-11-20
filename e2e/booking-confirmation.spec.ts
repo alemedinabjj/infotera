@@ -97,7 +97,7 @@ test.describe("conteúdo (critérios 1, 2, 3 e 5)", () => {
     await expect(
       other.getByRole("heading", { level: 1, name: "Reserva confirmada" }),
     ).toBeVisible();
-    await expect(other.getByText(id)).toBeVisible();
+    await expect(other.getByText(id).filter({ visible: true })).toBeVisible();
     expect(await other.evaluate(() => sessionStorage.getItem("infotera:booking-draft"))).toBeNull();
     await expect(other.getByRole("region", { name: "Pagamento" })).toContainText(
       "TotalR$ 3.726,00",

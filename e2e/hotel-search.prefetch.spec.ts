@@ -39,6 +39,8 @@ const openSearch = async (page: Page) => {
   await hydrated;
 };
 
+test.skip(process.env.E2E_PROD !== "1", "só no build: em `next dev` não há prerender nem prefetch");
+
 test.describe("prefetch por intenção no card @prod", () => {
   test("o mouse sobre um card prefetcha só o hotel dele (critério 26)", async ({ page }) => {
     const full = collectFullPrefetches(page);

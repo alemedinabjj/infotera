@@ -27,6 +27,8 @@ const hotelRoute = (id: number) => {
   return manifestSchema.parse(raw).routes[`/pt-BR/hotel/${id}`];
 };
 
+test.skip(process.env.E2E_PROD !== "1", "só no build: em `next dev` não há prerender nem prefetch");
+
 test.describe("ISR do hotel @prod", () => {
   test("o manifest revalida o hotel a cada 60 s e o deixa expirar em 1 h", () => {
     for (const id of [1, 31, 60]) {
