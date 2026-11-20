@@ -88,3 +88,45 @@ export const formatDate = (value: ISODate, format: DateFormat = "short"): string
     }
   }
 };
+
+const MONTHS_SHORT = [
+  "jan",
+  "fev",
+  "mar",
+  "abr",
+  "mai",
+  "jun",
+  "jul",
+  "ago",
+  "set",
+  "out",
+  "nov",
+  "dez",
+] as const;
+
+type DayMonthYear = { day: number; month: string; year: number };
+
+const toDayMonthYear = (value: ISODate): DayMonthYear => {
+  const date = new Date(toUTCms(value));
+  return {
+    day: date.getUTCDate(),
+    month: MONTHS_SHORT[date.getUTCMonth()] ?? "",
+    year: date.getUTCFullYear(),
+  };
+};
+
+/**
+ * Período curto para listas e resumos: `12–15 dez` (mesmo mês), `30 dez – 2 jan` (meses
+ * diferentes). O ano só aparece quando alguma das pontas não é o ano de `today`.
+ */
+export const formatDateRange = (checkIn: ISODate, checkOut: ISODate, today: ISODate): string => {
+  const start = toDayMonthYear(checkIn);
+  const end = toDayMonthYear(checkOut);
+  const currentYear = toDayMonthYear(today).year;
+  const showYear = start.year !== currentYear || end.year !== currentYear;
+  const withYear = (part: DayMonthYear) => `${part.day} ${part.month} ${part.year}`;
+  if (start.year !== end.year) return `${withYear(start)} – ${withYear(end)}`;
+  const year = showYear ? ` ${end.year}` : "";
+  if (start.month === end.month) return `${start.day}–${end.day} ${end.month}${year}`;
+  return `${start.day} ${start.month} – ${end.day} ${end.month}${year}`;
+};

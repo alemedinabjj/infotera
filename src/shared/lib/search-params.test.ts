@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import {
+  applySearchCriteriaRules,
   guestsPerRoom,
   parseSearchCriteria,
+  SEARCH_MESSAGES,
   SEARCH_PARAM_KEYS,
   type SearchCriteria,
   searchCriteriaToQueryString,
@@ -124,5 +127,42 @@ describe("guestsPerRoom", () => {
   it("arredonda para cima", () => {
     expect(guestsPerRoom({ adults: 3, children: 1, rooms: 3 })).toBe(2);
     expect(guestsPerRoom({ adults: 2, children: 1, rooms: 1 })).toBe(3);
+  });
+});
+
+describe("applySearchCriteriaRules", () => {
+  const run = (value: Parameters<typeof applySearchCriteriaRules>[0]) =>
+    z
+      .object({
+        checkIn: z.string(),
+        checkOut: z.string(),
+        rooms: z.number(),
+        adults: z.number(),
+        children: z.number(),
+      })
+      .superRefine(applySearchCriteriaRules)
+      .safeParse(value);
+
+  const base = { checkIn: "2026-12-01", checkOut: "2026-12-04", rooms: 1, adults: 2, children: 0 };
+
+  it("aceita valores coerentes", () => {
+    expect(run(base).success).toBe(true);
+  });
+
+  it("aponta cada regra no campo certo com a mensagem exportada", () => {
+    const messages = (value: Parameters<typeof run>[0]) =>
+      run(value).error?.issues.map((i) => [i.path[0], i.message]);
+    expect(messages({ ...base, checkOut: "2026-12-01" })).toEqual([
+      ["checkOut", SEARCH_MESSAGES.checkOutOrder],
+    ]);
+    expect(messages({ ...base, checkOut: "2027-01-05" })).toEqual([
+      ["checkOut", SEARCH_MESSAGES.maxNights],
+    ]);
+    expect(messages({ ...base, rooms: 2, adults: 1 })).toEqual([
+      ["adults", SEARCH_MESSAGES.adultsPerRoom],
+    ]);
+    expect(messages({ ...base, adults: 5, children: 1 })).toEqual([
+      ["children", SEARCH_MESSAGES.guestsPerRoom],
+    ]);
   });
 });

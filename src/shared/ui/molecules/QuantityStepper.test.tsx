@@ -8,15 +8,19 @@ const Harness = ({
   initial,
   min = 1,
   max = 3,
+  hint,
 }: {
   initial: number;
   min?: number;
   max?: number;
+  hint?: string;
 }) => {
   const [value, setValue] = useState(initial);
   return (
     <QuantityStepper
       label="Adultos"
+      description="A partir de 18 anos"
+      hint={hint}
       value={value}
       min={min}
       max={max}
@@ -64,5 +68,22 @@ describe("QuantityStepper", () => {
     expect(increase).toHaveAttribute("aria-disabled", "true");
     await user.click(increase);
     expect(screen.getByRole("status")).toHaveTextContent("3");
+  });
+
+  it("liga descrição e hint aos dois botões e mantém a região live sempre montada", () => {
+    const { container, rerender } = render(<Harness initial={1} />);
+    const live = container.querySelector("[aria-live='polite']:not(output)");
+    expect(live).toBeEmptyDOMElement();
+    const decrease = screen.getByRole("button", { name: "Remover adulto" });
+    expect(decrease).toHaveAccessibleDescription("A partir de 18 anos");
+    rerender(<Harness initial={1} hint="Até 5 hóspedes por quarto." />);
+    expect(container.querySelector("[aria-live='polite']:not(output)")).toHaveTextContent(
+      "Até 5 hóspedes por quarto.",
+    );
+    for (const name of ["Remover adulto", "Adicionar adulto"]) {
+      expect(screen.getByRole("button", { name })).toHaveAccessibleDescription(
+        "A partir de 18 anos Até 5 hóspedes por quarto.",
+      );
+    }
   });
 });

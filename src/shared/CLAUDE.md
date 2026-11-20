@@ -39,6 +39,8 @@ shared/
 - `Button loading` usa `aria-disabled` + `aria-busy` + guarda no clique (nunca `disabled`: mantém o foco);
   `loadingText` troca o rótulo em `aria-live="polite"`. `QuantityStepper` usa o mesmo padrão nos limites.
 - `EmptyState`/`ErrorState` aceitam `headingLevel` (use 1 quando ocupam a página).
+- `QuantityStepper` aceita `hint` (motivo do limite): região `aria-live` sempre montada e `aria-describedby` (descrição + hint) nos dois botões.
+- `search-params.ts` exporta `SEARCH_MESSAGES` e `applySearchCriteriaRules` (formulário da F2 e schema da URL compartilham as regras); `dates.ts` tem `formatDateRange(checkIn, checkOut, today)`.
 
 ## ui/
 - Fonte da verdade visual: `docs/design/design-system.md`. Tokens viram o `@theme` do Tailwind;
@@ -62,5 +64,4 @@ para `shared/` quando aparecer o segundo uso.
 - **RatingScore** (nota + `Stars` + contagem): F3, reaproveitado na F4.
 - **PriceTag** (preço, "por noite", total): F3, reaproveitado na F4/F5.
 - **Breadcrumb**: F4 (`hotel-details`).
-- **Combobox** (autocomplete de destino): F2 (`search-form`).
-- **DateRange** (seletor de período): F2 (`search-form`).
+- **Combobox** e **DateRange**: nasceram na F2 (`search-form`, `useCombobox` + `DateRangeFields`); promover quando houver segundo uso.

@@ -22,13 +22,14 @@ export const SEARCH_LIMITS = {
   maxNights: 30,
 } as const;
 
-const MESSAGES = {
+/** Mensagens de validação dos critérios de busca (reusadas pelo formulário da F2). */
+export const SEARCH_MESSAGES = {
   destination: "Escolha um destino da lista.",
   date: "Escolha uma data válida.",
   rooms: `Escolha de ${SEARCH_LIMITS.minRooms} a ${SEARCH_LIMITS.maxRooms} quartos.`,
   adults: `Informe de 1 a ${SEARCH_LIMITS.maxAdults} adultos.`,
   children: `Informe de 0 a ${SEARCH_LIMITS.maxChildren} crianças.`,
-  checkOutOrder: "O check-out precisa ser pelo menos 1 dia depois do check-in.",
+  checkOutOrder: "O check\u2011out precisa ser pelo menos 1 dia depois do check\u2011in.",
   maxNights: `A estadia pode ter no máximo ${SEARCH_LIMITS.maxNights} noites.`,
   adultsPerRoom: "Inclua pelo menos 1 adulto por quarto.",
   guestsPerRoom: `Cada quarto acomoda até ${SEARCH_LIMITS.maxGuestsPerRoom} hóspedes. Aumente os quartos ou reduza os hóspedes.`,
@@ -37,38 +38,56 @@ const MESSAGES = {
 const countSchema = (min: number, max: number, message: string) =>
   z.coerce.number({ message }).int({ message }).min(min, { message }).max(max, { message });
 
+type RuleValue = {
+  checkIn: string;
+  checkOut: string;
+  rooms: number;
+  adults: number;
+  children: number;
+};
+
+/**
+ * Regras que cruzam campos (noites, adultos por quarto, hóspedes por quarto). Compartilhada com o
+ * schema do formulário da F2 para existir uma única fonte da verdade.
+ */
+export const applySearchCriteriaRules = (value: RuleValue, ctx: z.RefinementCtx): void => {
+  const datesOk =
+    isoDateSchema.safeParse(value.checkIn).success &&
+    isoDateSchema.safeParse(value.checkOut).success;
+  if (datesOk) {
+    const nights = nightsBetween(value.checkIn, value.checkOut);
+    if (nights < SEARCH_LIMITS.minNights) {
+      ctx.addIssue({ code: "custom", path: ["checkOut"], message: SEARCH_MESSAGES.checkOutOrder });
+    } else if (nights > SEARCH_LIMITS.maxNights) {
+      ctx.addIssue({ code: "custom", path: ["checkOut"], message: SEARCH_MESSAGES.maxNights });
+    }
+  }
+  if (value.adults < value.rooms) {
+    ctx.addIssue({ code: "custom", path: ["adults"], message: SEARCH_MESSAGES.adultsPerRoom });
+  }
+  if (value.adults + value.children > value.rooms * SEARCH_LIMITS.maxGuestsPerRoom) {
+    ctx.addIssue({ code: "custom", path: ["children"], message: SEARCH_MESSAGES.guestsPerRoom });
+  }
+};
+
 /**
  * Critérios de busca. Valida só o que não depende do relógio (formato, calendário, limites);
  * "check-in no passado" é avaliado no cliente com `isBeforeToday`.
  */
 export const searchCriteriaSchema = z
   .object({
-    destination: z.string().trim().min(1, MESSAGES.destination).max(100, MESSAGES.destination),
+    destination: z
+      .string()
+      .trim()
+      .min(1, SEARCH_MESSAGES.destination)
+      .max(100, SEARCH_MESSAGES.destination),
     checkIn: isoDateSchema,
     checkOut: isoDateSchema,
-    rooms: countSchema(SEARCH_LIMITS.minRooms, SEARCH_LIMITS.maxRooms, MESSAGES.rooms),
-    adults: countSchema(1, SEARCH_LIMITS.maxAdults, MESSAGES.adults),
-    children: countSchema(0, SEARCH_LIMITS.maxChildren, MESSAGES.children),
+    rooms: countSchema(SEARCH_LIMITS.minRooms, SEARCH_LIMITS.maxRooms, SEARCH_MESSAGES.rooms),
+    adults: countSchema(1, SEARCH_LIMITS.maxAdults, SEARCH_MESSAGES.adults),
+    children: countSchema(0, SEARCH_LIMITS.maxChildren, SEARCH_MESSAGES.children),
   })
-  .superRefine((value, ctx) => {
-    const datesOk =
-      isoDateSchema.safeParse(value.checkIn).success &&
-      isoDateSchema.safeParse(value.checkOut).success;
-    if (datesOk) {
-      const nights = nightsBetween(value.checkIn, value.checkOut);
-      if (nights < SEARCH_LIMITS.minNights) {
-        ctx.addIssue({ code: "custom", path: ["checkOut"], message: MESSAGES.checkOutOrder });
-      } else if (nights > SEARCH_LIMITS.maxNights) {
-        ctx.addIssue({ code: "custom", path: ["checkOut"], message: MESSAGES.maxNights });
-      }
-    }
-    if (value.adults < value.rooms) {
-      ctx.addIssue({ code: "custom", path: ["adults"], message: MESSAGES.adultsPerRoom });
-    }
-    if (value.adults + value.children > value.rooms * SEARCH_LIMITS.maxGuestsPerRoom) {
-      ctx.addIssue({ code: "custom", path: ["children"], message: MESSAGES.guestsPerRoom });
-    }
-  });
+  .superRefine(applySearchCriteriaRules);
 
 export type SearchCriteria = z.infer<typeof searchCriteriaSchema>;
 

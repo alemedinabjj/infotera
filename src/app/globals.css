@@ -89,6 +89,20 @@
     color-scheme: light;
   }
 
+  /*
+   * Header fixo (h-14, lg:h-16) + folga de 16px: foco e scrollIntoView não ficam atrás dele
+   * (WCAG 2.4.11 Focus Not Obscured).
+   */
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-top: 5rem;
+    }
+  }
+
   body {
     background-color: var(--color-canvas);
     color: var(--color-fg);
