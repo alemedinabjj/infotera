@@ -11,8 +11,8 @@ const ignore = (): void => undefined;
 
 /**
  * 1ª página de comentários, sem TanStack: é o fallback do `ReviewsPager` e o que vai na casca
- * estática. Visualmente idêntico ao conteúdo do pager (mesma lista, mesma legenda e paginação), então
- * a troca não mexe em nada.
+ * estática. Mesma lista, legenda e paginação do pager, então a troca não mexe em nada; a paginação
+ * fica desabilitada (antes de hidratar, clicar não faria nada) e o pager a habilita.
  */
 export const ReviewsStatic = ({ page }: { page: ReviewsPage }) => {
   const locale = useLocale();
@@ -27,6 +27,7 @@ export const ReviewsStatic = ({ page }: { page: ReviewsPage }) => {
         page={1}
         totalPages={getTotalPages(page.total, REVIEWS_PAGE_SIZE)}
         onPageChange={ignore}
+        disabled
         className="mt-2"
       />
     </>

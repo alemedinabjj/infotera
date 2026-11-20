@@ -20,6 +20,8 @@ type PaginationProps = PaginationMode & {
   nextLabel?: string;
   /** Texto "Página 5 de 12" exibido no mobile. */
   summaryLabel?: (page: number, totalPages: number) => string;
+  /** Desabilita tudo (ex.: o conteúdo ainda não hidratou e clicar não faria nada). */
+  disabled?: boolean;
   className?: string;
 };
 
@@ -49,7 +51,7 @@ const PageItem = ({
   const classes = cn(
     ITEM_BASE,
     current ? "bg-primary text-fg-on-primary" : "text-primary hover:bg-primary-soft",
-    disabled && "cursor-not-allowed text-fg-subtle hover:bg-transparent",
+    disabled && !current && "cursor-not-allowed text-fg-subtle hover:bg-transparent",
     className,
   );
   const ariaCurrent = current ? "page" : undefined;
@@ -93,6 +95,7 @@ export const Pagination = ({
   previousLabel,
   nextLabel,
   summaryLabel,
+  disabled = false,
   className,
   ...mode
 }: PaginationProps) => {
@@ -105,7 +108,7 @@ export const Pagination = ({
       aria-label={label ?? t.label}
       className={cn("flex items-center justify-center gap-1", className)}
     >
-      <PageItem {...mode} target={page - 1} disabled={page <= 1}>
+      <PageItem {...mode} target={page - 1} disabled={disabled || page <= 1}>
         <ChevronLeftIcon className="size-4" />
         {previousLabel ?? t.previous}
       </PageItem>
@@ -124,6 +127,7 @@ export const Pagination = ({
                 {...mode}
                 target={item}
                 current={item === page}
+                disabled={disabled}
                 ariaLabel={t.page({ page: item })}
               >
                 {item}
@@ -132,7 +136,7 @@ export const Pagination = ({
           </li>
         ))}
       </ul>
-      <PageItem {...mode} target={page + 1} disabled={page >= totalPages}>
+      <PageItem {...mode} target={page + 1} disabled={disabled || page >= totalPages}>
         {nextLabel ?? t.next}
         <ChevronRightIcon className="size-4" />
       </PageItem>
