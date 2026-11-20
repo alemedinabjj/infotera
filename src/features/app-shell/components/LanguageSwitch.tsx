@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "@/shared/i18n/client";
 import type { Locale } from "@/shared/i18n/config";
@@ -34,7 +35,11 @@ export const LanguageSwitch = () => {
   const [href, setHref] = useState(() => localizePath(target, "/"));
   const refresh = useCallback(() => setHref(switchLocalePath(target, currentHref())), [target]);
 
-  useEffect(refresh, [refresh]);
+  // O pathname só dispara o recálculo a cada navegação no cliente: sem ele o link guardava o endereço da
+  // página anterior (ex.: o id de uma reserva) até o hover.
+  const pathname = usePathname();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `pathname` é o gatilho do recálculo
+  useEffect(refresh, [refresh, pathname]);
 
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     writeLocaleCookie(target);

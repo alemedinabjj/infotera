@@ -4,6 +4,7 @@ import { isValidElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BookingConfirmation } from "@/features/booking-confirmation";
 import { BOOKING_ID, makeBooking } from "@/shared/testing/fixtures";
+import { WipeOnHide } from "@/shared/ui";
 import ConfirmationError from "./error";
 import ConfirmationNotFound from "./not-found";
 import ConfirmationPage, { generateMetadata } from "./page";
@@ -51,10 +52,15 @@ describe("ConfirmationPage (critérios 8 e 9)", () => {
 
   it("UUID em maiúsculas é normalizado e compõe a feature", async () => {
     const element = await ConfirmationPage(props(BOOKING_ID.toUpperCase()));
-    expect(isValidElement<{ id: string }>(element)).toBe(true);
-    if (!isValidElement<{ id: string }>(element)) return;
-    expect(element.type).toBe(BookingConfirmation);
-    expect(element.props.id).toBe(BOOKING_ID);
+    // A feature vem embrulhada em `WipeOnHide`: o Activity não pode guardar a reserva no DOM escondido.
+    expect(isValidElement<{ children: unknown }>(element)).toBe(true);
+    if (!isValidElement<{ children: unknown }>(element)) return;
+    expect(element.type).toBe(WipeOnHide);
+    const inner = element.props.children;
+    expect(isValidElement<{ id: string }>(inner)).toBe(true);
+    if (!isValidElement<{ id: string }>(inner)) return;
+    expect(inner.type).toBe(BookingConfirmation);
+    expect(inner.props.id).toBe(BOOKING_ID);
   });
 });
 

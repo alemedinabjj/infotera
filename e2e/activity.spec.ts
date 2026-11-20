@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { bookingPath, createBooking } from "./helpers/booking";
 import {
   clickPrimary,
   criteria,
@@ -130,6 +131,40 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     // O cartão foi apagado ao esconder a rota: a revisão não volta, o pagamento sim (critério 22).
     await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
     await expect(terms).toBeHidden();
+  });
+});
+
+test.describe("confirmação: a reserva não fica no DOM escondido @prod", () => {
+  test("ao sair, o documento não guarda hóspedes, e-mail nem número da reserva; o Voltar a traz de volta", async ({
+    page,
+    request,
+  }) => {
+    const id = await createBooking(request);
+    await page.goto(bookingPath(id));
+    await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
+    // Sem os `<script>`: no carregamento direto o HTML traz o payload RSC inline (`self.__next_f.push`), inerte e
+    // idêntico ao "ver código-fonte". O que o teste cobre é a árvore de elementos que o Activity preserva.
+    const html = () =>
+      page.evaluate(() => {
+        const clone = document.body.cloneNode(true);
+        if (clone instanceof HTMLElement)
+          for (const node of clone.querySelectorAll("script")) node.remove();
+        return clone instanceof HTMLElement ? clone.innerHTML : "";
+      });
+    const secrets = ["Ana Souza", "Bruno Souza", "a***@exemplo.com", id, "Cartão final 1111"];
+    for (const secret of secrets) await expect.poll(html).toContain(secret);
+
+    await logo(page).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeVisible();
+    // A rota escondida continua anexada, mas sem conteúdo: o wipe roda no cleanup, depois de esconder.
+    for (const secret of secrets) await expect.poll(html).not.toContain(secret);
+    await expect(page.getByText("Sua reserva está confirmada.")).toHaveCount(0);
+
+    await page.goBack();
+    await expect(page).toHaveURL(bookingPath(id));
+    await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
+    await expect(page.getByText("Ana Souza")).toBeVisible();
   });
 });
 
