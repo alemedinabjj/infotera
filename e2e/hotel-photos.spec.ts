@@ -4,6 +4,14 @@ import { hotelPath, noHorizontalScroll, waitForHydration } from "./helpers/hotel
 import { test } from "./helpers/mock-api-server";
 
 const NAME = "Hotel Copacabana Palace";
+// 1×1 GIF: o Unsplash não é alcançável em todo ambiente (e os testes não devem depender dele).
+const PIXEL = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64");
+
+test.beforeEach(async ({ page }) => {
+  await page.route(/images\.unsplash\.com/, (route) =>
+    route.fulfill({ contentType: "image/gif", body: PIXEL }),
+  );
+});
 
 /** Contador da página cheia, dentro do grupo (a cópia oculta do HTML em streaming não conta). */
 const pageCounter = (page: Page, text: string) =>

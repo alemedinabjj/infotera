@@ -104,7 +104,7 @@ test.describe("conteúdo (critérios 1, 2, 3 e 5)", () => {
     );
   });
 
-  test("o HTML vem do servidor com o número e o total, sem cache e sem indexação", async ({
+  test("o HTML vem do servidor com o número e o total, sem cache e sem indexação @prod", async ({
     page,
     request,
   }) => {
