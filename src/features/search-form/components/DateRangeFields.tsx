@@ -2,8 +2,13 @@
 
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useToday } from "@/shared/hooks/useToday";
+import { useLocale } from "@/shared/i18n/client";
+import type { Locale } from "@/shared/i18n/config";
+import { formatUnit } from "@/shared/i18n/units";
 import { formatDate } from "@/shared/lib/dates";
 import { CalendarIcon, Field, InfoIcon, Input } from "@/shared/ui";
+import { useSearchFormMessages } from "../hooks/useSearchFormMessages";
+import type { SearchFormMessages } from "../i18n/pt-BR";
 import { type DateNotice, formatCheckOutAdjusted } from "../model/notices";
 import type { SearchFormValues } from "../model/search-form.schema";
 import { adjustCheckOut, dateBounds, stayNights } from "../model/stay-dates";
@@ -26,19 +31,29 @@ const NoticeText = ({ text }: { text: string }) => (
 
 const DATE_INPUT_CLASS = "[&::-webkit-date-and-time-value]:text-left";
 
-const summarize = (checkIn: string, checkOut: string): string => {
+const summarize = (
+  checkIn: string,
+  checkOut: string,
+  locale: Locale,
+  t: SearchFormMessages["form"],
+): string => {
   const nights = stayNights(checkIn, checkOut);
   if (nights !== null) {
-    const label = nights === 1 ? "1 noite" : `${nights} noites`;
-    return `${label} · ${formatDate(checkIn, "long")} a ${formatDate(checkOut, "long")}`;
+    return t.summaryDateRange({
+      nights: formatUnit(nights, "night", locale),
+      from: formatDate(checkIn, "long", locale),
+      to: formatDate(checkOut, "long", locale),
+    });
   }
-  return checkIn === "" || checkOut === "" ? "Escolha as datas para ver o total de noites." : "";
+  return checkIn === "" || checkOut === "" ? t.pickDates : "";
 };
 
 /** Check-in e check-out nativos (`type="date"`) com `min`/`max` coerentes e resumo de noites. */
 export const DateRangeFields = ({ notice, onNotice, deferBlur }: DateRangeFieldsProps) => {
   const { control, getValues, setValue, getFieldState, trigger } =
     useFormContext<SearchFormValues>();
+  const locale = useLocale();
+  const t = useSearchFormMessages().form;
   const today = useToday();
   const [checkIn, checkOut] = useWatch({ control, name: ["checkIn", "checkOut"] });
   const bounds = dateBounds(today, checkIn);
@@ -56,21 +71,21 @@ export const DateRangeFields = ({ notice, onNotice, deferBlur }: DateRangeFields
     }
     onNotice(
       adjusted.adjusted
-        ? { field: "checkOut", text: formatCheckOutAdjusted(adjusted.checkOut) }
+        ? { field: "checkOut", text: formatCheckOutAdjusted(adjusted.checkOut, locale) }
         : null,
     );
   };
 
   return (
     <fieldset className="min-w-0">
-      <legend className="mb-3 text-base font-semibold text-fg">Datas da estadia</legend>
+      <legend className="mb-3 text-base font-semibold text-fg">{t.stayDates}</legend>
       <div className="grid gap-4 sm:grid-cols-2">
         <Controller
           control={control}
           name="checkIn"
           render={({ field, fieldState }) => (
             <Field
-              label="Check-in"
+              label={t.checkIn}
               required
               error={fieldState.error?.message}
               description={
@@ -99,7 +114,7 @@ export const DateRangeFields = ({ notice, onNotice, deferBlur }: DateRangeFields
           name="checkOut"
           render={({ field, fieldState }) => (
             <Field
-              label="Check-out"
+              label={t.checkOut}
               required
               error={fieldState.error?.message}
               description={
@@ -130,7 +145,7 @@ export const DateRangeFields = ({ notice, onNotice, deferBlur }: DateRangeFields
         />
       </div>
       <p aria-live="polite" className="mt-2 min-h-5 text-sm text-fg-muted tabular-nums">
-        {summarize(checkIn, checkOut)}
+        {summarize(checkIn, checkOut, locale, t)}
       </p>
     </fieldset>
   );

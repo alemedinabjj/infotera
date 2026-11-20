@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Suggestion } from "@/shared/api/schemas";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useOnline } from "@/shared/hooks/useOnline";
+import { useLocale } from "@/shared/i18n/client";
 import { suggestionsQueryOptions } from "../api/suggestions";
 import { normalizeQuery } from "../model/suggestion-text";
 import {
@@ -23,6 +24,7 @@ type SuggestionsStateOptions = { inputValue: string; selected: string };
 
 /** Query de sugestões (debounce 300 ms, offline, retry) → visão do popover e opções. */
 const useSuggestionsState = ({ inputValue, selected }: SuggestionsStateOptions) => {
+  const locale = useLocale();
   const online = useOnline();
   // Chave normalizada da query em retry: some sozinha quando a pessoa muda o texto.
   const [retryingKey, setRetryingKey] = useState<string | null>(null);
@@ -60,8 +62,9 @@ const useSuggestionsState = ({ inputValue, selected }: SuggestionsStateOptions) 
       itemCount: items.length,
       text: inputValue,
       isCurrent: !query.isFetching && !query.isPlaceholderData && !isDebouncing,
+      locale,
     }),
-    errorMessage: suggestionsErrorMessage(offline),
+    errorMessage: suggestionsErrorMessage(offline, locale),
     isRetrying,
     /** A lista é de outra busca (`keepPreviousData`): teclado não ativa opções. */
     isStale: query.isPlaceholderData,

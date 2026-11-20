@@ -4,6 +4,7 @@ import { Controller, FormProvider } from "react-hook-form";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { Button, ErrorSummary, SearchIcon, toast } from "@/shared/ui";
 import { useSearchForm } from "../hooks/useSearchForm";
+import { useSearchFormMessages } from "../hooks/useSearchFormMessages";
 import { DateRangeFields } from "./DateRangeFields";
 import { DestinationCombobox } from "./DestinationCombobox";
 import { GuestsPicker } from "./GuestsPicker";
@@ -29,12 +30,15 @@ type SearchFormProps = {
   submitLoadingText?: string;
 };
 
-const FixedDestination = ({ name }: { name: string }) => (
-  <dl className="flex flex-col gap-1">
-    <dt className="text-sm font-medium text-fg">Destino</dt>
-    <dd className="text-base text-fg">{name}</dd>
-  </dl>
-);
+const FixedDestination = ({ name }: { name: string }) => {
+  const t = useSearchFormMessages().form;
+  return (
+    <dl className="flex flex-col gap-1">
+      <dt className="text-sm font-medium text-fg">{t.destination}</dt>
+      <dd className="text-base text-fg">{name}</dd>
+    </dl>
+  );
+};
 
 /** Formulário de busca: destino (autocomplete), datas, hóspedes e envio para `/search`. */
 export const SearchForm = ({
@@ -43,9 +47,10 @@ export const SearchForm = ({
   labelledBy,
   fixedDestination,
   getSubmitHref,
-  submitLabel = "Buscar hotéis",
-  submitLoadingText = "Buscando…",
+  submitLabel,
+  submitLoadingText,
 }: SearchFormProps) => {
+  const t = useSearchFormMessages().form;
   const search = useSearchForm(
     fixedDestination ? { ...initialCriteria, destination: fixedDestination } : initialCriteria,
     { getSubmitHref },
@@ -55,7 +60,7 @@ export const SearchForm = ({
   const clearRecent = () => {
     search.recent.clear();
     search.submitRef.current?.focus();
-    toast.success("Buscas recentes apagadas.");
+    toast.success(t.recentCleared);
   };
 
   return (
@@ -66,7 +71,7 @@ export const SearchForm = ({
           noValidate
           onSubmit={search.onSubmit}
           aria-labelledby={labelledBy}
-          aria-label={labelledBy ? undefined : "Buscar hotéis"}
+          aria-label={labelledBy ? undefined : t.title}
           className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4 shadow-card md:p-5 lg:gap-5 lg:p-6"
         >
           {search.summary.length > 0 ? (
@@ -118,9 +123,9 @@ export const SearchForm = ({
             className="lg:ml-auto lg:w-auto lg:min-w-56"
             leftIcon={<SearchIcon className="size-5" />}
             loading={search.isPending}
-            loadingText={submitLoadingText}
+            loadingText={submitLoadingText ?? t.searching}
           >
-            {submitLabel}
+            {submitLabel ?? t.submit}
           </Button>
           <p className="sr-only" aria-live="polite">
             {notices.announcement}

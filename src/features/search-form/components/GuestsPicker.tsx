@@ -2,39 +2,13 @@
 
 import { useId, useState } from "react";
 import { type Control, useController, useFormContext, useWatch } from "react-hook-form";
+import { useLocale } from "@/shared/i18n/client";
 import { AlertCircleIcon, QuantityStepper } from "@/shared/ui";
+import { useSearchFormMessages } from "../hooks/useSearchFormMessages";
 import { type GuestField, guestHints, guestLimits } from "../model/guests";
 import type { SearchFormValues } from "../model/search-form.schema";
 
-const ROWS = [
-  {
-    name: "adults",
-    label: "Adultos",
-    description: "A partir de 18 anos",
-    decrease: "Diminuir adultos",
-    increase: "Aumentar adultos",
-  },
-  {
-    name: "children",
-    label: "Crianças",
-    description: "Até 17 anos",
-    decrease: "Diminuir crianças",
-    increase: "Aumentar crianças",
-  },
-  {
-    name: "rooms",
-    label: "Quartos",
-    description: undefined,
-    decrease: "Diminuir quartos",
-    increase: "Aumentar quartos",
-  },
-] as const satisfies readonly {
-  name: GuestField;
-  label: string;
-  description: string | undefined;
-  decrease: string;
-  increase: string;
-}[];
+const ROW_NAMES = ["adults", "children", "rooms"] as const satisfies readonly GuestField[];
 
 const DEPS: Record<GuestField, GuestField[]> = {
   rooms: ["adults", "children"],
@@ -51,6 +25,8 @@ const useGuestField = (control: Control<SearchFormValues>, name: GuestField) =>
  */
 export const GuestsPicker = () => {
   const { control } = useFormContext<SearchFormValues>();
+  const t = useSearchFormMessages().form;
+  const locale = useLocale();
   const fields = {
     adults: useGuestField(control, "adults"),
     children: useGuestField(control, "children"),
@@ -61,30 +37,30 @@ export const GuestsPicker = () => {
   const limits = guestLimits(counts);
   // Dois controles no mesmo teto dariam a mesma frase duas vezes: só o último mexido a mostra.
   const [lastChanged, setLastChanged] = useState<GuestField | null>(null);
-  const hints = guestHints(counts, lastChanged);
+  const hints = guestHints(counts, lastChanged, locale);
   const errorId = useId();
-  const error = ROWS.map((row) => fields[row.name].fieldState.error?.message).find(Boolean);
+  const error = ROW_NAMES.map((name) => fields[name].fieldState.error?.message).find(Boolean);
 
   return (
     <fieldset className="min-w-0" aria-describedby={error ? errorId : undefined}>
-      <legend className="mb-3 text-base font-semibold text-fg">Quartos e hóspedes</legend>
+      <legend className="mb-3 text-base font-semibold text-fg">{t.guestsTitle}</legend>
       <div className="divide-y divide-border">
-        {ROWS.map((row) => (
+        {ROW_NAMES.map((name) => (
           <QuantityStepper
-            key={row.name}
+            key={name}
             className="py-3 first:pt-0 last:pb-0"
-            label={row.label}
-            description={row.description}
-            hint={hints[row.name]}
-            value={counts[row.name]}
-            min={limits[row.name].min}
-            max={limits[row.name].max}
+            label={t[name].label}
+            description={name === "rooms" ? undefined : t[name].description}
+            hint={hints[name]}
+            value={counts[name]}
+            min={limits[name].min}
+            max={limits[name].max}
             onChange={(value) => {
-              setLastChanged(row.name);
-              fields[row.name].field.onChange(value);
+              setLastChanged(name);
+              fields[name].field.onChange(value);
             }}
-            decreaseLabel={row.decrease}
-            increaseLabel={row.increase}
+            decreaseLabel={t[name].decrease}
+            increaseLabel={t[name].increase}
           />
         ))}
       </div>
@@ -92,7 +68,7 @@ export const GuestsPicker = () => {
         id={errorId}
         tabIndex={-1}
         ref={(element) => {
-          for (const row of ROWS) fields[row.name].field.ref(element);
+          for (const name of ROW_NAMES) fields[name].field.ref(element);
         }}
         className="mt-2"
       >

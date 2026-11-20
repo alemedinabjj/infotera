@@ -2,8 +2,10 @@
 
 import { useId } from "react";
 import { useToday } from "@/shared/hooks/useToday";
+import { useLocale } from "@/shared/i18n/client";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { Badge, Button, HistoryIcon, VisuallyHidden } from "@/shared/ui";
+import { useSearchFormMessages } from "../hooks/useSearchFormMessages";
 import {
   describeRecentDetails,
   describeRecentSearch,
@@ -22,24 +24,27 @@ export const RecentSearches = ({ items, onRestore, onClear }: RecentSearchesProp
   const headingId = useId();
   const hintId = useId();
   const today = useToday();
+  const locale = useLocale();
+  const t = useSearchFormMessages().recent;
   if (items.length === 0) return null;
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
       <h2 id={headingId} className="flex items-center gap-2 text-lg font-semibold text-fg">
         <HistoryIcon className="size-5 text-fg-muted" />
-        Buscas recentes
+        {t.title}
       </h2>
-      <VisuallyHidden id={hintId}>Preenche o formulário com esta busca.</VisuallyHidden>
+      <VisuallyHidden id={hintId}>{t.hint}</VisuallyHidden>
       <ul className="grid gap-3 md:grid-cols-2">
         {items.map((item) => {
           const expired = today !== null && hasExpiredDates(item, today);
-          const label = today === null ? item.destination : describeRecentSearch(item, today);
+          const label =
+            today === null ? item.destination : describeRecentSearch(item, today, locale);
           return (
             <li key={searchCriteriaToQueryString(item)}>
               <button
                 type="button"
-                aria-label={expired ? `${label}, datas passadas` : label}
+                aria-label={expired ? t.expiredLabel({ label }) : label}
                 aria-describedby={hintId}
                 onClick={() => onRestore(item)}
                 className="flex min-h-14 w-full gap-3 rounded-card border border-border bg-surface px-4 py-3 text-left hover:border-border-strong hover:bg-surface-sunken"
@@ -48,10 +53,10 @@ export const RecentSearches = ({ items, onRestore, onClear }: RecentSearchesProp
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="flex flex-wrap items-center gap-2 font-medium text-fg">
                     {item.destination}
-                    {expired ? <Badge>Datas passadas</Badge> : null}
+                    {expired ? <Badge>{t.expired}</Badge> : null}
                   </span>
                   <span className="text-sm text-fg-muted tabular-nums">
-                    {today === null ? "" : describeRecentDetails(item, today)}
+                    {today === null ? "" : describeRecentDetails(item, today, locale)}
                   </span>
                 </span>
               </button>
@@ -61,7 +66,7 @@ export const RecentSearches = ({ items, onRestore, onClear }: RecentSearchesProp
       </ul>
       <div>
         <Button variant="ghost" size="sm" onClick={onClear}>
-          Limpar buscas recentes
+          {t.clear}
         </Button>
       </div>
     </section>

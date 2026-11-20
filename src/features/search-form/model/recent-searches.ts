@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { formatUnit } from "@/shared/i18n/units";
 import { formatDateRange, type ISODate, isBeforeToday } from "@/shared/lib/dates";
 import {
   type SearchCriteria,
@@ -64,22 +66,26 @@ export const restoreRecentSearch = (criteria: SearchCriteria, today: ISODate): R
   };
 };
 
-const plural = (count: number, one: string, many: string): string =>
-  `${count} ${count === 1 ? one : many}`;
-
 /** "12–15 dez · 2 adultos, 1 criança · 1 quarto" (sem o destino). */
-export const describeRecentDetails = (criteria: SearchCriteria, today: ISODate): string => {
+export const describeRecentDetails = (
+  criteria: SearchCriteria,
+  today: ISODate,
+  locale: Locale = DEFAULT_LOCALE,
+): string => {
   const guests = [
-    plural(criteria.adults, "adulto", "adultos"),
-    ...(criteria.children > 0 ? [plural(criteria.children, "criança", "crianças")] : []),
+    formatUnit(criteria.adults, "adult", locale),
+    ...(criteria.children > 0 ? [formatUnit(criteria.children, "child", locale)] : []),
   ].join(", ");
   return [
-    formatDateRange(criteria.checkIn, criteria.checkOut, today),
+    formatDateRange(criteria.checkIn, criteria.checkOut, today, locale),
     guests,
-    plural(criteria.rooms, "quarto", "quartos"),
+    formatUnit(criteria.rooms, "room", locale),
   ].join(" · ");
 };
 
 /** "São Paulo, SP · 12–15 dez · 2 adultos, 1 criança · 1 quarto". */
-export const describeRecentSearch = (criteria: SearchCriteria, today: ISODate): string =>
-  `${criteria.destination} · ${describeRecentDetails(criteria, today)}`;
+export const describeRecentSearch = (
+  criteria: SearchCriteria,
+  today: ISODate,
+  locale: Locale = DEFAULT_LOCALE,
+): string => `${criteria.destination} · ${describeRecentDetails(criteria, today, locale)}`;
