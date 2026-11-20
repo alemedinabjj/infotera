@@ -99,6 +99,7 @@ Avançado
 - ✅ Breakdown de preço: diária × noites × quartos + taxas, em função pura testada.
 - ✅ Termos (checkbox obrigatório + modal), erros por campo + erro global + retry do submit.
 - ✅ Persistência do form com debounce — **nunca persistir dados de cartão nem CPF**.
+- ✅ CSP completa (script-src com nonce, img-src, connect-src) antes de coletar dados de pagamento.
 - ❓ Múltiplos hóspedes / múltiplos quartos / cupom.
 
 ### F6 — booking-confirmation (`/confirmation/[bookingId]`)
