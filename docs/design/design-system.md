@@ -1316,3 +1316,12 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | molecules | Field (+ campo composto), Stepper, Alert, ErrorSummary, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação, PriceBreakdown | F1 (Combobox/DateRange na F2; ErrorSummary nasce na F2 e sobe na F5; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso; PriceBreakdown nasce na F5 e sobe na F6) |
 | organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`, `focusableBody`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4; `focusableBody` na F5) |
 | feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, StepIndicator, CouponForm, ActionBar (barra fixa), BookingNumber/CopyBookingNumber (valor copiável), StayDetails (hotel/quarto em streaming) | F3–F6, compondo os acima (ActionBar sobe para shared no 2º uso) |
+
+## Ajustes pós-revisão (F7a)
+
+- **Preço**: `total com taxas · N noites · N quartos` e `R$ X por noite, sem taxas` (ver `PriceTag`). Sem total: `Total não carregado — tente de novo`.
+- **Bandeja de comparação**: chips numa linha rolável; com `max-height: 600px` vira uma linha só (contador + ações), altura ≤ 25% da viewport.
+- **Toast**: canto inferior esquerdo e 320 px no desktop; ação devolve o foco ao controle de origem.
+- **Aviso na home**: `Alert info` "Escolha um quarto para continuar." (redirect do checkout sem seleção).
+- **Confirmação**: `Código` curto (`font-mono text-2xl`, `select-all`) acima do `Número da reserva`; e-mail mascarado.
+- **Selo "Abrindo…"** sobre a foto do card enquanto o hotel carrega.
