@@ -10,11 +10,9 @@ import { cn } from "../../lib/cn";
 import { motionPreset } from "../../lib/motion";
 import { buttonClassName } from "../../ui/atoms/button-styles";
 import { HeartIcon, SuitcaseIcon } from "../../ui/icons";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
 import { FAVORITES_PATH, MY_BOOKINGS_PATH } from "../model/routes";
 import { useFavoriteCount, useFavoritesHydrated } from "../stores/favorites";
-
-const MESSAGES = SAVED_MESSAGES.nav;
 
 const LINK = "relative px-0 sm:px-3 size-11 sm:size-auto";
 
@@ -78,6 +76,7 @@ const Counter = ({ count }: { count: number }) => {
 
 /** Links "Favoritos" (com contador) e "Minhas reservas" do cabeçalho. Só ícone abaixo de `sm`. */
 export const SavedNav = () => {
+  const MESSAGES = useSavedMessages().nav;
   const locale = useLocale();
   const { path } = parsePublicPath(usePathname());
   const count = useFavoriteCount();

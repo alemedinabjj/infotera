@@ -3,12 +3,10 @@
 import { useRouter } from "next/navigation";
 import { readLastSearch } from "../../lib/last-search";
 import { toast } from "../../ui/toast/toast-store";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
 import { type CompareEntry, compareHref } from "../model/comparison";
 import { announceCompare } from "../stores/announcer";
 import { comparisonActions, useComparisonStore } from "../stores/comparison";
-
-const MESSAGES = SAVED_MESSAGES.compare;
 
 type CompareActions = {
   /** Marca/desmarca; no limite avisa por toast e pela região viva sem marcar. */
@@ -19,6 +17,7 @@ type CompareActions = {
 
 /** Ações de comparação com os avisos (região viva e toast) que acompanham cada resultado. */
 export const useCompareActions = (): CompareActions => {
+  const MESSAGES = useSavedMessages().compare;
   const router = useRouter();
 
   const toggle = (entry: CompareEntry) => {

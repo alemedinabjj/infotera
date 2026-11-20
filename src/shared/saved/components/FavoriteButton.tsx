@@ -7,12 +7,10 @@ import { motionPreset } from "../../lib/motion";
 import { IconButton } from "../../ui/atoms/IconButton";
 import { HeartIcon } from "../../ui/icons";
 import { toast } from "../../ui/toast/toast-store";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
 import type { ToggleResult } from "../model/favorites";
 import { FAVORITES_PATH } from "../model/routes";
 import { favoritesActions, useFavoritesStore, useIsFavorite } from "../stores/favorites";
-
-const MESSAGES = SAVED_MESSAGES.favorite;
 
 type FavoriteButtonProps = {
   hotelId: number;
@@ -40,6 +38,7 @@ export const FavoriteButton = ({
   onToggle,
   ref,
 }: FavoriteButtonProps) => {
+  const MESSAGES = useSavedMessages().favorite;
   const favorite = useIsFavorite(hotelId);
   const router = useRouter();
   const reduced = useReducedMotion() ?? false;
