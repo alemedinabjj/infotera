@@ -186,12 +186,21 @@ test.describe("teclado", () => {
   test("Enter no 'Carregar mais hotéis' leva o foco ao 11º card, abaixo do header", async ({
     page,
   }) => {
+    // Sem IntersectionObserver o botão é o único caminho (o app suporta isso). Com o observer, o
+    // rodapé visível dispara o carregamento automático ANTES do `focus()` sob carga e o foco, que
+    // só segue o lote pedido com o botão focado, não se move: o teste dependia dessa corrida.
+    await page.addInitScript(() => {
+      Reflect.deleteProperty(window, "IntersectionObserver");
+    });
+    const gate = await holdRequests(page, SECOND_BATCH);
     await page.goto(feedPath());
     await expect(cardAt(page, 1)).toBeVisible();
     const button = loadMoreButton(page);
     await button.scrollIntoViewIfNeeded();
     await button.focus();
     await page.keyboard.press("Enter");
+    await expect(page.getByRole("button", { name: "Carregando mais hotéis…" })).toBeFocused();
+    gate.release();
     const eleventh = cardAt(page, 11);
     await expect(eleventh).toBeFocused();
     const header = await page.getByRole("banner").boundingBox();
