@@ -1,5 +1,6 @@
 import { centsToReais, reaisToCents } from "@/shared/lib/currency";
 import type { Room } from "../api/schemas";
+import { feesOnBase } from "./price-breakdown";
 
 type StayTotalInput = { pricePerNight: number; nights: number; rooms: number };
 
@@ -9,6 +10,13 @@ type StayTotalInput = { pricePerNight: number; nights: number; rooms: number };
  */
 export const stayTotal = ({ pricePerNight, nights, rooms }: StayTotalInput): number =>
   centsToReais(reaisToCents(pricePerNight) * nights * rooms);
+
+/**
+ * Total com taxa de serviço e ISS (sem cupom): é o valor que o checkout cobra, pela mesma conta
+ * (`feesOnBase`). Busca, hotel e checkout mostram este número.
+ */
+export const stayTotalWithFees = ({ pricePerNight, nights, rooms }: StayTotalInput): number =>
+  centsToReais(feesOnBase(reaisToCents(pricePerNight) * nights * rooms).totalCents);
 
 export type FromPrice = { price: number; soldOut: boolean } | null;
 

@@ -80,22 +80,24 @@ describe("HotelCard: conteúdo (critérios 2 a 5)", () => {
 
   it("modo stay: total, rótulo e diária secundária", () => {
     renderCard();
-    expect(screen.getByText("R$ 540,00")).toBeInTheDocument();
-    expect(screen.getByText("total · 3 noites · 1 quarto")).toBeInTheDocument();
-    expect(screen.getByText(/a partir de/)).toHaveTextContent("a partir de R$ 180 por noite");
+    expect(screen.getByText("R$ 621,00")).toBeInTheDocument();
+    expect(screen.getByText("total com taxas · 3 noites · 1 quarto")).toBeInTheDocument();
+    expect(screen.getByText(/a partir de/)).toHaveTextContent(
+      "a partir de R$ 180 por noite, sem taxas",
+    );
   });
 
   it("2 quartos: total dobra", () => {
     renderCard({ criteria: { ...criteria, rooms: 2 } });
-    expect(screen.getByText("R$ 1.080,00")).toBeInTheDocument();
-    expect(screen.getByText("total · 3 noites · 2 quartos")).toBeInTheDocument();
+    expect(screen.getByText("R$ 1.242,00")).toBeInTheDocument();
+    expect(screen.getByText("total com taxas · 3 noites · 2 quartos")).toBeInTheDocument();
   });
 
   it("browse: diária como número grande, sem total e link sem critérios", () => {
     renderCard({ criteria: null });
     expect(screen.getByText("R$ 180")).toBeInTheDocument();
     expect(screen.getByText("por noite")).toBeInTheDocument();
-    expect(screen.queryByText(/total ·/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/total com taxas ·/)).not.toBeInTheDocument();
     expect(screen.getByRole("link")).toHaveAttribute("href", "/hotel/13");
   });
 
@@ -136,7 +138,7 @@ describe("HotelCard: conteúdo (critérios 2 a 5)", () => {
     renderCard({ hotel: makeHotel({ id: 19, availableRooms: 0, pricePerNight: 250 }) });
     expect(screen.getByText("Esgotado")).toBeInTheDocument();
     expect(screen.getByText("Sem quartos disponíveis para estas datas.")).toBeInTheDocument();
-    expect(screen.queryByText(/total ·/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/total com taxas ·/)).not.toBeInTheDocument();
     expect(screen.getByRole("img")).toHaveClass("grayscale");
     expect(screen.getByRole("link")).toBeInTheDocument();
   });
@@ -144,7 +146,7 @@ describe("HotelCard: conteúdo (critérios 2 a 5)", () => {
   it("escassez: Apenas 1 quarto! mantém o total", () => {
     renderCard({ hotel: makeHotel({ id: 7, availableRooms: 1, pricePerNight: 100 }) });
     expect(screen.getByText("Apenas 1 quarto!")).toBeInTheDocument();
-    expect(screen.getByText("R$ 300,00")).toBeInTheDocument();
+    expect(screen.getByText("R$ 345,00")).toBeInTheDocument();
   });
 
   it("insuficiente: busca de 3 quartos com 2 disponíveis", () => {
@@ -154,7 +156,7 @@ describe("HotelCard: conteúdo (critérios 2 a 5)", () => {
     });
     expect(screen.getByText("Só 2 quartos disponíveis")).toBeInTheDocument();
     expect(screen.getByText("Sua busca pede 3 quartos.")).toBeInTheDocument();
-    expect(screen.queryByText(/total ·/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/total com taxas ·/)).not.toBeInTheDocument();
   });
 
   it("sem avaliações", () => {

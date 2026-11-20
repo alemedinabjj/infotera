@@ -1,10 +1,9 @@
 import { reaisToCents } from "@/shared/lib/currency";
 import {
   applyBps,
-  ISS_BPS,
+  feesOnBase,
   type PriceLine,
   priceBreakdownLines,
-  SERVICE_FEE_BPS,
 } from "@/shared/lib/price-breakdown";
 
 export type PriceDiscount = { code: string } & (
@@ -52,10 +51,7 @@ export const calculatePrice = ({
   const subtotalCents = nightlyCents * nights * rooms;
   const discountCents = discount ? discountAmount(discount, subtotalCents) : 0;
   const baseCents = subtotalCents - discountCents;
-  const serviceFeeCents = applyBps(baseCents, SERVICE_FEE_BPS);
-  const taxCents = applyBps(baseCents, ISS_BPS);
-
-  const totalCents = baseCents + serviceFeeCents + taxCents;
+  const { serviceFeeCents, taxCents, totalCents } = feesOnBase(baseCents);
   const couponCode = discount?.code ?? null;
   const lines = priceBreakdownLines({
     nightlyCents,

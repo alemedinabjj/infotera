@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { makeRoom } from "../testing/fixtures";
 import { seedHotel, seedRooms } from "../testing/seed";
-import { lowestNightlyPrice, stayTotal } from "./pricing";
+import { centsToReais } from "./currency";
+import { feesOnBase } from "./price-breakdown";
+import { lowestNightlyPrice, stayTotal, stayTotalWithFees } from "./pricing";
 
 describe("stayTotal", () => {
   it("diária × noites × quartos (critério 3)", () => {
@@ -52,5 +54,17 @@ describe("lowestNightlyPrice", () => {
 
   it("sem quartos: null", () => {
     expect(lowestNightlyPrice([])).toBeNull();
+  });
+});
+
+describe("stayTotalWithFees", () => {
+  it("diária × noites × quartos + serviço 10% + ISS 5% (a conta do checkout)", () => {
+    expect(stayTotalWithFees({ pricePerNight: 800, nights: 3, rooms: 1 })).toBe(2760);
+    expect(stayTotalWithFees({ pricePerNight: 800, nights: 3, rooms: 2 })).toBe(5520);
+  });
+
+  it("bate com calculatePrice sem cupom (centavos)", () => {
+    const total = stayTotalWithFees({ pricePerNight: 199.99, nights: 3, rooms: 1 });
+    expect(total).toBe(centsToReais(feesOnBase(59_997).totalCents));
   });
 });

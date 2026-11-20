@@ -14,8 +14,8 @@ describe("PriceTag", () => {
       <PriceTag variant="stay" total={540} nights={3} rooms={1} nightly={180} />,
     );
     expect(container).toHaveTextContent("R$ 540,00");
-    expect(container).toHaveTextContent("total · 3 noites · 1 quarto");
-    expect(container).toHaveTextContent("a partir de R$ 180 por noite");
+    expect(container).toHaveTextContent("total com taxas · 3 noites · 1 quarto");
+    expect(container).toHaveTextContent("a partir de R$ 180 por noite, sem taxas");
   });
 
   it("stay com exactNightly: diária exata, sem 'a partir de'", () => {
@@ -23,7 +23,7 @@ describe("PriceTag", () => {
       <PriceTag variant="stay" total={2400} nights={3} rooms={1} nightly={800} exactNightly />,
     );
     expect(container).toHaveTextContent("R$ 2.400,00");
-    expect(container).toHaveTextContent("R$ 800 por noite");
+    expect(container).toHaveTextContent("R$ 800 por noite, sem taxas");
     expect(container).not.toHaveTextContent("a partir de");
   });
 

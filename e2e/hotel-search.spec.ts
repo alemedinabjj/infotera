@@ -27,14 +27,14 @@ test.describe("lista e cards", () => {
 
     const card13 = cardByName(page, await hotelName(request, 13));
     await expect(card13).toContainText("R$ 540,00");
-    await expect(card13).toContainText("total · 3 noites · 1 quarto");
+    await expect(card13).toContainText("total com taxas · 3 noites · 1 quarto");
     await expect(card13).toContainText("a partir de R$ 180 por noite");
     await expect(card13.getByRole("link")).toHaveAttribute("href", `/hotel/13?${criteriaQuery()}`);
 
     const card19 = cardByName(page, await hotelName(request, 19));
     await expect(card19).toContainText("Esgotado");
     await expect(card19).toContainText("Sem quartos disponíveis para estas datas.");
-    await expect(card19).not.toContainText("total ·");
+    await expect(card19).not.toContainText("total com taxas ·");
     await expect(cardByName(page, await hotelName(request, 7))).toContainText("Apenas 1 quarto!");
   });
 

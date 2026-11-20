@@ -49,7 +49,7 @@ index.ts                  API pública usada por app/search
   parse tolerante por chave, serialização canônica (omite padrões, ordem do enum). Nova busca = filtros zerados.
 - **Preço do card = quarto mais barato que serve à busca** (`cheapestFittingRoom` em `model/card-pricing.ts`):
   menor `pricePerNight` entre os quartos com `available >= quartos` e `maxGuests * quartos >= adultos + crianças`
-  (sem datas/`browse`: o menor com `available > 0`). O total da estadia (`stayTotal`, centavos, sem taxas) usa esse
+  (sem datas/`browse`: o menor com `available > 0`). O total da estadia (`stayTotalWithFees`: centavos, com taxa de serviço e ISS, a mesma conta `feesOnBase` do checkout; rótulo "total com taxas", diária "sem taxas" abaixo) usa esse
   quarto. Nenhum serve ao grupo: status `no-fit` ("Não comporta o grupo", sem total); esgotado/insuficiente seguem
   pelo `availableRooms` do hotel. Os quartos da página/lote vêm num ÚNICO `GET /rooms?hotelId=..&hotelId=..` dentro
   de `fetchHotelsPage` (`seedRooms`), semeados em `hotelRoomsQueryOptions(id)` (o card os lê com `useHotelRooms`,

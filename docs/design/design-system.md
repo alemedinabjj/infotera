@@ -676,7 +676,7 @@ Mostra dinheiro com `formatBRL` (de `shared/lib/currency`), `tabular-nums`, `whi
 | Variante | Visual | Uso |
 |---|---|---|
 | `nightly` | `a partir de` (`text-sm text-fg-subtle`) / **R$ 890** (`text-xl font-bold`) / `por noite` | Card de resultado, "a partir de" no detalhe |
-| `total` | **R$ 2.670,00** (`text-2xl font-bold`) / `total · 3 noites · 1 quarto` (`text-sm text-fg-muted`) | Barra fixa, resumo do checkout, confirmação |
+| `total` | **R$ 2.670,00** (`text-2xl font-bold`) / `total com taxas · 3 noites · 1 quarto` (`text-sm text-fg-muted`) | Barra fixa, resumo do checkout, confirmação |
 | `line` | label à esquerda, valor à direita (`flex justify-between`) | Linhas do breakdown (diárias, taxas) |
 | `nightly-inline` | `a partir de` (`text-sm text-fg-subtle`) **R$ 800** (`text-2xl font-bold`) `por noite` (`text-sm text-fg-muted`) numa linha `flex flex-wrap items-baseline gap-x-1` | "a partir de" no topo do detalhe do hotel |
 | `stay` com `exactNightly` | igual ao total do card, mas a 3ª linha é `R$ 1.200 por noite` (sem "a partir de") | Card de quarto (o preço do quarto é exato) |
@@ -689,10 +689,13 @@ Mostra dinheiro com `formatBRL` (de `shared/lib/currency`), `tabular-nums`, `whi
   diária. Nesse caso (F3) o **total vira o número grande** e a diária desce para linha secundária;
   nunca os dois no mesmo tamanho:
   ```
-              R$ 540,00          ← text-xl font-bold (no card; text-2xl fora dele)
-   total · 3 noites · 1 quarto   ← text-sm text-fg-muted
-   a partir de R$ 180 por noite  ← text-sm text-fg-subtle
+                      R$ 621,00                ← text-xl font-bold (no card; text-2xl fora dele)
+   total com taxas · 3 noites · 1 quarto   ← text-sm text-fg-muted
+   a partir de R$ 180 por noite, sem taxas ← text-sm text-fg-subtle
   ```
+  O total **inclui taxa de serviço (10%) e ISS (5%)**, pela mesma função pura do checkout
+  (`stayTotalWithFees`/`feesOnBase`): card, detalhe e checkout (sem cupom) mostram o mesmo número.
+  A diária é sempre "sem taxas".
   Sem datas, vale a variante `nightly`. Alinhamento no card: `text-right`, embaixo à direita.
 - Centavos: exibir sempre no total e no breakdown; no preço por noite do card pode omitir se for inteiro
   (`maximumFractionDigits: 0`), decidido por prop `compact`.

@@ -6,7 +6,7 @@ import {
   describeAvailability,
 } from "@/shared/lib/availability";
 import { nightsBetween } from "@/shared/lib/dates";
-import { stayTotal } from "@/shared/lib/pricing";
+import { stayTotalWithFees } from "@/shared/lib/pricing";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 
 export type CardPricing = {
@@ -14,7 +14,7 @@ export type CardPricing = {
   availability: AvailabilityDescription;
   /** "A partir de": o quarto mais barato que serve à busca (sem quartos conhecidos, o `pricePerNight` do hotel). */
   nightly: number;
-  /** Total da estadia; `null` no `browse` e quando não dá para reservar (esgotado/insuficiente). */
+  /** Total com taxas (serviço + ISS, como no checkout); `null` no `browse` e quando não dá para reservar (esgotado/insuficiente). */
   stay: { total: number; nights: number; rooms: number } | null;
 };
 
@@ -68,6 +68,6 @@ export const deriveCardPricing = (
     return { status, availability, nightly, stay: null };
   }
   const nights = nightsBetween(criteria.checkIn, criteria.checkOut);
-  const total = stayTotal({ pricePerNight: nightly, nights, rooms: criteria.rooms });
+  const total = stayTotalWithFees({ pricePerNight: nightly, nights, rooms: criteria.rooms });
   return { status, availability, nightly, stay: { total, nights, rooms: criteria.rooms } };
 };

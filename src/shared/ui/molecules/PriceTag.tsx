@@ -57,12 +57,13 @@ export const PriceTag = (props: PriceTagProps) => {
             {formatBRL(props.total)}
           </span>
           <span className="text-sm text-fg-muted">
-            total · {pluralize(props.nights, "noite", "noites")} ·{" "}
+            total com taxas · {pluralize(props.nights, "noite", "noites")} ·{" "}
             {pluralize(props.rooms, "quarto", "quartos")}
           </span>
           <span className="text-sm text-fg-subtle">
             {props.exactNightly ? null : "a partir de "}
-            <span className="whitespace-nowrap tabular-nums">{money(props.nightly)}</span> por noite
+            <span className="whitespace-nowrap tabular-nums">{money(props.nightly)}</span> por
+            noite, sem taxas
           </span>
         </p>
       );

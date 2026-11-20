@@ -11,7 +11,7 @@ test.describe("selecionar quarto", () => {
     await page.goto(hotelPath(1));
     const suite = roomCard(page, "Suíte Deluxe Ocean View");
     await expect(suite).toContainText("R$ 3.600,00");
-    await expect(suite).toContainText("total · 3 noites · 1 quarto");
+    await expect(suite).toContainText("total com taxas · 3 noites · 1 quarto");
     await expect(roomCard(page, "Quarto Standard")).toContainText("R$ 2.400,00");
     await suite.getByRole("button", { name: /^Selecionar quarto/ }).click();
     await expect(page).toHaveURL(/\/checkout$/);
@@ -46,7 +46,7 @@ test.describe("selecionar quarto", () => {
     await expect(standard).toContainText(
       "Acomoda até 2 hóspedes. Sua busca tem 3 por quarto. Escolha outro quarto ou altere os hóspedes.",
     );
-    await expect(standard).not.toContainText("total ·");
+    await expect(standard).not.toContainText("total com taxas ·");
     // `aria-disabled` não é "enabled" para o Playwright: o clique é forçado (mouse real).
     await button.click({ force: true });
     await expect(button).toBeFocused();
@@ -95,7 +95,7 @@ test.describe("disponibilidade", () => {
     const room = roomCard(page, "Quarto Executivo");
     const button = room.getByRole("button", { name: /^Esgotado/ });
     await expect(button).toHaveAttribute("aria-disabled", "true");
-    await expect(room).not.toContainText("total ·");
+    await expect(room).not.toContainText("total com taxas ·");
     await expect(page.getByText(/a partir de/).first()).toBeVisible();
   });
 });
@@ -110,7 +110,7 @@ test.describe("sem datas", () => {
     await expect(page.getByText("Destino", { exact: true })).toBeVisible();
     await expect(page.getByRole("combobox")).toHaveCount(0);
     const suite = roomCard(page, "Suíte Deluxe Ocean View");
-    await expect(suite).not.toContainText("total ·");
+    await expect(suite).not.toContainText("total com taxas ·");
 
     await suite.getByRole("button", { name: /^Escolher datas/ }).click();
     const checkIn = page.getByLabel(/Check-in/);

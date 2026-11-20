@@ -107,7 +107,7 @@ describe("HotelSearchResults: lista e anúncio (critério 1)", () => {
     stubApi();
     start("", { criteria: null });
     await screen.findAllByRole("heading", { level: 3 });
-    expect(screen.queryByText(/total ·/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/total com taxas ·/)).not.toBeInTheDocument();
   });
 });
 
