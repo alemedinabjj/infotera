@@ -85,6 +85,16 @@ export const serializeClient = (client: PersistedClient): string =>
     },
   });
 
+/** `localStorage` quando existe e é acessível (SSR, modo privado e WebView sem storage: `undefined`). */
+export const getBrowserStorage = (): Storage | undefined => {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+};
+
 /** Persister em `localStorage` (no servidor, `storage` ausente: não faz nada). Falha de gravação é silenciosa. */
 export const createQueryPersister = (
   storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | undefined,

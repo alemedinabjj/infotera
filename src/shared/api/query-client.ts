@@ -1,5 +1,6 @@
 import { defaultShouldDehydrateQuery, isServer, QueryClient } from "@tanstack/react-query";
 import { isApiError } from "./http";
+import { PERSIST_MAX_AGE } from "./persist";
 
 const MAX_RETRIES = 2;
 
@@ -27,6 +28,9 @@ export const makeQueryClient = (): QueryClient =>
     defaultOptions: {
       queries: {
         staleTime: 60_000,
+        // No navegador a consulta fica 24 h na memória (o cache persistido vale 24 h: com o padrão de
+        // 5 min ela sairia da memória e, com ela, do storage antes do `maxAge`). O servidor mantém o padrão.
+        ...(typeof window === "undefined" ? {} : { gcTime: PERSIST_MAX_AGE }),
         // Servidor (SSR/prefetch): sem retry, para não segurar a renderização com backoff.
         retry: typeof window === "undefined" ? 0 : shouldRetry,
         retryDelay,
