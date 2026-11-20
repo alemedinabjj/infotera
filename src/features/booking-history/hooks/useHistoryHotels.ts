@@ -1,8 +1,8 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { hotelsByIdsQueryOptions } from "@/shared/api/queries";
 import type { Hotel } from "@/shared/api/schemas";
+import { historyHotelsQueryOptions } from "../api/history-hotels";
 import type { HistoryRow } from "../model/history-rows";
 
 export type HotelLookup = {
@@ -21,7 +21,7 @@ const foundHotelIds = (rows: readonly HistoryRow[]): number[] => [
 export const useHistoryHotels = (rows: readonly HistoryRow[], settled: boolean): HotelLookup => {
   const hotelIds = foundHotelIds(rows);
   const query = useQuery({
-    ...hotelsByIdsQueryOptions(hotelIds),
+    ...historyHotelsQueryOptions(hotelIds),
     placeholderData: keepPreviousData,
   });
   if (hotelIds.length === 0) return { state: settled ? "ready" : "loading", hotels: [] };

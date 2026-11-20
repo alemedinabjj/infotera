@@ -1,6 +1,8 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { queryKeys } from "@/shared/api/query-keys";
 import {
   type BookingHistoryEntry,
   clearBookingHistory,
@@ -21,11 +23,14 @@ type ClearHistoryButtonProps = {
 export const ClearHistoryButton = ({ entries, onCleared, onRestored }: ClearHistoryButtonProps) => {
   const ALL = useHistoryMessages();
   const CLEAR = ALL.clear;
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
   const confirm = () => {
     const previous = [...entries];
     clearBookingHistory();
+    // Os hotéis das reservas saem do cache em memória junto com a lista.
+    queryClient.removeQueries({ queryKey: queryKeys.historyHotels.all });
     setOpen(false);
     onCleared();
     toast.info(CLEAR.done, {

@@ -2,6 +2,7 @@ import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persist
 import type { QueryKey } from "@tanstack/react-query";
 import type { PersistedClient } from "@tanstack/react-query-persist-client";
 import { z } from "../lib/zod";
+import { hotelSchema, reviewSchema, roomSchema, suggestionSchema } from "./schemas";
 
 /** Chave do `localStorage` com o cache público das consultas. */
 export const PERSIST_KEY = "infotera:query-cache";
@@ -46,10 +47,49 @@ const envelopeSchema = z.object({
   }),
 });
 
+const hotelsPageSchema = z.object({
+  items: z.array(hotelSchema),
+  total: z.number(),
+  center: z.object({ latitude: z.number(), longitude: z.number() }).nullable(),
+});
+
+/** Schema do `state.data` por raiz e subchave (`queryKeys`); `null` = formato desconhecido. */
+const dataSchemaFor = (queryKey: readonly unknown[]): z.ZodType | null => {
+  const [root, kind] = queryKey;
+  switch (root) {
+    case "suggestions":
+      return z.array(suggestionSchema);
+    case "hotels":
+      if (kind === "detail") return hotelSchema;
+      if (kind === "by-ids") return z.array(hotelSchema);
+      if (kind === "list") return z.union([z.array(hotelSchema), hotelsPageSchema]);
+      if (kind === "infinite") {
+        return z.object({ pages: z.array(hotelsPageSchema), pageParams: z.array(z.unknown()) });
+      }
+      return null;
+    case "rooms":
+      if (kind === "detail") return roomSchema;
+      return kind === "hotel" || kind === "by-hotels" ? z.array(roomSchema) : null;
+    case "reviews":
+      return z.object({ items: z.array(reviewSchema), total: z.number() });
+    default:
+      return null;
+  }
+};
+
+/**
+ * O `state.data` de uma consulta restaurada bate com o schema da raiz? Um `localStorage` adulterado
+ * (ou de uma versão com outro formato) não entra no cache: a consulta falha aqui e busca de novo.
+ */
+export const hasValidPersistedData = (query: {
+  queryKey: readonly unknown[];
+  state: { data: unknown };
+}): boolean => dataSchemaFor(query.queryKey)?.safeParse(query.state.data).success === true;
+
 /**
  * Valida o **envelope** do cache salvo (timestamp, buster, lista de consultas com chave array). O
- * conteúdo de cada consulta não passa de novo pelos schemas da API: o `buster` por versão do app
- * descarta o cache de outro deploy, então o formato salvo sempre bate com o código atual.
+ * conteúdo de cada consulta é validado depois, por raiz (`hasValidPersistedData`), em
+ * `deserializeClient`: o `buster` descarta o cache de outro deploy, o schema descarta JSON adulterado.
  */
 export const persistedClientSchema = z.custom<PersistedClient>(
   (value) => envelopeSchema.safeParse(value).success,
@@ -66,7 +106,12 @@ const EMPTY_CLIENT: PersistedClient = {
 export const deserializeClient = (cached: string): PersistedClient => {
   try {
     const parsed = persistedClientSchema.safeParse(JSON.parse(cached));
-    return parsed.success ? parsed.data : EMPTY_CLIENT;
+    if (!parsed.success) return EMPTY_CLIENT;
+    const { clientState } = parsed.data;
+    return {
+      ...parsed.data,
+      clientState: { ...clientState, queries: clientState.queries.filter(hasValidPersistedData) },
+    };
   } catch {
     return EMPTY_CLIENT;
   }

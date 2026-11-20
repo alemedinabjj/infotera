@@ -5,6 +5,7 @@ import {
   persistQueryClientSave,
 } from "@tanstack/react-query-persist-client";
 import { describe, expect, it, vi } from "vitest";
+import { makeHotel, makeReview, makeRoom } from "../testing/fixtures";
 import {
   createQueryPersister,
   deserializeClient,
@@ -51,6 +52,16 @@ describe("isPersistableQueryKey: allowlist por raiz de queryKeys", () => {
     expect(isPersistableQueryKey(key)).toBe(expected);
   });
 
+  it("os hotéis do histórico (raiz própria) nunca persistem", () => {
+    expect(isPersistableQueryKey(queryKeys.historyHotels.byIds([1, 4]))).toBe(false);
+    expect(
+      isPersistableQuery({
+        queryKey: queryKeys.historyHotels.byIds([1]),
+        meta: { sensitive: true },
+      }),
+    ).toBe(false);
+  });
+
   it("raiz desconhecida, vazia ou que não é texto nunca persiste", () => {
     expect(isPersistableQueryKey(["history", 1])).toBe(false);
     expect(isPersistableQueryKey(["favorites"])).toBe(false);
@@ -84,12 +95,16 @@ describe("isPersistableQuery: a marca meta.sensitive vence a allowlist", () => {
   });
 });
 
+const SUGGESTIONS = [
+  { id: 1, name: "São Paulo", type: "city", country: "Brasil", searchName: "sao paulo" },
+];
+
 const seedClient = (): QueryClient => {
   const client = new QueryClient();
-  client.setQueryData(queryKeys.hotels.detail(1), { id: 1, name: "Hotel" });
-  client.setQueryData(queryKeys.rooms.byHotel(1), [{ id: 1 }]);
-  client.setQueryData(queryKeys.suggestions("sao"), ["São Paulo"]);
-  client.setQueryData(queryKeys.reviews.byHotel(1, 1), []);
+  client.setQueryData(queryKeys.hotels.detail(1), makeHotel({ id: 1 }));
+  client.setQueryData(queryKeys.rooms.byHotel(1), [makeRoom({ id: 1 })]);
+  client.setQueryData(queryKeys.suggestions("sao"), SUGGESTIONS);
+  client.setQueryData(queryKeys.reviews.byHotel(1, 1), { items: [makeReview()], total: 1 });
   client.setQueryData(queryKeys.bookings.detail("abc"), { holder: { email: "ana@exemplo.com" } });
   client.setQueryData(queryKeys.coupons.detail("X"), { code: "X" });
   return client;
@@ -175,7 +190,7 @@ describe("restauração: envelope, buster e validade", () => {
     const storage = new MemoryStorage();
     await save(storage, "v1");
     const client = await restore(storage, "v1");
-    expect(client.getQueryData(queryKeys.hotels.detail(1))).toEqual({ id: 1, name: "Hotel" });
+    expect(client.getQueryData(queryKeys.hotels.detail(1))).toEqual(makeHotel({ id: 1 }));
     expect(client.getQueryData(queryKeys.bookings.detail("abc"))).toBeUndefined();
   });
 
@@ -224,6 +239,40 @@ describe("restauração: envelope, buster e validade", () => {
     const client = await restore(storage, "v1");
     expect(client.getQueryCache().getAll()).toEqual([]);
     expect(storage.getItem(PERSIST_KEY)).toBeNull();
+  });
+});
+
+describe("deserializeClient valida o state.data de cada consulta", () => {
+  const envelope = (queries: unknown[]): string =>
+    JSON.stringify({ timestamp: 1, buster: "v1", clientState: { mutations: [], queries } });
+  const query = (queryKey: unknown[], data: unknown) => ({
+    queryKey,
+    queryHash: JSON.stringify(queryKey),
+    state: { data, status: "success" },
+  });
+
+  it("mantém a consulta válida e descarta a adulterada (só ela)", () => {
+    const text = envelope([
+      query(["hotels", "detail", 1], makeHotel({ id: 1 })),
+      query(["hotels", "detail", 2], { id: 2, name: "<img src=x onerror=alert(1)>" }),
+      query(["rooms", "hotel", 1], "não é lista"),
+      query(["reviews", 1, 1], { items: [{ id: "x" }], total: 1 }),
+      query(["suggestions", "sao"], SUGGESTIONS),
+    ]);
+    const kept = deserializeClient(text).clientState.queries.map((item) => item.queryKey);
+    expect(kept).toEqual([
+      ["hotels", "detail", 1],
+      ["suggestions", "sao"],
+    ]);
+  });
+
+  it("descarta raiz ou subchave desconhecida e consulta sem dado", () => {
+    const text = envelope([
+      query(["coupons", "detail", "X"], { code: "X" }),
+      query(["hotels", "novo"], []),
+      { queryKey: ["hotels", "detail", 1], queryHash: "h", state: { status: "success" } },
+    ]);
+    expect(deserializeClient(text).clientState.queries).toEqual([]);
   });
 });
 

@@ -174,6 +174,34 @@ test.describe("remover e limpar", () => {
     expect(await idsInStorage(page)).toEqual([id]);
   });
 
+  test("o cache de consultas no localStorage nunca guarda os hotéis nem os ids do histórico", async ({
+    page,
+    request,
+  }) => {
+    const id = await createBooking(request);
+    await seedHistory(page, [id]);
+    await page.goto("/my-bookings");
+    await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+    await expect(page.getByText(await hotelName(request, 1)).first()).toBeVisible();
+    // O persister grava com throttle de 1 s: espera passar para a checagem valer.
+    await page.waitForTimeout(1500);
+    const cache = () => page.evaluate(() => localStorage.getItem("infotera:query-cache") ?? "");
+    expect(await cache()).not.toContain("history-hotels");
+    expect(await cache()).not.toContain(id);
+
+    await page.getByRole("button", { name: "Limpar histórico" }).click();
+    await page
+      .getByRole("dialog", { name: "Limpar o histórico?" })
+      .getByRole("button", { name: "Limpar histórico" })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Nenhuma reserva neste navegador" }),
+    ).toBeVisible();
+    await page.waitForTimeout(1500);
+    expect(await cache()).not.toContain("history-hotels");
+    expect(await cache()).not.toContain(id);
+  });
+
   test("vazio: EmptyState, axe e 320 px sem rolagem horizontal", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 700 });
     await page.goto("/my-bookings");
