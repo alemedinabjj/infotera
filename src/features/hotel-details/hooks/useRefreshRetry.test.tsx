@@ -1,4 +1,5 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
+import { Activity } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { navigationSpies } from "@/shared/testing/next-navigation";
 import { useRefreshRetry } from "./useRefreshRetry";
@@ -14,6 +15,22 @@ const mountHeading = () => {
   heading.tabIndex = -1;
   document.body.append(heading);
   return heading;
+};
+
+const RetrySection = () => {
+  const { retry, anchorRef } = useRefreshRetry("quartos-titulo");
+  return (
+    <section>
+      <h2 id="quartos-titulo" tabIndex={-1}>
+        Quartos
+      </h2>
+      <div ref={anchorRef}>
+        <button type="button" onClick={retry}>
+          Tentar de novo
+        </button>
+      </div>
+    </section>
+  );
 };
 
 afterEach(() => {
@@ -41,5 +58,35 @@ describe("useRefreshRetry", () => {
     const { unmount } = renderHook(() => useRefreshRetry("quartos-titulo"));
     unmount();
     expect(heading).not.toHaveFocus();
+  });
+
+  it("esconder a rota (Activity) depois de um retry não move o foco para o h2 de outro hotel", () => {
+    // O jsdom não tem `checkVisibility`: simula a regra do `display: none` que o Activity aplica.
+    const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "checkVisibility");
+    Object.defineProperty(HTMLElement.prototype, "checkVisibility", {
+      configurable: true,
+      value(this: HTMLElement) {
+        return this.closest('[style*="display: none"]') === null;
+      },
+    });
+    try {
+      const otherHotel = mountHeading();
+      const { getByRole, rerender } = render(
+        <Activity mode="visible">
+          <RetrySection />
+        </Activity>,
+      );
+      act(() => getByRole("button", { name: "Tentar de novo" }).click());
+      rerender(
+        <Activity mode="hidden">
+          <RetrySection />
+        </Activity>,
+      );
+      expect(otherHotel).not.toHaveFocus();
+      expect(document.activeElement).toBe(document.body);
+    } finally {
+      if (original) Object.defineProperty(HTMLElement.prototype, "checkVisibility", original);
+      else Reflect.deleteProperty(HTMLElement.prototype, "checkVisibility");
+    }
   });
 });

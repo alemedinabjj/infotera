@@ -18,15 +18,17 @@ type SectionRefreshErrorProps = {
 export const SectionRefreshError = ({ headingId, title }: SectionRefreshErrorProps) => {
   const locale = useLocale();
   const t = useHotelDetailsMessages().errors;
-  const { retry, retrying } = useRefreshRetry(headingId);
+  const { retry, retrying, anchorRef } = useRefreshRetry(headingId);
   return (
-    <ErrorState
-      locale={locale}
-      title={title}
-      description={t.sectionRetry}
-      headingLevel={3}
-      onRetry={retry}
-      retrying={retrying}
-    />
+    <div ref={anchorRef}>
+      <ErrorState
+        locale={locale}
+        title={title}
+        description={t.sectionRetry}
+        headingLevel={3}
+        onRetry={retry}
+        retrying={retrying}
+      />
+    </div>
   );
 };
