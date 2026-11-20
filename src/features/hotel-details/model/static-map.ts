@@ -70,11 +70,3 @@ export const staticMapLayout = ({ lat, lon, zoom, width, height }: StaticMapInpu
     },
   };
 };
-
-/** URL do tile padrão do OpenStreetMap. */
-export const tileUrl = ({ z, x, y }: Pick<MapTile, "z" | "x" | "y">): string =>
-  `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
-
-/** Link "Abrir no OpenStreetMap" com o marcador no ponto. */
-export const osmLink = (lat: number, lon: number, zoom = 15): string =>
-  `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;

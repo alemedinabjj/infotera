@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seedHotel } from "@/shared/testing/seed";
-import { osmLink, staticMapLayout, tileUrl } from "./static-map";
+import { staticMapLayout } from "./static-map";
 
 const hotel = seedHotel(1);
 const INPUT = { lat: hotel.latitude, lon: hotel.longitude, zoom: 15, width: 640, height: 320 };
@@ -65,16 +65,5 @@ describe("staticMapLayout: bordas", () => {
     const map = staticMapLayout({ lat: 89, lon: -179.9, zoom: 3, width: 640, height: 320 });
     expect(map.tiles.every((tile) => tile.y >= 0 && tile.y < 8)).toBe(true);
     expect(map.tiles.some((tile) => tile.x === 7)).toBe(true);
-  });
-});
-
-describe("links", () => {
-  it("URL do tile e link do OSM com marcador", () => {
-    expect(tileUrl({ z: 15, x: 12453, y: 18532 })).toBe(
-      "https://tile.openstreetmap.org/15/12453/18532.png",
-    );
-    expect(osmLink(-22.9683, -43.1792)).toBe(
-      "https://www.openstreetmap.org/?mlat=-22.9683&mlon=-43.1792#map=15/-22.9683/-43.1792",
-    );
   });
 });

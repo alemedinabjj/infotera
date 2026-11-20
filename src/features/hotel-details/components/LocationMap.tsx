@@ -1,6 +1,8 @@
 import type { Hotel } from "@/shared/api/schemas";
+import { osmLink } from "@/shared/lib/geo";
+import { OSM_COPYRIGHT_URL, tileUrl } from "@/shared/lib/map-tiles";
 import { MapPinIcon } from "@/shared/ui";
-import { osmLink, staticMapLayout, tileUrl } from "../model/static-map";
+import { staticMapLayout } from "../model/static-map";
 import { MapTile } from "./MapTile";
 import { Section } from "./Section";
 
@@ -44,7 +46,7 @@ const StaticMap = ({ hotel }: StaticMapProps) => {
       </div>
       <p className="absolute right-0 bottom-0 bg-surface/90 px-2 py-0.5 text-xs">
         <a
-          href="https://www.openstreetmap.org/copyright"
+          href={OSM_COPYRIGHT_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary underline after:absolute after:inset-x-0 after:bottom-0 after:h-11 after:content-['']"
