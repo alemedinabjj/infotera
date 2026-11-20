@@ -1,7 +1,7 @@
-import { pluralize } from "@/shared/lib/format";
+import { formatUnit } from "@/shared/i18n/units";
 
-/** Microcopy da comparação (pt-BR). */
-export const COMPARISON_MESSAGES = {
+/** Microcopy da comparação (pt-BR é a fonte). */
+export const ptBR = {
   title: "Comparar hotéis",
   legend: "Linhas marcadas mudam entre os hotéis.",
   onlyDifferences: "Mostrar só diferenças",
@@ -60,12 +60,14 @@ export const COMPARISON_MESSAGES = {
     checkOutValue: (time: string) => `Até ${time}`,
     availability: "Disponibilidade",
     soldOut: "Esgotado",
-    scarce: (count: number) => `Apenas ${pluralize(count, "quarto", "quartos")}!`,
+    scarce: (count: number) => `Apenas ${formatUnit(count, "room", "pt-BR")}!`,
     available: "Disponível",
     roomTypes: "Tipos de quarto",
-    roomTypesValue: (count: number) => pluralize(count, "tipo", "tipos"),
+    roomTypesValue: (count: number) => `${count} ${count === 1 ? "tipo" : "tipos"}`,
     guests: "Hóspedes por quarto",
     guestsValue: (max: number) => `Até ${max}`,
     unknown: "—",
   },
-} as const;
+};
+
+export type ComparisonMessages = typeof ptBR;

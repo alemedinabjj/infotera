@@ -49,7 +49,7 @@ describe("buildHotelComparison (seed 1, 4 e 11)", () => {
       "guests",
     ]);
     const amenity = rows.find((item) => item.kind === "boolean");
-    expect(amenity?.cells.every((cell) => cell === "Sim" || cell === "Não")).toBe(true);
+    expect(amenity?.cells.every((cell) => cell === "yes" || cell === "no")).toBe(true);
   });
 
   it("differs reflete diferença real", () => {

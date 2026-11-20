@@ -1,19 +1,16 @@
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { amenitySchema } from "@/shared/api/schemas";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import { availabilityStatus } from "@/shared/lib/availability";
 import { cancellationDetails } from "@/shared/lib/cancellation";
 import { type ComparisonRow, makeRow, NO, YES } from "@/shared/lib/comparison";
 import { formatBRL } from "@/shared/lib/currency";
-import { formatRating, ratingLabel } from "@/shared/lib/format";
+import { formatCount, formatRating, ratingLabel } from "@/shared/lib/format";
 import { amenityLabel, propertyTypeLabel } from "@/shared/lib/labels";
 import { lowestNightlyPrice } from "@/shared/lib/pricing";
-import { COMPARISON_MESSAGES } from "./messages";
-
-const ROWS = COMPARISON_MESSAGES.rows;
+import { comparisonMessages } from "../i18n/messages";
 
 export type HotelComparison = { hotels: readonly Hotel[]; rows: ComparisonRow[] };
-
-const priceText = (price: number): string => formatBRL(price, { cents: !Number.isInteger(price) });
 
 /** Índices com o melhor valor; vazio quando todos os candidatos empatam (selo não diz nada). */
 const bestIndexes = (values: readonly (number | null)[], pick: "min" | "max"): number[] => {
@@ -33,106 +30,116 @@ const nightly = (hotel: Hotel, rooms: readonly Room[]) => {
   return from ?? { price: hotel.pricePerNight, soldOut: false };
 };
 
-const priceRow = (hotels: readonly Hotel[], rooms: readonly Room[]): ComparisonRow => {
-  const prices = hotels.map((hotel) => nightly(hotel, rooms));
-  const row = makeRow(
-    "price",
-    ROWS.price,
-    "text",
-    prices.map((item) => {
-      const text = ROWS.priceFrom(priceText(item.price));
-      return item.soldOut ? `${text} · ${ROWS.soldOutNote}` : text;
-    }),
-  );
-  const candidates = prices.map((item) => (item.soldOut ? null : item.price));
-  return {
-    ...row,
-    best: bestIndexes(candidates, "min"),
-    bestLabel: COMPARISON_MESSAGES.badges.cheapest,
-  };
-};
+const makeRows = (locale: Locale) => {
+  const m = comparisonMessages.get(locale);
+  const priceText = (price: number): string =>
+    formatBRL(price, { cents: !Number.isInteger(price), locale });
 
-const ratingRow = (hotels: readonly Hotel[]): ComparisonRow => ({
-  ...makeRow(
-    "rating",
-    ROWS.rating,
-    "text",
-    hotels.map((hotel) => `${formatRating(hotel.rating)} · ${ratingLabel(hotel.rating)}`),
-  ),
-  best: bestIndexes(
-    hotels.map((hotel) => hotel.rating),
-    "max",
-  ),
-  bestLabel: COMPARISON_MESSAGES.badges.bestRated,
-});
-
-const availabilityText = (hotel: Hotel): string => {
-  switch (availabilityStatus(hotel.availableRooms, 1)) {
-    case "sold-out":
-      return ROWS.soldOut;
-    case "scarce":
-      return ROWS.scarce(hotel.availableRooms);
-    default:
-      return ROWS.available;
-  }
-};
-
-const textRows = (hotels: readonly Hotel[], rooms: readonly Room[]): ComparisonRow[] => {
-  const guests = hotels.map((hotel) => {
-    const own = roomsOf(hotel, rooms);
-    return own.length === 0
-      ? ROWS.unknown
-      : ROWS.guestsValue(Math.max(...own.map((room) => room.maxGuests)));
-  });
-  return [
-    makeRow(
-      "reviews",
-      ROWS.reviews,
+  const priceRow = (hotels: readonly Hotel[], rooms: readonly Room[]): ComparisonRow => {
+    const prices = hotels.map((hotel) => nightly(hotel, rooms));
+    const row = makeRow(
+      "price",
+      m.rows.price,
       "text",
-      hotels.map((hotel) => hotel.reviewCount.toLocaleString("pt-BR")),
-    ),
-    makeRow(
-      "type",
-      ROWS.type,
-      "text",
-      hotels.map((hotel) => propertyTypeLabel(hotel.propertyType)),
-    ),
-    makeRow(
-      "destination",
-      ROWS.destination,
-      "text",
-      hotels.map((hotel) => hotel.destination),
-    ),
-    makeRow(
-      "cancellation",
-      ROWS.cancellation,
-      "text",
-      hotels.map((hotel) => cancellationDetails(hotel.cancellationPolicy).label),
-    ),
-    makeRow(
-      "check-in",
-      ROWS.checkIn,
-      "text",
-      hotels.map((hotel) => ROWS.checkInValue(hotel.checkInTime)),
-    ),
-    makeRow(
-      "check-out",
-      ROWS.checkOut,
-      "text",
-      hotels.map((hotel) => ROWS.checkOutValue(hotel.checkOutTime)),
-    ),
-    makeRow("availability", ROWS.availability, "text", hotels.map(availabilityText)),
-    makeRow(
-      "room-types",
-      ROWS.roomTypes,
-      "text",
-      hotels.map((hotel) => {
-        const count = roomsOf(hotel, rooms).length;
-        return count === 0 ? ROWS.unknown : ROWS.roomTypesValue(count);
+      prices.map((item) => {
+        const text = m.rows.priceFrom(priceText(item.price));
+        return item.soldOut ? `${text} · ${m.rows.soldOutNote}` : text;
       }),
+    );
+    const candidates = prices.map((item) => (item.soldOut ? null : item.price));
+    return {
+      ...row,
+      best: bestIndexes(candidates, "min"),
+      bestLabel: m.badges.cheapest,
+    };
+  };
+
+  const ratingRow = (hotels: readonly Hotel[]): ComparisonRow => ({
+    ...makeRow(
+      "rating",
+      m.rows.rating,
+      "text",
+      hotels.map(
+        (hotel) => `${formatRating(hotel.rating, locale)} · ${ratingLabel(hotel.rating, locale)}`,
+      ),
     ),
-    makeRow("guests", ROWS.guests, "text", guests),
-  ];
+    best: bestIndexes(
+      hotels.map((hotel) => hotel.rating),
+      "max",
+    ),
+    bestLabel: m.badges.bestRated,
+  });
+
+  const availabilityText = (hotel: Hotel): string => {
+    switch (availabilityStatus(hotel.availableRooms, 1)) {
+      case "sold-out":
+        return m.rows.soldOut;
+      case "scarce":
+        return m.rows.scarce(hotel.availableRooms);
+      default:
+        return m.rows.available;
+    }
+  };
+
+  const textRows = (hotels: readonly Hotel[], rooms: readonly Room[]): ComparisonRow[] => {
+    const guests = hotels.map((hotel) => {
+      const own = roomsOf(hotel, rooms);
+      return own.length === 0
+        ? m.rows.unknown
+        : m.rows.guestsValue(Math.max(...own.map((room) => room.maxGuests)));
+    });
+    return [
+      makeRow(
+        "reviews",
+        m.rows.reviews,
+        "text",
+        hotels.map((hotel) => formatCount(hotel.reviewCount, locale)),
+      ),
+      makeRow(
+        "type",
+        m.rows.type,
+        "text",
+        hotels.map((hotel) => propertyTypeLabel(hotel.propertyType, locale)),
+      ),
+      makeRow(
+        "destination",
+        m.rows.destination,
+        "text",
+        hotels.map((hotel) => hotel.destination),
+      ),
+      makeRow(
+        "cancellation",
+        m.rows.cancellation,
+        "text",
+        hotels.map((hotel) => cancellationDetails(hotel.cancellationPolicy, locale).label),
+      ),
+      makeRow(
+        "check-in",
+        m.rows.checkIn,
+        "text",
+        hotels.map((hotel) => m.rows.checkInValue(hotel.checkInTime)),
+      ),
+      makeRow(
+        "check-out",
+        m.rows.checkOut,
+        "text",
+        hotels.map((hotel) => m.rows.checkOutValue(hotel.checkOutTime)),
+      ),
+      makeRow("availability", m.rows.availability, "text", hotels.map(availabilityText)),
+      makeRow(
+        "room-types",
+        m.rows.roomTypes,
+        "text",
+        hotels.map((hotel) => {
+          const count = roomsOf(hotel, rooms).length;
+          return count === 0 ? m.rows.unknown : m.rows.roomTypesValue(count);
+        }),
+      ),
+      makeRow("guests", m.rows.guests, "text", guests),
+    ];
+  };
+
+  return { priceRow, ratingRow, textRows };
 };
 
 /**
@@ -143,7 +150,9 @@ const textRows = (hotels: readonly Hotel[], rooms: readonly Room[]): ComparisonR
 export const buildHotelComparison = (
   hotels: readonly Hotel[],
   rooms: readonly Room[],
+  locale: Locale = DEFAULT_LOCALE,
 ): HotelComparison => {
+  const { priceRow, ratingRow, textRows } = makeRows(locale);
   const present = amenitySchema.options.filter((amenity) =>
     hotels.some((hotel) => hotel.amenities.includes(amenity)),
   );
@@ -156,7 +165,7 @@ export const buildHotelComparison = (
       ...present.map((amenity) =>
         makeRow(
           amenity,
-          amenityLabel(amenity),
+          amenityLabel(amenity, locale),
           "boolean",
           hotels.map((hotel) => (hotel.amenities.includes(amenity) ? YES : NO)),
         ),

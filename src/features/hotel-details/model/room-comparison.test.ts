@@ -51,7 +51,7 @@ describe("buildRoomComparison: hotel 18 (seed)", () => {
       "1 disponível",
       "12 disponíveis",
     ]);
-    expect(byKey.kitchen?.cells).toEqual(["Não", "Sim", "Não", "Não"]);
+    expect(byKey.kitchen?.cells).toEqual(["no", "yes", "no", "no"]);
     expect(byKey.kitchen?.kind).toBe("boolean");
   });
 

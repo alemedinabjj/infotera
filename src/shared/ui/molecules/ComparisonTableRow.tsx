@@ -1,3 +1,6 @@
+"use client";
+
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { cn } from "../../lib/cn";
 import { type ComparisonRow, YES } from "../../lib/comparison";
 import { Badge } from "../atoms/Badge";
@@ -17,6 +20,7 @@ type ComparisonTableRowProps = {
 const NON_BREAKING_HYPHEN = "‑";
 
 const Cell = ({ row, value }: { row: ComparisonRow; value: string }) => {
+  const t = useCommonMessages();
   if (row.kind === "text") return <>{value}</>;
   const yes = value === YES;
   return (
@@ -26,7 +30,7 @@ const Cell = ({ row, value }: { row: ComparisonRow; value: string }) => {
       ) : (
         <MinusIcon aria-hidden="true" className="size-4 text-fg-subtle" />
       )}
-      {value}
+      {yes ? t.yes : t.no}
     </span>
   );
 };

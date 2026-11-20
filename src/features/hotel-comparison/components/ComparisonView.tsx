@@ -13,15 +13,14 @@ import {
   WifiOffIcon,
 } from "@/shared/ui";
 import { COMPARE_TITLE_ID, removeColumn } from "../hooks/compare-url";
+import { useComparisonMessages } from "../hooks/useComparisonMessages";
 import { type ComparisonState, useComparisonPage } from "../hooks/useComparisonPage";
-import { COMPARISON_MESSAGES } from "../model/messages";
 import { CompareNotice } from "./CompareNotice";
 import { ComparisonSkeleton } from "./ComparisonSkeleton";
 import { HotelColumnHeader } from "./HotelColumnHeader";
 
-const MESSAGES = COMPARISON_MESSAGES;
-
 const EmptyCompare = () => {
+  const MESSAGES = useComparisonMessages();
   const tray = useComparison();
   return (
     <EmptyState
@@ -53,6 +52,7 @@ type BodyProps = {
 };
 
 const Body = ({ state, ids, criteria }: BodyProps) => {
+  const MESSAGES = useComparisonMessages();
   switch (state.kind) {
     case "empty":
       return <EmptyCompare />;
@@ -131,6 +131,7 @@ type ComparisonViewProps = {
  * compartilhável e funciona sem storage. Os 4 estados + offline, avisos e remoção de coluna.
  */
 export const ComparisonView = ({ headingLevel = 1 }: ComparisonViewProps) => {
+  const MESSAGES = useComparisonMessages();
   const { ids, criteria, state } = useComparisonPage();
   const Heading = headingLevel === 1 ? "h1" : "h2";
   return (
@@ -149,9 +150,12 @@ export const ComparisonView = ({ headingLevel = 1 }: ComparisonViewProps) => {
 };
 
 /** Fallback do `Suspense` da página: mesmo título e skeleton da tabela (sem salto de layout). */
-export const ComparisonFallback = () => (
-  <div className="flex flex-col gap-4">
-    <h1 className="text-2xl font-bold text-fg lg:text-3xl">{MESSAGES.title}</h1>
-    <ComparisonSkeleton slow={false} />
-  </div>
-);
+export const ComparisonFallback = () => {
+  const MESSAGES = useComparisonMessages();
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-bold text-fg lg:text-3xl">{MESSAGES.title}</h1>
+      <ComparisonSkeleton slow={false} />
+    </div>
+  );
+};
