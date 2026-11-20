@@ -31,3 +31,6 @@ export const useIsActiveHotel = (hotelId: number): boolean =>
 export const resetMapSync = (): void => {
   useMapSync.setState({ activeHotelId: null, revealCard: null });
 };
+
+/** Hotel em destaque (para quem precisa do valor; prefira `useIsActiveHotel` por card/marcador). */
+export const useIsActiveHotelId = (): number | null => useMapSync((state) => state.activeHotelId);

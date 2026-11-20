@@ -11,6 +11,8 @@ type ResultsToolbarProps = {
   filtersTrigger?: ReactNode;
   sort: ReactNode;
   listMode: ReactNode;
+  /** Botão do mapa (último da toolbar: o Tab segue para o "Pular o mapa"). */
+  mapToggle?: ReactNode;
 };
 
 const Heading = ({ heading }: { heading: ToolbarHeading }) =>
@@ -58,6 +60,7 @@ export const ResultsToolbar = ({
   filtersTrigger,
   sort,
   listMode,
+  mapToggle,
 }: ResultsToolbarProps) => (
   <div className="flex flex-col gap-3">
     <div>
@@ -77,6 +80,7 @@ export const ResultsToolbar = ({
       {filtersTrigger}
       {sort}
       {listMode}
+      {mapToggle}
     </div>
   </div>
 );

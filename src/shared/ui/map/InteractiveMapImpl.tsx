@@ -1,9 +1,10 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import "./map.css";
 import type { Marker as LeafletMarker, PopupEvent } from "leaflet";
 import { useReducedMotion } from "motion/react";
-import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
+import { memo, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { cn } from "../../lib/cn";
 import { FIT_MAX_ZOOM, FIT_PADDING, fitPlan, type LatLng } from "../../lib/geo";
@@ -22,8 +23,8 @@ export type InteractiveMapProps = {
   activeId?: string | null;
   onActiveChange?: (id: string | null) => void;
   onSelect?: (id: string) => void;
-  /** Conteúdo do popup do marcador (sem ele o marcador não abre popup). */
-  renderPopup?: (id: string) => ReactNode;
+  /** Conteúdo do popup do marcador (sem ele o marcador não abre popup); `close` fecha o popup. */
+  renderPopup?: (id: string, close: () => void) => ReactNode;
   /** Primeiro lote de tiles carregado (a ilha do hotel troca o mapa estático nesse momento). */
   onTilesLoad?: () => void;
   /** O lote terminou e **nenhum** tile veio (sem rede, bloqueio): quem chamou mantém o plano B. */
@@ -87,7 +88,7 @@ type MarkerItemProps = {
   closeLabel: string;
   onActiveChange: ((id: string | null) => void) | undefined;
   onSelect: ((id: string) => void) | undefined;
-  renderPopup: ((id: string) => ReactNode) | undefined;
+  renderPopup: ((id: string, close: () => void) => ReactNode) | undefined;
 };
 
 const FOCUSABLE = "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])";
@@ -106,14 +107,14 @@ const PopupBody = ({ focusOnMount, children }: { focusOnMount: boolean; children
 };
 
 /** Um marcador. `active` vem por seletor, então passar o mouse re-renderiza só dois itens. */
-const MarkerItem = ({
+const MarkerItem = memo(function MarkerItem({
   marker,
   active,
   closeLabel,
   onActiveChange,
   onSelect,
   renderPopup,
-}: MarkerItemProps) => {
+}: MarkerItemProps) {
   const { id, label, variant, text, tone, position } = marker;
   const ref = useRef<LeafletMarker | null>(null);
   const [openedByKeyboard, setOpenedByKeyboard] = useState(false);
@@ -179,12 +180,14 @@ const MarkerItem = ({
     >
       {renderPopup ? (
         <Popup>
-          <PopupBody focusOnMount={openedByKeyboard}>{renderPopup(id)}</PopupBody>
+          <PopupBody focusOnMount={openedByKeyboard}>
+            {renderPopup(id, () => ref.current?.closePopup())}
+          </PopupBody>
         </Popup>
       ) : null}
     </Marker>
   );
-};
+});
 
 const Attribution = ({ text }: { text: string }) => (
   <p className="absolute right-0 bottom-0 z-[1000] bg-surface/90 px-2 py-0.5 text-xs">

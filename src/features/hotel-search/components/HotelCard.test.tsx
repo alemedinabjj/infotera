@@ -1,9 +1,10 @@
 import { QueryClient } from "@tanstack/react-query";
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeHotel, makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
 import { renderWithProviders } from "@/shared/testing/render";
+import { resetMapSync, useMapSync } from "../store/map-sync";
 import { HotelCard } from "./HotelCard";
 import { HotelCardSkeleton } from "./HotelCardSkeleton";
 
@@ -271,5 +272,30 @@ describe("HotelCard: favoritar e comparar (critério 2)", () => {
   it("o skeleton ganha a linha do Comparar", () => {
     const { container } = renderWithProviders(<HotelCardSkeleton />);
     expect(container.querySelector(".min-h-11")).not.toBeNull();
+  });
+});
+
+describe("HotelCard: destaque sincronizado com o mapa", () => {
+  beforeEach(() => resetMapSync());
+
+  it("passar o mouse ou focar o card marca o hotel; sair desmarca", async () => {
+    renderCard();
+    const article = screen.getByRole("article");
+    await userEvent.hover(article);
+    expect(useMapSync.getState().activeHotelId).toBe(13);
+    await userEvent.unhover(article);
+    expect(useMapSync.getState().activeHotelId).toBeNull();
+    await userEvent.tab();
+    expect(useMapSync.getState().activeHotelId).toBe(13);
+  });
+
+  it("o destaque vindo do mapa põe o anel no card e o link é localizável pelo id", () => {
+    renderCard();
+    expect(screen.getByRole("article")).not.toHaveClass("ring-2");
+    act(() => useMapSync.getState().setActive(13));
+    expect(screen.getByRole("article")).toHaveClass("ring-2", "ring-primary");
+    expect(document.querySelector('[data-hotel-link="13"]')).toBe(
+      screen.getByRole("link", { name: /Pousada Vista Corcovado/ }),
+    );
   });
 });

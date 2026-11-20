@@ -28,6 +28,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
   useRememberSearch(criteria);
   const headingId = useId();
   const distanceHelpId = useId();
+  const mapPanelId = useId();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const { filters, update, pageHref, results, headingRef, sectionRef, sectionMinHeight, retry } =
@@ -67,6 +68,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
           destination={destination}
           onChange={update}
           onOpenFilters={() => setDrawerOpen(true)}
+          mapPanelId={filters.map && view.kind === "results" ? mapPanelId : undefined}
         />
         <ErrorBoundary
           resetKeys={[resetKey]}
@@ -80,6 +82,8 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
             page={filters.page}
             headingId={headingId}
             feed={results.feed}
+            mapOpen={filters.map}
+            mapPanelId={mapPanelId}
             destination={destination}
             criteria={criteria}
             selectedAmenities={filters.amenities}

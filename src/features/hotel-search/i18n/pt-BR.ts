@@ -14,6 +14,7 @@ export const ptBR = {
     markerLabel: ({ name, price }: { name: string; price: string }) =>
       `${name}, ${price} por noite`,
     soldOutLabel: ({ name }: { name: string }) => `${name}, esgotado`,
+    popupRating: ({ rating }: { rating: string }) => `Nota ${rating}`,
     popupPerNight: ({ price }: { price: string }) => `${price} por noite`,
     viewHotel: "Ver hotel",
     showInList: "Mostrar na lista",

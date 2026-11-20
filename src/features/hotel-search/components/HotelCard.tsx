@@ -10,6 +10,7 @@ import { motionPreset } from "@/shared/lib/motion";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { CompareCheckbox, FavoriteButton } from "@/shared/saved";
 import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui";
+import { useCardMapSync } from "../hooks/useCardMapSync";
 import { useHotelRooms } from "../hooks/useHotelRooms";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
@@ -102,6 +103,7 @@ export const HotelCard = ({
   const titleId = useId();
   const prefetch = usePrefetchHotel(hotel.id);
   const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id));
+  const sync = useCardMapSync(hotel.id);
 
   return (
     <m.article
@@ -115,10 +117,13 @@ export const HotelCard = ({
       aria-setsize={feed?.setSize}
       aria-labelledby={feed ? titleId : undefined}
       tabIndex={feed ? -1 : undefined}
+      {...sync.handlers}
       className={cardClassName({
         variant: "interactive",
-        className:
+        className: cn(
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row [--card-image-w:14rem] [--card-fav-size:2.75rem]",
+          sync.active && "ring-2 ring-primary",
+        ),
       })}
     >
       <RemoteImage
@@ -133,6 +138,7 @@ export const HotelCard = ({
         <h3 id={titleId} className="line-clamp-2 text-lg font-semibold text-fg">
           <Link
             href={hotelHref(hotel.id, criteria)}
+            data-hotel-link={hotel.id}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
             {...prefetch}
           >

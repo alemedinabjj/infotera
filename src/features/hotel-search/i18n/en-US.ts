@@ -14,6 +14,7 @@ export const enUS: HotelSearchMessages = {
     soldOut: "Sold out",
     markerLabel: ({ name, price }) => `${name}, ${price} per night`,
     soldOutLabel: ({ name }) => `${name}, sold out`,
+    popupRating: ({ rating }) => `Rating ${rating}`,
     popupPerNight: ({ price }) => `${price} per night`,
     viewHotel: "View hotel",
     showInList: "Show in list",
