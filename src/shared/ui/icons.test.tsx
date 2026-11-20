@@ -1,12 +1,13 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { CompareIcon, HeartIcon, SuitcaseIcon } from "./icons";
+import { CompareIcon, GlobeIcon, HeartIcon, SuitcaseIcon } from "./icons";
 
 describe("ícones de extras", () => {
   it.each([
     ["heart", <HeartIcon key="h" />],
     ["compare", <CompareIcon key="c" />],
     ["suitcase", <SuitcaseIcon key="s" />],
+    ["globe", <GlobeIcon key="g" />],
   ])("%s é decorativo (aria-hidden)", (_name, icon) => {
     const { container } = render(icon);
     expect(container.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
