@@ -41,8 +41,9 @@ test.describe("rota da foto lenta (critério 18)", () => {
     const clickedAt = Date.now();
     await seeAll.click();
     const loading = loadingDialog(page);
-    await expect(loading).toBeVisible({ timeout: 1000 });
-    expect(Date.now() - clickedAt).toBeLessThan(SLOW_MS - 500);
+    await expect(loading).toBeVisible();
+    // A moldura de carregamento não espera a rota: aparece bem antes de ela chegar (folga de 1 s).
+    expect(Date.now() - clickedAt).toBeLessThan(SLOW_MS - 1000);
     await expect(loading.getByText("Carregando foto…")).toBeVisible();
     await expect(loading.getByRole("button", { name: "Fechar" })).toBeVisible();
     expect(await loading.evaluate((el) => el.matches(":modal"))).toBe(true);
@@ -52,14 +53,36 @@ test.describe("rota da foto lenta (critério 18)", () => {
     await expect(loading).toHaveCount(0);
   });
 
-  test("Fechar durante o carregamento volta ao hotel e o foco volta ao link", async ({ page }) => {
+  test("Fechar durante o carregamento: a chegada tardia da rota não reabre o modal", async ({
+    page,
+  }) => {
     await slowPhotoRoute(page);
+    // Vale antes do clique: no build é o prefetch lento que a navegação espera.
+    const lateRoute = page.waitForResponse(
+      (response) =>
+        /\/hotel\/1\/photos\/1/.test(response.url()) && !!response.request().headers().rsc,
+    );
     const seeAll = await openHotel(page, 1);
+    const hotelUrl = page.url();
+    const entries = await page.evaluate(() => history.length);
     await seeAll.click();
     await loadingDialog(page).getByRole("button", { name: "Fechar" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
+
+    // A rota chega depois da desistência: o Next empurra `/photos/1` e o app volta uma entrada. O que
+    // prova o ciclo inteiro é o histórico ter ganhado a entrada da foto (para frente) com a URL de volta
+    // no hotel; um modal reaberto deixaria a URL em `/photos/1`.
+    await lateRoute;
+    await expect
+      .poll(async () => ({ url: page.url(), entries: await page.evaluate(() => history.length) }))
+      .toEqual({ url: hotelUrl, entries: entries + 1 });
     await expect(page).toHaveURL(/\/hotel\/1\?/);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(seeAll).toBeFocused();
+
+    await page.goForward();
+    await expect(page.getByRole("dialog", { name: /^Fotos de / })).toBeVisible();
+    await expect(page).toHaveURL(/\/hotel\/1\/photos\/1$/);
   });
 });
 
@@ -112,12 +135,13 @@ test.describe("sem internet (U6)", () => {
 
   test("Esc fecha o estado offline e devolve o foco ao link", async ({ page, context }) => {
     const seeAll = await openHotel(page, 1);
+    const before = page.url();
     await context.setOffline(true);
     await seeAll.click();
     await expect(loadingDialog(page)).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(seeAll).toBeFocused();
-    expect(page.url()).toBe(page.url());
+    expect(page.url()).toBe(before);
   });
 });

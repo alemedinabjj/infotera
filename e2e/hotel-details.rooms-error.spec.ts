@@ -4,13 +4,11 @@ import { hotelPath, roomCard } from "./helpers/hotel-details";
 import { API_URL } from "./helpers/hotel-search";
 import { controlledHotel, hotelRoomsRequest, test } from "./helpers/server-api";
 
-// Critério 24 da F4: os quartos falham já na carga inicial (o servidor os busca e o erro vai
-// dehidratado para o cliente). O proxy de controle responde 500 para `/rooms?hotelId=<hotel do
-// worker>`; o retry da seção (request do navegador) passa pelo mesmo proxy. A falha inicial
-// pode levar alguns segundos: o cliente repete a query (backoff) antes de mostrar o erro.
+// Critério 24 da F4: os quartos falham já na carga inicial. O servidor os busca (fora do escopo cacheado) e o
+// erro vira `SectionRefreshError` no HTML, sem repetir no cliente. O proxy de controle responde 500 para
+// `/rooms?hotelId=<hotel do worker>`; o "Tentar de novo" (`router.refresh()`) passa pelo mesmo proxy.
 
 const ERROR_TITLE = "Não foi possível carregar os quartos.";
-const FIRST_FAILURE_MS = 20_000;
 
 const firstRoomName = async (hotelId: number, request: APIRequestContext) => {
   const rooms: unknown = await (await request.get(`${API_URL}/rooms?hotelId=${hotelId}`)).json();
@@ -34,9 +32,7 @@ test.describe("falha inicial dos quartos (critério 24)", () => {
     const roomName = await firstRoomName(hotelId, request);
     await serverApi.failServerRequests(hotelRoomsRequest(hotelId));
     await page.goto(hotelPath(hotelId));
-    await expect(page.getByRole("heading", { level: 3, name: ERROR_TITLE })).toBeVisible({
-      timeout: FIRST_FAILURE_MS,
-    });
+    await expect(page.getByRole("heading", { level: 3, name: ERROR_TITLE })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByText("Preços indisponíveis no momento.")).toBeVisible();
     // O overlay de erros do `next dev` (fora do `main`) mostra o erro do SSR; a página, não.
@@ -59,7 +55,7 @@ test.describe("falha inicial dos quartos (critério 24)", () => {
     await serverApi.failServerRequests(hotelRoomsRequest(hotelId));
     await page.goto(hotelPath(hotelId));
     const retry = page.getByRole("button", { name: "Tentar de novo" });
-    await expect(retry).toBeVisible({ timeout: FIRST_FAILURE_MS });
+    await expect(retry).toBeVisible();
 
     await retry.click();
     await expect(page.getByRole("heading", { level: 3, name: ERROR_TITLE })).toBeVisible();
