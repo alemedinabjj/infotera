@@ -29,10 +29,6 @@ test.describe("prerender manifest @prod", () => {
 
 test.describe("hotel sem JavaScript: a casca estática @prod", () => {
   test.use({ javaScriptEnabled: false });
-  // PENDENTE (critério 5/19): o HTML do build entrega o conteúdo do hotel num segmento Suspense
-  // "outlined" (`<div hidden id="S:…">`) que só aparece com o script de troca do React; sem JS fica o
-  // skeleton do `loading.tsx`. Precisa de uma decisão (ver relatório da F7c).
-  test.fixme(true, "sem JS o segmento outlined do loading.tsx não é trocado");
 
   test("nome, foto, quartos, diárias, 'a partir de', comentários e similares no HTML; buracos em skeleton", async ({
     page,
@@ -47,12 +43,20 @@ test.describe("hotel sem JavaScript: a casca estática @prod", () => {
     await expect(suite).toContainText("R$ 1.200 por noite, sem taxas");
     await expect(page.getByRole("button", { name: /Comparar quartos/ })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Avaliações" })).toBeVisible();
+    // Similares e comentários da 1ª página vêm do cache, já no HTML e visíveis (não no segmento oculto).
+    await expect(
+      page
+        .getByRole("region", { name: /Hotéis similares/ })
+        .getByRole("link")
+        .first(),
+    ).toBeVisible();
     // Os buracos da estadia mostram skeleton `aria-hidden`, nunca o botão "Selecionar quarto".
     await expect(suite.getByRole("button", { name: /Selecionar quarto/ })).toHaveCount(0);
     await expect(suite.locator("[aria-hidden='true'].animate-none").first()).toBeAttached();
   });
 
-  test("a miniatura leva à página cheia da foto", async ({ page }) => {
+  // Fica pendente: a página cheia da foto é de outra frente (mesmo problema do segmento outlined).
+  test.fixme("a miniatura leva à página cheia da foto", async ({ page }) => {
     await page.goto(hotelPath(1));
     await page.getByRole("link", { name: "Ver todas as fotos (5)" }).click();
     await expect(

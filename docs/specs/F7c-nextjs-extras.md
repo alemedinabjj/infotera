@@ -419,7 +419,7 @@ Comparar quartos · Comentários p.1 · Similares (links dos cards = mesmo link 
   quarto). Quem usa leitor de tela encontra o conteúdo final ao chegar nele.
 - `/search` e `/confirmation/[bookingId]`: a casca é o `loading.tsx` que já existe (skeletons da F3 e
   da F6). Nada muda visualmente. `/checkout` continua sem casca (carga normal).
-- `/hotel/61` (fora do build): `HotelDetailsSkeleton` da F4 → "Hotel não encontrado". Sem mudança.
+- `/hotel/61` (fora do build): vai direto a "Hotel não encontrado", sem skeleton antes (a página do hotel não tem `loading.tsx`: ver critério 8).
 
 ### Estados
 
@@ -594,8 +594,9 @@ Novo token: **nenhum**.
    carregar os critérios.
 7. Dado `/hotel/1` sem critérios, então "Escolha as datas para reservar" e o formulário aberto
    aparecem (comportamento da F4 mantido) e cada quarto mostra "Escolher datas".
-8. Dado `/hotel/61` (id inexistente), então chega a casca de fallback com skeleton e, em seguida,
-   "Hotel não encontrado" (status 200 + `noindex`, como a Decisão 2 da F4). Dado `/hotel/abc`, então
+8. Dado `/hotel/61` (id inexistente), então chega "Hotel não encontrado" (status 200 + `noindex`, como
+   a Decisão 2 da F4), **sem skeleton antes**: a página não tem `loading.tsx` (ele empurrava o conteúdo
+   do hotel para um segmento *outlined* `<div hidden id="S:…">`, invisível sem JS; ver critério 5). Dado `/hotel/abc`, então
    o mesmo, sem nenhum request à API.
 9. Dado que troco para a página 2 dos comentários do hotel 18, então funciona como na F4 (página
    atual visível até a próxima chegar, foco no h2, status anunciado).

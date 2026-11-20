@@ -7,7 +7,7 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 - Nada de lógica de negócio, fetch manual ou estado aqui. Isso mora na feature.
 - `params` e `searchParams` são `Promise` no Next 16: `const { hotelId } = await params`.
 - Valide `params`/`searchParams` com o schema da feature antes de usar. Valor inválido → `notFound()` ou redirect.
-- Cada rota com dado remoto tem `loading.tsx` (skeleton da feature) e `error.tsx` (`"use client"`, com botão de retry via `reset`).
+- Cada rota com dado remoto tem `loading.tsx` (skeleton da feature, **exceto `hotel/[hotelId]`**, ver F7c) e `error.tsx` (`"use client"`, com botão de retry via `reset`).
 - `generateMetadata` em toda página, com o título no idioma da rota (`params.locale`; dicionário da feature ou `common.routes`).
 - `app/[locale]/layout.tsx` é o layout raiz: valida `[locale]` (`isLocale`, `dynamicParams = false`), define `<html lang={locale}>`, monta `I18nProvider` e os providers.
 
@@ -57,6 +57,7 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
   `SavedNav` ficam sob Suspense). `dynamicParams` não existe mais (removido do layout; o `[locale]` inválido cai em `notFound()` no layout).
 - Forma de cada rota (conferida no `npm run build`): `/` `○`; `/search` `◐`; `/hotel/[hotelId]` e `/hotel/1…60` `◐` (ISR, 60 ids da API); `/hotel/[hotelId]/photos/[photo]` `◐`;
   **`/checkout` `ƒ`** (casca vazia: `export const instant = false` + `await connection()`); `/confirmation/[bookingId]` `◐` (casca sem PII).
+- `hotel/[hotelId]` **não tem `loading.tsx`**: o React tira do fluxo (segmento `<div hidden id="S:…">`, invisível sem JS) toda boundary concluída maior que ~12,8 KB, e o hotel inteiro cairia nela. A casca é o próprio conteúdo do cache; só os buracos (`StayAware`, `HotelStayBar`, `RoomStayAction`, `ReviewsPager`) ficam sob Suspense. Prova: no `.next/server/app/pt-BR/hotel/1.html` não há `<div hidden id="S:` antes do `<h1>`. `/hotel/61` não mostra skeleton antes de "não encontrado".
 - **Nunca** crie `loading.tsx` nem `<Suspense>` acima do `connection()` do checkout (nem `app/loading.tsx`): viraria uma casca estática sem nonce. O `@prod` do nonce é o guarda.
 - `hotel/[hotelId]/page.tsx` cria `const criteria = searchParams.then(toStayCriteria)` **sem `await`** e passa a promessa à feature: no prerender ela nunca resolve (tudo
   que a espera vira fallback), por request resolve na hora. `await searchParams` no topo mata o PPR da rota.

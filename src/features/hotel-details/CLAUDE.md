@@ -16,8 +16,8 @@ hooks/                   useSelectRoom · useSectionRetry · useReviewsPage (+ u
 components/              HotelDetailsView (RSC) · HotelHeader · Breadcrumb · SectionNav · Section · Gallery/Lightbox ·
                          HotelOverview/Policies/LocationMap (RSC) · HotelStayBar · RoomsSection/RoomList/RoomCard ·
                          StayEditContext (painel de datas) · RoomComparison/ComparisonTable · MapTile · ReviewsSection · SimilarHotels (RSC async) · SectionBoundary/SectionError ·
-                         HotelDetailsSkeleton · HotelNotFound
-index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, loadHotel, parseHotelId, hotelPageTitle,
+                         HotelNotFound
+index.ts                 HotelDetailsView, HotelNotFound, loadHotel, parseHotelId, hotelPageTitle,
                          STAY_EDIT_TITLE_ID
 ```
 
@@ -25,7 +25,7 @@ index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, 
 - **Fetch paralelo (Decisão 1)**: `HotelDetailsView` dispara `void prefetchQuery` dos quartos e da 1ª página de
   avaliações **antes** do `await loadHotel`; `dehydrate` leva as promessas pendentes e as ilhas cliente usam
   `useSuspenseQuery` com as mesmas chaves (o prefetch do hover da F3 vale). O hotel também vai para o cache (F5).
-- **`loading.tsx` + 404 "suave" (Decisão 2)**: o skeleton aparece na hora (cold start da API), então hotel
+- **404 "suave" (Decisão 2)**: sem `loading.tsx` desde a F7c (ver abaixo), hotel
   inexistente responde `200` + `<meta name="robots" content="noindex">` (vem no HTML do servidor; o React a
   move no cliente). Id inválido (`parseHotelId`) → `notFound()` sem chamar a API.
 - **Formulário de datas por `app/`**: `renderDatesForm(destination)` (função servidor→servidor; o destino só se
@@ -49,7 +49,6 @@ index.ts                 HotelDetailsView, HotelDetailsSkeleton, HotelNotFound, 
   envio válido; `useFocusAfterDates` consome o sinal. Nada de sinal de módulo próprio.
 - **Painel de datas**: `StayEditProvider` (client) liga `HotelStayBar` e os botões "Escolher datas" dos quartos
   (sem datas ou datas passadas = `needs-dates`/`past-dates`). Nome acessível do botão do quarto é `aria-label`.
-- **Aviso de demora no `loading.tsx`**: CSS (`animate-slow-notice`) numa região `role="status"`; sem hook.
 - **"Selecionar quarto" entra no checkout com carga de documento** (`assignLocation("/checkout")`; a CSP com nonce é do
   documento); `pageshow` persistido zera o "Selecionando…". `cancellationDetails` vive em `shared/lib/cancellation`.
 - **Sem barra de âncoras sticky, scrollspy nem barra de ação fixa.** O lightbox aceita swipe horizontal.
@@ -78,7 +77,7 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
 ## F7b (i18n pt-BR + en-US)
 - Todo texto vive em `i18n/` (`hotelDetailsMessages`, `Record<Locale, M>`). Client: `useHotelDetailsMessages()`. Server Components
   (`HotelHeader`, `HotelOverview`, `HotelPolicies`, `LocationMap`, `SectionNav`, `SoldOutAlert`, `SimilarHotels`) recebem `locale` por prop
-  (vem dos `params` da página, via `HotelDetailsView`); `HotelDetailsSkeleton` e `HotelNotFound` são client folha (usam o provider).
+  (vem dos `params` da página, via `HotelDetailsView`); `HotelNotFound` é client folha (usam o provider).
 - Funções de `model/` aceitam `locale` (padrão pt-BR): rótulos de quarto, `selectabilityMessage/Badge`, comparação
   (`roomComparisonMessages(locale)` no lugar da constante), breadcrumb (já devolve `href` localizado e `navLabel`), `hotelPageTitle`, galeria, avaliações.
   `HOTEL_SECTIONS` guarda só `id` + `key`; o rótulo sai de `sectionLabel(key, locale)`.
@@ -100,10 +99,10 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
   (atravessa as ilhas). `todayISO()` só depois de `await connection()` (servidor) ou depois do `use(criteria)` (cliente).
 - Avaliações: p.1 em `ReviewsStatic` (cliente sem TanStack, fallback e casca) e `ReviewsPager` (TanStack com `initialData`/`initialDataUpdatedAt = fetchedAt`) sob Suspense.
 - **ISR**: `generateStaticParams = listPrerenderHotelIds` (todos os ids; 8 tentativas, 2 s → 15 s, `Aguardando a mock-api (tentativa n/8)…`; vazio ou esgotado = erro em pt-BR).
-  `npm run build` precisa da API no ar. `/hotel/61` recebe a casca de fallback (`loading.tsx`) e é gerado sob demanda.
+  `npm run build` precisa da API no ar. `/hotel/61` é gerado sob demanda e vai direto a "não encontrado" (sem skeleton antes).
 - **Galeria como rota**: miniaturas são `PhotoLink` (`next/link`, `scroll={false}`, registra `data-photo-opener`). `PhotoModal` (`Dialog full`, prop nova `onClosed`/`describedBy`) fecha em
   `close()` → foco ao gatilho → **um** `router.back()`; `PhotoViewer` é a página cheia. Setas trocam o índice em estado e a URL por `history.replaceState` (sem request, sem entrada).
   `usePhotoViewer` e `PhotoModal` usam `useResetOnHide` (Activity preserva a rota escondida: sem reset o modal voltava fechado/na foto errada).
 - Segunda entrada pública `client.ts` (`PhotoModalError`, para `error.tsx`). `PhotoNotFound` não linka para outra foto (seria interceptado).
 - Trade-offs: reload na foto + "Voltar para o hotel" perde as datas (a galeria não depende de `searchParams`); cartão de erro do modal usa o anel `focus` padrão (claro).
-- **Pendente (critério 5/19)**: o HTML do build entrega o conteúdo num segmento Suspense *outlined* do `loading.tsx`; sem JavaScript fica o skeleton (`test.fixme` em `e2e/nextjs.prod.spec.ts`).
+- **Sem `loading.tsx` e sem Suspense nos similares (critério 5)**: o React põe fora do fluxo (`<div hidden id="S:…">`) toda boundary concluída maior que `progressiveChunkSize` (~12,8 KB); com o hotel inteiro num `loading.tsx` o conteúdo só aparecia com o script de troca. Os similares são `"use cache"` e já resolvem no prerender. Só os buracos da estadia suspendem.

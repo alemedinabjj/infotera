@@ -24,11 +24,9 @@ export const ptBR = {
     description: "O link pode estar errado ou o hotel não está mais disponível.",
   },
   loading: {
-    hotel: "Carregando hotel…",
-    slow: "Está demorando mais que o normal…",
     rooms: "Carregando quartos…",
     reviews: "Carregando avaliações…",
-    similar: "Carregando hotéis similares…",
+    slow: "Está demorando mais que o normal…",
   },
   header: {
     featured: "Destaque",

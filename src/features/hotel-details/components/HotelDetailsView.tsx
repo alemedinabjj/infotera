@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { Suspense } from "react";
 import type { Locale } from "@/shared/i18n/config";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import {
@@ -22,7 +21,6 @@ import { RoomsSection } from "./RoomsSection";
 import { Section } from "./Section";
 import { SectionNav } from "./SectionNav";
 import { SimilarHotels } from "./SimilarHotels";
-import { SimilarHotelsSkeleton } from "./SimilarHotelsSkeleton";
 import { SoldOutAlert } from "./SoldOutAlert";
 import { StayAware } from "./StayAware";
 import { StayEditProvider } from "./StayEditContext";
@@ -108,14 +106,12 @@ export const HotelDetailsView = async ({
         />
       </Section>
       <Section id="similares" title={t.sections.similarIn({ destination: hotel.destination })}>
-        <Suspense fallback={<SimilarHotelsSkeleton locale={locale} />}>
-          <SimilarHotels
-            locale={locale}
-            hotelId={hotel.id}
-            destination={hotel.destination}
-            criteria={criteria}
-          />
-        </Suspense>
+        <SimilarHotels
+          locale={locale}
+          hotelId={hotel.id}
+          destination={hotel.destination}
+          criteria={criteria}
+        />
       </Section>
     </div>
   );

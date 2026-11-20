@@ -25,11 +25,9 @@ export const enUS: HotelDetailsMessages = {
     description: "The link may be wrong or the hotel is no longer available.",
   },
   loading: {
-    hotel: "Loading hotel…",
-    slow: "This is taking longer than usual…",
     rooms: "Loading rooms…",
     reviews: "Loading reviews…",
-    similar: "Loading similar hotels…",
+    slow: "This is taking longer than usual…",
   },
   header: {
     featured: "Featured",

@@ -1,6 +1,5 @@
 export { getHotelSnapshot } from "./api/catalog.cached";
 export { listPrerenderHotelIds } from "./api/prerender.server";
-export { HotelDetailsSkeleton } from "./components/HotelDetailsSkeleton";
 export { HotelDetailsView } from "./components/HotelDetailsView";
 export { HotelNotFound } from "./components/HotelNotFound";
 export { PhotoModal } from "./components/PhotoModal";
