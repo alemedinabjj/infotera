@@ -59,6 +59,7 @@ export const LanguageSwitch = () => {
         {messages.targetShort}
       </span>
       <span lang={target} className="sr-only xs:not-sr-only">
+        {" "}
         {messages.targetName}
       </span>
     </a>
