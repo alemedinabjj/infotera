@@ -43,10 +43,8 @@ test.describe("sem seleção", () => {
     });
     await page.goto("/");
     await page.goto("/checkout");
-    await expect(page).toHaveURL(/\/$/);
-    await expect(
-      page.getByText("Nenhum quarto selecionado. Escolha um hotel e um quarto para reservar."),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/\?notice=choose-room$/);
+    await expect(page.getByText("Escolha um quarto para continuar.")).toBeVisible();
     expect(await page.evaluate(() => Reflect.get(window, "__formSeen") === true)).toBe(false);
     await page.goBack();
     await expect(page).not.toHaveURL(/\/checkout/);

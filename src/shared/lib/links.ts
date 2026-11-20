@@ -9,3 +9,8 @@ export const searchHref = (destination: string, criteria: SearchCriteria | null)
   criteria
     ? `/search?${searchCriteriaToQueryString(criteria)}`
     : `/search?${new URLSearchParams({ destination }).toString()}`;
+
+/** Aviso na home depois de um redirect (ex.: `/checkout` sem quarto escolhido). */
+export const HOME_NOTICE_PARAM = "notice";
+export const CHOOSE_ROOM_NOTICE = "choose-room";
+export const CHOOSE_ROOM_HREF = `/?${HOME_NOTICE_PARAM}=${CHOOSE_ROOM_NOTICE}`;

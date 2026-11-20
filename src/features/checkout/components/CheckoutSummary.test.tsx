@@ -88,7 +88,9 @@ describe("erro por seção (critério 9)", () => {
     renderCheckout();
     await user.type(await screen.findByLabelText("Nome"), "Ana");
     expect(
-      await screen.findByRole("heading", { name: "Não foi possível carregar os dados da reserva." }),
+      await screen.findByRole("heading", {
+        name: "Não foi possível carregar os dados da reserva.",
+      }),
     ).toBeVisible();
     expect(screen.queryByText("Quarto indisponível no momento")).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Tentar de novo" })).toHaveLength(1);
@@ -110,7 +112,9 @@ describe("erro por seção (critério 9)", () => {
     });
     renderCheckout();
     expect(
-      await screen.findByRole("heading", { name: "Não foi possível carregar os dados da reserva." }),
+      await screen.findByRole("heading", {
+        name: "Não foi possível carregar os dados da reserva.",
+      }),
     ).toBeVisible();
     expect(plain(summary().textContent)).toContain("TotalR$ 4.140,00");
     expect(plain(summary().textContent)).toContain("3 noites");
