@@ -103,6 +103,33 @@ describe("ComparisonView", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveFocus();
   });
 
+  it("Remover mantém a tabela no DOM enquanto a nova consulta carrega", async () => {
+    const user = userEvent.setup();
+    setTestUrl("/compare?hotel=1&hotel=4&hotel=7");
+    let hold = false;
+    const never = new Promise<Response>(() => undefined);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = new URL(String(input));
+        if (hold) return never;
+        if (url.pathname === "/hotels") {
+          return json(url.searchParams.getAll("id").map((id) => seedHotel(Number(id))));
+        }
+        return json(url.searchParams.getAll("hotelId").flatMap((id) => seedRooms(Number(id))));
+      }),
+    );
+    renderWithProviders(<ComparisonView />);
+    await screen.findByRole("table");
+    hold = true;
+    await user.click(
+      screen.getByRole("button", { name: `Remover ${seedHotel(4).name} da comparação` }),
+    );
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(screen.queryByText("Carregando a comparação…")).not.toBeInTheDocument();
+    expect(screen.queryByText(seedHotel(4).name)).not.toBeInTheDocument();
+  });
+
   it("menos de 2 colunas: Alert com Buscar hotéis em {destino} e Ver favoritos", async () => {
     setTestUrl("/compare?hotel=1");
     stub();

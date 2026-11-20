@@ -1,6 +1,6 @@
 "use client";
 
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { missingIds, orderByIds } from "@/shared/api/ids";
@@ -54,13 +54,19 @@ const derive = (
 
 /**
  * Ids da URL (`?hotel=`) + hotéis e quartos em paralelo. Só sai de `loading` quando os **dois**
- * chegaram; um único estado de erro, cujo retry refaz só o que falhou.
+ * chegaram; `keepPreviousData` mantém a tabela ao remover um hotel (sem voltar ao skeleton); um único estado de erro, cujo retry refaz só o que falhou.
  */
 export const useComparisonPage = (): Result => {
   const params = useSearchParams();
   const ids = useMemo(() => parseCompareParams(new URLSearchParams(params.toString())), [params]);
-  const hotelsQuery = useQuery(hotelsByIdsQueryOptions(ids));
-  const roomsQuery = useQuery(comparisonRoomsQueryOptions(ids));
+  const hotelsQuery = useQuery({
+    ...hotelsByIdsQueryOptions(ids),
+    placeholderData: keepPreviousData,
+  });
+  const roomsQuery = useQuery({
+    ...comparisonRoomsQueryOptions(ids),
+    placeholderData: keepPreviousData,
+  });
   const loading = ids.length > 0 && !(hotelsQuery.isSuccess && roomsQuery.isSuccess);
   const slow = useSlowLoading(loading);
   return { ids, state: derive(ids, hotelsQuery, roomsQuery, slow) };
