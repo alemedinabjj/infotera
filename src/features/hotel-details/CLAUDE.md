@@ -68,3 +68,9 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
   (`lib/comparison`), a tabela (`ui/molecules/ComparisonTable`, com "Mostrar só diferenças", legenda e anúncio) e o card
   compacto (`ui/molecules/CompactHotelCard`, que substituiu o `SimilarHotelCard`). Os textos da tabela de quartos ficam em
   `ROOM_COMPARISON_MESSAGES` (`model/room-comparison.ts`).
+
+## F7b (mapa interativo)
+- `LocationMap` (RSC) envolve o mapa estático (`StaticMap`) em `InteractiveLocationMap` (ilha cliente): a moldura `aspect-[2/1]` é a mesma, o
+  Leaflet carrega por cima quando a moldura chega a 200 px da viewport **e** há rede (`useNearViewport` + `useOnline` + `useInteractiveMap`), e o estático
+  só sai depois do primeiro lote de tiles (`onTilesLoad`). Chunk ou tiles com erro (`onTilesError`): o estático fica, sem mensagem.
+- `osmLink`/`tileUrl` vieram de `shared/lib/geo` e `shared/lib/map-tiles`. `i18n/` começa só com `location.mapRegion` (resto na parte 2).

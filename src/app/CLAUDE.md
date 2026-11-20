@@ -9,12 +9,19 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 - Valide `params`/`searchParams` com o schema da feature antes de usar. Valor inválido → `notFound()` ou redirect.
 - Cada rota com dado remoto tem `loading.tsx` (skeleton da feature) e `error.tsx` (`"use client"`, com botão de retry via `reset`).
 - `metadata`/`generateMetadata` em toda página (título em pt-BR).
-- `layout.tsx` raiz monta os providers de `@/shared/providers` e define `lang="pt-BR"`.
+- `app/[locale]/layout.tsx` é o layout raiz: valida `[locale]` (`isLocale`, `dynamicParams = false`), define `<html lang={locale}>`, monta `I18nProvider` e os providers.
+
+## Rotas por idioma (F7b)
+- Todas as rotas vivem em `app/[locale]/`. O `src/proxy.ts` reescreve `/x` → `/pt-BR/x` e `/en/x` → `/en-US/x`, redireciona o segmento interno (308) e o cookie
+  `infotera-locale=en-US` (307, exceto `/offline`) e aplica a CSP com nonce em `/checkout` e `/en/checkout` (não em prefetch). Tipos: `PageProps<"/[locale]/...">`.
+- `[locale]/[...rest]/page.tsx` chama `notFound()` (404 dentro do idioma). `manifest.ts`, `icon.tsx`, `apple-icon.tsx` e `serwist/[path]/route.ts` ficam na raiz
+  de `app/` (fora do idioma e fora do matcher do proxy). Não leia `cookies()` no layout (a F7c precisa de PPR): o idioma vem do segmento.
+- `[locale]/offline/page.tsx` é a página offline (estática). `global-error.tsx` ainda é pt-BR fixo (vira por idioma na tradução da parte 2).
 
 ## Mapa de rotas
 | Rota | Feature |
 |---|---|
-| `/` | `search-form` |
+| `/` | `search-form` (+ `app-shell`: cartão de instalação) |
 | `/search` | `hotel-search` |
 | `/hotel/[hotelId]` | `hotel-details` |
 | `/checkout` | `checkout` |
@@ -22,6 +29,7 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 | `/favorites` | `favorites` |
 | `/compare` | `hotel-comparison` |
 | `/my-bookings` | `booking-history` |
+| `/offline` | `app-shell` |
 
 ## `/checkout` (F5)
 - `page.tsx` chama `await connection()` (nonce por request exige renderização dinâmica) e `src/proxy.ts` aplica a

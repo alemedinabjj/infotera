@@ -126,3 +126,19 @@ para `shared/` quando aparecer o segundo uso.
 - `api`: `fetchHotelsByIds` (nunca chama com lista vazia), `hotelsByIdsQueryOptions`, `bookingQueryOptions` (promovida, `meta.sensitive`
   para o cache offline da F7b não persistir PII), chaves `hotels.byIds`/`rooms.byHotels` (ids canônicos: `api/ids.ts`).
 - `ComparisonTable`, `CompactHotelCard` e `lib/comparison` foram promovidos da F4; `ComparisonRow` tem `best`/`bestLabel`.
+
+## F7b (plataforma: i18n, mapas, offline)
+- **`i18n/`**: `config` (`LOCALES`, `Locale`, `isLocale`, `contentLang`), `paths` (`localizePath`, `parsePublicPath`, `switchLocalePath`, `isCheckoutPath`,
+  `alternatesFor`, `resolveLocaleRequest` do proxy), `messages` (`defineMessages`, `plural`), `client` (`I18nProvider`, `useLocale`), `server` (`getLocale` por
+  `next/root-params`), `cookie`, `common/` (dicionário comum + `useCommonMessages`). Rotas: pt-BR sem prefixo, en-US em `/en`; o `app/[locale]` recebe a
+  URL reescrita pelo `proxy.ts`. **Nunca derive `href` de `usePathname()` em render** (rewrite do proxy): use `localizePath(useLocale(), "/rota")`.
+  Todo texto novo nasce em `i18n/` (a catraca `src/i18n-guard.test.ts` conta o que ainda está fora).
+- Formatadores (`formatBRL`, `formatRating`, `formatDate`, `formatDateRange`, `formatCount`) aceitam `locale` (opcional, padrão pt-BR).
+- **Mapa**: `lib/map-tiles` (`TILE_ORIGIN`/`TILE_URL`/`MAX_ZOOM`/`tileUrl`, única fonte da CSP e do cache do SW), `lib/geo` (`boundsOf`, `fitPlan`, `osmLink`),
+  `ui/map/` (`InteractiveMapImpl` react-leaflet + `MapMarkerElement` (DOM por `textContent`, nunca HTML) + `map.css` + `useInteractiveMap` que carrega o
+  chunk sob demanda com `retry`). `leaflet.css` é CSS sem camada e vence os utilitários do Tailwind (cor de `a` dentro do mapa usa `!`).
+- **Offline**: `api/persist.ts` (allowlist `PERSISTABLE_ROOTS` = suggestions/hotels/rooms/reviews, **nunca** `meta.sensitive === true` nem `bookings`;
+  `serializeClient` refiltra), `AppProviders` usa `PersistQueryClientProvider` (24 h, `buster` = `APP_VERSION`), `makeQueryClient` tem `gcTime` 24 h no navegador.
+  `hooks/useHydrated` evita divergência de hidratação com dado restaurado. Toast aceita `persistent: true`.
+- `lib/brand` (cores de marca fora do CSS; um teste compara com os tokens de `globals.css`) e `lib/app-version` (`NEXT_PUBLIC_APP_VERSION`).
+- **CSP do checkout**: ganhou `worker-src 'self'` (com `strict-dynamic` o fallback ignoraria `'self'`) e `manifest-src 'self'`; `img-src` vem de `TILE_ORIGIN`.
