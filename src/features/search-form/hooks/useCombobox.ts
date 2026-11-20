@@ -7,6 +7,7 @@ import {
   useReducer,
   useRef,
 } from "react";
+import { useResetOnHide } from "@/shared/hooks/useResetOnHide";
 import { comboboxReducer, INITIAL_COMBOBOX_STATE } from "../model/combobox";
 
 type UseComboboxOptions = {
@@ -41,6 +42,8 @@ export const useCombobox = ({
   const listboxId = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [state, dispatch] = useReducer(comboboxReducer, INITIAL_COMBOBOX_STATE);
+  // Activity (cacheComponents) preserva a rota escondida: a lista aberta não pode voltar aberta.
+  useResetOnHide(() => dispatch({ type: "close" }));
   const count = itemKeys.length;
   const isOpen = state.isOpen && canOpen;
   const activeIndex = isOpen && canActivate ? state.activeIndex : -1;
