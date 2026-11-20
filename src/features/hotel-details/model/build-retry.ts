@@ -22,14 +22,18 @@ type RetryOptions = {
   retryIf?: (error: unknown) => boolean;
 };
 
+const TRANSIENT_CLIENT_STATUSES: ReadonlySet<number> = new Set([408, 429]);
+
 /**
- * Só vale repetir quando a API pode estar acordando: falha de rede, timeout ou 5xx. Resposta fora
- * do schema (`parse`), 404 e demais 4xx não mudam com o tempo, então falham alto de primeira.
+ * Só vale repetir quando a API pode estar acordando ou sobrecarregada: falha de rede, timeout, 5xx,
+ * 408 (request timeout) ou 429 (rate limit). Resposta fora do schema (`parse`), 404 e demais 4xx não
+ * mudam com o tempo, então falham alto de primeira.
  */
 export const isRetryableBuildError = (error: unknown): boolean => {
   if (!isApiError(error)) return false;
   if (error.kind === "network" || error.kind === "timeout") return true;
-  return error.kind === "http" && error.status !== null && error.status >= 500;
+  if (error.kind !== "http" || error.status === null) return false;
+  return error.status >= 500 || TRANSIENT_CLIENT_STATUSES.has(error.status);
 };
 
 /**

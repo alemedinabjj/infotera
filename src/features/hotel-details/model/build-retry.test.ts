@@ -58,6 +58,11 @@ describe("withRetry", () => {
 });
 
 describe("isRetryableBuildError", () => {
+  it("repete 408 (request timeout) e 429 (rate limit), que passam sozinhos", () => {
+    expect(isRetryableBuildError(new ApiError("http", 408, "lento"))).toBe(true);
+    expect(isRetryableBuildError(new ApiError("http", 429, "muitas"))).toBe(true);
+  });
+
   it("repete falha de rede, timeout e 5xx", () => {
     expect(isRetryableBuildError(new ApiError("network", null, "off"))).toBe(true);
     expect(isRetryableBuildError(new ApiError("timeout", null, "lento"))).toBe(true);
@@ -67,6 +72,7 @@ describe("isRetryableBuildError", () => {
   it("não repete 404, outros 4xx, resposta fora do schema nem erro desconhecido", () => {
     expect(isRetryableBuildError(new ApiError("http", 404, "nao achou"))).toBe(false);
     expect(isRetryableBuildError(new ApiError("http", 400, "ruim"))).toBe(false);
+    expect(isRetryableBuildError(new ApiError("http", 409, "conflito"))).toBe(false);
     expect(isRetryableBuildError(new ApiError("parse", 200, "schema"))).toBe(false);
     expect(isRetryableBuildError(new Error("x"))).toBe(false);
   });
