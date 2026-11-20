@@ -20,6 +20,7 @@ export const FAVORITES_MESSAGES = {
     title: "Você está sem internet.",
     description: "Seus favoritos aparecem assim que a conexão voltar.",
   },
+  priceUnavailable: "Preço indisponível no momento",
   removed: "Removido dos favoritos.",
   undo: "Desfazer",
   undoLabel: (name: string) => `Desfazer: ${name}`,

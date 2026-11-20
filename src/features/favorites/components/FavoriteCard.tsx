@@ -13,10 +13,33 @@ import {
   favoritesActions,
   useIsFavorite,
 } from "@/shared/saved";
-import { CompactHotelCard } from "@/shared/ui";
+import { CompactHotelCard, PriceTag, Skeleton } from "@/shared/ui";
+import type { PriceState } from "../model/favorites-view";
+import { FAVORITES_MESSAGES } from "../model/messages";
 import { RemovedFavorite } from "./RemovedFavorite";
 
-type FavoriteCardProps = { hotel: Hotel; entry: FavoriteEntry | undefined; index: number };
+type FavoriteCardProps = {
+  hotel: Hotel;
+  entry: FavoriteEntry | undefined;
+  index: number;
+  price: PriceState;
+};
+
+/** "a partir de" pelos quartos, como na busca e na comparação (o `pricePerNight` do hotel diverge). */
+const CardPrice = ({ price }: { price: PriceState }) => {
+  switch (price.state) {
+    case "loading":
+      return <Skeleton className="h-5 w-36" />;
+    case "ready":
+      return <PriceTag variant="nightly-line" nightly={price.nightly} />;
+    case "unavailable":
+      return <p className="text-sm text-fg-subtle">{FAVORITES_MESSAGES.priceUnavailable}</p>;
+    default: {
+      const unreachable: never = price;
+      return unreachable;
+    }
+  }
+};
 
 type FocusTarget = "undo" | "heart" | null;
 
@@ -25,7 +48,7 @@ type FocusTarget = "undo" | "heart" | null;
  * grid (o card original segue renderizado, `invisible` + `inert`): a altura é a mesma e nada
  * abaixo se move. O foco vai para "Desfazer" e, ao desfazer, volta ao coração.
  */
-export const FavoriteCard = ({ hotel, entry, index }: FavoriteCardProps) => {
+export const FavoriteCard = ({ hotel, entry, index, price }: FavoriteCardProps) => {
   const favorite = useIsFavorite(hotel.id);
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
   const [focus, setFocus] = useState<FocusTarget>(null);
@@ -64,6 +87,7 @@ export const FavoriteCard = ({ hotel, entry, index }: FavoriteCardProps) => {
           layout="vertical"
           headingLevel={2}
           showDestination
+          price={<CardPrice price={price} />}
           media={
             <FavoriteButton
               ref={heartRef}

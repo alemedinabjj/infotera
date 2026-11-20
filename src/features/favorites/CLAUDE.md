@@ -12,6 +12,8 @@ components/   FavoritesView · FavoriteCard (card + fantasma) · RemovedFavorite
 - **Snapshot no mount**: remover um favorito aqui não reflui a lista; o card vira "fantasma" na mesma célula do grid (conteúdo original
   `invisible` + `inert` por baixo, mesma altura). O foco vai ao "Desfazer" e, ao desfazer, volta ao coração (`focusWhenReady`).
   O `FavoriteButton` usa `notify={false}` aqui (sem toast; o desfazer é inline).
+- **Preço pelos quartos**: 1 `GET /rooms?hotelId=…` (`roomsByHotelsQueryOptions`, shared) e `lowestNightlyPrice` por hotel (o `pricePerNight` do hotel diverge
+  da busca/detalhe); skeleton enquanto carrega, "Preço indisponível no momento" se falhar. Sem critérios de busca aqui, então só a diária (sem total).
 - **Prune só com resposta**: ids que a API não devolveu (e itens inválidos) saem do storage depois do sucesso; erro/offline nunca apagam.
 - Estados: hidratando/carregando (skeleton + "demorando" > 5 s), erro (retry), vazio, offline (`Alert` warning; `deriveFavoritesView` tem o
   6º valor `offline`), sucesso. Nunca "vazio" antes de o storage ser lido.

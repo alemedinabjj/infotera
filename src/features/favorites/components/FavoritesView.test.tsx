@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FAVORITES_STORAGE_KEY, useFavoritesStore } from "@/shared/saved/stores/favorites";
 import { renderWithProviders } from "@/shared/testing/render";
-import { seedHotel } from "@/shared/testing/seed";
+import { seedHotel, seedRooms } from "@/shared/testing/seed";
 import { FavoritesView } from "./FavoritesView";
 
 vi.mock(
@@ -28,7 +28,14 @@ const store = async (items: unknown[]) => {
 };
 
 const stubFetch = (handler: (url: URL) => Response) => {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => handler(new URL(String(input))));
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const url = new URL(String(input));
+    // Os preços vêm dos quartos (um request à parte); os testes de hotéis contam só `/hotels`.
+    if (url.pathname === "/rooms") {
+      return json(url.searchParams.getAll("hotelId").flatMap((id) => seedRooms(Number(id))));
+    }
+    return handler(url);
+  });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 };
@@ -51,11 +58,14 @@ describe("FavoritesView", () => {
   it("3 favoritos: 1 request, do mais recente para o mais antigo, h1 e status", async () => {
     await store([entry(1, 1), entry(4, 3), entry(7, 2)]);
     const fetchMock = stubFetch(hotelsFor);
-    renderWithProviders(<FavoritesView />);
+    const { container } = renderWithProviders(<FavoritesView />);
     expect(await screen.findByText("3 hotéis salvos")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Favoritos" })).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledOnce();
-    expect(String(fetchMock.mock.calls[0]?.[0])).toMatch(/\/hotels\?id=1&id=4&id=7$/);
+    const hotelCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes("/hotels"));
+    expect(hotelCalls).toHaveLength(1);
+    expect(String(hotelCalls[0]?.[0])).toMatch(/\/hotels\?id=1&id=4&id=7$/);
+    // "a partir de" pelo quarto mais barato (hotel 1: 800, não o 1.200 do hotel).
+    await waitFor(() => expect(container).toHaveTextContent(/a partir de R\$\s800 por noite/));
     const names = screen
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent);
@@ -115,7 +125,9 @@ describe("FavoritesView", () => {
     fail = false;
     await user.click(screen.getByRole("button", { name: "Tentar de novo" }));
     expect(await screen.findByText("1 hotel salvo")).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls.filter((call) => String(call[0]).includes("/hotels"))).toHaveLength(
+      2,
+    );
   });
 
   it("carregando: skeleton aria-busy e aviso de lentidão depois de 5 s", async () => {

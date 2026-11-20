@@ -4,7 +4,6 @@ Compara até 3 hotéis lado a lado. **A URL é a página** (`/compare?hotel=1&ho
 `app/` importa `ComparisonView` (prop `headingLevel`: 1 na página, 2 no futuro modal da F7c) e `ComparisonFallback`.
 
 ```
-api/          rooms (comparisonRoomsQueryOptions: GET /rooms?hotelId=1&hotelId=4)
 model/        compare-params (parseCompareParams) · hotel-comparison (buildHotelComparison) · messages
 hooks/        useComparisonPage (ids da URL + 2 queries em paralelo) · compare-url (removeColumn: replaceState)
 components/   ComparisonView · HotelColumnHeader · ComparisonSkeleton · CompareNotice

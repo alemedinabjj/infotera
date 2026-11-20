@@ -47,3 +47,9 @@ export const orderBySnapshot = (
     const hotel = hotels.find((item) => item.id === id);
     return hotel ? [hotel] : [];
   });
+
+/** Preço do card: carregando (skeleton), "a partir de" pelos quartos ou indisponível. */
+export type PriceState =
+  | { state: "loading" }
+  | { state: "ready"; nightly: number }
+  | { state: "unavailable" };

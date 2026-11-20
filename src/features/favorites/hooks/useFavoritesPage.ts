@@ -3,16 +3,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { missingIds } from "@/shared/api/ids";
-import { hotelsByIdsQueryOptions } from "@/shared/api/queries";
+import { hotelsByIdsQueryOptions, roomsByHotelsQueryOptions } from "@/shared/api/queries";
 import type { Hotel } from "@/shared/api/schemas";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
+import { lowestNightlyPrice } from "@/shared/lib/pricing";
 import {
   type FavoriteEntry,
   favoritesActions,
   useFavorites,
   useFavoritesHydrated,
 } from "@/shared/saved";
-import { deriveFavoritesView, type FavoritesView, orderBySnapshot } from "../model/favorites-view";
+import {
+  deriveFavoritesView,
+  type FavoritesView,
+  orderBySnapshot,
+  type PriceState,
+} from "../model/favorites-view";
 
 type FavoritesPage = {
   view: FavoritesView;
@@ -25,6 +31,8 @@ type FavoritesPage = {
   slow: boolean;
   retrying: boolean;
   retry: () => void;
+  /** Preço "a partir de" de um hotel, pelos quartos (não pelo `pricePerNight` do hotel). */
+  priceOf: (hotelId: number) => PriceState;
 };
 
 /**
@@ -44,6 +52,7 @@ export const useFavoritesPage = (): FavoritesPage => {
     [snapshot],
   );
   const query = useQuery(hotelsByIdsQueryOptions(ids));
+  const rooms = useQuery(roomsByHotelsQueryOptions(ids));
   const view = deriveFavoritesView({
     hydrated: hydrated && snapshot !== null,
     count: ids.length,
@@ -66,5 +75,11 @@ export const useFavoritesPage = (): FavoritesPage => {
     slow,
     retrying: query.isFetching && view === "error",
     retry: () => void query.refetch(),
+    priceOf: (hotelId) => {
+      if (rooms.isError) return { state: "unavailable" };
+      if (!rooms.data) return { state: "loading" };
+      const from = lowestNightlyPrice(rooms.data.filter((room) => room.hotelId === hotelId));
+      return from ? { state: "ready", nightly: from.price } : { state: "unavailable" };
+    },
   };
 };

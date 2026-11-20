@@ -5,7 +5,9 @@ import {
   fetchHotelRooms,
   fetchHotelsByIds,
   fetchRoom,
+  fetchRoomsOfHotels,
 } from "./endpoints";
+import { canonicalIds } from "./ids";
 import { queryKeys } from "./query-keys";
 
 export const hotelQueryOptions = (id: number) =>
@@ -32,6 +34,14 @@ export const hotelsByIdsQueryOptions = (ids: readonly number[]) =>
     queryKey: queryKeys.hotels.byIds(ids),
     queryFn: ({ signal }) => fetchHotelsByIds(ids, signal),
     enabled: ids.length > 0,
+  });
+
+/** `GET /rooms?hotelId=1&hotelId=4`: os quartos de vários hotéis num request só (comparação, favoritos). */
+export const roomsByHotelsQueryOptions = (hotelIds: readonly number[]) =>
+  queryOptions({
+    queryKey: queryKeys.rooms.byHotels(hotelIds),
+    queryFn: ({ signal }) => fetchRoomsOfHotels(canonicalIds(hotelIds), signal),
+    enabled: hotelIds.length > 0,
   });
 
 /**

@@ -61,6 +61,7 @@ const Body = ({ page }: { page: Page }) => {
               hotel={hotel}
               entry={page.entries.get(hotel.id)}
               index={index}
+              price={page.priceOf(hotel.id)}
             />
           ))}
         </ul>

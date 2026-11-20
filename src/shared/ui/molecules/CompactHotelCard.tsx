@@ -23,6 +23,8 @@ type CompactHotelCardProps = {
   showDestination?: boolean;
   /** Sobre a foto (ex.: coração). Controle secundário: `relative z-10`, depois do link no DOM. */
   media?: ReactNode;
+  /** Preço no lugar do padrão (`pricePerNight` do hotel, que diverge dos quartos em alguns hotéis). */
+  price?: ReactNode;
   /** Linha no fim do card (ex.: "Comparar"). Controle secundário: `relative z-10`. */
   actions?: ReactNode;
   className?: string;
@@ -47,6 +49,7 @@ export const CompactHotelCard = ({
   headingLevel = 3,
   showDestination = false,
   media,
+  price,
   actions,
   className,
 }: CompactHotelCardProps) => {
@@ -89,7 +92,7 @@ export const CompactHotelCard = ({
           showLabel={false}
         />
         <div className="mt-auto flex flex-col gap-1 pt-1">
-          <PriceTag variant="nightly-line" nightly={hotel.pricePerNight} />
+          {price ?? <PriceTag variant="nightly-line" nightly={hotel.pricePerNight} />}
           {badge ? (
             <Badge tone={badge.tone} className="w-fit">
               {badge.text}

@@ -4,10 +4,9 @@ import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { orderByIds } from "@/shared/api/ids";
-import { hotelsByIdsQueryOptions } from "@/shared/api/queries";
+import { hotelsByIdsQueryOptions, roomsByHotelsQueryOptions } from "@/shared/api/queries";
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
-import { comparisonRoomsQueryOptions } from "../api/rooms";
 import { parseCompareParams } from "../model/compare-params";
 import { buildHotelComparison, type HotelComparison } from "../model/hotel-comparison";
 import { usePruneNotFound } from "./usePruneNotFound";
@@ -66,7 +65,7 @@ export const useComparisonPage = (): Result => {
     placeholderData: keepPreviousData,
   });
   const roomsQuery = useQuery({
-    ...comparisonRoomsQueryOptions(ids),
+    ...roomsByHotelsQueryOptions(ids),
     placeholderData: keepPreviousData,
   });
   const loading = ids.length > 0 && !(hotelsQuery.isSuccess && roomsQuery.isSuccess);
