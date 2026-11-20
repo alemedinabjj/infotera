@@ -14,4 +14,4 @@ components/   ComparisonView · HotelColumnHeader · ComparisonSkeleton · Compa
   "Menor preço". Selos de texto (`best`/`bestLabel`); empate total → sem selo.
 - Só sai de `loading` com hotéis **e** quartos; um erro único cujo retry refaz só a query que falhou. Id que a API não devolve: `Alert` e a coluna some.
 - Remover coluna: `history.replaceState`, tira da bandeja se estiver nela e foca o título.
-- A tabela é `shared/ui/molecules/ComparisonTable`; os textos são de `model/messages.ts`.
+- A tabela é `shared/ui/molecules/ComparisonTable`; os textos são de `i18n/` (`comparisonMessages`, com `metaTitle` para o `generateMetadata` da rota).

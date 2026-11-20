@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { ComparisonFallback, ComparisonView } from "@/features/hotel-comparison";
+import {
+  ComparisonFallback,
+  ComparisonView,
+  comparisonMessages,
+} from "@/features/hotel-comparison";
+import { isLocale } from "@/shared/i18n/config";
 
-export const metadata: Metadata = {
-  title: "Comparar hotéis | Infotera Hotéis",
-  robots: { index: false },
+export const generateMetadata = async ({
+  params,
+}: PageProps<"/[locale]/compare">): Promise<Metadata> => {
+  const { locale } = await params;
+  return {
+    title: isLocale(locale) ? comparisonMessages.get(locale).metaTitle : undefined,
+    robots: { index: false },
+  };
 };
 
 /** Casca estática: a view lê `?hotel=` no cliente, dentro do Suspense. */
