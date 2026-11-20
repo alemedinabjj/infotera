@@ -23,3 +23,7 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
 ## `/checkout` (F5)
 - `page.tsx` chama `await connection()` (nonce por request exige renderização dinâmica) e `src/proxy.ts` aplica a
   CSP estrita só nesta rota. O `next.config.ts` exclui `/checkout` da CSP base (um único header).
+
+## `/confirmation/[bookingId]` (F6)
+- `page.tsx` chama `await connection()` (rota sempre dinâmica, `no-store`: tem PII) e valida o id com `parseBookingId` antes de
+  qualquer request. `error.tsx` só importa `@/shared/ui`; `not-found.tsx` exporta `metadata` com `noindex, nofollow`.

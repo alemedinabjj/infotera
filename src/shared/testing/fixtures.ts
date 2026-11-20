@@ -1,4 +1,6 @@
 import {
+  type Booking,
+  bookingSchema,
   type Hotel,
   hotelSchema,
   type Review,
@@ -75,5 +77,47 @@ export const makeSearchCriteria = (overrides: Partial<SearchCriteria> = {}): Sea
     rooms: 1,
     adults: 2,
     children: 0,
+    ...overrides,
+  });
+
+/** UUID v4 fixo das reservas de teste. */
+export const BOOKING_ID = "3f2a9c1e-7b4d-4e8a-9f12-6c0d3b2a1e57";
+
+/** Reserva no formato que a F5 grava: BEMVINDO10, R$ 1.200 × 3 noites × 1 quarto, 2 adultos + 1 criança. */
+export const makeBooking = (overrides: Partial<Booking> = {}): Booking =>
+  bookingSchema.parse({
+    id: BOOKING_ID,
+    hotelId: 1,
+    roomId: 1,
+    checkIn: "2026-12-12",
+    checkOut: "2026-12-15",
+    rooms: 1,
+    adults: 2,
+    children: 1,
+    guests: [
+      {
+        firstName: "Ana",
+        lastName: "Souza",
+        email: "ana.souza@exemplo.com",
+        phone: "(11) 98765-4321",
+        kind: "adult",
+      },
+      { firstName: "Bruno", lastName: "Souza", kind: "adult" },
+      { firstName: "Clara", lastName: "Souza", kind: "child", age: 7 },
+    ],
+    totalPrice: 3726,
+    payment: { method: "credit_card", cardLast4: "1111" },
+    priceBreakdown: {
+      nightlyCents: 120000,
+      nights: 3,
+      rooms: 1,
+      subtotalCents: 360000,
+      discountCents: 36000,
+      serviceFeeCents: 32400,
+      taxCents: 16200,
+      totalCents: 372600,
+      couponCode: "BEMVINDO10",
+    },
+    createdAt: "2026-11-19T15:04:00.000Z",
     ...overrides,
   });

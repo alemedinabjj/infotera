@@ -1,16 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { applyBps, calculatePrice, ISS_BPS, SERVICE_FEE_BPS } from "./price";
-import { priceLineAmount, priceLineLabel } from "./price-labels";
-
-const plain = (value: string) => value.replaceAll(" ", " ");
-
-describe("applyBps", () => {
-  it("arredonda meio centavo para cima", () => {
-    expect(applyBps(5, 1000)).toBe(1); // 0,5
-    expect(applyBps(4, 1000)).toBe(0); // 0,4
-    expect(applyBps(15, 1000)).toBe(2); // 1,5
-  });
-});
+import { applyBps, ISS_BPS, SERVICE_FEE_BPS } from "@/shared/lib/price-breakdown";
+import { calculatePrice } from "./price";
 
 describe("calculatePrice", () => {
   it("1 quarto, 3 noites a R$ 1.200", () => {
@@ -97,34 +87,5 @@ describe("calculatePrice", () => {
       discount: { code: "ABCD", kind: "fixed", cents: 1000 },
     });
     expect(quote.lines.map((l) => l.kind)).toEqual(["stay", "discount", "service-fee", "tax"]);
-  });
-});
-
-describe("priceLineLabel / priceLineAmount", () => {
-  it("rótulos com singular e plural", () => {
-    expect(
-      plain(
-        priceLineLabel({ kind: "stay", nightlyCents: 120000, nights: 3, rooms: 2, amountCents: 1 }),
-      ),
-    ).toBe("R$ 1.200,00 × 3 noites × 2 quartos");
-    expect(
-      plain(
-        priceLineLabel({ kind: "stay", nightlyCents: 18000, nights: 1, rooms: 1, amountCents: 1 }),
-      ),
-    ).toBe("R$ 180,00 × 1 noite × 1 quarto");
-    expect(priceLineLabel({ kind: "discount", code: "BEMVINDO10", amountCents: 1 })).toBe(
-      "Desconto (BEMVINDO10)",
-    );
-    expect(priceLineLabel({ kind: "service-fee", bps: 1000, amountCents: 1 })).toBe(
-      "Taxa de serviço (10%)",
-    );
-    expect(priceLineLabel({ kind: "tax", bps: 500, amountCents: 1 })).toBe("ISS (5%)");
-  });
-
-  it("o desconto leva o sinal de menos", () => {
-    expect(plain(priceLineAmount({ kind: "discount", code: "ABCD", amountCents: 72000 }))).toBe(
-      "−R$ 720,00",
-    );
-    expect(plain(priceLineAmount({ kind: "tax", bps: 500, amountCents: 64800 }))).toBe("R$ 648,00");
   });
 });

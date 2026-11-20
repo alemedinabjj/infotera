@@ -18,6 +18,9 @@ hooks/    useStrictDocument · useCheckoutGate · useCheckoutQueries · useRoomC
 components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingSummary/CheckoutForm … (ver spec)
 ```
 
+> F6: `SERVICE_FEE_BPS`/`ISS_BPS`/`PriceLine`/rótulos/`formatCents` e o `<dl>` do `PriceBreakdown` agora vivem em `shared`
+> (`lib/price-breakdown`, `ui/molecules/PriceBreakdown`); `calculatePrice` usa `priceBreakdownLines`; a reconciliação usa `fetchBooking`.
+
 ## Decisões (valem daqui para frente)
 - **Server Action recalcula tudo**: o cliente envia só referências, escolhas, `cardLast4` e `expectedTotalCents`; o
   `totalPrice` gravado nunca vem do cliente. A action não lança: devolve `CreateBookingResult` (union por `status`).
@@ -35,7 +38,8 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
   `booking-draft.setRoomCount`. Seleção congelada (`leaving`) quando a reserva é criada, para o `clearSelection()` não
   disparar o redirect para `/`.
 - **Cupons locais** (`BEMVINDO10`, `FERIAS15`, `DESCONTO50`, `VERAO2024`), consulta com cache por código (`staleTime: Infinity`),
-  elegibilidade reavaliada por `buildQuote` quando os quartos mudam.
+  elegibilidade reavaliada por `buildQuote` quando os quartos mudam. A linha de desconto só aparece com
+  `discountCents > 0` (cupom inelegível ou sem cupom não mostra linha); durante a validação, só um skeleton (`afterStay`).
 - **Telefone**: o valor guardado são os dígitos brutos (até 15); a máscara é só de exibição e o excesso por país é erro
   de validação (BR → US → BR preserva o número).
 - **Rascunho**: `step` é o passo **máximo alcançado**; se a restauração cai no passo 1 (ex.: idade da criança), o aviso do
@@ -57,4 +61,6 @@ components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingS
 ## Testes
 Unit em `model/` e `api/` (tabelas para validadores, gate, cupons); componente por seção com `fetch` stubado e a action mockada
 (`checkout-test-utils.tsx`); `console.*` espionado; E2E em `e2e/checkout*.spec.ts` (rode também contra o build para a CSP).
-Falhas da mock-api **dentro** da action não passam pelo `page.route`: cobertas em `create-booking.server.test.ts`.
+Falhas da mock-api **dentro** da action (que o `page.route` não vê) são cobertas em `create-booking.server.test.ts`
+(unit) e no E2E `e2e/checkout.server-failure.spec.ts`: o control-proxy responde 500 ao `POST /bookings` cujo corpo
+leva um sobrenome único do teste (`serverApi.failServerRequests(..., { method: "POST", body, times: 1 })`).

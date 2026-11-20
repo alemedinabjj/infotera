@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
+
+// `server-only` lança fora do bundler do Next; nos testes os módulos de servidor rodam em jsdom.
+vi.mock("server-only", () => ({}));
 
 // jsdom não implementa showModal/close de <dialog>: polyfill mínimo (open + evento close).
 if (typeof HTMLDialogElement !== "undefined") {

@@ -29,7 +29,10 @@ npm run lint         # biome check
 npm run format       # biome check --write (formata e organiza imports)
 npm run test         # vitest run
 npm run test:watch   # vitest em modo watch
-npm run test:e2e     # playwright test --trace off (sobe a mock-api e o front se não estiverem rodando; exige `npm install` em mock-api/)
+npm run test:e2e     # playwright test --trace off (sobe mock-api, control-proxy e front se não estiverem rodando; exige `npm install` em mock-api/)
+# O E2E roda navegador e servidor do Next -> control-proxy (:3334) -> mock-api (:3333). O proxy permite
+# atrasar/falhar/segurar requests do SERVIDOR (`e2e/helpers/server-api.ts`, fixture `serverApi`).
+# Portas por env: E2E_MOCK_API_PORT, E2E_PROXY_PORT, E2E_FRONT_PORT (só uma `next dev` por pasta).
 # E2E usa o Chromium do Playwright 1.63 (`npx playwright install chromium` se faltar)
 # CSP do checkout: rode também contra o build (`npm run build && npx next start -p 3100`, depois
 # `PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/checkout*.spec.ts`)

@@ -1,6 +1,7 @@
 import { type Room, type RoomAmenity, roomAmenitySchema } from "@/shared/api/schemas";
 import { formatBRL } from "@/shared/lib/currency";
-import { bedsLabel, roomAmenityLabel, roomSizeLabel } from "./room-labels";
+import { bedsLabel } from "@/shared/lib/room-labels";
+import { roomAmenityLabel, roomSizeLabel } from "./room-labels";
 
 export const YES = "Sim";
 export const NO = "Não";

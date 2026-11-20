@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
+import { formatCents } from "@/shared/lib/price-breakdown";
 import { Skeleton } from "@/shared/ui";
 import type { CheckoutPrice } from "../hooks/checkout-price";
-import { describeNightsAndRooms, formatCents } from "../model/price-labels";
+import { describeNightsAndRooms } from "../model/price-labels";
 
 type ActionBarProps = {
   price: CheckoutPrice;

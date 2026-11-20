@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { apiGet } from "./http";
-import { type Hotel, hotelSchema, type Room, roomSchema } from "./schemas";
+import {
+  type Booking,
+  bookingSchema,
+  type Hotel,
+  hotelSchema,
+  type Room,
+  roomSchema,
+} from "./schemas";
 
 const roomsSchema = z.array(roomSchema);
 
@@ -22,3 +29,10 @@ export const fetchRoomsOfHotels = (
 /** `GET /rooms/:id`. */
 export const fetchRoom = (id: number, signal?: AbortSignal): Promise<Room> =>
   apiGet(`/rooms/${id}`, roomSchema, { signal });
+
+/**
+ * `GET /bookings/:id` (404 → `ApiError` com status 404). O id entra no path com
+ * `encodeURIComponent`: nunca vira outro caminho, mesmo que venha de uma URL.
+ */
+export const fetchBooking = (id: string | number, signal?: AbortSignal): Promise<Booking> =>
+  apiGet(`/bookings/${encodeURIComponent(id)}`, bookingSchema, { signal });

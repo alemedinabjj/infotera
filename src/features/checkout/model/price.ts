@@ -1,25 +1,16 @@
 import { reaisToCents } from "@/shared/lib/currency";
-
-/** Taxa de serviço (10%) e ISS (5%), em basis points, sobre a base já com desconto. */
-export const SERVICE_FEE_BPS = 1000;
-export const ISS_BPS = 500;
-
-const BPS_DENOMINATOR = 10_000;
-
-/** Percentual em bps com arredondamento half-up, só em aritmética inteira. */
-export const applyBps = (cents: number, bps: number): number =>
-  Math.floor((cents * bps + BPS_DENOMINATOR / 2) / BPS_DENOMINATOR);
+import {
+  applyBps,
+  ISS_BPS,
+  type PriceLine,
+  priceBreakdownLines,
+  SERVICE_FEE_BPS,
+} from "@/shared/lib/price-breakdown";
 
 export type PriceDiscount = { code: string } & (
   | { kind: "percent"; bps: number }
   | { kind: "fixed"; cents: number }
 );
-
-export type PriceLine =
-  | { kind: "stay"; nightlyCents: number; nights: number; rooms: number; amountCents: number }
-  | { kind: "discount"; code: string; amountCents: number }
-  | { kind: "service-fee"; bps: number; amountCents: number }
-  | { kind: "tax"; bps: number; amountCents: number };
 
 export type PriceQuote = {
   nights: number;
@@ -64,14 +55,19 @@ export const calculatePrice = ({
   const serviceFeeCents = applyBps(baseCents, SERVICE_FEE_BPS);
   const taxCents = applyBps(baseCents, ISS_BPS);
 
-  const lines: PriceLine[] = [
-    { kind: "stay", nightlyCents, nights, rooms, amountCents: subtotalCents },
-    ...(discount
-      ? [{ kind: "discount" as const, code: discount.code, amountCents: discountCents }]
-      : []),
-    { kind: "service-fee", bps: SERVICE_FEE_BPS, amountCents: serviceFeeCents },
-    { kind: "tax", bps: ISS_BPS, amountCents: taxCents },
-  ];
+  const totalCents = baseCents + serviceFeeCents + taxCents;
+  const couponCode = discount?.code ?? null;
+  const lines = priceBreakdownLines({
+    nightlyCents,
+    nights,
+    rooms,
+    subtotalCents,
+    discountCents,
+    serviceFeeCents,
+    taxCents,
+    totalCents,
+    ...(couponCode === null ? {} : { couponCode }),
+  });
 
   return {
     nights,
@@ -81,8 +77,8 @@ export const calculatePrice = ({
     discountCents,
     serviceFeeCents,
     taxCents,
-    totalCents: baseCents + serviceFeeCents + taxCents,
-    couponCode: discount?.code ?? null,
+    totalCents,
+    couponCode,
     lines,
   };
 };

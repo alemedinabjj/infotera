@@ -93,3 +93,10 @@ para `shared/` quando aparecer o segundo uso.
 - `lib/scroll.ts`: `revealBelowHeader` (topo acima do header), `revealNearest` e `revealBlock` (revela um
   **bloco** entre o header e a barra fixa `[data-action-bar]` medida no DOM; usa `revealDelta`, função pura).
   `Field` marca o contêiner com `data-reveal-block` para o foco revelar rótulo, controle e erro inteiros.
+
+## F6 (booking-confirmation)
+- `lib/price-breakdown` (`SERVICE_FEE_BPS`, `ISS_BPS`, `PriceLine`, `priceLineLabel/Amount`, `priceBreakdownLines`, `isBreakdownConsistent`,
+  `formatCents`), `ui/molecules/PriceBreakdown` (só apresentação; `afterStay`, `showTaxNote`), `lib/room-labels` (`bedsLabel`).
+- `api/endpoints.fetchBooking` (id com `encodeURIComponent`), `lib/clipboard.copyText` (nunca lança; `copyCurrentUrl` usa),
+  `lib/booking-history` (só ids, máx. 10, `localStorage`), `ui/FocusOnMount`, `CopyIcon`, `print:hidden` no header e no toaster.
+- `testing/fixtures`: `makeBooking`, `BOOKING_ID`.
