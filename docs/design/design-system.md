@@ -160,11 +160,12 @@ Sombra nunca é o único limite de um elemento: card também tem `border border-
 
 ### 1.6 Breakpoints
 
-Padrão do Tailwind 4 (não sobrescrever):
+Padrão do Tailwind 4 (não sobrescrever) + um acrescentado na F7b (`xs`):
 
 | Prefixo | Mín. | Mudança típica |
 |---|---|---|
 | (base) | 0 / **320** | 1 coluna, barra de ação fixa no rodapé, filtros em Drawer |
+| `xs` (F7b) | 400 (`25rem`) | Header: logo completo "Infotera Hotéis" e seletor de idioma por extenso (abaixo: "Infotera" e "EN"/"PT", §4.2) |
 | `sm` | 640 | Campos lado a lado (datas), card horizontal |
 | `md` | 768 | Grid 2 colunas onde couber |
 | `lg` | 1024 | Layout com coluna lateral (filtros/resumo), sem barra fixa inferior |
@@ -181,6 +182,18 @@ Testar sempre em 320, 375, 768 e 1280.
 | Header sticky | `z-20` |
 | Barra de ação fixa (mobile) e bandeja de comparação | `z-30` |
 | Toasts | `z-50` |
+
+**Mapas (F7b).** O Leaflet traz `z-index` próprios no `leaflet.css` (panes 200–700, controles
+800–1000). Regras:
+- O contêiner do Leaflet tem `relative z-0` e o wrapper do painel `relative isolate`: tudo do mapa fica
+  dentro desse contexto e nunca passa por cima do header (`z-20`), barra fixa (`z-30`) ou toasts (`z-50`).
+- **Nenhum utilitário `z-*` nosso dentro do contêiner do Leaflet** (`z-[1000]` é proibido). O que é
+  nosso e precisa ficar sobre o mapa entra como **controle do Leaflet** (atribuição: `attributionControl`
+  nativo, sem `<p>` absoluto) ou fica **fora** do contêiner (dica de teclado: abaixo da moldura, em fluxo).
+- Única sobreposição nossa: o link "Pular o mapa" focado, irmão do contêiner dentro do wrapper
+  `isolate`, com `z-10` (mesmo token do popover).
+- Popup do Leaflet (pane 700) fica abaixo dos controles (800): por isso o `autoPan` do popup reserva a
+  coluna dos botões de zoom (§9 MapPopup), em vez de subir o popup com z-index.
 
 Dialog e Drawer usam `<dialog>` nativo com `showModal()`: vão para a *top layer* e dispensam z-index.
 Toasts precisam ficar acima de um Dialog aberto: renderize o `Toaster` como `popover="manual"` (também
@@ -227,6 +240,9 @@ fica estático, spinner para (por isso Spinner **sempre** vem com texto). Nada d
 @theme {
   /* Fonte (a variável --font-inter vem do next/font no layout) */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Breakpoint extra (F7b): header compacto abaixo de 400px */
+  --breakpoint-xs: 25rem;
 
   /* Superfícies */
   --color-canvas: #f4f6f9;
@@ -397,8 +413,12 @@ const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-int
 ```
 - `<header>` com `bg-surface border-b border-border`, altura 56px (`h-14`) mobile / 64px (`lg:h-16`),
   `sticky top-0 z-20`.
-- Logo = link para `/` com texto visível "Infotera Hotéis" (`font-bold text-lg text-fg`); no ≤ 360px pode
-  mostrar só "Infotera" mas o link mantém `aria-label="Infotera Hotéis, página inicial"`.
+- Logo = link para `/` com texto visível "Infotera Hotéis" (`font-bold text-lg text-fg whitespace-nowrap`).
+  **Abaixo de `xs` (400px)** mostra só "Infotera" (`<span class="hidden xs:inline"> Hotéis</span>`), e o
+  link mantém `aria-label="Infotera Hotéis, página inicial"` / `"Infotera Hotéis, home page"` (o nome
+  contém o texto visível). Nunca quebra em duas linhas (F7b: quebrava em 320 e em 375 no /en).
+- Ações à direita (F7b): Favoritos, Minhas reservas e `LanguageSwitch` (§9). Abaixo de `xs` o seletor
+  mostra "EN"/"PT".
 - Primeiro item focável da página: link "Pular para o conteúdo" (`sr-only focus:not-sr-only`) apontando
   para `<main id="conteudo">`.
 - O resumo da busca **não** vai no header global (F3: o header é do layout raiz). Fica no topo da
@@ -1106,6 +1126,7 @@ próximo passo.
 | Data longa | `Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "numeric", month: "short" })` | `sáb., 12 de dez.` |
 | Intervalo | mesmo mês: `12–15 dez`; meses diferentes: `30 dez – 2 jan` | |
 | Horário | `14:00` (24h) | "Check-in a partir de 14:00" |
+| Horário en-US (F7b) | `Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" })` (12h, AM/PM) | `From 3:00 PM` · `Until 12:00 PM` (nunca `15:00` em inglês) |
 | Nota | 1 casa, vírgula | `4,6` |
 | Plural | sempre tratar 0/1/n (`Intl.PluralRules` ou função `plural`) | `1 noite`, `3 noites`, `1 hóspede`, `2 hóspedes`, `1 quarto`, `1 avaliação` |
 | Números grandes | `toLocaleString("pt-BR")` | `1.234 avaliações` |
@@ -1197,6 +1218,11 @@ Confirmação: `Copiar número da reserva` / `Copiado` · `Ver página do hotel`
 | Erro ao carregar a reserva (rota) | h1 `Não foi possível carregar sua reserva` · `Sua reserva não foi afetada. Verifique sua conexão e tente de novo.` | `Tentar de novo` + `Fazer nova busca` |
 | Hotel/quarto da confirmação | `Não foi possível carregar os dados do hotel.` / `…do quarto.` / `…do hotel e do quarto.` · `Sua reserva está confirmada. Verifique sua conexão e tente de novo.` | `Tentar de novo` |
 | Copiar número falhou | linha abaixo do botão (sem toast): `Não foi possível copiar. Selecione o número e copie.` | — |
+| Offline: app inteiro (F7b) | Banner `OfflineBar` (§9) | — |
+| Offline: rota pública não salva (F7b) | `OfflinePage` pública (§9): h1 `Esta página não está disponível offline` | `Tentar de novo` + `Ir para o início` |
+| Offline: checkout, confirmação, histórico (F7b) | `OfflinePage` de reserva (§9): h1 `A reserva precisa de internet` · `Nada foi cobrado e sua seleção continua salva…` | `Tentar de novo` + `Ir para o início` |
+| Offline: trocar ordenação/filtro/página sem cache (F7b) | Com lista anterior: Alert warning `Sem internet para atualizar a lista` · `A lista abaixo ainda é da seleção anterior. Ela atualiza sozinha quando a conexão voltar.` Sem lista: EmptyState warning `Estes resultados ainda não estão salvos offline` · `Volte à opção anterior ou espere a conexão voltar: a lista atualiza sozinha.` | — (atualiza ao reconectar) |
+| Mapa não carregou (F7b) | Alert danger `Não foi possível carregar o mapa.` · `A lista abaixo continua disponível.` | `Tentar de novo` |
 
 Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem status HTTP ao usuário.
 
@@ -1315,6 +1341,7 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 | atoms | Range (estilo do `input type="range"` nativo) · Avatar | F3 · F4 (na feature até o 2º uso) |
 | molecules | Field (+ campo composto), Stepper, Alert, ErrorSummary, Card, RatingScore, Breadcrumb, Pagination, EmptyState, ErrorState, DateRange, Combobox, Disclosure (+ cabeçalho e nativo), Tabela de comparação, PriceBreakdown | F1 (Combobox/DateRange na F2; ErrorSummary nasce na F2 e sobe na F5; Card, RatingScore e Disclosure na F3, sobem na F4; Breadcrumb e Tabela de comparação nascem na F4 e ficam na feature até o 2º uso; PriceBreakdown nasce na F5 e sobe na F6) |
 | organisms | Dialog (`placement: "center" \| "sheet"`, `size: "sm" \| "md" \| "full"`, `focusableBody`), Drawer = Dialog sheet, ErrorBoundary, Toast/Toaster, Header, Footer | F1 (sheet e ErrorBoundary na F3; `full` na F4; `focusableBody` na F5) |
+| F7b | LanguageSwitch, OfflineBar, InstallCard, UpdateToast (Toast `info` persistente) e OfflinePage em `features/app-shell`; MapPanel, MapToggle, PriceMarker e MapPopup em `shared/ui/map` + `features/hotel-search` (§9) | F7b |
 | feature | HotelCard, RoomCard, SimilarHotelCard, Gallery/Lightbox, SectionNav, StepIndicator, CouponForm, ActionBar (barra fixa), BookingNumber/CopyBookingNumber (valor copiável), StayDetails (hotel/quarto em streaming) | F3–F6, compondo os acima (ActionBar sobe para shared no 2º uso) |
 
 ## Ajustes pós-revisão (F7a)
@@ -1325,3 +1352,223 @@ Nunca mostrar `error.message` cru da API ("Falha simulada pela mock API") nem st
 - **Aviso na home**: `Alert info` "Escolha um quarto para continuar." (redirect do checkout sem seleção).
 - **Confirmação**: `Código` curto (`font-mono text-2xl`, `select-all`) acima do `Número da reserva`; e-mail mascarado.
 - **Selo "Abrindo…"** sobre a foto do card enquanto o hotel carrega.
+
+## 9. Componentes da F7b (plataforma: i18n, offline, PWA, mapas)
+
+Todos os textos vêm dos dicionários (`i18n/pt-BR.ts` / `i18n/en-US.ts`); as tabelas abaixo são a
+fonte do microcopy nos dois idiomas. Nenhum componente desta seção usa valor arbitrário de `z-*`
+(ver §1.7 "Mapas").
+
+### 9.1 LanguageSwitch (header)
+
+`<a>` com o estilo do `Button ghost`: `inline-flex items-center gap-2 min-h-11 px-3 rounded-control
+text-sm font-medium text-primary hover:bg-primary-soft`, `GlobeIcon size-5 aria-hidden`. Carga de
+documento (não `next/link`), `lang` e `hrefLang` do idioma de destino. Estados: hover/active
+`bg-primary-soft`, `focus-visible` anel global. Sem estado de loading (a navegação é do navegador).
+
+| Largura | Visível | Nome acessível |
+|---|---|---|
+| ≥ `xs` (400px) | `English` (em pt) / `Português` (em en) | igual ao visível |
+| < `xs` | `EN` / `PT` | `EN English` / `PT Português` |
+
+- **Sem `aria-label`.** O nome sai do conteúdo: `<span class="xs:hidden">EN</span>` +
+  `<span class="sr-only xs:not-sr-only">English</span>` (abaixo de `xs` o nome começa pelo texto
+  visível: label-in-name, WCAG 2.5.3). O antigo "Mudar idioma para English" sai: estava em português
+  dentro de um link `lang="en"` e não continha o texto visível "EN".
+- O ícone de globo + nome do idioma no próprio idioma é o padrão reconhecível; não precisa de prefixo.
+
+### 9.2 OfflineBar (banner global)
+
+Em fluxo logo abaixo do header (não sticky), largura total, conteúdo no container:
+`bg-warning-soft border-b border-warning`, linha `flex items-start gap-2 py-2 text-sm text-fg`,
+`WifiOffIcon size-4 mt-0.5 text-warning aria-hidden`. 1 linha no desktop, até 3 no celular. Região
+`role="status"` sempre montada (vazia online), anunciada uma vez. Sem botão de fechar.
+
+| Estado | pt-BR | en-US |
+|---|---|---|
+| Offline | `Você está sem internet. Mostramos o que já foi carregado; reservas ficam indisponíveis até a conexão voltar.` | `You're offline. We're showing what was already loaded; bookings are unavailable until you're back online.` |
+| Reconectou (tom `success`: `bg-success-soft border-success`, `CheckIcon text-success`, some em 4 s com fade de 150 ms) | `Conexão restabelecida.` | `Connection restored.` |
+
+### 9.3 InstallCard (só na home, abaixo do formulário)
+
+`Card static p-4 sm:p-6`, `<section aria-labelledby>` com h2 `text-lg font-semibold`, texto
+`text-fg-muted`, ações `mt-4 flex flex-wrap gap-2`.
+
+| Peça | pt-BR | en-US |
+|---|---|---|
+| Título (h2) | `Instale o Infotera Hotéis` | `Install Infotera Hotéis` |
+| Texto | `Abra suas buscas mais rápido, até sem internet.` | `Open your searches faster, even offline.` |
+| Ação 1 — `Button secondary` | `Instalar app` | `Install app` |
+| Ação 2 — `Button ghost` | `Agora não` | `Not now` |
+| Status `sr-only` ao dispensar | `Tudo bem. Você pode instalar depois pelo menu do navegador.` | `No problem. You can install it later from the browser menu.` |
+| Toast `success` (`appinstalled`) | `App instalado.` | `App installed.` |
+
+- **"Instalar app" é `secondary`, nunca `primary`**: a home já tem `Buscar hotéis` como ação primária
+  (§0.3). Instalar é opcional e secundário à tarefa.
+- **Foco ao sair** (o cartão desmonta e o foco cairia no `body`): ao clicar em "Agora não", ou quando o
+  prompt nativo termina (`accepted` ou `dismissed`), o foco vai **antes** do desmonte para o botão
+  `Buscar hotéis` (último focável antes do cartão; o cartão é o último bloco do `main`), com
+  `preventScroll` + `revealBelowHeader`. "Agora não" também escreve o status `sr-only` numa região
+  `role="status"` **do slot** (sempre montada, fora do cartão). `dismissed` no prompt nativo conta como
+  "Agora não" (o evento não é reutilizável).
+- Saída: fade 150 ms `ease-exit` e desmonta; com reduced motion, desmonta direto. Entrada: só depois
+  da hidratação e do `beforeinstallprompt`; como fica no fim da página, não empurra nada acima.
+
+### 9.4 Toast de nova versão (UpdateToast)
+
+`toast.info` com `key: "app-update"` (nunca duplica) e **sem tempo de expiração** (persistente; o
+`IconButton` "Fechar notificação"/"Close notification" continua). Não rouba foco (região `polite`).
+
+| Peça | pt-BR | en-US |
+|---|---|---|
+| Texto | `Nova versão disponível.` | `New version available.` |
+| Ação (ghost) | `Atualizar agora` | `Update now` |
+| Ação em loading | `Atualizando…` | `Updating…` |
+
+- Clique: botão entra em `loading` (`aria-busy`), manda `SKIP_WAITING`, recarrega no `controllerchange`.
+- **Não aparece em `/checkout` (`/en/checkout`)**: o reload perderia o que foi digitado. O aviso fica
+  pendente e aparece na próxima rota. Fechar esconde até o próximo carregamento de página.
+
+### 9.5 OfflinePage (`/offline` e variantes, pt e en)
+
+Layout do `EmptyState` em página (`py-12`, centralizado, `max-w-prose`), ícone `WifiOffIcon` no círculo
+`bg-surface-sunken`; o título é o **h1** (`text-2xl font-bold`). Ações `flex flex-col gap-2 sm:flex-row
+sm:justify-center`, `w-full sm:w-auto`: `Button primary` "Tentar de novo" (recarrega; loading
+"Tentando…"/"Trying…") + `ButtonLink ghost` "Ir para o início". O h1 **nunca** repete o banner
+("Você está sem internet"): o banner diz o estado do app, a página diz o que isso afeta aqui.
+
+| Variante (escolhida pelo SW pela regra da rota) | pt-BR | en-US |
+|---|---|---|
+| `public` — rota pública não salva — h1 | `Esta página não está disponível offline` | `This page isn't available offline` |
+| `public` — texto | `Ela ainda não foi salva neste aparelho. As buscas e os hotéis que você já abriu continuam disponíveis.` | `It hasn't been saved on this device yet. Searches and hotels you've already opened are still available.` |
+| `checkout` — h1 | `A reserva precisa de internet` | `Booking needs an internet connection` |
+| `checkout` — texto | `Nada foi cobrado e sua seleção continua salva neste aparelho. Assim que a conexão voltar, toque em “Tentar de novo”.` | `Nothing was charged and your selection is still saved on this device. Once you're back online, select “Try again”.` |
+| `bookings` — confirmação e histórico — h1 | `Suas reservas precisam de internet` | `Your bookings need an internet connection` |
+| `bookings` — texto | `Por segurança, os dados das reservas não ficam salvos neste aparelho. Suas reservas não foram afetadas.` | `For your security, booking details aren't saved on this device. Your bookings haven't been affected.` |
+| Botões | `Tentar de novo` · `Ir para o início` | `Try again` · `Go to homepage` |
+| `<title>` | `Sem internet \| Infotera Hotéis` | `Offline \| Infotera Hotéis` |
+
+### 9.6 MapToggle (botão do mapa na toolbar de `/search`)
+
+`Button secondary md` com `leftIcon={MapIcon}` (ícone **à esquerda, na mesma linha**; nunca empilhado),
+`aria-pressed`. Largura igual à dos irmãos da toolbar: `w-full` na coluna única (< 23rem), `w-auto`
+a partir daí.
+
+| Estado | Visual | ARIA |
+|---|---|---|
+| Desligado | `secondary` padrão | `aria-pressed="false"`, sem `aria-controls` |
+| Ligado | `bg-primary-soft border-primary ring-1 ring-inset ring-primary text-primary` (borda visual de 2px sem mudar o tamanho: a espessura é o sinal além da cor; 5.85:1) · hover `border-primary-active ring-primary-active` | `aria-pressed="true"`, `aria-controls` = id do painel **só quando o painel existe** |
+| Ligado sem painel (lista carregando, vazia, com erro ou offline sem dados) | igual a "Ligado" | `aria-pressed="true"`, sem `aria-controls` |
+
+- **Rótulo fixo** `Mapa` / `Map`. O estado vem só do `aria-pressed` (leitor: "Mapa, botão de
+  alternância, pressionado"). Trocar o rótulo ("Mostrar/Ocultar mapa") junto com `aria-pressed`
+  anunciava o estado duas vezes e invertia o sentido ("Ocultar mapa, pressionado").
+- Clique: alterna na hora (`replaceState`), o foco fica no botão, o painel aparece/some abaixo. Ligado
+  sem painel: clicar desliga a preferência (remove `map=1`); nenhuma mensagem extra (o estado da lista
+  já é o conteúdo).
+
+### 9.7 MapPanel (painel do mapa dos resultados) e moldura do mapa do hotel
+
+```
+wrapper  relative isolate  (id do aria-controls; aria-busy enquanto carrega)
+├─ [Pular o mapa]            sr-only; focado: absolute top-2 left-2 z-10 (sobre o canto do mapa)
+├─ Alert warning offline     (só offline sem tiles; em fluxo, acima da moldura)
+├─ moldura                   rounded-card border border-border overflow-hidden bg-surface-sunken
+│   └─ contêiner Leaflet     relative z-0, role="region", aria-label, aria-describedby → dica
+└─ dica de teclado (p)       mt-2 min-h-5 text-xs text-fg-muted, em fluxo, abaixo da moldura
+```
+
+- Altura da moldura dos resultados: `clamp(280px, 45dvh, 420px)`. Moldura do hotel: **`aspect-[4/3]`
+  abaixo de `sm` e `aspect-[2/1]` a partir de `sm`**, igual no mapa estático e no interativo (a troca
+  continua sem CLS; o `staticMapLayout` calcula os tiles para as duas proporções). Em 320px o 2:1 dava
+  288×144 e o popup não cabia.
+- **Dica de teclado**: em fluxo, **abaixo** da moldura (nunca sobre o mapa: cobria popup e "+"). A linha
+  é reservada sempre (`min-h-5`, sem layout shift); o texto fica `opacity-0` e passa a `opacity-100`
+  (`transition-opacity duration-150`) quando o wrapper tem foco de teclado dentro
+  (`group-has-[:focus-visible]`). No toque/mouse nunca aparece; o leitor de tela sempre a ouve pelo
+  `aria-describedby`.
+- **"Pular o mapa"** (`Skip map`): primeiro filho do wrapper, só existe com o painel. Visível só com
+  foco: `absolute top-2 left-2 z-10 inline-flex min-h-11 items-center rounded-control bg-surface px-4
+  text-sm font-medium text-primary shadow-raised`. Fica sobre o canto do mapa (não no topo da tela,
+  não empurra layout). Ativar leva o foco ao **link do 1º card da lista** (páginas: 1º card da página;
+  feed: índice 0 com `scrollToIndex`), `preventScroll` + `revealBelowHeader`.
+- Controles do Leaflet: botões de zoom `size-11`, borda `border-border-strong`, hover
+  `bg-surface-sunken`, foco anel global; `aria-label`/`title` `Aproximar`/`Afastar` · `Zoom in`/`Zoom out`.
+  Atribuição pelo `attributionControl` nativo: `text-xs bg-surface/90`, link `text-primary underline`.
+
+| Estado do painel | Visual | Texto pt-BR | Texto en-US |
+|---|---|---|---|
+| Carregando o chunk | `Skeleton block` na altura da moldura, texto centralizado `text-sm text-fg-muted`, região `aria-live="polite"` | `Carregando mapa…` | `Loading map…` |
+| Lento (> 5 s) | linha abaixo, como §6.5 | `Está demorando mais que o normal…` | `This is taking longer than usual…` |
+| Falha do chunk | **a moldura some** e o painel encolhe para o `Alert danger` (altura do conteúdo; um bloco cinza de 420px vazio é pior que o deslocamento, que é consequência do clique no botão). Botão `secondary` `w-full sm:w-auto`, alinhado à esquerda sob o texto; retry em `loading` "Tentando…"; sucesso → foco no contêiner do mapa | título `Não foi possível carregar o mapa.` · texto `A lista abaixo continua disponível.` · `Tentar de novo` | `We couldn't load the map.` · `The list below is still available.` · `Try again` |
+| Offline sem tiles | `Alert warning` em fluxo acima da moldura; marcadores continuam | `O mapa precisa de internet. A lista abaixo continua disponível.` | `The map needs an internet connection. The list below is still available.` |
+| Dica (resultados) | — | `Setas movem o mapa; + e − mudam o zoom; Tab percorre os hotéis.` | `Arrow keys move the map; + and − change the zoom; Tab moves between hotels.` |
+| Dica (hotel) | — | `Setas movem o mapa; + e − mudam o zoom.` | `Arrow keys move the map; + and − change the zoom.` |
+| Região | — | `Mapa dos resultados` · `Mapa: {endereço}` | `Results map` · `Map: {address}` |
+
+### 9.8 PriceMarker
+
+`L.divIcon` com elemento montado por `textContent`. Pílula `inline-flex items-center min-h-6 px-2
+rounded-full border text-xs font-semibold tabular-nums whitespace-nowrap shadow-raised` (alvo ≥ 24px,
+WCAG 2.5.8; o espaço entre marcadores vem do enquadramento).
+
+| Estado | Classes | Contraste |
+|---|---|---|
+| Normal | `bg-surface text-fg border-border` | 17.28 |
+| Ativo (card em hover/foco, marcador focado ou com popup) | `bg-primary text-fg-on-primary border-primary`, acima dos demais por `zIndexOffset` do Leaflet (não CSS) | 6.67 |
+| Esgotado | `bg-surface-sunken text-fg-subtle border-border`, texto `Esgotado` / `Sold out` | 4.61 |
+| Foco | anel global (`outline-2 outline-offset-2 outline-focus`) + estado ativo | — |
+
+- Preço compacto: `R$ 1.200` (pt) / `R$1,200` (en).
+- `role="button"` (Leaflet `keyboard: true`), `aria-haspopup="dialog"`, `aria-expanded` com o popup.
+  **Enter e Espaço** abrem o popup (Espaço com `preventDefault`, para não rolar a página).
+- Nome: `{nome}, R$ 1.200 por noite` / `{name}, R$1,200 per night`; esgotado `{nome}, esgotado` /
+  `{name}, sold out`.
+
+### 9.9 MapPopup
+
+Popup do Leaflet com `closeButton: false` (o "×" é nosso), `minWidth = maxWidth = 224` (`w-56`),
+`autoPanPaddingTopLeft: [56, 8]` (reserva a coluna do zoom: 10 + 44 + 2) e
+`autoPanPaddingBottomRight: [8, 24]` (reserva a atribuição); com reduced motion, sem animação. Em 320px
+(moldura de 288px) 56 + 224 + 8 = 288: cabe sem cobrir o "+". `map.css` zera margens:
+`.leaflet-popup-content { margin: 0 }` e `.leaflet-popup-content p { margin: 0 }`; o wrapper usa
+`rounded-card shadow-overlay`. Espaçamento só por `flex flex-col gap-2 p-3`.
+
+```
+Resultados                              Hotel
+┌───────────────────────────────┐       ┌───────────────────────────────┐
+│ Hotel Flamengo Park       [×] │       │ Hotel Copacabana Palace   [×] │
+│ 4,0 ★★★★☆                     │       └───────────────────────────────┘
+│ R$ 780 por noite              │
+│ [ Ver hotel                 ] │
+│ [ Mostrar na lista          ] │
+└───────────────────────────────┘
+```
+
+- Raiz `role="dialog"` (não modal, sem `aria-modal`) com `aria-labelledby` no h3.
+- h3 `text-sm font-semibold line-clamp-2 pr-11`. Nota: **`RatingScore size="sm"`** sem `reviewCount`
+  (`4,0 ★★★★☆`, nome "Nota 4,0 de 5"; nunca `★ 4,0` solto). Preço: valor `font-semibold tabular-nums`
+  + `por noite` `text-sm text-fg-muted`; esgotado → `Badge danger` "Esgotado" no lugar do preço.
+- Ações empilhadas, `fullWidth`, `md` (44px): `ButtonLink primary` "Ver hotel" / "View hotel" (leva os
+  critérios, como o card) e `Button secondary` "Mostrar na lista" / "Show in list". O popup é um
+  contexto próprio: o primário dele não concorre com outro primário visível na busca.
+- "×": `IconButton ghost size-11` em `absolute top-1 right-1`, **último no DOM**; `aria-label`
+  `Fechar` / `Close`.
+- Teclado (vale para clique também):
+  - **A cada abertura** (clique, Enter ou Espaço, inclusive reabrir o mesmo marcador) o foco entra no
+    popup: no 1º item ("Ver hotel"); no mapa do hotel, no "×".
+  - Ordem: Ver hotel → Mostrar na lista → Fechar.
+  - **Tab no último item**: fecha e foca o **próximo marcador** (ordem da lista); no último marcador ou
+    no mapa do hotel, volta ao próprio marcador (o próximo Tab sai do mapa).
+  - **Shift+Tab no primeiro item**, **Esc** ou **"×"**: fecha e volta ao marcador.
+  - "Mostrar na lista": fecha e foca o link do card (rotina de `revealCard`).
+
+### 9.10 Microcopy da F7b em en-US (revisão)
+
+- Botões sempre com verbo + objeto também em inglês (`Install app`, `Update now`, `Try again`,
+  `View hotel`, `Show in list`, `Go to homepage`); nada de "Go to the start page".
+- Contrações naturais (`You're`, `isn't`, `couldn't`), frases curtas, ponto final em frases completas e
+  sem ponto em rótulos de botão.
+- Horários em 12h (`From 3:00 PM`, `Until 12:00 PM`), §6.1.
+- Chaves que saem: `map.show`/`map.hide` (viram `map.toggle` "Mapa"/"Map"), `popupRating` (vira
+  `RatingScore`), `languageSwitch.label` (sem `aria-label`).

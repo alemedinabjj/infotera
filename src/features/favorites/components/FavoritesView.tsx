@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import {
   Alert,
   buttonClassName,
@@ -9,14 +11,16 @@ import {
   FocusOnMount,
   WifiOffIcon,
 } from "@/shared/ui";
+import { useFavoritesMessages } from "../hooks/useFavoritesMessages";
 import { useFavoritesPage } from "../hooks/useFavoritesPage";
-import { FAVORITES_MESSAGES } from "../model/messages";
 import { FavoriteCard } from "./FavoriteCard";
 import { FavoritesSkeleton } from "./FavoritesSkeleton";
 
 type Page = ReturnType<typeof useFavoritesPage>;
 
 const Body = ({ page }: { page: Page }) => {
+  const MESSAGES = useFavoritesMessages();
+  const locale = useLocale();
   switch (page.view) {
     case "hydrating":
     case "loading":
@@ -25,17 +29,18 @@ const Body = ({ page }: { page: Page }) => {
       return (
         <Alert
           tone="warning"
-          title={FAVORITES_MESSAGES.offline.title}
+          title={MESSAGES.offline.title}
           icon={<WifiOffIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
         >
-          {FAVORITES_MESSAGES.offline.description}
+          {MESSAGES.offline.description}
         </Alert>
       );
     case "error":
       return (
         <ErrorState
-          title={FAVORITES_MESSAGES.error.title}
-          description={FAVORITES_MESSAGES.error.description}
+          locale={locale}
+          title={MESSAGES.error.title}
+          description={MESSAGES.error.description}
           onRetry={page.retry}
           retrying={page.retrying}
         />
@@ -43,11 +48,14 @@ const Body = ({ page }: { page: Page }) => {
     case "empty":
       return (
         <EmptyState
-          title={FAVORITES_MESSAGES.empty.title}
-          description={FAVORITES_MESSAGES.empty.description}
+          title={MESSAGES.empty.title}
+          description={MESSAGES.empty.description}
           action={
-            <Link href="/" className={buttonClassName({ variant: "primary" })}>
-              {FAVORITES_MESSAGES.empty.action}
+            <Link
+              href={localizePath(locale, "/")}
+              className={buttonClassName({ variant: "primary" })}
+            >
+              {MESSAGES.empty.action}
             </Link>
           }
         />
@@ -75,15 +83,16 @@ const Body = ({ page }: { page: Page }) => {
 
 /** Página `/favorites`: lista com os 4 estados (+ offline). O estado de remoção é por card. */
 export const FavoritesView = () => {
+  const MESSAGES = useFavoritesMessages();
   const page = useFavoritesPage();
   return (
     <div className="flex flex-col gap-4">
       <FocusOnMount selector="#favorites-title" />
       <h1 id="favorites-title" tabIndex={-1} className="text-2xl font-bold text-fg lg:text-3xl">
-        {FAVORITES_MESSAGES.title}
+        {MESSAGES.title}
       </h1>
       <p aria-live="polite" className="min-h-5 text-sm text-fg-muted">
-        {page.view === "success" ? FAVORITES_MESSAGES.count(page.liveCount) : null}
+        {page.view === "success" ? MESSAGES.count(page.liveCount) : null}
       </p>
       <Body page={page} />
     </div>

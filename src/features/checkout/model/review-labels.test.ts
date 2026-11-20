@@ -11,40 +11,43 @@ const payment = {
 
 describe("review labels", () => {
   it("cartão mascarado, só os 4 últimos", () => {
-    const text = describeCard(payment);
+    const text = describeCard(payment, "pt-BR");
     expect(text).toBe("Visa •••• 1111 · validade 12/28");
     expect(text).not.toContain("4111 1111");
   });
 
   it("cartão de bandeira desconhecida", () => {
-    expect(describeCard({ ...payment, cardNumber: "9999 9999 9999 9995" })).toMatch(
+    expect(describeCard({ ...payment, cardNumber: "9999 9999 9999 9995" }, "pt-BR")).toMatch(
       /^Cartão •••• 9995/,
     );
   });
 
   it("documento mascarado", () => {
-    expect(describeDocument(payment)).toBe("CPF ***.982.247-**");
-    expect(describeDocument({ ...payment, documentType: "passport", document: "AB1234567" })).toBe(
-      "Passaporte ******567",
-    );
+    expect(describeDocument(payment, "pt-BR")).toBe("CPF ***.982.247-**");
+    expect(
+      describeDocument({ ...payment, documentType: "passport", document: "AB1234567" }, "pt-BR"),
+    ).toBe("Passaporte ******567");
   });
 
   it("hóspedes: titular com contato, acompanhantes com tipo e idade", () => {
-    const guests = describeGuests({
-      ...defaultCheckoutValues,
-      contact: {
-        firstName: "Ana",
-        lastName: "Souza",
-        email: "ana@exemplo.com",
-        phoneCountry: "BR",
-        phone: "(11) 98765-4321",
+    const guests = describeGuests(
+      {
+        ...defaultCheckoutValues,
+        contact: {
+          firstName: "Ana",
+          lastName: "Souza",
+          email: "ana@exemplo.com",
+          phoneCountry: "BR",
+          phone: "(11) 98765-4321",
+        },
+        companions: [
+          { kind: "adult", firstName: "Bruno", lastName: "Souza", age: "" },
+          { kind: "child", firstName: "Clara", lastName: "Souza", age: "7" },
+          { kind: "child", firstName: "Davi", lastName: "Souza", age: "0" },
+        ],
       },
-      companions: [
-        { kind: "adult", firstName: "Bruno", lastName: "Souza", age: "" },
-        { kind: "child", firstName: "Clara", lastName: "Souza", age: "7" },
-        { kind: "child", firstName: "Davi", lastName: "Souza", age: "0" },
-      ],
-    });
+      "pt-BR",
+    );
     expect(guests.map((g) => g.name)).toEqual([
       "Ana Souza · titular",
       "Bruno Souza · adulto",

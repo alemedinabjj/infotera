@@ -2,10 +2,13 @@
 
 import { type FormEvent, useId } from "react";
 import { FormProvider } from "react-hook-form";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { hotelHref } from "@/shared/lib/links";
 import { revealBlock } from "@/shared/lib/scroll";
 import { Alert, ErrorSummary } from "@/shared/ui";
 import type { CheckoutFlow } from "../hooks/useCheckoutFlow";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { noticeText } from "../model/notices";
 import { stepCounter, stepDocumentTitle, stepTitle } from "../model/steps";
@@ -18,8 +21,6 @@ import { ReviewStep } from "./ReviewStep";
 import { StepActions } from "./StepActions";
 import { SubmitError } from "./SubmitError";
 
-export const DEMO_NOTICE = "Ambiente de demonstração — não use dados reais.";
-
 /**
  * `<form>` dos 3 passos: aviso de demonstração, título do passo (alvo do foco), resumo de erros,
  * passo atual, alerta do envio e ações. Um `useForm` para tudo; só o passo atual fica montado.
@@ -27,9 +28,11 @@ export const DEMO_NOTICE = "Ambiente de demonstração — não use dados reais.
 export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
   const { checkout, submit, price, selection, roomCount } = flow;
   const { form, step } = checkout;
+  const locale = useLocale();
+  const t = useCheckoutMessages();
   const headingId = useId();
   const hasChildren = checkout.fields.some((field) => field.kind === "child");
-  useDocumentTitle(stepDocumentTitle(step));
+  useDocumentTitle(stepDocumentTitle(step, locale));
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,20 +59,22 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
           onSubmit={onSubmit}
           className="flex flex-col gap-5 rounded-card border border-border bg-surface p-4 shadow-card lg:col-start-1 lg:row-start-2 lg:max-w-2xl lg:p-5"
         >
-          <Alert tone="info">{DEMO_NOTICE}</Alert>
+          <Alert tone="info">{t.demoNotice}</Alert>
           <div ref={checkout.titleRef} className="flex flex-col gap-1">
-            <span className="block text-sm font-medium text-fg-muted">{stepCounter(step)}</span>
+            <span className="block text-sm font-medium text-fg-muted">
+              {stepCounter(step, locale)}
+            </span>
             <h2
               id={headingId}
               ref={checkout.headingRef}
               tabIndex={-1}
               className="text-xl font-semibold text-fg"
             >
-              {stepTitle(step)}
+              {stepTitle(step, locale)}
             </h2>
           </div>
           {checkout.notice ? (
-            <Alert tone="info">{noticeText(checkout.notice.kind, hasChildren)}</Alert>
+            <Alert tone="info">{noticeText(checkout.notice.kind, hasChildren, locale)}</Alert>
           ) : null}
           {checkout.summary.length > 0 ? (
             <ErrorSummary
@@ -86,7 +91,7 @@ export const CheckoutForm = ({ flow }: { flow: CheckoutFlow }) => {
               key={submit.state.key}
               state={submit.state}
               retrying={submit.isPending}
-              backHref={hotelHref(selection.hotelId, selection.criteria)}
+              backHref={localizePath(locale, hotelHref(selection.hotelId, selection.criteria))}
               onRetry={() => void form.handleSubmit(submit.submit)()}
               onReloadPrice={price.status === "error" ? price.retry : () => undefined}
               priceRetrying={price.status === "error" && price.retrying}

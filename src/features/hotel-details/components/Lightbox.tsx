@@ -1,7 +1,9 @@
 "use client";
 
 import type { KeyboardEventHandler } from "react";
+import { useLocale } from "@/shared/i18n/client";
 import { ChevronLeftIcon, ChevronRightIcon, Dialog, IconButton, RemoteImage } from "@/shared/ui";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { useSwipe } from "../hooks/useSwipe";
 import { type GalleryAction, photoAlt, photoCounter } from "../model/gallery";
 import { LightboxPhoto } from "./LightboxPhoto";
@@ -55,6 +57,8 @@ export const Lightbox = ({
   onGo,
   onKeyDown,
 }: LightboxProps) => {
+  const t = useHotelDetailsMessages().gallery;
+  const locale = useLocale();
   const total = images.length;
   const src = images[index];
   const several = total > 1;
@@ -65,23 +69,23 @@ export const Lightbox = ({
       onClose={onClose}
       onKeyDown={onKeyDown}
       size="full"
-      title={`Fotos de ${name}`}
+      title={t.lightboxTitle({ name })}
       initialFocus={several ? "[data-lightbox-next]" : undefined}
       footer={
         several ? (
           <>
             <IconButton
-              aria-label="Foto anterior"
+              aria-label={t.previous}
               variant="overlay"
               className={ARROW}
               icon={<ChevronLeftIcon className="size-6" />}
               onClick={() => onGo("prev")}
             />
             <p aria-live="polite" className="w-28 text-center tabular-nums">
-              {photoCounter(index, total)}
+              {photoCounter(index, total, locale)}
             </p>
             <IconButton
-              aria-label="Próxima foto"
+              aria-label={t.next}
               variant="overlay"
               className={ARROW}
               data-lightbox-next=""
@@ -95,7 +99,7 @@ export const Lightbox = ({
       {src ? (
         // `touch-pan-y`: o gesto horizontal chega ao componente (troca de foto) sem rolar a página.
         <div className="size-full touch-pan-y" {...(several ? swipe : {})}>
-          <LightboxPhoto key={src} src={src} alt={photoAlt(name, index, total)} />
+          <LightboxPhoto key={src} src={src} alt={photoAlt(name, index, total, locale)} />
         </div>
       ) : null}
       {several ? <Neighbors images={images} index={index} /> : null}

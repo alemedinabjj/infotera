@@ -21,6 +21,8 @@ describe("buildCsp", () => {
         "style-src-attr 'unsafe-inline'",
         "img-src 'self' data: blob: https://images.unsplash.com https://i.pravatar.cc https://tile.openstreetmap.org",
         "font-src 'self'",
+        "worker-src 'self'",
+        "manifest-src 'self'",
         "connect-src 'self' https://api.exemplo.com",
         "object-src 'none'",
         "base-uri 'self'",

@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode, RefObject } from "react";
 import { Skeleton, Spinner, VisuallyHidden } from "@/shared/ui";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import type { ToolbarHeading, ToolbarStatus } from "../model/results-view";
 
 type ResultsToolbarProps = {
@@ -11,13 +14,16 @@ type ResultsToolbarProps = {
   filtersTrigger?: ReactNode;
   sort: ReactNode;
   listMode: ReactNode;
+  /** Botão do mapa (último da toolbar: o Tab segue para o "Pular o mapa"). */
+  mapToggle?: ReactNode;
 };
 
-const Heading = ({ heading }: { heading: ToolbarHeading }) =>
-  heading.kind === "skeleton" ? (
+const Heading = ({ heading }: { heading: ToolbarHeading }) => {
+  const t = useHotelSearchMessages().list;
+  return heading.kind === "skeleton" ? (
     <>
       <Skeleton className="h-7 w-48" />
-      <VisuallyHidden>Resultados</VisuallyHidden>
+      <VisuallyHidden>{t.results}</VisuallyHidden>
     </>
   ) : (
     <>
@@ -25,6 +31,7 @@ const Heading = ({ heading }: { heading: ToolbarHeading }) =>
       {heading.srSuffix ? <VisuallyHidden>{heading.srSuffix}</VisuallyHidden> : null}
     </>
   );
+};
 
 const Status = ({ status }: { status: ToolbarStatus }) => {
   switch (status.kind) {
@@ -58,6 +65,7 @@ export const ResultsToolbar = ({
   filtersTrigger,
   sort,
   listMode,
+  mapToggle,
 }: ResultsToolbarProps) => (
   <div className="flex flex-col gap-3">
     <div>
@@ -77,6 +85,7 @@ export const ResultsToolbar = ({
       {filtersTrigger}
       {sort}
       {listMode}
+      {mapToggle}
     </div>
   </div>
 );

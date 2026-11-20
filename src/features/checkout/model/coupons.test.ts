@@ -90,19 +90,23 @@ describe("evaluateCoupon", () => {
 
 describe("couponMessage / couponBenefit", () => {
   it("mensagens do design system", () => {
-    expect(couponMessage({ kind: "not-found" })).toBe("Cupom não encontrado. Confira o código.");
-    expect(couponMessage({ kind: "expired" })).toBe("Este cupom expirou.");
-    expect(couponMessage({ kind: "min-nights", nights: 3 })).toBe(
+    expect(couponMessage({ kind: "not-found" }, "pt-BR")).toBe(
+      "Cupom não encontrado. Confira o código.",
+    );
+    expect(couponMessage({ kind: "expired" }, "pt-BR")).toBe("Este cupom expirou.");
+    expect(couponMessage({ kind: "min-nights", nights: 3 }, "pt-BR")).toBe(
       "Válido para estadias a partir de 3 noites.",
     );
-    expect(plain(couponMessage({ kind: "min-subtotal", cents: 30000 }))).toBe(
+    expect(plain(couponMessage({ kind: "min-subtotal", cents: 30000 }, "pt-BR"))).toBe(
       "Válido para reservas a partir de R$ 300,00.",
     );
   });
 
   it("benefício legível", () => {
-    expect(couponBenefit(COUPONS.BEMVINDO10 ?? never())).toBe("10% de desconto");
-    expect(plain(couponBenefit(COUPONS.DESCONTO50 ?? never()))).toBe("R$ 50,00 de desconto");
+    expect(couponBenefit(COUPONS.BEMVINDO10 ?? never(), "pt-BR")).toBe("10% de desconto");
+    expect(plain(couponBenefit(COUPONS.DESCONTO50 ?? never(), "pt-BR"))).toBe(
+      "R$ 50,00 de desconto",
+    );
   });
 });
 

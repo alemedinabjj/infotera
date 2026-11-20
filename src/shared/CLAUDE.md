@@ -89,7 +89,7 @@ para `shared/` quando aparecer o segundo uso.
 - `Dialog focusableBody` (corpo rolável vira região focável com foco inicial), `QuantityStepper locked`
   (`aria-disabled` nos dois botões), `Toaster data-toaster`, ícones `credit-card`/`lock`/`tag`, e o CSS da barra de
   ação fixa (`[data-action-bar]`) em `globals.css`.
-- `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`) e exporta `describeErrorCount`.
+- `ErrorSummary<Id>` é genérico por `id` (`{ id, label, message }[]` + `onSelect(id)`).
 - `lib/scroll.ts`: `revealBelowHeader` (topo acima do header), `revealNearest` e `revealBlock` (revela um
   **bloco** entre o header e a barra fixa `[data-action-bar]` medida no DOM; usa `revealDelta`, função pura).
   `Field` marca o contêiner com `data-reveal-block` para o foco revelar rótulo, controle e erro inteiros.
@@ -126,3 +126,33 @@ para `shared/` quando aparecer o segundo uso.
 - `api`: `fetchHotelsByIds` (nunca chama com lista vazia), `hotelsByIdsQueryOptions`, `bookingQueryOptions` (promovida, `meta.sensitive`
   para o cache offline da F7b não persistir PII), chaves `hotels.byIds`/`rooms.byHotels` (ids canônicos: `api/ids.ts`).
 - `ComparisonTable`, `CompactHotelCard` e `lib/comparison` foram promovidos da F4; `ComparisonRow` tem `best`/`bestLabel`.
+
+## F7b (plataforma: i18n, mapas, offline)
+- **`i18n/`**: `config` (`LOCALES`, `Locale`, `isLocale`, `contentLang`), `paths` (`localizePath`, `parsePublicPath`, `switchLocalePath`, `isCheckoutPath`,
+  `alternatesFor`, `resolveLocaleRequest` do proxy), `messages` (`defineMessages`, `plural`), `client` (`I18nProvider`, `useLocale`), `server` (`getLocale` por
+  `next/root-params`), `cookie`, `common/` (dicionário comum + `useCommonMessages`). Rotas: pt-BR sem prefixo, en-US em `/en`; o `app/[locale]` recebe a
+  URL reescrita pelo `proxy.ts`. **Nunca derive `href` de `usePathname()` em render** (rewrite do proxy): use `localizePath(useLocale(), "/rota")`.
+  Todo texto novo nasce em `i18n/` (a catraca `src/i18n-guard.test.ts` está em 0: texto fora de `i18n/` quebra o teste).
+- **Traduzido (parte 2)**: `i18n/common` (erros, rótulos de comodidade/tipo/cama, disponibilidade, cancelamento, preço, paginação, `routes.*`), `i18n/units` (`formatUnit`), `saved/i18n`. Os helpers de `lib/` recebem `locale` (obrigatório, sem default). `SiteHeader` recebe `homeLabel`/`homeHref`; `copyCurrentUrl(locale)`.
+- Formatadores (`formatBRL`, `formatRating`, `formatDate`, `formatDateRange`, `formatCount`) recebem `locale` (obrigatório). `Dialog` usa `common.dialog.close` quando `closeLabel` não vem.
+- **Mapa**: `lib/map-tiles` (`TILE_ORIGIN`/`TILE_URL`/`MAX_ZOOM`/`tileUrl`, única fonte da CSP e do cache do SW), `lib/geo` (`boundsOf`, `fitPlan`, `osmLink`),
+  `ui/map/` (`InteractiveMapImpl` react-leaflet + `MapMarkerElement` (DOM por `textContent`, nunca HTML) + `map.css` + `useInteractiveMap` que carrega o
+  chunk sob demanda; o `retry` recarrega a página, porque o runtime do Turbopack guarda a promessa rejeitada do chunk e um novo `import()` falha igual). `leaflet.css` é CSS sem camada e vence os utilitários do Tailwind (cor de `a` dentro do mapa usa `!`).
+- **Offline**: `api/persist.ts` (allowlist `PERSISTABLE_ROOTS` = suggestions/hotels/rooms/reviews, **nunca** `meta.sensitive === true` nem `bookings`;
+  `serializeClient` refiltra), `AppProviders` usa `PersistQueryClientProvider` (24 h, `buster` = `APP_VERSION`), `makeQueryClient` tem `gcTime` 24 h no navegador.
+  `hooks/useHydrated` evita divergência de hidratação com dado restaurado. Toast aceita `persistent: true`.
+- `lib/brand` (cores de marca fora do CSS; um teste compara com os tokens de `globals.css`) e `lib/app-version` (`NEXT_PUBLIC_APP_VERSION`).
+- **CSP do checkout**: ganhou `worker-src 'self'` (com `strict-dynamic` o fallback ignoraria `'self'`) e `manifest-src 'self'`; `img-src` vem de `TILE_ORIGIN`.
+
+## F7b: correções da revisão
+- **Átomos de UI puros por `locale`**: `Stars`, `PriceTag`, `RatingScore`, `PriceBreakdown`, `CompactHotelCard`, `ErrorState`,
+  `Pagination` e `SkipLink` recebem `locale` por prop (dicionário `commonMessages.get(locale)`), sem hook e sem
+  `"use client"`. Cliente passa `useLocale()`; servidor, `await getLocale()`. `SkipLink` aceita `label` pronto **ou** `locale`.
+- **Rotas públicas**: `compareHref(locale, ids, criteria)` já devolve o caminho com `/en`; todo `href`/`push`/`replace`/`replaceState`
+  usa `localizePath(locale, …)`. A catraca `src/i18n-guard.test.ts` falha com rota crua, inglês cru em JSX e rótulos de objeto.
+- **`aria-current` e bandeja**: `SavedNav`/`CompareTray` só olham o pathname depois de `useHydrated()` (`/[locale]/favorites` é SSG com rewrite).
+- **Persistência**: `deserializeClient` valida `state.data` por raiz (`hasValidPersistedData`); o histórico usa a raiz própria
+  `history-hotels` (fora da allowlist, com `meta.sensitive`) e "Limpar histórico" a remove.
+- **E2E**: todo spec importa `test` de `e2e/fixtures.ts` (Biome `noRestrictedImports`); a fixture bloqueia service workers
+  (o `page.route` não os vê), intercepta os tiles do OSM e falha se algum escapar. `pwa.build.spec` liga o SW com `test.use`.
+- `localeOf(params)` (`i18n/params`) em páginas; `SITE_URL` (`lib/site-url`) alimenta o `metadataBase`.

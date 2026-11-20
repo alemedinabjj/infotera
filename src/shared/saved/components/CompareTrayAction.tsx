@@ -4,10 +4,8 @@ import Link from "next/link";
 import { cn } from "../../lib/cn";
 import { Button } from "../../ui/atoms/Button";
 import { buttonClassName } from "../../ui/atoms/button-styles";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
 import { announceCompare } from "../stores/announcer";
-
-const MESSAGES = SAVED_MESSAGES.tray;
 
 type CompareTrayActionProps = { count: number; href: string };
 
@@ -16,12 +14,14 @@ type CompareTrayActionProps = { count: number; href: string };
  * clicar, anuncia o motivo (continua focável).
  */
 export const CompareTrayAction = ({ count, href }: CompareTrayActionProps) => {
+  const MESSAGES = useSavedMessages().tray;
+  const compareMessages = useSavedMessages().compare;
   if (count < 2) {
     return (
       <Button
         aria-disabled
         className="shrink-0"
-        onClick={() => announceCompare(SAVED_MESSAGES.compare.needTwo)}
+        onClick={() => announceCompare(compareMessages.needTwo)}
       >
         {MESSAGES.action}
       </Button>

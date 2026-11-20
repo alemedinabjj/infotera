@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
+import { commonMessages } from "../../i18n/common/messages";
+import type { Locale } from "../../i18n/config";
 import { cn } from "../../lib/cn";
 import { Button } from "../atoms/Button";
 import { AlertCircleIcon } from "../icons";
 
 type ErrorStateProps = {
+  locale: Locale;
   title: string;
   description?: ReactNode;
   onRetry?: () => void;
@@ -21,17 +24,19 @@ type ErrorStateProps = {
 
 /** Estado de erro com `role="alert"` e botão de nova tentativa. */
 export const ErrorState = ({
+  locale,
   title,
   description,
   onRetry,
   retrying = false,
-  retryLabel = "Tentar de novo",
+  retryLabel,
   variant = "inline",
   action,
   headingLevel = 2,
   className,
 }: ErrorStateProps) => {
   const Heading = `h${headingLevel}` as const;
+  const t = commonMessages.get(locale).ui;
   return (
     <div
       role="alert"
@@ -53,9 +58,9 @@ export const ErrorState = ({
               variant="secondary"
               onClick={onRetry}
               loading={retrying}
-              loadingText="Tentando…"
+              loadingText={t.retrying}
             >
-              {retryLabel}
+              {retryLabel ?? t.tryAgain}
             </Button>
           ) : null}
           {action}

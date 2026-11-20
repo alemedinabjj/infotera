@@ -19,6 +19,7 @@ const FULL: SearchFilters = {
   amenities: ["wifi", "pool", "spa"],
   sort: "rating-desc",
   view: "pages",
+  map: false,
   page: 2,
 };
 
@@ -206,5 +207,30 @@ describe("countActiveFilters / hasActiveFilters", () => {
   it("soma preço, nota, tipos e comodidades", () => {
     expect(countActiveFilters(FULL)).toBe(1 + 1 + 2 + 3);
     expect(hasActiveFilters(FULL)).toBe(true);
+  });
+});
+
+describe("map (preferência de exibição na URL)", () => {
+  it("map=1 abre; ausente, vazio ou inválido fica fechado", () => {
+    expect(parse("map=1").map).toBe(true);
+    expect(parse("").map).toBe(false);
+    for (const raw of ["map=", "map=0", "map=true", "map=2", "map=on"]) {
+      expect(parse(raw).map).toBe(false);
+    }
+  });
+
+  it("round-trip: serializa `map=1` depois de `view` e ignora quando fechado", () => {
+    const open = { ...DEFAULT_FILTERS, sort: "distance", view: "infinite", map: true } as const;
+    expect(serializeSearchFilters(open).toString()).toBe("sort=distance&view=infinite&map=1");
+    expect(parseSearchFilters(serializeSearchFilters(open))).toEqual(open);
+    expect(serializeSearchFilters({ ...DEFAULT_FILTERS, map: false }).toString()).toBe("");
+  });
+
+  it("não conta como filtro ativo e withFilters preserva a posição dos critérios", () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, map: true })).toBe(0);
+    expect(hasActiveFilters({ ...DEFAULT_FILTERS, map: true })).toBe(false);
+    const params = new URLSearchParams("destination=Rio&map=1&page=3");
+    const next = withFilters(params, { ...DEFAULT_FILTERS, map: true });
+    expect(next.toString()).toBe("destination=Rio&map=1");
   });
 });

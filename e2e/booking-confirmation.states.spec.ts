@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { z } from "zod";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { bookingPath, createBooking, README_FORMAT_BOOKING } from "./helpers/booking";
 import { noHorizontalScroll } from "./helpers/hotel-details";
@@ -15,6 +16,17 @@ const expectNoViolations = async (page: Page) => {
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(" | ")}`),
   ).toEqual([]);
+};
+
+/**
+ * O número aparece uma vez na tela. O React transmite o conteúdo da rota num `<div hidden>` que só
+ * sai do DOM quando troca o skeleton: `getByText` também casa esse nó oculto (e o código curto, que
+ * no id curto do json-server é igual ao número), por isso o número é lido pelo id dentro do `main`
+ * (o que a pessoa vê e o leitor de tela lê) e, depois de estabilizar, o id existe uma única vez.
+ */
+const expectBookingNumber = async (page: Page, id: string) => {
+  await expect(page.getByRole("main").locator("#numero-reserva")).toHaveText(id);
+  await expect(page.locator("#numero-reserva")).toHaveCount(1);
 };
 
 const NOT_FOUND = { level: 1, name: "Reserva não encontrada" } as const;
@@ -52,12 +64,15 @@ test.describe("reserva não encontrada (critérios 7, 8 e 9)", () => {
   });
 
   test("reserva do curl do README (id curto do json-server) abre", async ({ page, request }) => {
+    // O json-server só gera id texto (uuid) se a coleção já tiver um; numa base vazia o POST sem id
+    // devolve um número. Uma reserva antes garante o formato sem depender da ordem dos testes.
+    await createBooking(request);
     const response = await request.post(`${API_URL}/bookings`, { data: README_FORMAT_BOOKING });
     const { id } = z.object({ id: z.string() }).parse(await response.json());
     expect(id).not.toMatch(/^\d+$/);
     await page.goto(bookingPath(id));
     await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
-    await expect(page.getByText(id, { exact: true })).toBeVisible();
+    await expectBookingNumber(page, id);
   });
 
   test("UUID em maiúsculas abre normalmente, com o número em minúsculas", async ({
@@ -67,7 +82,7 @@ test.describe("reserva não encontrada (critérios 7, 8 e 9)", () => {
     const id = await createBooking(request);
     await page.goto(bookingPath(id.toUpperCase()));
     await expect(page.getByRole("heading", { level: 1, name: "Reserva confirmada" })).toBeVisible();
-    await expect(page.getByText(id, { exact: true })).toBeVisible();
+    await expectBookingNumber(page, id);
   });
 });
 

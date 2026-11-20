@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seedHotel } from "@/shared/testing/seed";
-import { osmLink, staticMapLayout, tileUrl } from "./static-map";
+import { STATIC_MAP_FRAMES, staticMapLayout } from "./static-map";
 
 const hotel = seedHotel(1);
 const INPUT = { lat: hotel.latitude, lon: hotel.longitude, zoom: 15, width: 640, height: 320 };
@@ -68,13 +68,23 @@ describe("staticMapLayout: bordas", () => {
   });
 });
 
-describe("links", () => {
-  it("URL do tile e link do OSM com marcador", () => {
-    expect(tileUrl({ z: 15, x: 12453, y: 18532 })).toBe(
-      "https://tile.openstreetmap.org/15/12453/18532.png",
-    );
-    expect(osmLink(-22.9683, -43.1792)).toBe(
-      "https://www.openstreetmap.org/?mlat=-22.9683&mlon=-43.1792#map=15/-22.9683/-43.1792",
+describe("STATIC_MAP_FRAMES", () => {
+  it("compact é 4:3 e wide é 2:1, com o marcador no centro das duas", () => {
+    const { compact, wide } = STATIC_MAP_FRAMES;
+    expect(compact.width / compact.height).toBeCloseTo(4 / 3, 6);
+    expect(wide.width / wide.height).toBeCloseTo(2, 6);
+    for (const frame of [compact, wide]) {
+      const map = staticMapLayout({ ...INPUT, ...frame });
+      expect(map.marker.leftPct).toBeCloseTo(50, 6);
+      expect(map.marker.topPct).toBeCloseTo(50, 6);
+    }
+  });
+
+  it("o canvas 4:3 é mais alto: cobre mais linhas de tiles que o 2:1", () => {
+    const compact = staticMapLayout({ ...INPUT, ...STATIC_MAP_FRAMES.compact });
+    const wide = staticMapLayout({ ...INPUT, ...STATIC_MAP_FRAMES.wide });
+    expect(new Set(compact.tiles.map((tile) => tile.y)).size).toBeGreaterThanOrEqual(
+      new Set(wide.tiles.map((tile) => tile.y)).size,
     );
   });
 });

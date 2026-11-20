@@ -26,6 +26,7 @@ describe("describeAvailability", () => {
     hasDates = true,
   ) =>
     describeAvailability({
+      locale: "pt-BR",
       status,
       availableRooms: available,
       requestedRooms: requested,

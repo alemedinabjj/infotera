@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import type { Room } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { todayISO } from "@/shared/lib/dates";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
 import { buttonClassName, EmptyState } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { type BlockedReason, describeBlocked } from "../model/blocked";
 import { hotelBackHref } from "../model/checkout-gate";
@@ -21,6 +24,8 @@ type BlockedCheckoutProps = {
  * (e de anel de foco) no h1.
  */
 export const BlockedCheckout = ({ reason, selection, room }: BlockedCheckoutProps) => {
+  const locale = useLocale();
+  const t = useCheckoutMessages();
   const copy = describeBlocked({
     reason,
     criteria: selection.criteria,
@@ -28,6 +33,7 @@ export const BlockedCheckout = ({ reason, selection, room }: BlockedCheckoutProp
     available: room?.available ?? null,
     maxGuests: room?.maxGuests ?? null,
     today: todayISO(),
+    locale,
   });
 
   useDocumentTitle(copy.title);
@@ -41,13 +47,16 @@ export const BlockedCheckout = ({ reason, selection, room }: BlockedCheckoutProp
         action={
           <>
             <Link
-              href={hotelBackHref(selection, reason)}
+              href={localizePath(locale, hotelBackHref(selection, reason))}
               className={buttonClassName({ variant: "primary" })}
             >
               {copy.action}
             </Link>
-            <Link href="/" className={buttonClassName({ variant: "ghost" })}>
-              Fazer nova busca
+            <Link
+              href={localizePath(locale, "/")}
+              className={buttonClassName({ variant: "ghost" })}
+            >
+              {t.newSearch}
             </Link>
           </>
         }

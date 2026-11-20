@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
 import { cardByName, criteriaQuery, hotelName } from "./helpers/hotel-search";
 
 // Dinheiro: o total (com taxa de serviço e ISS) é o mesmo número no card da busca, no quarto do

@@ -74,6 +74,6 @@ export const StayEditProvider = ({ criteriaKey, children }: StayEditProviderProp
 /** Lê o painel de datas; só dentro de `StayEditProvider`. */
 export const useStayEdit = (): StayEdit => {
   const value = useContext(StayEditContext);
-  if (value === null) throw new Error("useStayEdit precisa de StayEditProvider");
+  if (value === null) throw new Error("useStayEdit must be used within StayEditProvider");
   return value;
 };

@@ -163,3 +163,21 @@ index.ts                  API pública usada por app/search
   O skeleton ganhou a linha. `HotelCard` é `m.article`: prop `fade` (`{ delay }` ou `null`) liga o fade de opacidade no 1º mount.
 - Lista paginada: `staggerDelay(index)`. Feed virtualizado: `useSeenCount(queryKey, itens)` + `shouldAnimateItem`; item
   remontado ao rolar de volta não pisca.
+
+## F7b (mapa dos resultados)
+- **`map=1` na URL** é preferência de exibição (como `view`): `SearchFilters.map`, `toggleMap` **não** volta a página para 1, `clear` mantém, não
+  conta em "Filtros (n)", nova busca (critérios sem `map`) zera.
+- `components/MapToggle` (último da toolbar, `aria-pressed` + `aria-controls` só com o painel no DOM) · `ResultsMap` (painel `h-[clamp(280px,45dvh,420px)]`
+  acima da lista, **só na visão `results`**) · `MapPopup` (nome, nota, preço, "Ver hotel" com os critérios e "Mostrar na lista").
+  `useMapMarkers` lê os quartos do cache (só leitura): o preço do marcador é o do card (`deriveCardPricing`); esgotado vira "Esgotado" apagado.
+- `store/map-sync` (Zustand): `activeHotelId` + `revealCard` registrado pelo modo de lista ativo (`usePagesReveal` foca o link do card; o `HotelFeed`
+  usa `focusIndex`). Cada card/marcador assina `s.activeHotelId === id`. `useCardMapSync` liga pointer/foco do card.
+- MapToggle: rótulo fixo "Mapa", `aria-pressed`, `aria-controls` só com o painel. Dica de teclado abaixo da moldura (`MapHint`, `group-has-[:focus-visible]`); popup com × nosso,
+  foco a cada abertura e Tab/Shift+Tab/Esc/Espaço conforme o DS §9.9 (lógica em `shared/ui/map/popup-keys`). Falha do chunk: o painel vira o `Alert` e o retry pede o chunk
+  de novo no mesmo lugar (foco no contêiner do mapa se der certo; senão recarrega). Sem rede ao trocar ordenação/filtro/página: a lista anterior fica com aviso (`staleOffline`).
+- "Pular o mapa" leva o foco ao **primeiro card** (não ao h2, que fica acima do mapa e reiniciaria o Tab pela toolbar).
+- `i18n/` já existe só com a seção `map` (a tradução do resto da feature entra na parte 2 da F7b).
+- **Hidratação**: `useHotelResults`/`useHotelFeed` tratam "sem dado" até `useHydrated()` (o cache persistido só existe no cliente; sem isto a lista
+  restaurada divergia do HTML do servidor).
+- **i18n**: dicionário completo (`list`, `feed`, `controls`, `distance`, `page`, `map`). `describe*`, `sortLabel`, `formatDistanceFromCenter`, `describePriceSummary`, `searchPageTitle`
+  aceitam `locale`. O card localiza o link (`localizePath`) e usa `formatUnit`.

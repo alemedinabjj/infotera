@@ -31,23 +31,36 @@ describe("deriveResultsView", () => {
     ["sem dados com erro", { hasData: false, isError: true }, { kind: "error" }],
     ["sem dados e sem rede", { hasData: false, isPaused: true }, { kind: "offline" }],
     ["erro vence sem rede", { hasData: false, isError: true, isPaused: true }, { kind: "error" }],
-    ["resultados", {}, { kind: "results", stale: false, offlineWithData: false }],
+    [
+      "resultados",
+      {},
+      { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
+    ],
     [
       "placeholder (troca em andamento)",
       { isPlaceholderData: true },
-      { kind: "results", stale: true, offlineWithData: false },
+      { kind: "results", stale: true, offlineWithData: false, staleOffline: false },
     ],
     ["placeholder + erro", { isPlaceholderData: true, isError: true }, { kind: "error" }],
-    ["placeholder + sem rede", { isPlaceholderData: true, isPaused: true }, { kind: "offline" }],
+    [
+      "placeholder + sem rede: a lista anterior fica, com aviso de que não atualiza",
+      { isPlaceholderData: true, isPaused: true },
+      { kind: "results", stale: true, offlineWithData: false, staleOffline: true },
+    ],
+    [
+      "placeholder vazio + sem rede: sem lista para mostrar",
+      { isPlaceholderData: true, isPaused: true, total: 0 },
+      { kind: "offline" },
+    ],
     [
       "dados da mesma chave + sem rede",
       { isPaused: true },
-      { kind: "results", stale: false, offlineWithData: true },
+      { kind: "results", stale: false, offlineWithData: true, staleOffline: false },
     ],
     [
       "dados + erro de refetch em segundo plano",
       { isError: true },
-      { kind: "results", stale: false, offlineWithData: false },
+      { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
     ],
     ["vazio do destino", { total: 0 }, { kind: "empty-destination" }],
     ["vazio com filtros", { total: 0, hasActiveFilters: true }, { kind: "empty-filters" }],
@@ -60,12 +73,12 @@ describe("deriveResultsView", () => {
     [
       "página fora do intervalo em placeholder fica stale",
       { page: 5, isPlaceholderData: true },
-      { kind: "results", stale: true, offlineWithData: false },
+      { kind: "results", stale: true, offlineWithData: false, staleOffline: false },
     ],
     [
       "última página válida",
       { page: 2 },
-      { kind: "results", stale: false, offlineWithData: false },
+      { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
     ],
   ])("%s", (_label, overrides, expected) => {
     expect(view(overrides)).toEqual(expected);
@@ -83,32 +96,40 @@ describe("outOfRangePage", () => {
 
 describe("textos", () => {
   it("describeResultCount: 0, 1 e n", () => {
-    expect(describeResultCount(0)).toBe("Nenhum hotel encontrado");
-    expect(describeResultCount(1)).toBe("1 hotel encontrado");
-    expect(describeResultCount(14)).toBe("14 hotéis encontrados");
+    expect(describeResultCount(0, "pt-BR")).toBe("Nenhum hotel encontrado");
+    expect(describeResultCount(1, "pt-BR")).toBe("1 hotel encontrado");
+    expect(describeResultCount(14, "pt-BR")).toBe("14 hotéis encontrados");
   });
 
   it("describePageSuffix só com mais de uma página", () => {
-    expect(describePageSuffix(2, 14)).toBe(", página 2 de 2");
-    expect(describePageSuffix(1, 10)).toBe("");
-    expect(describePageSuffix(1, 0)).toBe("");
+    expect(describePageSuffix(2, 14, "pt-BR")).toBe(", página 2 de 2");
+    expect(describePageSuffix(1, 10, "pt-BR")).toBe("");
+    expect(describePageSuffix(1, 0, "pt-BR")).toBe("");
   });
 
   it("describeVisibleRange", () => {
-    expect(describeVisibleRange(1, 14)).toBe("Mostrando 1–10 de 14");
-    expect(describeVisibleRange(2, 14)).toBe("Mostrando 11–14 de 14");
-    expect(describeVisibleRange(1, 1)).toBe("Mostrando 1–1 de 1");
+    expect(describeVisibleRange(1, 14, "pt-BR")).toBe("Mostrando 1–10 de 14");
+    expect(describeVisibleRange(2, 14, "pt-BR")).toBe("Mostrando 11–14 de 14");
+    expect(describeVisibleRange(1, 1, "pt-BR")).toBe("Mostrando 1–1 de 1");
   });
 
   it("describeAnnouncement por visão", () => {
     const announce = (v: ResultsView, slow = false) =>
-      describeAnnouncement({ view: v, slow, total: 14, destination: "Bonito, MS" });
+      describeAnnouncement({
+        locale: "pt-BR",
+        view: v,
+        slow,
+        total: 14,
+        destination: "Bonito, MS",
+      });
     expect(announce({ kind: "loading" })).toBe("Carregando hotéis…");
     expect(announce({ kind: "loading" }, true)).toBe("Está demorando mais que o normal…");
-    expect(announce({ kind: "results", stale: false, offlineWithData: false })).toBe(
-      "14 hotéis encontrados",
-    );
-    expect(announce({ kind: "results", stale: true, offlineWithData: false })).toBe("");
+    expect(
+      announce({ kind: "results", stale: false, offlineWithData: false, staleOffline: false }),
+    ).toBe("14 hotéis encontrados");
+    expect(
+      announce({ kind: "results", stale: true, offlineWithData: false, staleOffline: false }),
+    ).toBe("");
     expect(announce({ kind: "empty-filters" })).toBe("Nenhum hotel com esses filtros");
     expect(announce({ kind: "empty-destination" })).toBe("Nenhum hotel em Bonito, MS");
     expect(announce({ kind: "error" })).toBe("");
@@ -123,7 +144,7 @@ describe("describeToolbar", () => {
     slow = false,
     total = 14,
     listing: Listing = { mode: "pages", page: 1 },
-  ) => describeToolbar({ view: v, slow, total, listing });
+  ) => describeToolbar({ locale: "pt-BR", view: v, slow, total, listing });
 
   it("carregando: skeleton + spinner, e 'demorando' depois de 5 s", () => {
     expect(toolbar({ kind: "loading" })).toEqual({
@@ -138,10 +159,15 @@ describe("describeToolbar", () => {
 
   it("resultados: contagem, sufixo de página e faixa", () => {
     expect(
-      toolbar({ kind: "results", stale: false, offlineWithData: false }, false, 14, {
-        mode: "pages",
-        page: 2,
-      }),
+      toolbar(
+        { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
+        false,
+        14,
+        {
+          mode: "pages",
+          page: 2,
+        },
+      ),
     ).toEqual({
       heading: { kind: "text", text: "14 hotéis encontrados", srSuffix: ", página 2 de 2" },
       status: { kind: "text", text: "Mostrando 11–14 de 14" },
@@ -150,10 +176,15 @@ describe("describeToolbar", () => {
 
   it("feed: 'Mostrando 10 de 14' e sem sufixo de página", () => {
     expect(
-      toolbar({ kind: "results", stale: false, offlineWithData: false }, false, 14, {
-        mode: "infinite",
-        loaded: 10,
-      }),
+      toolbar(
+        { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
+        false,
+        14,
+        {
+          mode: "infinite",
+          loaded: 10,
+        },
+      ),
     ).toEqual({
       heading: { kind: "text", text: "14 hotéis encontrados", srSuffix: "" },
       status: { kind: "text", text: "Mostrando 10 de 14" },
@@ -161,7 +192,9 @@ describe("describeToolbar", () => {
   });
 
   it("stale: mantém a contagem anterior e mostra Atualizando", () => {
-    expect(toolbar({ kind: "results", stale: true, offlineWithData: false }).status).toEqual({
+    expect(
+      toolbar({ kind: "results", stale: true, offlineWithData: false, staleOffline: false }).status,
+    ).toEqual({
       kind: "spinner",
       text: "Atualizando resultados…",
     });
@@ -178,11 +211,12 @@ describe("describeToolbar", () => {
 });
 
 describe("describeSheetAction", () => {
-  const action = (v: ResultsView, total = 14) => describeSheetAction(v, total);
+  const action = (v: ResultsView, total = 14) => describeSheetAction(v, total, "pt-BR");
   const results = (stale: boolean): ResultsView => ({
     kind: "results",
     stale,
     offlineWithData: false,
+    staleOffline: false,
   });
 
   it("resultado esperado no primário", () => {

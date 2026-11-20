@@ -6,6 +6,7 @@ import { BookingConfirmation } from "./BookingConfirmation";
 import { ConfirmationView } from "./ConfirmationView";
 import { UnreadableBooking } from "./UnreadableBooking";
 
+vi.mock("@/shared/i18n/server", () => ({ getLocale: vi.fn(async () => "pt-BR") }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK;404"), {

@@ -4,8 +4,9 @@ Lista os hotéis favoritos deste navegador. Sem servidor: o storage guarda só `
 **1** `GET /hotels?id=…` (`hotelsByIdsQueryOptions`). Spec: `docs/specs/F7a-product-extras.md`. `app/` importa só `FavoritesView`.
 
 ```
-model/        favorites-view (deriveFavoritesView, orderBySnapshot) · messages
-hooks/        useFavoritesPage (snapshot de ids no mount, query, prune pós-sucesso)
+model/        favorites-view (deriveFavoritesView, orderBySnapshot)
+i18n/         pt-BR · en-US · messages (`favoritesMessages`, inclui `metaTitle`; `app/` usa `generateMetadata`)
+hooks/        useFavoritesMessages · useFavoritesPage (snapshot de ids no mount, query, prune pós-sucesso)
 components/   FavoritesView · FavoriteCard (card + fantasma) · RemovedFavorite · FavoritesSkeleton
 ```
 

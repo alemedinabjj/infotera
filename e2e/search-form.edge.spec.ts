@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 
 const destination = (page: Page) => page.getByRole("combobox", { name: /Destino/ });

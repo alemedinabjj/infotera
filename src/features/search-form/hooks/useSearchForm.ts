@@ -2,13 +2,15 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { useDeferredBlur } from "@/shared/hooks/useDeferredBlur";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import { todayISO } from "@/shared/lib/dates";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { summarizeErrors } from "../model/error-summary";
-import { EXPIRED_DATES_NOTICE, formatRestored } from "../model/notices";
+import { expiredDatesNotice, formatRestored } from "../model/notices";
 import { restoreRecentSearch } from "../model/recent-searches";
-import { searchFormResolver } from "../model/search-form.resolver";
+import { makeSearchFormResolver } from "../model/search-form.resolver";
 import {
   DEFAULT_SEARCH_FORM_VALUES,
   type SearchFormValues,
@@ -33,6 +35,7 @@ export const useSearchForm = (
   initialCriteria?: Partial<SearchCriteria>,
   { getSubmitHref }: SearchFormOptions = {},
 ) => {
+  const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [attempts, setAttempts] = useState(0);
@@ -43,7 +46,7 @@ export const useSearchForm = (
   const notices = useFormNotices();
   const recent = useRecentSearches();
   const form = useForm<SearchFormValues, unknown, SearchCriteria>({
-    resolver: searchFormResolver,
+    resolver: makeSearchFormResolver(locale),
     defaultValues: initialCriteria ? toFormValues(initialCriteria) : DEFAULT_SEARCH_FORM_VALUES,
     mode: "onTouched",
     reValidateMode: "onChange",
@@ -58,7 +61,7 @@ export const useSearchForm = (
       recent.add(criteria);
       startTransition(() => {
         if (getSubmitHref) router.push(getSubmitHref(criteria), { scroll: false });
-        else router.push(`/search?${searchCriteriaToQueryString(criteria)}`);
+        else router.push(localizePath(locale, `/search?${searchCriteriaToQueryString(criteria)}`));
       });
     },
     () => setAttempts((count) => count + 1),
@@ -74,12 +77,12 @@ export const useSearchForm = (
     // header fixo) antes de focar, para a pessoa ver o que foi preenchido.
     revealBelowHeader(formRef.current);
     if (datesExpired) {
-      notices.showNotice({ field: "checkIn", text: EXPIRED_DATES_NOTICE });
+      notices.showNotice({ field: "checkIn", text: expiredDatesNotice(locale) });
       // `reset` re-registra os campos no próximo render; o foco espera por ele.
       setTimeout(() => form.setFocus("checkIn"), 0);
     } else {
       notices.showNotice(null);
-      notices.announce(formatRestored(criteria.destination));
+      notices.announce(formatRestored(criteria.destination, locale));
       submitRef.current?.focus({ preventScroll: true });
     }
   };
@@ -95,7 +98,7 @@ export const useSearchForm = (
     notices,
     recent,
     restore,
-    summary: attempts > 0 ? summarizeErrors(errors) : [],
+    summary: attempts > 0 ? summarizeErrors(errors, locale) : [],
     attempts,
   };
 };

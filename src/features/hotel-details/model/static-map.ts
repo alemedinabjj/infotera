@@ -18,6 +18,15 @@ export type StaticMap = {
 
 type StaticMapInput = { lat: number; lon: number; zoom: number; width: number; height: number };
 
+/**
+ * Tamanhos do canvas do mapa estático, um por proporção da moldura: `compact` é 4:3 (abaixo de `sm`,
+ * onde 2:1 daria 288×144 e o popup não cabe) e `wide` é 2:1 (a partir de `sm`).
+ */
+export const STATIC_MAP_FRAMES = {
+  compact: { width: 640, height: 480 },
+  wide: { width: 640, height: 320 },
+} as const;
+
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
@@ -70,11 +79,3 @@ export const staticMapLayout = ({ lat, lon, zoom, width, height }: StaticMapInpu
     },
   };
 };
-
-/** URL do tile padrão do OpenStreetMap. */
-export const tileUrl = ({ z, x, y }: Pick<MapTile, "z" | "x" | "y">): string =>
-  `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
-
-/** Link "Abrir no OpenStreetMap" com o marcador no ponto. */
-export const osmLink = (lat: number, lon: number, zoom = 15): string =>
-  `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;

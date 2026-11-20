@@ -1,11 +1,13 @@
+import type { Locale } from "@/shared/i18n/config";
 import { type ISODate, isBeforeToday, isValidISODate } from "@/shared/lib/dates";
 import {
   applySearchCriteriaRules,
   SEARCH_LIMITS,
-  SEARCH_MESSAGES,
   type SearchCriteria,
+  searchMessages,
 } from "@/shared/lib/search-params";
 import { z } from "@/shared/lib/zod";
+import { searchFormMessages } from "../i18n/messages";
 
 /** Valores do formulário. Datas e destino são `""` enquanto vazios. */
 export type SearchFormValues = {
@@ -30,44 +32,47 @@ export const DEFAULT_SEARCH_FORM_VALUES: SearchFormValues = {
  * Mensagens exclusivas do formulário; as demais vêm de `SEARCH_MESSAGES`. "check‑in/out" usa hífen
  * não separável (U+2011) para a palavra não quebrar em duas linhas no mobile.
  */
-export const FORM_MESSAGES = {
-  checkInRequired: "Escolha a data de check\u2011in.",
-  checkOutRequired: "Escolha a data de check\u2011out.",
-  checkInPast: "Escolha uma data a partir de hoje.",
-} as const;
+/** Mensagens exclusivas do formulário no idioma (as de busca vêm de `searchMessages`). */
+export const formMessages = (locale: Locale) => searchFormMessages.get(locale).validation;
 
 const countSchema = (min: number, max: number, message: string) =>
   z.number({ message }).int({ message }).min(min, { message }).max(max, { message });
 
-const dateSchema = (requiredMessage: string) =>
+const dateSchema = (requiredMessage: string, dateMessage: string) =>
   z
     .string()
     .min(1, requiredMessage)
-    .refine((value) => value === "" || isValidISODate(value), SEARCH_MESSAGES.date);
+    .refine((value) => value === "" || isValidISODate(value), dateMessage);
 
 /**
  * Schema do formulário de busca. Mesmas regras do `searchCriteriaSchema` (via
  * `applySearchCriteriaRules`), mas com campos `number` (sem coerção) e "check-in ≥ hoje".
  * `today` entra por parâmetro para a regra acompanhar o relógio no momento da validação.
  */
-export const makeSearchFormSchema = (today: ISODate): z.ZodType<SearchCriteria, SearchFormValues> =>
-  z
+export const makeSearchFormSchema = (
+  today: ISODate,
+  locale: Locale,
+): z.ZodType<SearchCriteria, SearchFormValues> => {
+  const SEARCH_MESSAGES = searchMessages(locale);
+  const FORM_MESSAGES = formMessages(locale);
+  return z
     .object({
       destination: z
         .string()
         .trim()
         .min(1, SEARCH_MESSAGES.destination)
         .max(100, SEARCH_MESSAGES.destination),
-      checkIn: dateSchema(FORM_MESSAGES.checkInRequired).refine(
+      checkIn: dateSchema(FORM_MESSAGES.checkInRequired, SEARCH_MESSAGES.date).refine(
         (value) => !isValidISODate(value) || !isBeforeToday(value, today),
         FORM_MESSAGES.checkInPast,
       ),
-      checkOut: dateSchema(FORM_MESSAGES.checkOutRequired),
+      checkOut: dateSchema(FORM_MESSAGES.checkOutRequired, SEARCH_MESSAGES.date),
       rooms: countSchema(SEARCH_LIMITS.minRooms, SEARCH_LIMITS.maxRooms, SEARCH_MESSAGES.rooms),
       adults: countSchema(1, SEARCH_LIMITS.maxAdults, SEARCH_MESSAGES.adults),
       children: countSchema(0, SEARCH_LIMITS.maxChildren, SEARCH_MESSAGES.children),
     })
-    .superRefine(applySearchCriteriaRules);
+    .superRefine((value, ctx) => applySearchCriteriaRules(value, ctx, SEARCH_MESSAGES));
+};
 
 /** Critérios (URL, recentes), inteiros ou parciais → valores do formulário (o resto vem dos padrões). */
 export const toFormValues = (criteria: Partial<SearchCriteria>): SearchFormValues => ({

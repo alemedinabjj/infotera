@@ -2,14 +2,15 @@ import { describe, expect, it } from "vitest";
 import { searchCriteriaSchema } from "@/shared/lib/search-params";
 import {
   DEFAULT_SEARCH_FORM_VALUES,
-  FORM_MESSAGES,
+  formMessages,
   makeSearchFormSchema,
   type SearchFormValues,
   toFormValues,
 } from "./search-form.schema";
 
+const FORM_MESSAGES = formMessages("pt-BR");
 const TODAY = "2026-12-10";
-const schema = makeSearchFormSchema(TODAY);
+const schema = makeSearchFormSchema(TODAY, "pt-BR");
 const valid: SearchFormValues = {
   destination: "São Paulo, SP",
   checkIn: "2026-12-12",

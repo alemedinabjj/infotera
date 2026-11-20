@@ -1,6 +1,8 @@
 import type { PriceBreakdown } from "../api/schemas";
+import { commonMessages } from "../i18n/common/messages";
+import type { Locale } from "../i18n/config";
+import { formatUnit } from "../i18n/units";
 import { centsToReais, formatBRL, reaisToCents } from "./currency";
-import { pluralize } from "./format";
 
 /** Taxa de serviço (10%) e ISS (5%), em basis points, sobre a base já com desconto. */
 export const SERVICE_FEE_BPS = 1000;
@@ -29,21 +31,23 @@ export type PriceLine =
   | { kind: "tax"; bps: number; amountCents: number };
 
 /** `R$ 1.200,00` a partir de centavos inteiros. */
-export const formatCents = (cents: number): string => formatBRL(centsToReais(cents));
+export const formatCents = (cents: number, locale: Locale): string =>
+  formatBRL(centsToReais(cents), { locale });
 
 const percent = (bps: number): string => `${bps / 100}%`;
 
 /** Rótulo de cada linha do detalhamento (switch exaustivo). */
-export const priceLineLabel = (line: PriceLine): string => {
+export const priceLineLabel = (line: PriceLine, locale: Locale): string => {
+  const t = commonMessages.get(locale).price;
   switch (line.kind) {
     case "stay":
-      return `${formatCents(line.nightlyCents)} × ${pluralize(line.nights, "noite", "noites")} × ${pluralize(line.rooms, "quarto", "quartos")}`;
+      return `${formatCents(line.nightlyCents, locale)} × ${formatUnit(line.nights, "night", locale)} × ${formatUnit(line.rooms, "room", locale)}`;
     case "discount":
-      return line.code === null ? "Desconto" : `Desconto (${line.code})`;
+      return line.code === null ? t.discount : t.discountCode({ code: line.code });
     case "service-fee":
-      return `Taxa de serviço (${percent(line.bps)})`;
+      return t.serviceFee({ percent: percent(line.bps) });
     case "tax":
-      return `ISS (${percent(line.bps)})`;
+      return t.tax({ percent: percent(line.bps) });
     default: {
       const unreachable: never = line;
       return unreachable;
@@ -52,8 +56,10 @@ export const priceLineLabel = (line: PriceLine): string => {
 };
 
 /** Valor da linha; o desconto leva o sinal `−` no texto (cor nunca sozinha). */
-export const priceLineAmount = (line: PriceLine): string =>
-  line.kind === "discount" ? `−${formatCents(line.amountCents)}` : formatCents(line.amountCents);
+export const priceLineAmount = (line: PriceLine, locale: Locale): string =>
+  line.kind === "discount"
+    ? `−${formatCents(line.amountCents, locale)}`
+    : formatCents(line.amountCents, locale);
 
 /**
  * Linhas do detalhamento na ordem fixa: estadia, desconto (só com `discountCents > 0`), taxa de

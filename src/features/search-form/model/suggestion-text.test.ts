@@ -70,8 +70,8 @@ describe("highlightMatch", () => {
 
 describe("describeResultCount", () => {
   it("singular, plural e vazio", () => {
-    expect(describeResultCount(1, "flor")).toBe("1 destino encontrado");
-    expect(describeResultCount(5, "bra")).toBe("5 destinos encontrados");
-    expect(describeResultCount(0, " xyz ")).toBe('Nenhum destino encontrado para "xyz"');
+    expect(describeResultCount(1, "flor", "pt-BR")).toBe("1 destino encontrado");
+    expect(describeResultCount(5, "bra", "pt-BR")).toBe("5 destinos encontrados");
+    expect(describeResultCount(0, " xyz ", "pt-BR")).toBe('Nenhum destino encontrado para "xyz"');
   });
 });

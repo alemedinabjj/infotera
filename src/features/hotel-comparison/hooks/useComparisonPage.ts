@@ -7,6 +7,8 @@ import { orderByIds } from "@/shared/api/ids";
 import { hotelsByIdsQueryOptions, roomsByHotelsQueryOptions } from "@/shared/api/queries";
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
+import { useLocale } from "@/shared/i18n/client";
+import type { Locale } from "@/shared/i18n/config";
 import { parseSearchCriteria, type SearchCriteria } from "@/shared/lib/search-params";
 import { parseCompareParams } from "../model/compare-params";
 import { buildHotelComparison, type HotelComparison } from "../model/hotel-comparison";
@@ -36,6 +38,7 @@ const derive = (
   roomsQuery: UseQueryResult<Room[]>,
   slow: boolean,
   notFound: number,
+  locale: Locale,
 ): ComparisonState => {
   if (ids.length === 0) return { kind: "empty" };
   const queries = [hotelsQuery, roomsQuery];
@@ -51,7 +54,7 @@ const derive = (
     return {
       kind: "success",
       hotels,
-      comparison: buildHotelComparison(hotels, roomsQuery.data),
+      comparison: buildHotelComparison(hotels, roomsQuery.data, locale),
       notFound,
     };
   }
@@ -64,6 +67,7 @@ const derive = (
  * chegaram; `keepPreviousData` mantém a tabela ao remover um hotel (sem voltar ao skeleton); um único estado de erro, cujo retry refaz só o que falhou.
  */
 export const useComparisonPage = (): Result => {
+  const locale = useLocale();
   const params = useSearchParams();
   const ids = useMemo(() => parseCompareParams(new URLSearchParams(params.toString())), [params]);
   const criteria = useMemo(() => {
@@ -86,5 +90,5 @@ export const useComparisonPage = (): Result => {
     hotelsQuery.isSuccess && !hotelsQuery.isPlaceholderData,
     criteria,
   );
-  return { ids, criteria, state: derive(ids, hotelsQuery, roomsQuery, slow, notFound) };
+  return { ids, criteria, state: derive(ids, hotelsQuery, roomsQuery, slow, notFound, locale) };
 };

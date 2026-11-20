@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from "@/shared/i18n/config";
 import { searchCriteriaSchema } from "@/shared/lib/search-params";
 import { z } from "@/shared/lib/zod";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
@@ -8,7 +9,8 @@ import { personNameSchema } from "./names";
 import { toE164 } from "./phone";
 import type { PriceQuote } from "./price";
 
-const guestName = (message: string) => personNameSchema(message);
+/** Mensagens técnicas: a Server Action devolve só `status`, nada disto chega à tela. */
+const guestName = (message: string) => personNameSchema(message, DEFAULT_LOCALE);
 
 /**
  * Entrada da Server Action (não confiável: validada no servidor). Só **referências e escolhas**:
@@ -22,16 +24,16 @@ export const bookingRequestSchema = z
     criteria: searchCriteriaSchema,
     couponCode: couponCodeSchema.nullable(),
     contact: z.object({
-      firstName: guestName("Informe o nome."),
-      lastName: guestName("Informe o sobrenome."),
+      firstName: guestName("First name is required."),
+      lastName: guestName("Last name is required."),
       email: z.email(),
       phone: z.string().regex(/^\+\d{8,15}$/),
     }),
     companions: z.array(
       z.object({
         kind: z.enum(["adult", "child"]),
-        firstName: guestName("Informe o nome."),
-        lastName: guestName("Informe o sobrenome."),
+        firstName: guestName("First name is required."),
+        lastName: guestName("Last name is required."),
         age: z.number().int().min(0).max(17).nullable(),
       }),
     ),
@@ -45,7 +47,7 @@ export const bookingRequestSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["companions"],
-        message: "Hóspedes não batem com a busca.",
+        message: "Guest counts differ from the search.",
       });
     }
     request.companions.forEach((child, index) => {
@@ -53,7 +55,7 @@ export const bookingRequestSchema = z
         ctx.addIssue({
           code: "custom",
           path: ["companions", index, "age"],
-          message: "Idade obrigatória.",
+          message: "Child age is required.",
         });
       }
     });

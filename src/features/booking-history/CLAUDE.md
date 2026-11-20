@@ -4,8 +4,9 @@ Reservas deste navegador. Lê os ids que a F6 grava (`shared/lib/booking-history
 (até 10, em paralelo, `bookingQueryOptions` com `meta.sensitive`). `app/` importa só `BookingHistoryView`.
 
 ```
-model/        stay-status (stayStatus, stayStatusLabel) · history-rows (classifyHistoryResults) · messages
-hooks/        useBookingHistory (useSyncExternalStore) · useHistoryRows (queries, prune de 404, hotéis)
+model/        stay-status (stayStatus, stayStatusTone) · history-rows (classifyHistoryResults)
+i18n/         pt-BR · en-US · messages (`historyMessages`; rótulos de situação em `stay.*`, a cor sai de `stayStatusTone`)
+hooks/        useHistoryMessages · useBookingHistory (useSyncExternalStore) · useHistoryRows (queries, prune de 404, hotéis)
 components/   BookingHistoryView · HistoryRowItem (linha + fantasma) · HistoryItem · HistoryItemStates · RemovedHistoryItem · ClearHistoryButton
 ```
 

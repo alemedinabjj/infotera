@@ -30,7 +30,13 @@ const OK: StayDetails = {
 };
 
 const renderSection = async (details: StayDetails, forBooking = booking) =>
-  render(await StayDetailsSection({ booking: forBooking, details: Promise.resolve(details) }));
+  render(
+    await StayDetailsSection({
+      booking: forBooking,
+      details: Promise.resolve(details),
+      locale: "pt-BR",
+    }),
+  );
 
 beforeEach(() => navigationSpies.refresh.mockClear());
 
@@ -177,7 +183,7 @@ describe("CheckTimes e skeleton (critério 6)", () => {
     ["check-in", "A partir de 15:00"],
     ["check-out", "Até 12:00"],
   ] as const)("%s com hotel ok", async (which, text) => {
-    render(await CheckTimes({ details: Promise.resolve(OK), which }));
+    render(await CheckTimes({ details: Promise.resolve(OK), which, locale: "pt-BR" }));
     expect(screen.getByText(text)).toBeVisible();
   });
 
@@ -186,6 +192,7 @@ describe("CheckTimes e skeleton (critério 6)", () => {
       await CheckTimes({
         details: Promise.resolve({ ...OK, hotel: { status: "missing" } }),
         which: "check-in",
+        locale: "pt-BR",
       }),
     );
     expect(screen.getByText("Confirme com o hotel")).toBeVisible();
@@ -196,19 +203,20 @@ describe("CheckTimes e skeleton (critério 6)", () => {
       await CheckTimes({
         details: Promise.resolve({ ...OK, hotel: { status: "error" } }),
         which: "check-out",
+        locale: "pt-BR",
       }),
     );
     expect(screen.getByText("Indisponível no momento")).toBeVisible();
   });
 
   it("o skeleton é aria-busy e anuncia o carregamento uma vez", () => {
-    const { container } = render(<StayDetailsSkeleton />);
+    const { container } = render(<StayDetailsSkeleton locale="pt-BR" />);
     expect(container.firstElementChild).toHaveAttribute("aria-busy", "true");
     expect(screen.getByText("Carregando dados do hotel…")).toHaveClass("sr-only");
   });
 
   it("dentro do skeleton da rota não repete o anúncio", () => {
-    render(<StayDetailsSkeleton announce={false} />);
+    render(<StayDetailsSkeleton locale="pt-BR" announce={false} />);
     expect(screen.queryByText("Carregando dados do hotel…")).not.toBeInTheDocument();
   });
 });

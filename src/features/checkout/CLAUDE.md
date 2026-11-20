@@ -13,6 +13,7 @@ model/    price (centavos inteiros) · price-labels · quote (preço + elegibili
           booking-request · verify-booking · to-booking-input · create-booking-result (`submitFeedback`) ·
           summary-labels · review-labels · terms
 api/      coupons (consulta simulada, 600 ms, abortável) · create-booking.server (orquestra) · create-booking.action ("use server")
+i18n/     pt-BR (fonte) + en-US (+ `.form`): TODO texto da feature; `checkoutMessages.get(locale)` · hook `useCheckoutMessages()`
 hooks/    useStrictDocument · useCheckoutGate · useCheckoutQueries · useRoomCount · useCoupon · usePriceQuote · useCheckoutForm ·
           useCheckoutDraft · usePaymentWipe · useSubmitBooking · useCheckoutFlow (agrega) · checkout-initial
 components/ CheckoutPage (gate) → CheckoutRoute → CheckoutReady → BookingSummary/CheckoutForm … (ver spec)
@@ -70,3 +71,17 @@ leva um sobrenome único do teste (`serverApi.failServerRequests(..., { method: 
 ## F7a (extras)
 - `AnimatedStep` envolve o passo atual: só o passo novo anima (`x` ±16, sem opacidade para nunca ficar invisível, direção por `stepDirection`), sem saída, sem animar na
   1ª renderização, com `overflow-x-clip`. O foco no `h2` do passo não mudou.
+
+## F7b (i18n pt-BR + en-US)
+- Todo texto vive em `i18n/` (`pt-BR.ts` + `pt-BR.form.ts` são a fonte; `en-US*` tem o mesmo formato por tipo). `model/` recebe `locale` com
+  padrão `pt-BR` (`describeBlocked`, `submitFeedback`, `couponMessage`, `stepTitle`, `termsSections`...); componentes e hooks usam
+  `useCheckoutMessages()` / `useLocale()`. Contagens e datas pelos formatadores de `shared` (`formatUnit`, `formatDate`, `formatCents`: sempre BRL).
+- **Validação**: `makeCheckoutSchema(today, locale)` / `makePaymentSchema` / `makeCheckoutResolver(locale)` (o `useCheckoutForm` memoriza por locale);
+  `validationMessages(locale)` entrega o dicionário. A mensagem de erro do servidor (`invalid`) vira `submit.invalidField` no cliente.
+- **Server Action não devolve texto**: só `status`/`kind`/`fields`; `submitFeedback(result, ctx, locale)` monta o alerta no cliente.
+  As mensagens do `bookingRequestSchema` (servidor) são técnicas em inglês e nunca chegam à tela.
+- **Rotas**: `/checkout` e `/en/checkout` (CSP com nonce nas duas, `isCheckoutPath`). Links e redirects usam `localizePath(locale, ...)`
+  (voltar ao hotel, ver quartos, nova busca, home com aviso, `/confirmation/:id`). Metadata por `generateMetadata` + `checkoutPageTitle(locale)`.
+- Texto do hotel/quarto/endereço vem da API em pt-BR: leva `lang={contentLang(locale)}`.
+- Política de PII inalterada (nada de cartão/CVV/validade/documento persistido). E2E: `e2e/i18n.checkout.spec.ts`.
+- Cuidado com a heurística de `e2e/helpers/language.ts`: palavras como "data", "do", "com" (e e-mails `.com`) contam como português; o copy em inglês as evita.

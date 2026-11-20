@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { compareHref, useComparison } from "@/shared/saved";
 import {
@@ -13,15 +15,15 @@ import {
   WifiOffIcon,
 } from "@/shared/ui";
 import { COMPARE_TITLE_ID, removeColumn } from "../hooks/compare-url";
+import { useComparisonMessages } from "../hooks/useComparisonMessages";
 import { type ComparisonState, useComparisonPage } from "../hooks/useComparisonPage";
-import { COMPARISON_MESSAGES } from "../model/messages";
 import { CompareNotice } from "./CompareNotice";
 import { ComparisonSkeleton } from "./ComparisonSkeleton";
 import { HotelColumnHeader } from "./HotelColumnHeader";
 
-const MESSAGES = COMPARISON_MESSAGES;
-
 const EmptyCompare = () => {
+  const MESSAGES = useComparisonMessages();
+  const locale = useLocale();
   const tray = useComparison();
   return (
     <EmptyState
@@ -29,12 +31,18 @@ const EmptyCompare = () => {
       description={MESSAGES.empty.description}
       action={
         <>
-          <Link href="/" className={buttonClassName({ variant: "primary" })}>
+          <Link
+            href={localizePath(locale, "/")}
+            className={buttonClassName({ variant: "primary" })}
+          >
             {MESSAGES.empty.search}
           </Link>
           {tray.length >= 2 ? (
             <Link
-              href={compareHref(tray.map((entry) => entry.id))}
+              href={compareHref(
+                locale,
+                tray.map((entry) => entry.id),
+              )}
               className={buttonClassName({ variant: "secondary" })}
             >
               {MESSAGES.empty.tray(tray.length)}
@@ -53,6 +61,8 @@ type BodyProps = {
 };
 
 const Body = ({ state, ids, criteria }: BodyProps) => {
+  const MESSAGES = useComparisonMessages();
+  const locale = useLocale();
   switch (state.kind) {
     case "empty":
       return <EmptyCompare />;
@@ -71,6 +81,7 @@ const Body = ({ state, ids, criteria }: BodyProps) => {
     case "error":
       return (
         <ErrorState
+          locale={locale}
           title={MESSAGES.error.title}
           description={MESSAGES.error.description}
           onRetry={state.retry}
@@ -94,7 +105,7 @@ const Body = ({ state, ids, criteria }: BodyProps) => {
                   <HotelColumnHeader
                     hotel={hotel}
                     criteria={criteria}
-                    onRemove={(id) => removeColumn(ids, id, criteria)}
+                    onRemove={(id) => removeColumn(locale, ids, id, criteria)}
                   />
                 ),
               }))}
@@ -131,6 +142,7 @@ type ComparisonViewProps = {
  * compartilhável e funciona sem storage. Os 4 estados + offline, avisos e remoção de coluna.
  */
 export const ComparisonView = ({ headingLevel = 1 }: ComparisonViewProps) => {
+  const MESSAGES = useComparisonMessages();
   const { ids, criteria, state } = useComparisonPage();
   const Heading = headingLevel === 1 ? "h1" : "h2";
   return (
@@ -149,9 +161,12 @@ export const ComparisonView = ({ headingLevel = 1 }: ComparisonViewProps) => {
 };
 
 /** Fallback do `Suspense` da página: mesmo título e skeleton da tabela (sem salto de layout). */
-export const ComparisonFallback = () => (
-  <div className="flex flex-col gap-4">
-    <h1 className="text-2xl font-bold text-fg lg:text-3xl">{MESSAGES.title}</h1>
-    <ComparisonSkeleton slow={false} />
-  </div>
-);
+export const ComparisonFallback = () => {
+  const MESSAGES = useComparisonMessages();
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-bold text-fg lg:text-3xl">{MESSAGES.title}</h1>
+      <ComparisonSkeleton slow={false} />
+    </div>
+  );
+};

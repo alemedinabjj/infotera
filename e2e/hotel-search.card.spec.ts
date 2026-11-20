@@ -1,6 +1,7 @@
-import { type APIRequestContext, expect, test } from "@playwright/test";
+import { type APIRequestContext, expect } from "@playwright/test";
 import { formatBRL } from "../src/shared/lib/currency";
 import { stayTotalWithFees } from "../src/shared/lib/pricing";
+import { test } from "./fixtures";
 import {
   API_URL,
   CHECK_IN,
@@ -63,7 +64,9 @@ test.describe("preço do card = quarto mais barato que serve", () => {
     const nightly = await cheapestForParty(request, 1, 2);
     const card = cardByName(page, await hotelName(request, 1));
     await expect(card).toContainText(
-      formatBRL(stayTotalWithFees({ pricePerNight: nightly, nights: NIGHTS, rooms: 1 })),
+      formatBRL(stayTotalWithFees({ pricePerNight: nightly, nights: NIGHTS, rooms: 1 }), {
+        locale: "pt-BR",
+      }),
     );
   });
 
@@ -77,7 +80,9 @@ test.describe("preço do card = quarto mais barato que serve", () => {
     expect(nightly).toBe(1310);
     const card = cardByName(page, await hotelName(request, 20));
     await expect(card).toContainText(
-      formatBRL(stayTotalWithFees({ pricePerNight: nightly, nights: NIGHTS, rooms: 1 })),
+      formatBRL(stayTotalWithFees({ pricePerNight: nightly, nights: NIGHTS, rooms: 1 }), {
+        locale: "pt-BR",
+      }),
     );
   });
 

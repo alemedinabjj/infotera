@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { HISTORY_KEY, noHorizontalScroll, readStorage } from "./extras";
+import { test } from "./fixtures";
 import { analyzeAccessibility } from "./helpers/axe";
 import { bookingPath, createBooking } from "./helpers/booking";
 import { hotelName } from "./helpers/hotel-search";
@@ -108,7 +109,8 @@ test.describe("conteúdo", () => {
     await page.goto("/my-bookings");
     await expect(page.getByText("Não foi possível carregar esta reserva.")).toBeVisible();
     await context.setOffline(true);
-    await expect(page.getByText("Você está sem internet.")).toBeVisible();
+    // `exact`: o banner global ("Você está sem internet. Mostramos…") também contém a frase.
+    await expect(page.getByText("Você está sem internet.", { exact: true })).toBeVisible();
     await expect(page.getByText("Não foi possível carregar esta reserva.")).toHaveCount(0);
     expect(await idsInStorage(page)).toEqual([id]);
     expect((await analyzeAccessibility(page)).violations).toEqual([]);
@@ -170,6 +172,34 @@ test.describe("remover e limpar", () => {
     await page.getByRole("status").getByRole("button", { name: "Desfazer" }).click();
     await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
     expect(await idsInStorage(page)).toEqual([id]);
+  });
+
+  test("o cache de consultas no localStorage nunca guarda os hotéis nem os ids do histórico", async ({
+    page,
+    request,
+  }) => {
+    const id = await createBooking(request);
+    await seedHistory(page, [id]);
+    await page.goto("/my-bookings");
+    await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+    await expect(page.getByText(await hotelName(request, 1)).first()).toBeVisible();
+    // O persister grava com throttle de 1 s: espera passar para a checagem valer.
+    await page.waitForTimeout(1500);
+    const cache = () => page.evaluate(() => localStorage.getItem("infotera:query-cache") ?? "");
+    expect(await cache()).not.toContain("history-hotels");
+    expect(await cache()).not.toContain(id);
+
+    await page.getByRole("button", { name: "Limpar histórico" }).click();
+    await page
+      .getByRole("dialog", { name: "Limpar o histórico?" })
+      .getByRole("button", { name: "Limpar histórico" })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Nenhuma reserva neste navegador" }),
+    ).toBeVisible();
+    await page.waitForTimeout(1500);
+    expect(await cache()).not.toContain("history-hotels");
+    expect(await cache()).not.toContain(id);
   });
 
   test("vazio: EmptyState, axe e 320 px sem rolagem horizontal", async ({ page }) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HOTEL_SECTIONS, sectionHeadingId } from "./sections";
+import { HOTEL_SECTIONS, sectionHeadingId, sectionLabel } from "./sections";
 
 describe("HOTEL_SECTIONS", () => {
   it("ordem da página, ids únicos e sem acento", () => {
@@ -11,13 +11,21 @@ describe("HOTEL_SECTIONS", () => {
       "avaliacoes",
       "similares",
     ]);
-    expect(HOTEL_SECTIONS.map((section) => section.label)).toEqual([
+    expect(HOTEL_SECTIONS.map((section) => sectionLabel(section.key, "pt-BR"))).toEqual([
       "Visão geral",
       "Quartos",
       "Localização",
       "Políticas",
       "Avaliações",
       "Similares",
+    ]);
+    expect(HOTEL_SECTIONS.map((section) => sectionLabel(section.key, "en-US"))).toEqual([
+      "Overview",
+      "Rooms",
+      "Location",
+      "Policies",
+      "Reviews",
+      "Similar",
     ]);
     expect(sectionHeadingId("quartos")).toBe("quartos-titulo");
   });

@@ -4,15 +4,16 @@ import { m, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useHydrated } from "../../hooks/useHydrated";
+import { useLocale } from "../../i18n/client";
+import { localizePath, parsePublicPath } from "../../i18n/paths";
 import { cn } from "../../lib/cn";
 import { motionPreset } from "../../lib/motion";
 import { buttonClassName } from "../../ui/atoms/button-styles";
 import { HeartIcon, SuitcaseIcon } from "../../ui/icons";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
 import { FAVORITES_PATH, MY_BOOKINGS_PATH } from "../model/routes";
 import { useFavoriteCount, useFavoritesHydrated } from "../stores/favorites";
-
-const MESSAGES = SAVED_MESSAGES.nav;
 
 const LINK = "relative px-0 sm:px-3 size-11 sm:size-auto";
 
@@ -76,21 +77,26 @@ const Counter = ({ count }: { count: number }) => {
 
 /** Links "Favoritos" (com contador) e "Minhas reservas" do cabeçalho. Só ícone abaixo de `sm`. */
 export const SavedNav = () => {
-  const pathname = usePathname();
+  const MESSAGES = useSavedMessages().nav;
+  const locale = useLocale();
+  // `/[locale]/favorites` é estático com rewrite: o pathname do servidor difere do cliente. O
+  // item atual só é marcado depois da hidratação, para o primeiro render bater com o HTML.
+  const hydrated = useHydrated();
+  const { path } = parsePublicPath(usePathname());
   const count = useFavoriteCount();
   return (
     <nav aria-label={MESSAGES.label} className="flex items-center gap-1">
       <NavLink
-        href={FAVORITES_PATH}
-        current={pathname === FAVORITES_PATH}
+        href={localizePath(locale, FAVORITES_PATH)}
+        current={hydrated && path === FAVORITES_PATH}
         label={MESSAGES.favoritesLabel(count)}
         text={MESSAGES.favorites}
         icon={<HeartIcon className="size-5" />}
         badge={<Counter count={count} />}
       />
       <NavLink
-        href={MY_BOOKINGS_PATH}
-        current={pathname === MY_BOOKINGS_PATH}
+        href={localizePath(locale, MY_BOOKINGS_PATH)}
+        current={hydrated && path === MY_BOOKINGS_PATH}
         label={MESSAGES.myBookings}
         text={MESSAGES.myBookings}
         icon={<SuitcaseIcon className="size-5" />}

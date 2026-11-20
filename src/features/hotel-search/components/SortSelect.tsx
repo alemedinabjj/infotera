@@ -1,5 +1,9 @@
+"use client";
+
 import { useId } from "react";
+import { useLocale } from "@/shared/i18n/client";
 import { Select } from "@/shared/ui";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import { sortLabel } from "../model/labels";
 import { SORT_OPTIONS, type SortOption } from "../model/search-filters";
 
@@ -13,10 +17,12 @@ type SortSelectProps = {
 /** Ordenação em `<select>` nativo com rótulo visível ("Ordenar por"). */
 export const SortSelect = ({ value, onChange, describedBy }: SortSelectProps) => {
   const id = useId();
+  const t = useHotelSearchMessages();
+  const locale = useLocale();
   return (
     <div className="flex min-w-0 flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-3">
       <label htmlFor={id} className="text-sm font-medium whitespace-nowrap text-fg">
-        Ordenar por
+        {t.controls.sortBy}
       </label>
       <Select
         id={id}
@@ -30,7 +36,7 @@ export const SortSelect = ({ value, onChange, describedBy }: SortSelectProps) =>
       >
         {SORT_OPTIONS.map((option) => (
           <option key={option} value={option}>
-            {sortLabel(option)}
+            {sortLabel(option, locale)}
           </option>
         ))}
       </Select>

@@ -2,8 +2,10 @@
 
 import type { FetchQueryOptions, QueryKey } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { useLocale } from "@/shared/i18n/client";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import { ErrorState } from "@/shared/ui";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { useSectionRetry } from "../hooks/useSectionRetry";
 
 type SectionErrorProps<TData, TKey extends QueryKey> = {
@@ -25,6 +27,8 @@ export const SectionError = <TData, TKey extends QueryKey>({
   onFinished,
   focusRetry = false,
 }: SectionErrorProps<TData, TKey>) => {
+  const t = useHotelDetailsMessages().errors;
+  const locale = useLocale();
   const { retry, retrying } = useSectionRetry(options, { onFinished });
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -36,8 +40,9 @@ export const SectionError = <TData, TKey extends QueryKey>({
   return (
     <div ref={ref}>
       <ErrorState
+        locale={locale}
         title={title}
-        description="Verifique sua conexão e tente de novo."
+        description={t.sectionRetry}
         headingLevel={3}
         onRetry={() => void retry()}
         retrying={retrying}

@@ -45,9 +45,9 @@ describe("galleryKeyAction", () => {
 
 describe("textos", () => {
   it("alt, rótulo do botão e contador (índice base 0)", () => {
-    expect(photoAlt("Hotel X", 1, 5)).toBe("Hotel X, foto 2 de 5");
-    expect(photoOpenLabel(1, 5)).toBe("Abrir foto 2 de 5");
-    expect(photoCounter(1, 5)).toBe("Foto 2 de 5");
+    expect(photoAlt("Hotel X", 1, 5, "pt-BR")).toBe("Hotel X, foto 2 de 5");
+    expect(photoOpenLabel(1, 5, "pt-BR")).toBe("Abrir foto 2 de 5");
+    expect(photoCounter(1, 5, "pt-BR")).toBe("Foto 2 de 5");
   });
 });
 

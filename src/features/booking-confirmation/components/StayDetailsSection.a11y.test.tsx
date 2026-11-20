@@ -20,6 +20,7 @@ const violationsOf = async (details: StayDetails): Promise<string[]> => {
   const section = await StayDetailsSection({
     booking: makeBooking(),
     details: Promise.resolve(details),
+    locale: "pt-BR",
   });
   const { container } = render(
     <main>

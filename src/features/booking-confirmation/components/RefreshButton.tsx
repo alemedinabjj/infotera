@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useTransition } from "react";
 import { revealBelowHeader } from "@/shared/lib/scroll";
 import { Button } from "@/shared/ui";
+import { useConfirmationMessages } from "../hooks/useConfirmationMessages";
 import { STAY_TITLE_ID } from "./stay-ids";
 
 /**
@@ -13,6 +14,7 @@ import { STAY_TITLE_ID } from "./stay-ids";
  * mesmo botão continua montado (e focado).
  */
 export const RefreshButton = () => {
+  const t = useConfirmationMessages();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const started = useRef(false);
@@ -37,10 +39,10 @@ export const RefreshButton = () => {
       variant="secondary"
       onClick={handleClick}
       loading={pending}
-      loadingText="Tentando…"
+      loadingText={t.retrying}
       className="print:hidden"
     >
-      Tentar de novo
+      {t.retry}
     </Button>
   );
 };

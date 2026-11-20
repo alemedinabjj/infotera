@@ -1,3 +1,5 @@
+import type { Locale } from "@/shared/i18n/config";
+import { checkoutMessages } from "../i18n/messages";
 import type { CheckoutFieldPath } from "./checkout.schema";
 
 export const CHECKOUT_STEPS = ["personal", "payment", "review"] as const;
@@ -10,29 +12,22 @@ export const STEP_FIELDS: Record<CheckoutStep, readonly CheckoutFieldPath[]> = {
   review: ["termsAccepted"],
 };
 
-export const STEP_LABELS: Record<CheckoutStep, string> = {
-  personal: "Hóspedes",
-  payment: "Pagamento",
-  review: "Revisão",
-};
+/** Rótulo curto do passo (indicador de etapas). */
+export const stepLabel = (step: CheckoutStep, locale: Locale): string =>
+  checkoutMessages.get(locale).steps.labels[step];
 
-const STEP_TITLES: Record<CheckoutStep, string> = {
-  personal: "Dados dos hóspedes",
-  payment: "Pagamento",
-  review: "Revise e confirme",
-};
-
-export const stepTitle = (step: CheckoutStep): string => STEP_TITLES[step];
+export const stepTitle = (step: CheckoutStep, locale: Locale): string =>
+  checkoutMessages.get(locale).steps.titles[step];
 
 export const stepNumber = (step: CheckoutStep): number => CHECKOUT_STEPS.indexOf(step) + 1;
 
 /** `Passo 2 de 3`. */
-export const stepCounter = (step: CheckoutStep): string =>
-  `Passo ${stepNumber(step)} de ${CHECKOUT_STEPS.length}`;
+export const stepCounter = (step: CheckoutStep, locale: Locale): string =>
+  checkoutMessages.get(locale).steps.counter(stepNumber(step), CHECKOUT_STEPS.length);
 
 /** Título do documento: `Passo 1 de 3: Dados dos hóspedes`. */
-export const stepDocumentTitle = (step: CheckoutStep): string =>
-  `${stepCounter(step)}: ${stepTitle(step)}`;
+export const stepDocumentTitle = (step: CheckoutStep, locale: Locale): string =>
+  `${stepCounter(step, locale)}: ${stepTitle(step, locale)}`;
 
 export const nextStep = (step: CheckoutStep): CheckoutStep =>
   CHECKOUT_STEPS[stepNumber(step)] ?? step;

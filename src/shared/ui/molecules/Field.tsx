@@ -1,4 +1,5 @@
 import { type ReactNode, useId } from "react";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { cn } from "../../lib/cn";
 import { AlertCircleIcon } from "../icons";
 
@@ -34,6 +35,7 @@ export const Field = ({
   className,
   children,
 }: FieldProps) => {
+  const t = useCommonMessages().ui;
   const id = useId();
   const descriptionId = description ? `${id}-description` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -43,8 +45,8 @@ export const Field = ({
     <div data-reveal-block className={cn("flex flex-col gap-1.5", className)}>
       <label htmlFor={id} className="text-sm font-medium text-fg">
         {label}
-        {required ? <span className="sr-only"> (obrigatório)</span> : null}
-        {optional ? <span className="font-normal text-fg-subtle"> (opcional)</span> : null}
+        {required ? <span className="sr-only"> {t.required}</span> : null}
+        {optional ? <span className="font-normal text-fg-subtle"> {t.optional}</span> : null}
       </label>
       {children({
         id,

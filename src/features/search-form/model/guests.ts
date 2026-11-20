@@ -1,4 +1,6 @@
+import type { Locale } from "@/shared/i18n/config";
 import { SEARCH_LIMITS } from "@/shared/lib/search-params";
+import { searchFormMessages } from "../i18n/messages";
 
 export type GuestCounts = { rooms: number; adults: number; children: number };
 export type GuestField = keyof GuestCounts;
@@ -20,38 +22,38 @@ export const guestLimits = ({ rooms, adults, children }: GuestCounts): GuestLimi
   children: { min: 0, max: Math.min(maxChildren, rooms * maxGuestsPerRoom - adults) },
 });
 
-const capacityHint = (rooms: number): string =>
-  rooms < maxRooms
-    ? `Até ${maxGuestsPerRoom} hóspedes por quarto. Adicione um quarto para incluir mais pessoas.`
-    : `Até ${maxGuestsPerRoom} hóspedes por quarto, em no máximo ${maxRooms} quartos.`;
+type Hints = ReturnType<typeof searchFormMessages.get>["guestHints"];
 
-const adultsHint = (counts: GuestCounts, { min, max }: Range): string | null => {
+const capacityHint = (rooms: number, t: Hints): string =>
+  rooms < maxRooms
+    ? t.capacityMore({ max: maxGuestsPerRoom })
+    : t.capacityMax({ max: maxGuestsPerRoom, rooms: maxRooms });
+
+const adultsHint = (counts: GuestCounts, { min, max }: Range, t: Hints): string | null => {
   if (counts.adults >= max) {
     const capacityMax = counts.rooms * maxGuestsPerRoom - counts.children;
     return capacityMax <= maxAdults
-      ? capacityHint(counts.rooms)
-      : `Máximo de ${maxAdults} adultos por busca.`;
+      ? capacityHint(counts.rooms, t)
+      : t.maxAdults({ max: maxAdults });
   }
-  if (counts.adults <= min && min > 1) return "Cada quarto precisa de pelo menos 1 adulto.";
+  if (counts.adults <= min && min > 1) return t.adultPerRoom;
   return null;
 };
 
-const childrenHint = (counts: GuestCounts, { max }: Range): string | null => {
+const childrenHint = (counts: GuestCounts, { max }: Range, t: Hints): string | null => {
   if (counts.children < max) return null;
   const capacityMax = counts.rooms * maxGuestsPerRoom - counts.adults;
   return capacityMax <= maxChildren
-    ? capacityHint(counts.rooms)
-    : `Máximo de ${maxChildren} crianças por busca.`;
+    ? capacityHint(counts.rooms, t)
+    : t.maxChildren({ max: maxChildren });
 };
 
-const roomsHint = (counts: GuestCounts, { min, max }: Range): string | null => {
+const roomsHint = (counts: GuestCounts, { min, max }: Range, t: Hints): string | null => {
   if (counts.rooms >= max) {
-    return counts.adults >= maxRooms
-      ? `Máximo de ${maxRooms} quartos por busca.`
-      : "Cada quarto precisa de pelo menos 1 adulto. Adicione um adulto para incluir mais quartos.";
+    return counts.adults >= maxRooms ? t.maxRooms({ max: maxRooms }) : t.addAdultForRooms;
   }
   if (counts.rooms <= min && min > 1) {
-    return `Com ${counts.adults + counts.children} hóspedes, são necessários pelo menos ${min} quartos.`;
+    return t.needRooms({ guests: counts.adults + counts.children, min });
   }
   return null;
 };
@@ -60,15 +62,20 @@ const roomsHint = (counts: GuestCounts, { min, max }: Range): string | null => {
  * Motivo do limite de um contador: no máximo, explica o teto; no mínimo, só quando o mínimo
  * é maior que o natural (1 adulto, 0 crianças, 1 quarto). `null` quando não há o que explicar.
  */
-export const guestHint = (field: GuestField, counts: GuestCounts): string | null => {
+export const guestHint = (
+  field: GuestField,
+  counts: GuestCounts,
+  locale: Locale,
+): string | null => {
+  const t = searchFormMessages.get(locale).guestHints;
   const range = guestLimits(counts)[field];
   switch (field) {
     case "adults":
-      return adultsHint(counts, range);
+      return adultsHint(counts, range, t);
     case "children":
-      return childrenHint(counts, range);
+      return childrenHint(counts, range, t);
     case "rooms":
-      return roomsHint(counts, range);
+      return roomsHint(counts, range, t);
     default: {
       const unreachable: never = field;
       return unreachable;
@@ -84,11 +91,12 @@ export const guestHint = (field: GuestField, counts: GuestCounts): string | null
 export const guestHints = (
   counts: GuestCounts,
   lastChanged: GuestField | null = null,
+  locale: Locale,
 ): Record<GuestField, string | null> => {
   const hints: Record<GuestField, string | null> = {
-    adults: guestHint("adults", counts),
-    children: guestHint("children", counts),
-    rooms: guestHint("rooms", counts),
+    adults: guestHint("adults", counts, locale),
+    children: guestHint("children", counts, locale),
+    rooms: guestHint("rooms", counts, locale),
   };
   const order: GuestField[] = ["adults", "children", "rooms"];
   const shown = new Set<string>();

@@ -2,6 +2,7 @@
 
 import { useController, useFormContext } from "react-hook-form";
 import { Radio } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { CheckoutValues } from "../model/checkout.schema";
 import { formatCpf } from "../model/cpf";
 import { normalizePassport } from "../model/passport";
@@ -15,6 +16,7 @@ const formatPassport = (text: string): string => normalizePassport(text).slice(0
  * enviado. Trocar o tipo limpa o valor e o erro (as máscaras são incompatíveis) e mantém o foco.
  */
 export const DocumentField = () => {
+  const t = useCheckoutMessages().payment;
   const { control, setValue, clearErrors } = useFormContext<CheckoutValues>();
   const { field } = useController({ control, name: "payment.documentType" });
   const isCpf = field.value === "cpf";
@@ -29,20 +31,18 @@ export const DocumentField = () => {
   return (
     <div className="flex flex-col gap-3 border-t border-border pt-6">
       <fieldset className="flex flex-col gap-1">
-        <legend className="mb-1 text-lg font-semibold text-fg">
-          Documento do titular do cartão
-        </legend>
+        <legend className="mb-1 text-lg font-semibold text-fg">{t.documentLegend}</legend>
         <div className="flex flex-wrap gap-x-6">
           <Radio
             name={field.name}
-            label="CPF"
+            label={t.cpf}
             checked={isCpf}
             onChange={() => choose("cpf")}
             ref={field.ref}
           />
           <Radio
             name={field.name}
-            label="Passaporte"
+            label={t.passport}
             checked={!isCpf}
             onChange={() => choose("passport")}
           />
@@ -50,13 +50,13 @@ export const DocumentField = () => {
       </fieldset>
       <TextField
         name="payment.document"
-        label={isCpf ? "CPF" : "Número do passaporte"}
+        label={isCpf ? t.cpf : t.passportNumber}
         format={isCpf ? formatCpf : formatPassport}
         inputMode={isCpf ? "numeric" : "text"}
         autoComplete="off"
         autoCapitalize={isCpf ? "none" : "characters"}
         placeholder={isCpf ? "000.000.000-00" : "FZ123456"}
-        description="Usado só para validar o pagamento. Não é salvo nem enviado."
+        description={t.documentHint}
       />
     </div>
   );

@@ -7,6 +7,6 @@ import { formatBookedAt } from "./booked-at";
 describe("formatBookedAt com o processo em UTC", () => {
   it("o fuso do processo não muda a hora de Brasília", () => {
     expect(new Date(2026, 10, 19, 12, 0).getTimezoneOffset()).toBe(0);
-    expect(formatBookedAt("2026-11-19T15:04:00.000Z")).toBe("19/11/2026, 12:04");
+    expect(formatBookedAt("2026-11-19T15:04:00.000Z", "pt-BR")).toBe("19/11/2026, 12:04");
   });
 });

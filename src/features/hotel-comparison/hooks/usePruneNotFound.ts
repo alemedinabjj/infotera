@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { missingIds } from "@/shared/api/ids";
 import type { Hotel } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { dropMissingIds } from "./compare-url";
 
@@ -17,13 +18,14 @@ export const usePruneNotFound = (
   settled: boolean,
   criteria: SearchCriteria | null,
 ): number => {
+  const locale = useLocale();
   const [removed, setRemoved] = useState(0);
   useEffect(() => {
     if (!settled || !hotels) return;
     const missing = missingIds(ids, hotels);
     if (missing.length === 0) return;
-    dropMissingIds(ids, missing, criteria);
+    dropMissingIds(locale, ids, missing, criteria);
     setRemoved((count) => count + missing.length);
-  }, [ids, hotels, settled, criteria]);
+  }, [locale, ids, hotels, settled, criteria]);
   return removed;
 };

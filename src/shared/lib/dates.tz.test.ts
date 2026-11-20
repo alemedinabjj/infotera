@@ -6,7 +6,7 @@ import { addDays, formatDate, nightsBetween, toISODate } from "./dates";
 
 describe("datas em America/Sao_Paulo (UTC-3)", () => {
   it("formatDate não volta um dia", () => {
-    expect(formatDate("2026-12-01", "short")).toBe("01/12/2026");
+    expect(formatDate("2026-12-01", "short", "pt-BR")).toBe("01/12/2026");
   });
 
   it("nightsBetween e addDays seguem estáveis", () => {

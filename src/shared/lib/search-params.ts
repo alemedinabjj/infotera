@@ -1,4 +1,6 @@
 import { z } from "@/shared/lib/zod";
+import { commonMessages } from "../i18n/common/messages";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
 import { isoDateSchema, nightsBetween } from "./dates";
 
 export const SEARCH_PARAM_KEYS = [
@@ -22,18 +24,26 @@ export const SEARCH_LIMITS = {
   maxNights: 30,
 } as const;
 
-/** Mensagens de validação dos critérios de busca (reusadas pelo formulário da F2). */
-export const SEARCH_MESSAGES = {
-  destination: "Escolha um destino da lista.",
-  date: "Escolha uma data válida.",
-  rooms: `Escolha de ${SEARCH_LIMITS.minRooms} a ${SEARCH_LIMITS.maxRooms} quartos.`,
-  adults: `Informe de 1 a ${SEARCH_LIMITS.maxAdults} adultos.`,
-  children: `Informe de 0 a ${SEARCH_LIMITS.maxChildren} crianças.`,
-  checkOutOrder: "O check\u2011out precisa ser pelo menos 1 dia depois do check\u2011in.",
-  maxNights: `A estadia pode ter no máximo ${SEARCH_LIMITS.maxNights} noites.`,
-  adultsPerRoom: "Inclua pelo menos 1 adulto por quarto.",
-  guestsPerRoom: `Cada quarto acomoda até ${SEARCH_LIMITS.maxGuestsPerRoom} hóspedes. Aumente os quartos ou reduza os hóspedes.`,
-} as const;
+export type SearchMessages = ReturnType<typeof searchMessages>;
+
+/** Mensagens de validação dos critérios de busca no idioma (reusadas pelo formulário da F2). */
+export const searchMessages = (locale: Locale) => {
+  const t = commonMessages.get(locale).validation.search;
+  return {
+    destination: t.destination,
+    date: t.date,
+    rooms: t.rooms({ min: SEARCH_LIMITS.minRooms, max: SEARCH_LIMITS.maxRooms }),
+    adults: t.adults({ max: SEARCH_LIMITS.maxAdults }),
+    children: t.children({ max: SEARCH_LIMITS.maxChildren }),
+    checkOutOrder: t.checkOutOrder,
+    maxNights: t.maxNights({ max: SEARCH_LIMITS.maxNights }),
+    adultsPerRoom: t.adultsPerRoom,
+    guestsPerRoom: t.guestsPerRoom({ max: SEARCH_LIMITS.maxGuestsPerRoom }),
+  };
+};
+
+/** Mensagens técnicas da URL (nunca exibidas): o idioma é fixo, de propósito. */
+export const SEARCH_MESSAGES = searchMessages(DEFAULT_LOCALE);
 
 const countSchema = (min: number, max: number, message: string) =>
   z.coerce.number({ message }).int({ message }).min(min, { message }).max(max, { message });
@@ -50,23 +60,27 @@ type RuleValue = {
  * Regras que cruzam campos (noites, adultos por quarto, hóspedes por quarto). Compartilhada com o
  * schema do formulário da F2 para existir uma única fonte da verdade.
  */
-export const applySearchCriteriaRules = (value: RuleValue, ctx: z.RefinementCtx): void => {
+export const applySearchCriteriaRules = (
+  value: RuleValue,
+  ctx: z.RefinementCtx,
+  messages: SearchMessages = SEARCH_MESSAGES,
+): void => {
   const datesOk =
     isoDateSchema.safeParse(value.checkIn).success &&
     isoDateSchema.safeParse(value.checkOut).success;
   if (datesOk) {
     const nights = nightsBetween(value.checkIn, value.checkOut);
     if (nights < SEARCH_LIMITS.minNights) {
-      ctx.addIssue({ code: "custom", path: ["checkOut"], message: SEARCH_MESSAGES.checkOutOrder });
+      ctx.addIssue({ code: "custom", path: ["checkOut"], message: messages.checkOutOrder });
     } else if (nights > SEARCH_LIMITS.maxNights) {
-      ctx.addIssue({ code: "custom", path: ["checkOut"], message: SEARCH_MESSAGES.maxNights });
+      ctx.addIssue({ code: "custom", path: ["checkOut"], message: messages.maxNights });
     }
   }
   if (value.adults < value.rooms) {
-    ctx.addIssue({ code: "custom", path: ["adults"], message: SEARCH_MESSAGES.adultsPerRoom });
+    ctx.addIssue({ code: "custom", path: ["adults"], message: messages.adultsPerRoom });
   }
   if (value.adults + value.children > value.rooms * SEARCH_LIMITS.maxGuestsPerRoom) {
-    ctx.addIssue({ code: "custom", path: ["children"], message: SEARCH_MESSAGES.guestsPerRoom });
+    ctx.addIssue({ code: "custom", path: ["children"], message: messages.guestsPerRoom });
   }
 };
 
@@ -89,7 +103,7 @@ export const searchCriteriaSchema = z
     adults: countSchema(1, SEARCH_LIMITS.maxAdults, SEARCH_MESSAGES.adults),
     children: countSchema(0, SEARCH_LIMITS.maxChildren, SEARCH_MESSAGES.children),
   })
-  .superRefine(applySearchCriteriaRules);
+  .superRefine((value, ctx) => applySearchCriteriaRules(value, ctx));
 
 export type SearchCriteria = z.infer<typeof searchCriteriaSchema>;
 

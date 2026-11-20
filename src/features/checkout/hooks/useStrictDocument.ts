@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { isCheckoutPath } from "@/shared/i18n/paths";
 import type { DocumentState } from "../model/checkout-gate";
-
-const CHECKOUT_PATH = "/checkout";
 
 const subscribe = (): (() => void) => () => undefined;
 
-/** O documento carregado (a URL de carga, não a atual) é `/checkout`? Só ele tem a CSP com nonce. */
+/** O documento carregado (a URL de carga, não a atual) é `/checkout` ou `/en/checkout`? Só ele tem a CSP com nonce. */
 const getSnapshot = (): DocumentState => {
   const name = performance.getEntriesByType("navigation")[0]?.name;
   if (!name) return "ok";
   try {
-    return new URL(name).pathname === CHECKOUT_PATH ? "ok" : "reload";
+    return isCheckoutPath(new URL(name).pathname) ? "ok" : "reload";
   } catch {
     return "ok";
   }

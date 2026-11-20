@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { roomQueryOptions } from "@/shared/api/queries";
 import { queryKeys } from "@/shared/api/query-keys";
+import { useLocale } from "@/shared/i18n/client";
 import { withTimeout } from "@/shared/lib/timeout";
 import type { RoomSelection } from "@/shared/stores/booking-draft";
 import { toast } from "@/shared/ui";
@@ -21,7 +22,7 @@ import {
   type FailedResult,
   type SubmitFeedback,
   submitFeedback,
-  TRANSPORT_TOAST,
+  transportToast,
 } from "../model/create-booking-result";
 import type { QuoteResult } from "../model/quote";
 import type { CheckoutPrice } from "./checkout-price";
@@ -58,6 +59,7 @@ export const useSubmitBooking = ({
   onInvalidField,
 }: SubmitOptions) => {
   const queryClient = useQueryClient();
+  const locale = useLocale();
   const attempt = useRef<Attempt | null>(null);
   const keyRef = useRef(0);
   // Marcada antes do `mutate`: dois envios no mesmo tick (Enter repetido) não passam por `isPending`.
@@ -93,12 +95,16 @@ export const useSubmitBooking = ({
       setState({ kind: "none" });
       return;
     }
-    const feedback = submitFeedback(result, {
-      previousTotalCents: quote.quote.totalCents,
-      totalWithoutCouponCents: quote.baseQuote.totalCents,
-      couponCode: quote.quote.couponCode,
-      online: navigator.onLine,
-    });
+    const feedback = submitFeedback(
+      result,
+      {
+        previousTotalCents: quote.quote.totalCents,
+        totalWithoutCouponCents: quote.baseQuote.totalCents,
+        couponCode: quote.quote.couponCode,
+        online: navigator.onLine,
+      },
+      locale,
+    );
     show((key) => ({ kind: "feedback", feedback, key }));
   };
 
@@ -125,7 +131,7 @@ export const useSubmitBooking = ({
       },
       onSuccess: (result) => handle(result, quote),
       onError: () => {
-        toast.error(TRANSPORT_TOAST);
+        toast.error(transportToast(locale));
         handle(FAILED_ON_TRANSPORT, quote);
       },
     });

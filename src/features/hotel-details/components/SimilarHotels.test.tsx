@@ -8,6 +8,7 @@ const json = (body: unknown, status = 200) =>
 
 const criteria = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" });
 const props: Parameters<typeof SimilarHotels>[0] = {
+  locale: "pt-BR",
   hotelId: 1,
   destination: "Rio de Janeiro, RJ",
   criteria,

@@ -32,6 +32,7 @@ export const MapTile = ({ src, style }: MapTileProps) => {
       width={256}
       height={256}
       unoptimized
+      crossOrigin="anonymous"
       className={loaded ? "absolute max-w-none" : "invisible absolute max-w-none"}
       style={style}
       onLoad={() => setLoaded(true)}

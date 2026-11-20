@@ -4,16 +4,10 @@ import { type ComponentProps, Fragment, useEffect, useRef } from "react";
 import type { Suggestion } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import { BuildingIcon, PalmTreeIcon, TreesIcon, UmbrellaIcon, VisuallyHidden } from "@/shared/ui";
+import { useSearchFormMessages } from "../hooks/useSearchFormMessages";
 import { highlightMatch } from "../model/suggestion-text";
 
 type SuggestionType = Suggestion["type"];
-
-const TYPE_LABELS: Record<SuggestionType, string> = {
-  city: "Cidade",
-  beach: "Praia",
-  island: "Ilha",
-  nature: "Natureza",
-};
 
 const TypeIcon = ({ type }: { type: SuggestionType }) => {
   switch (type) {
@@ -46,6 +40,7 @@ export const SuggestionOption = ({
   className,
   ...rest
 }: SuggestionOptionProps) => {
+  const t = useSearchFormMessages().suggestions;
   const ref = useRef<HTMLLIElement>(null);
   useEffect(() => {
     if (active) ref.current?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
@@ -77,7 +72,7 @@ export const SuggestionOption = ({
       </span>
       <span className="text-sm text-fg-subtle">
         <VisuallyHidden>, </VisuallyHidden>
-        {TYPE_LABELS[suggestion.type]}
+        {t.types[suggestion.type]}
       </span>
     </li>
   );

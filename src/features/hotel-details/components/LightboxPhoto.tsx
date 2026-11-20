@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BedIcon, RemoteImage, Spinner } from "@/shared/ui";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 
 type LightboxPhotoProps = { src: string; alt: string };
 
@@ -16,6 +17,7 @@ const Overlay = ({ children }: { children: React.ReactNode }) => (
  * (ícone + texto, as setas continuam). Montar com `key` = foto para reiniciar o estado.
  */
 export const LightboxPhoto = ({ src, alt }: LightboxPhotoProps) => {
+  const t = useHotelDetailsMessages().gallery;
   const [status, setStatus] = useState<"loading" | "loaded" | "failed">("loading");
   return (
     <div className="relative size-full">
@@ -32,14 +34,14 @@ export const LightboxPhoto = ({ src, alt }: LightboxPhotoProps) => {
         fallback={
           <Overlay>
             <BedIcon aria-hidden="true" className="size-8" />
-            <p>Não foi possível carregar esta foto.</p>
+            <p>{t.failed}</p>
           </Overlay>
         }
       />
       {status === "loading" ? (
         <Overlay>
           <Spinner />
-          <p>Carregando foto…</p>
+          <p>{t.loading}</p>
         </Overlay>
       ) : null}
     </div>

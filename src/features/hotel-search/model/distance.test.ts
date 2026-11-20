@@ -71,7 +71,7 @@ describe("formatDistanceFromCenter", () => {
     [9.96, "a 10 km do ponto central"],
     [20.22, "a 20 km do ponto central"],
   ])("%s km -> %s", (km, text) => {
-    expect(formatDistanceFromCenter(km)).toBe(text);
+    expect(formatDistanceFromCenter(km, "pt-BR")).toBe(text);
   });
 });
 
@@ -97,7 +97,9 @@ describe("seed (protege contra mudança de fórmula)", () => {
     const list = byDestination(destination);
     const center = computeCentroid(list);
     const hotel = list.find((item) => item.id === id);
-    return center && hotel ? formatDistanceFromCenter(distanceKm(center, hotel)) : undefined;
+    return center && hotel
+      ? formatDistanceFromCenter(distanceKm(center, hotel), "pt-BR")
+      : undefined;
   };
 
   it("Rio ordena 18, 13, 11, 15, 12, 1, 16, 7, 9, 19, 14, 10, 2, 17", () => {

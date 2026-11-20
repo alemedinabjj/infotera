@@ -2,15 +2,19 @@ import { m, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { type CSSProperties, type RefCallback, useId } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
+import { localizePath } from "@/shared/i18n/paths";
+import { formatUnit } from "@/shared/i18n/units";
 import { cn } from "@/shared/lib/cn";
-import { pluralize } from "@/shared/lib/format";
 import { amenityLabel, propertyTypeLabel } from "@/shared/lib/labels";
 import { hotelHref } from "@/shared/lib/links";
 import { motionPreset } from "@/shared/lib/motion";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { CompareCheckbox, FavoriteButton } from "@/shared/saved";
 import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui";
+import { useCardMapSync } from "../hooks/useCardMapSync";
 import { useHotelRooms } from "../hooks/useHotelRooms";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
 import { pickCardAmenities } from "../model/card-amenities";
 import { deriveCardPricing } from "../model/card-pricing";
@@ -56,6 +60,8 @@ const AmenityList = ({
   amenities: readonly Amenity[];
   selected: readonly Amenity[];
 }) => {
+  const locale = useLocale();
+  const t = useHotelSearchMessages().page;
   const { shown, hiddenCount } = pickCardAmenities(amenities, selected);
   const selectedSet = new Set(selected);
   if (shown.length === 0) return null;
@@ -70,14 +76,14 @@ const AmenityList = ({
           )}
         >
           <CheckIcon aria-hidden="true" className="size-4 shrink-0 text-success" />
-          {amenityLabel(amenity)}
+          {amenityLabel(amenity, locale)}
         </li>
       ))}
       {hiddenCount > 0 ? (
         <li className="text-fg-subtle">
           <span aria-hidden="true">+{hiddenCount}</span>
           <span className="sr-only">
-            {pluralize(hiddenCount, "comodidade", "comodidades")} a mais
+            {formatUnit(hiddenCount, "amenity", locale)} {t.more}
           </span>
         </li>
       ) : null}
@@ -101,7 +107,9 @@ export const HotelCard = ({
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
   const titleId = useId();
   const prefetch = usePrefetchHotel(hotel.id);
-  const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id));
+  const locale = useLocale();
+  const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id), locale);
+  const sync = useCardMapSync(hotel.id);
 
   return (
     <m.article
@@ -115,10 +123,13 @@ export const HotelCard = ({
       aria-setsize={feed?.setSize}
       aria-labelledby={feed ? titleId : undefined}
       tabIndex={feed ? -1 : undefined}
+      {...sync.handlers}
       className={cardClassName({
         variant: "interactive",
-        className:
+        className: cn(
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row [--card-image-w:14rem] [--card-fav-size:2.75rem]",
+          sync.active && "ring-2 ring-primary",
+        ),
       })}
     >
       <RemoteImage
@@ -132,7 +143,8 @@ export const HotelCard = ({
       <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
         <h3 id={titleId} className="line-clamp-2 text-lg font-semibold text-fg">
           <Link
-            href={hotelHref(hotel.id, criteria)}
+            href={localizePath(locale, hotelHref(hotel.id, criteria))}
+            data-hotel-link={hotel.id}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
             {...prefetch}
           >
@@ -146,12 +158,12 @@ export const HotelCard = ({
           <FavoriteButton hotelId={hotel.id} hotelName={hotel.name} variant="overlay" />
         </div>
         <p className="text-sm text-fg-muted">
-          {propertyTypeLabel(hotel.propertyType)} · {hotel.destination}
+          {propertyTypeLabel(hotel.propertyType, locale)} · {hotel.destination}
         </p>
         <HotelCardDistance hotel={hotel} center={center} />
-        <RatingScore rating={hotel.rating} reviewCount={hotel.reviewCount} />
+        <RatingScore locale={locale} rating={hotel.rating} reviewCount={hotel.reviewCount} />
         <AmenityList amenities={hotel.amenities} selected={selectedAmenities} />
-        <HotelCardFooter pricing={pricing} />
+        <HotelCardFooter locale={locale} pricing={pricing} />
         <div className="relative z-10 flex min-h-11 items-center">
           <CompareCheckbox hotelId={hotel.id} hotelName={hotel.name} className="min-h-11" />
         </div>

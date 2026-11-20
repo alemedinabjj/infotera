@@ -9,6 +9,7 @@ import {
   useId,
   useRef,
 } from "react";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { cn } from "../../lib/cn";
 import { type MotionPresetName, motionPreset } from "../../lib/motion";
 import { IconButton } from "../atoms/IconButton";
@@ -221,7 +222,7 @@ export const Dialog = ({
   footer,
   size = "md",
   placement = "center",
-  closeLabel = "Fechar",
+  closeLabel,
   closeOnBackdrop = false,
   initialFocus,
   focusableBody = false,
@@ -229,6 +230,7 @@ export const Dialog = ({
   className,
 }: DialogProps) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const commonClose = useCommonMessages().dialog.close;
   const titleId = useId();
   const pressStartedOnBackdrop = useRef(false);
   const { finish } = useDialogLifecycle(
@@ -276,7 +278,7 @@ export const Dialog = ({
             size={size}
             titleId={titleId}
             title={title}
-            closeLabel={closeLabel}
+            closeLabel={closeLabel ?? commonClose}
             onClose={onClose}
             footer={footer}
             focusableBody={focusableBody}

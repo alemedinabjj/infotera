@@ -3,15 +3,17 @@
  * checkout (nonce, via `proxy.ts`) e a política base das demais rotas (`next.config.ts`).
  */
 
+import { TILE_ORIGIN } from "./map-tiles";
+
 type Directive = readonly [name: string, ...values: string[]];
 
 export type CspMode = "production" | "development";
 
-/** Hosts de imagem usados pelo app (Unsplash direto no loader, avatares e tiles do mapa). */
+/** Hosts de imagem usados pelo app (Unsplash direto no loader, avatares e tiles do mapa, via `TILE_ORIGIN`). */
 export const IMAGE_HOSTS = [
   "https://images.unsplash.com",
   "https://i.pravatar.cc",
-  "https://tile.openstreetmap.org",
+  TILE_ORIGIN,
 ] as const;
 
 /** Política base (todas as rotas sem nonce): só o que não depende de renderização dinâmica. */
@@ -54,6 +56,10 @@ export const buildCsp = ({ nonce, apiOrigin, mode }: BuildCspOptions): string =>
     ["style-src-attr", "'unsafe-inline'"],
     ["img-src", "'self'", "data:", "blob:", ...IMAGE_HOSTS],
     ["font-src", "'self'"],
+    // Com `strict-dynamic` em `script-src`, o fallback de `worker-src` ignoraria `'self'` e o registro
+    // do service worker numa página aberta em `/checkout` seria bloqueado.
+    ["worker-src", "'self'"],
+    ["manifest-src", "'self'"],
     ["connect-src", "'self'", api, ...(isDev ? ["ws:"] : [])],
     ["object-src", "'none'"],
     ["base-uri", "'self'"],

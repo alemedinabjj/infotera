@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Field, IconButton, Input, MapPinIcon, Spinner, VisuallyHidden, XIcon } from "@/shared/ui";
 import { useCombobox } from "../hooks/useCombobox";
 import { useDestinationField } from "../hooks/useDestinationField";
+import { useSearchFormMessages } from "../hooks/useSearchFormMessages";
 import { SuggestionList } from "./SuggestionList";
 
 type DestinationComboboxProps = {
@@ -28,6 +29,7 @@ export const DestinationCombobox = ({
   error,
   inputRef,
 }: DestinationComboboxProps) => {
+  const t = useSearchFormMessages();
   const elementRef = useRef<HTMLInputElement | null>(null);
   const field = useDestinationField({ selected: value, onSelect: onChange });
   const combobox = useCombobox({
@@ -60,11 +62,11 @@ export const DestinationCombobox = ({
   const endSlot = field.isLoading ? (
     <span className="px-2.5 text-fg-muted">
       <Spinner className="size-5" />
-      <VisuallyHidden>Buscando destinos…</VisuallyHidden>
+      <VisuallyHidden>{t.suggestions.loading}</VisuallyHidden>
     </span>
   ) : field.inputValue ? (
     <IconButton
-      aria-label="Limpar destino"
+      aria-label={t.form.clearDestination}
       icon={<XIcon className="size-5" />}
       // Safari/iOS/Firefox mac não focam o botão no clique: sem isso o input perderia o foco
       // (blur com relatedTarget nulo) e o erro de "destino vazio" apareceria antes do clear.
@@ -74,7 +76,7 @@ export const DestinationCombobox = ({
   ) : undefined;
 
   return (
-    <Field label="Destino" required error={error}>
+    <Field label={t.form.destination} required error={error}>
       {(control) => (
         <div className="relative" {...combobox.wrapperProps}>
           <Input
@@ -90,7 +92,7 @@ export const DestinationCombobox = ({
               combobox.reset();
               if (event.target.value.trim() !== "") combobox.open();
             }}
-            placeholder="Cidade, praia ou ilha"
+            placeholder={t.form.placeholder}
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}

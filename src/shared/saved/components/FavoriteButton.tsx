@@ -3,16 +3,16 @@
 import { m, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { type Ref, useState } from "react";
+import { useLocale } from "../../i18n/client";
+import { localizePath } from "../../i18n/paths";
 import { motionPreset } from "../../lib/motion";
 import { IconButton } from "../../ui/atoms/IconButton";
 import { HeartIcon } from "../../ui/icons";
 import { toast } from "../../ui/toast/toast-store";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
 import type { ToggleResult } from "../model/favorites";
 import { FAVORITES_PATH } from "../model/routes";
 import { favoritesActions, useFavoritesStore, useIsFavorite } from "../stores/favorites";
-
-const MESSAGES = SAVED_MESSAGES.favorite;
 
 type FavoriteButtonProps = {
   hotelId: number;
@@ -40,8 +40,10 @@ export const FavoriteButton = ({
   onToggle,
   ref,
 }: FavoriteButtonProps) => {
+  const MESSAGES = useSavedMessages().favorite;
   const favorite = useIsFavorite(hotelId);
   const router = useRouter();
+  const locale = useLocale();
   const reduced = useReducedMotion() ?? false;
   const [pulses, setPulses] = useState(0);
   const preset = motionPreset("favorite-pulse", reduced);
@@ -58,7 +60,7 @@ export const FavoriteButton = ({
         key,
         action: {
           label: MESSAGES.viewAction,
-          onClick: () => router.push(FAVORITES_PATH),
+          onClick: () => router.push(localizePath(locale, FAVORITES_PATH)),
           navigates: true,
         },
       });

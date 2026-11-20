@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatGuests, formatRating, pluralize, ratingLabel } from "./format";
+import { formatCount, formatGuests, formatRating, pluralize, ratingLabel } from "./format";
 
 describe("pluralize", () => {
   it("trata 0, 1 e n", () => {
@@ -15,22 +15,22 @@ describe("pluralize", () => {
 
 describe("formatRating", () => {
   it("usa uma casa e vírgula", () => {
-    expect(formatRating(4.5)).toBe("4,5");
-    expect(formatRating(4)).toBe("4,0");
-    expect(formatRating(4.66)).toBe("4,7");
+    expect(formatRating(4.5, "pt-BR")).toBe("4,5");
+    expect(formatRating(4, "pt-BR")).toBe("4,0");
+    expect(formatRating(4.66, "pt-BR")).toBe("4,7");
   });
 });
 
 describe("formatGuests", () => {
   it("descreve hóspedes e quartos", () => {
-    expect(formatGuests({ adults: 2, children: 1, rooms: 1 })).toBe(
+    expect(formatGuests({ adults: 2, children: 1, rooms: 1 }, "pt-BR")).toBe(
       "2 adultos, 1 criança · 1 quarto",
     );
   });
 
   it("omite crianças quando zero e pluraliza", () => {
-    expect(formatGuests({ adults: 1, children: 0, rooms: 1 })).toBe("1 adulto · 1 quarto");
-    expect(formatGuests({ adults: 4, children: 2, rooms: 2 })).toBe(
+    expect(formatGuests({ adults: 1, children: 0, rooms: 1 }, "pt-BR")).toBe("1 adulto · 1 quarto");
+    expect(formatGuests({ adults: 4, children: 2, rooms: 2 }, "pt-BR")).toBe(
       "4 adultos, 2 crianças · 2 quartos",
     );
   });
@@ -47,6 +47,19 @@ describe("ratingLabel", () => {
     [3.49, "Regular"],
     [0, "Regular"],
   ])("nota %s é %s", (rating, label) => {
-    expect(ratingLabel(rating)).toBe(label);
+    expect(ratingLabel(rating, "pt-BR")).toBe(label);
+  });
+});
+
+describe("formatRating / formatCount por idioma", () => {
+  it("nota usa vírgula em pt-BR e ponto em en-US", () => {
+    expect(formatRating(4.5, "pt-BR")).toBe("4,5");
+    expect(formatRating(4.5, "pt-BR")).toBe("4,5");
+    expect(formatRating(4.5, "en-US")).toBe("4.5");
+  });
+
+  it("contagem agrupa por idioma", () => {
+    expect(formatCount(1200, "pt-BR")).toBe("1.200");
+    expect(formatCount(1200, "en-US")).toBe("1,200");
   });
 });

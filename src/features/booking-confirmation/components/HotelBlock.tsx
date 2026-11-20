@@ -1,5 +1,8 @@
 import Link from "next/link";
+import type { Locale } from "@/shared/i18n/config";
+import { localizePath } from "@/shared/i18n/paths";
 import { Badge, BedIcon, CheckIcon, ChevronRightIcon, MapPinIcon, RemoteImage } from "@/shared/ui";
+import { confirmationMessages } from "../i18n/messages";
 import type { HotelView } from "../model/confirmation-view";
 
 const PHOTO = "aspect-[4/3] w-24 shrink-0 rounded-control sm:w-40";
@@ -9,7 +12,10 @@ const Photo = ({ hotel }: { hotel: HotelView & { status: "ok" } }) => (
 );
 
 /** Hotel `ok`, `missing` (id da reserva + aviso, sem retry) ou `error` (o `ErrorState` explica). */
-export const HotelBlock = ({ hotel }: { hotel: HotelView }) => {
+type BlockProps = { hotel: HotelView; locale: Locale };
+
+export const HotelBlock = ({ hotel, locale }: BlockProps) => {
+  const t = confirmationMessages.get(locale).stay;
   switch (hotel.status) {
     case "ok":
       return (
@@ -25,10 +31,10 @@ export const HotelBlock = ({ hotel }: { hotel: HotelView }) => {
             </div>
           </div>
           <Link
-            href={hotel.href}
+            href={localizePath(locale, hotel.href)}
             className="mt-1 inline-flex min-h-11 items-center gap-1 rounded-control font-medium text-primary hover:underline print:hidden"
           >
-            Ver página do hotel
+            {t.viewHotel}
             <ChevronRightIcon className="size-4" />
           </Link>
         </div>
@@ -55,12 +61,14 @@ export const HotelBlock = ({ hotel }: { hotel: HotelView }) => {
 };
 
 /** Política de cancelamento sempre aberta: é o que a pessoa volta para conferir (e imprime). */
-export const CancellationBlock = ({ hotel }: { hotel: HotelView }) => {
+export const CancellationBlock = ({ hotel, locale }: BlockProps) => {
   if (hotel.status !== "ok") return null;
   const { label, tone, details } = hotel.cancellation;
   return (
     <div className="flex flex-col items-start gap-2">
-      <h3 className="text-base font-semibold text-fg">Cancelamento</h3>
+      <h3 className="text-base font-semibold text-fg">
+        {confirmationMessages.get(locale).stay.cancellation}
+      </h3>
       <Badge tone={tone} icon={tone === "success" ? <CheckIcon className="size-3.5" /> : undefined}>
         {label}
       </Badge>

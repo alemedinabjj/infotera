@@ -1,5 +1,6 @@
-import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
+import { analyzeAccessibility } from "./helpers/axe";
 
 test("rota inexistente: 404 com h1, link de volta e sem violações axe", async ({ page }) => {
   const response = await page.goto("/rota-que-nao-existe");
@@ -13,6 +14,6 @@ test("rota inexistente: 404 com h1, link de volta e sem violações axe", async 
     "/",
   );
 
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  const results = await analyzeAccessibility(page);
   expect(results.violations).toEqual([]);
 });

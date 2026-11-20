@@ -1,20 +1,21 @@
+import type { Locale } from "@/shared/i18n/config";
 import { Alert } from "@/shared/ui";
+import { hotelDetailsMessages } from "../i18n/messages";
 
 /** Hotel sem quartos: avisa e leva aos similares (âncora, sem JS). */
-export const SoldOutAlert = ({ hasDates }: { hasDates: boolean }) => (
-  <Alert
-    tone="warning"
-    title={
-      hasDates
-        ? "Este hotel está esgotado nestas datas"
-        : "Este hotel está sem quartos disponíveis no momento"
-    }
-    action={
-      <a href="#similares" className="w-fit font-medium text-primary hover:underline">
-        Ver hotéis similares
-      </a>
-    }
-  >
-    Veja opções parecidas na mesma região.
-  </Alert>
-);
+export const SoldOutAlert = ({ hasDates, locale }: { hasDates: boolean; locale: Locale }) => {
+  const t = hotelDetailsMessages.get(locale).soldOut;
+  return (
+    <Alert
+      tone="warning"
+      title={hasDates ? t.titleDates : t.titleNow}
+      action={
+        <a href="#similares" className="w-fit font-medium text-primary hover:underline">
+          {t.seeSimilar}
+        </a>
+      }
+    >
+      {t.body}
+    </Alert>
+  );
+};

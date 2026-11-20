@@ -4,11 +4,9 @@ import { useId } from "react";
 import { Checkbox } from "../../ui/atoms/Checkbox";
 import { VisuallyHidden } from "../../ui/atoms/VisuallyHidden";
 import { useCompareActions } from "../hooks/useCompareActions";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
 import { MAX_COMPARE } from "../model/comparison";
 import { useComparison } from "../stores/comparison";
-
-const MESSAGES = SAVED_MESSAGES.compare;
 
 type CompareCheckboxProps = { hotelId: number; hotelName: string; className?: string };
 
@@ -17,6 +15,7 @@ type CompareCheckboxProps = { hotelId: number; hotelName: string; className?: st
  * (continua focável e explica o motivo) e clicar não marca: mostra o toast do limite.
  */
 export const CompareCheckbox = ({ hotelId, hotelName, className }: CompareCheckboxProps) => {
+  const MESSAGES = useSavedMessages().compare;
   const items = useComparison();
   const { toggle } = useCompareActions();
   const hintId = useId();

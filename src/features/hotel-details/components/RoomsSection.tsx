@@ -4,8 +4,10 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import type { CancellationPolicy } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { buttonClassName, EmptyState } from "@/shared/ui";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { canCompare } from "../model/room-comparison";
 import { roomTypesLabel } from "../model/room-labels";
 import { sectionHeadingId } from "../model/sections";
@@ -33,6 +35,8 @@ type RoomsSectionProps = {
 const subscribeNothing = (): (() => void) => () => undefined;
 
 const RoomsAnnouncer = ({ hotelId }: { hotelId: number }) => {
+  const locale = useLocale();
+  const loadingText = useHotelDetailsMessages().loading.rooms;
   const { data } = useQuery({ ...hotelRoomsQueryOptions(hotelId), enabled: false });
   // No servidor o cache já pode ter os quartos e o cliente começa sem eles: só anuncia depois de
   // hidratar (o 1º render dos dois lados é igual, vazio) para não gerar mismatch.
@@ -41,7 +45,7 @@ const RoomsAnnouncer = ({ hotelId }: { hotelId: number }) => {
     () => true,
     () => false,
   );
-  const text = data ? roomTypesLabel(data.length) : "Carregando quartos…";
+  const text = data ? roomTypesLabel(data.length, locale) : loadingText;
   return (
     <p className="sr-only" aria-live="polite">
       {hydrated ? text : ""}
@@ -56,6 +60,8 @@ const RoomsContent = ({
   criteria,
   pastDates,
 }: RoomsSectionProps) => {
+  const locale = useLocale();
+  const t = useHotelDetailsMessages().rooms;
   const { data: rooms } = useSuspenseQuery(hotelRoomsQueryOptions(hotelId));
   const { pickDates } = useStayEdit();
 
@@ -63,11 +69,11 @@ const RoomsContent = ({
     return (
       <EmptyState
         headingLevel={3}
-        title="Nenhum quarto para reserva"
-        description="Este hotel ainda não tem quartos cadastrados. Veja hotéis parecidos na mesma região."
+        title={t.emptyTitle}
+        description={t.emptyBody}
         action={
           <a href="#similares" className={buttonClassName({ variant: "secondary" })}>
-            Ver hotéis similares
+            {t.seeSimilar}
           </a>
         }
       />
@@ -78,10 +84,10 @@ const RoomsContent = ({
   const soldOut = hotelAvailableRooms !== 0 && rooms.every((room) => room.available === 0);
   return (
     <>
-      {soldOut ? <SoldOutAlert hasDates={criteria !== null} /> : null}
+      {soldOut ? <SoldOutAlert hasDates={criteria !== null} locale={locale} /> : null}
       {/* A contagem é falada pelo anunciador (`RoomsAnnouncer`): aqui só a vista, sem repetir. */}
       <p aria-hidden="true" className="min-h-5 text-sm text-fg-muted">
-        {roomTypesLabel(rooms.length)}
+        {roomTypesLabel(rooms.length, locale)}
       </p>
       <RoomList
         hotelId={hotelId}
@@ -100,16 +106,19 @@ const RoomsContent = ({
  * Quartos do hotel (`useSuspenseQuery` com as mesmas options do prefetch da F3 e do servidor).
  * O h2 e a barra da estadia ficam fora; loading e erro (com retry no lugar) trocam só o miolo.
  */
-export const RoomsSection = (props: RoomsSectionProps) => (
-  <div className="flex flex-col gap-4">
-    <RoomsAnnouncer hotelId={props.hotelId} />
-    <SectionBoundary
-      headingId={sectionHeadingId("quartos")}
-      errorTitle="Não foi possível carregar os quartos."
-      options={hotelRoomsQueryOptions(props.hotelId)}
-      loading={<RoomsLoading />}
-    >
-      <RoomsContent {...props} />
-    </SectionBoundary>
-  </div>
-);
+export const RoomsSection = (props: RoomsSectionProps) => {
+  const t = useHotelDetailsMessages().rooms;
+  return (
+    <div className="flex flex-col gap-4">
+      <RoomsAnnouncer hotelId={props.hotelId} />
+      <SectionBoundary
+        headingId={sectionHeadingId("quartos")}
+        errorTitle={t.loadError}
+        options={hotelRoomsQueryOptions(props.hotelId)}
+        loading={<RoomsLoading />}
+      >
+        <RoomsContent {...props} />
+      </SectionBoundary>
+    </div>
+  );
+};

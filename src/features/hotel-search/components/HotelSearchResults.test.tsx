@@ -383,20 +383,24 @@ describe("HotelSearchResults: erro e offline (critérios 21 e 23)", () => {
     onlineManager.setOnline(false);
     stubApi();
     start();
-    expect(await screen.findByText("Você está sem internet.")).toBeInTheDocument();
-    expect(screen.getByText("Os hotéis aparecem assim que a conexão voltar.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Estes resultados ainda não estão salvos offline"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/a lista atualiza sozinha/)).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
   });
 
-  it("sem rede ao trocar o filtro: a lista dos filtros antigos sai e entra o aviso", async () => {
+  it("sem rede ao trocar o filtro: a lista anterior fica com o aviso, sem 'Atualizando' sem fim", async () => {
     const user = userEvent.setup();
     stubApi();
     start();
     await screen.findAllByRole("heading", { level: 3 });
     act(() => onlineManager.setOnline(false));
     await user.click(screen.getByRole("checkbox", { name: "Piscina" }));
-    expect(await screen.findByText("Você está sem internet.")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+    expect(await screen.findByText("Sem internet para atualizar a lista")).toBeInTheDocument();
+    expect(screen.getByText(/ainda é da seleção anterior/)).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 3 }).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Atualizando resultados…")).not.toBeInTheDocument();
   });
 });
 

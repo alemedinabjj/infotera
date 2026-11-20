@@ -15,6 +15,7 @@ requisitos por feature, o que escolhemos dos avançados e os detalhes da mock-ap
 - Vitest + Testing Library (unit/componente), Playwright (E2E)
 - Doc do Next 16 desta versão: `node_modules/next/dist/docs/` (leia antes de usar API nova)
 - Backend: **somente** a `mock-api/` (json-server 0.17). Base URL em `NEXT_PUBLIC_API_URL`, nunca `localhost` fixo no código.
+  `NEXT_PUBLIC_SITE_URL` (opcional, padrão `http://localhost:3000`) é o `metadataBase`; veja `.env.example`.
 
 ## Comandos
 
@@ -36,6 +37,9 @@ npm run test:e2e     # playwright test --trace off (sobe mock-api, control-proxy
 # E2E usa o Chromium do Playwright 1.63 (`npx playwright install chromium` se faltar)
 # CSP do checkout: rode também contra o build (`npm run build && npx next start -p 3100`, depois
 # `PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/checkout*.spec.ts`)
+# PWA/offline: contra o build (o service worker é desligado no `next dev`)
+npm run build && npx next start -p 3100   # depois, noutro terminal:
+PLAYWRIGHT_BASE_URL=http://localhost:3100 npm run test:e2e:build   # e2e/pwa.build.spec.ts
 npx -y react-doctor@0.9.23 . --scope changed --base main --verbose --no-telemetry
                      # saúde React: componentes gigantes/aninhados, perf, a11y (também roda em toda PR)
 ```
@@ -89,7 +93,14 @@ features/<nome>/
   complexidade cognitiva até 15. Passou do limite → extraia subcomponente, hook ou função em `model/`.
 - Acessibilidade não é opcional: label em todo input, foco visível, navegação por teclado, `aria-live` para loading/erro, contraste AA, nada quebrado no mobile (320px).
 - Toda tela com dado remoto tem os 4 estados: loading (skeleton), erro (com retry), vazio, sucesso.
-- Identificadores e código em inglês; textos da UI e documentação em pt-BR.
+- Identificadores e código em inglês; documentação em pt-BR. **Texto de UI só em `i18n/`** (pt-BR é a fonte, en-US é obrigatório:
+  chave faltando = erro de compilação). Rotas vivem em `app/[locale]/`; links internos sempre por `localizePath(locale, "/rota")`
+  (nunca string `"/..."` crua nem `usePathname()` em render); `<html lang>` vem do locale; formatadores e funções de `model/`
+  recebem `locale` **obrigatório** (sem default: o tipo obriga o chamador; constantes técnicas de módulo passam `DEFAULT_LOCALE` de propósito).
+  Conteúdo da API (descrição, quartos, avaliações) fica no idioma original e leva `lang={contentLang(locale)}`.
+  A catraca `src/i18n-guard.test.ts` está em `COPY_BASELINE = 0` (nenhuma feature pendente): texto de UI fora de `i18n/` quebra o teste.
+  Ela pega JSX/atributos com letras, literais com acento, palavra funcional pt e uma lista curada de palavras de UI pt sem acento
+  (`Esgotado`, `Quartos`...; ids kebab-case minúsculos não contam). Palavra nova que escapar entra em `PT_UI_WORDS`.
 - Não commitar `node_modules`, `.env`, `mock-api/db.json`.
 
 ## Fluxo de trabalho com os agentes

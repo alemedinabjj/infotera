@@ -3,6 +3,8 @@
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useId } from "react";
+import { useHydrated } from "../../hooks/useHydrated";
+import { useLocale } from "../../i18n/client";
 import { useLastSearch } from "../../lib/last-search";
 import { motionPreset } from "../../lib/motion";
 import { Button } from "../../ui/atoms/Button";
@@ -12,7 +14,8 @@ import { toast } from "../../ui/toast/toast-store";
 import { useBottomBarInset } from "../hooks/useBottomBarInset";
 import { useCompareActions } from "../hooks/useCompareActions";
 import { useKeepFocusAboveBar } from "../hooks/useKeepFocusAboveBar";
-import { SAVED_MESSAGES } from "../messages";
+import { useSavedMessages } from "../hooks/useSavedMessages";
+import type { SavedMessages } from "../i18n/pt-BR";
 import { type CompareEntry, compareHref, MAX_COMPARE } from "../model/comparison";
 import { isTrayHiddenOn } from "../model/tray";
 import { useCompareAnnouncer } from "../stores/announcer";
@@ -20,15 +23,13 @@ import { comparisonActions, useComparison } from "../stores/comparison";
 import { CompareTrayAction } from "./CompareTrayAction";
 import { CompareTrayChips } from "./CompareTrayChips";
 
-const MESSAGES = SAVED_MESSAGES.tray;
-
 /** Limpa a comparação com Desfazer; o foco vai ao `<main>` porque a bandeja desmonta. */
-const clearComparison = () => {
+const clearComparison = (messages: SavedMessages["compare"]) => {
   const previous = comparisonActions.clear();
-  toast.info(SAVED_MESSAGES.compare.cleared, {
+  toast.info(messages.cleared, {
     key: "compare:clear",
     action: {
-      label: SAVED_MESSAGES.compare.undoAction,
+      label: messages.undoAction,
       onClick: () => comparisonActions.restoreAll(previous),
       // A bandeja volta: o foco vai ao "Comparar" dela (ou ao conteúdo, com 1 hotel só).
       returnFocus: () =>
@@ -40,7 +41,10 @@ const clearComparison = () => {
 };
 
 const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
+  const saved = useSavedMessages();
+  const MESSAGES = saved.tray;
   const lastSearch = useLastSearch();
+  const locale = useLocale();
   const titleId = useId();
   const measure = useBottomBarInset();
   const { remove } = useCompareActions();
@@ -63,7 +67,7 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
           aria-label={MESSAGES.clearLabel}
           className="sm:hidden"
           icon={<XIcon className="size-5" />}
-          onClick={clearComparison}
+          onClick={() => clearComparison(saved.compare)}
         />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 id={titleId} className="sr-only text-sm font-semibold text-fg roomy:not-sr-only">
@@ -71,9 +75,7 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
           </h2>
           <p className="text-sm text-fg-muted">{MESSAGES.counter(items.length)}</p>
           {items.length >= MAX_COMPARE ? (
-            <p className="hidden text-sm text-fg-subtle tall:block">
-              {SAVED_MESSAGES.compare.limitHint}
-            </p>
+            <p className="hidden text-sm text-fg-subtle tall:block">{saved.compare.limitHint}</p>
           ) : null}
           <CompareTrayChips items={items} onRemove={remove} />
         </div>
@@ -81,13 +83,14 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
           variant="ghost"
           size="sm"
           className="hidden sm:inline-flex"
-          onClick={clearComparison}
+          onClick={() => clearComparison(saved.compare)}
         >
           {MESSAGES.clear}
         </Button>
         <CompareTrayAction
           count={items.length}
           href={compareHref(
+            locale,
             items.map((item) => item.id),
             lastSearch,
           )}
@@ -103,9 +106,10 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
  */
 export const CompareTray = () => {
   const pathname = usePathname();
+  const hydrated = useHydrated();
   const items = useComparison();
   const announcement = useCompareAnnouncer((state) => state.message);
-  const visible = !isTrayHiddenOn(pathname) && items.length > 0;
+  const visible = hydrated && !isTrayHiddenOn(pathname) && items.length > 0;
 
   return (
     <>

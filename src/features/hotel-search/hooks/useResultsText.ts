@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/shared/i18n/client";
 import {
   describeAnnouncement,
   describeToolbar,
@@ -21,6 +22,7 @@ export const useResultsText = (
   page: number,
   destination: string,
 ): ResultsText => {
+  const locale = useLocale();
   const { view, slow, total, feed } = results;
   const feedAnnouncement = useFeedAnnouncement(feed, total);
   return {
@@ -29,11 +31,12 @@ export const useResultsText = (
       slow,
       total,
       listing: feed ? { mode: "infinite", loaded: feed.loaded } : { mode: "pages", page },
+      locale,
     }),
     // Durante o lote o botão já diz "Carregando mais hotéis…": o anunciador geral fica mudo.
     announcement:
       feed?.footer.kind === "loading-more"
         ? ""
-        : feedAnnouncement || describeAnnouncement({ view, slow, total, destination }),
+        : feedAnnouncement || describeAnnouncement({ view, slow, total, destination, locale }),
   };
 };

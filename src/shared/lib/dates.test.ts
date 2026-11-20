@@ -84,12 +84,12 @@ describe("isBeforeToday", () => {
 
 describe("formatDate", () => {
   it("short não volta um dia", () => {
-    expect(formatDate("2026-12-01", "short")).toBe("01/12/2026");
-    expect(formatDate("2026-01-01")).toBe("01/01/2026");
+    expect(formatDate("2026-12-01", "short", "pt-BR")).toBe("01/12/2026");
+    expect(formatDate("2026-01-01", "short", "pt-BR")).toBe("01/01/2026");
   });
 
   it("long inclui dia da semana", () => {
-    expect(formatDate("2026-12-12", "long")).toMatch(/sáb/i);
+    expect(formatDate("2026-12-12", "long", "pt-BR")).toMatch(/sáb/i);
   });
 });
 
@@ -104,6 +104,35 @@ describe("formatDateRange", () => {
     ["2027-03-30", "2027-04-02", "30 mar – 2 abr 2027"],
     ["2026-01-01", "2026-01-02", "1–2 jan"],
   ])("%s a %s → %s", (checkIn, checkOut, expected) => {
-    expect(formatDateRange(checkIn, checkOut, today)).toBe(expected);
+    expect(formatDateRange(checkIn, checkOut, today, "pt-BR")).toBe(expected);
+  });
+});
+
+describe("formatDate por idioma", () => {
+  it.each([
+    ["short", "pt-BR", "01/12/2026"],
+    ["short", "en-US", "12/01/2026"],
+    ["medium", "pt-BR", "1 de dez. de 2026"],
+    ["medium", "en-US", "Dec 1, 2026"],
+  ] as const)("%s em %s → %s", (format, locale, expected) => {
+    expect(formatDate("2026-12-01", format, locale)).toBe(expected);
+  });
+
+  it("long em en-US inclui o dia da semana em inglês", () => {
+    expect(formatDate("2026-12-12", "long", "en-US")).toMatch(/Sat/);
+  });
+});
+
+describe("formatDateRange por idioma", () => {
+  const today = "2026-11-19";
+
+  it.each([
+    ["2026-12-12", "2026-12-15", "Dec 12–15"],
+    ["2026-12-30", "2027-01-02", "Dec 30, 2026 – Jan 2, 2027"],
+    ["2026-11-28", "2026-12-02", "Nov 28 – Dec 2"],
+    ["2027-03-10", "2027-03-12", "Mar 10–12, 2027"],
+    ["2027-03-30", "2027-04-02", "Mar 30 – Apr 2, 2027"],
+  ])("%s a %s → %s", (checkIn, checkOut, expected) => {
+    expect(formatDateRange(checkIn, checkOut, today, "en-US")).toBe(expected);
   });
 });

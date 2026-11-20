@@ -1,5 +1,8 @@
+"use client";
+
 import { type ReactNode, useId } from "react";
 import { Button } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 
 type ReviewSectionProps = {
   title: string;
@@ -20,6 +23,7 @@ export const ReviewSection = ({
   children,
 }: ReviewSectionProps) => {
   const id = useId();
+  const t = useCheckoutMessages();
   return (
     <section
       aria-labelledby={id}
@@ -31,7 +35,8 @@ export const ReviewSection = ({
         </h3>
         {onEdit ? (
           <Button variant="ghost" size="sm" onClick={onEdit}>
-            Editar<span className="sr-only"> {editLabel}</span>
+            {t.edit}
+            <span className="sr-only"> {editLabel}</span>
           </Button>
         ) : null}
       </div>

@@ -1,5 +1,7 @@
 import type { FieldErrors } from "react-hook-form";
+import type { Locale } from "@/shared/i18n/config";
 import type { ErrorSummaryItem } from "@/shared/ui";
+import { checkoutMessages } from "../i18n/messages";
 import type { CheckoutFieldPath, CheckoutValues } from "./checkout.schema";
 import type { GuestKind } from "./companions";
 import type { CheckoutStep } from "./steps";
@@ -11,6 +13,7 @@ type SummaryContext = {
   step: CheckoutStep;
   companionKinds: readonly GuestKind[];
   documentType: CheckoutValues["payment"]["documentType"];
+  locale: Locale;
 };
 
 const item = (
@@ -19,38 +22,53 @@ const item = (
   message: string | undefined,
 ): CheckoutSummaryItem[] => (message ? [{ id, label, message }] : []);
 
-const personalItems = ({ errors, companionKinds }: SummaryContext): CheckoutSummaryItem[] => {
+const personalItems = ({
+  errors,
+  companionKinds,
+  locale,
+}: SummaryContext): CheckoutSummaryItem[] => {
+  const t = checkoutMessages.get(locale);
   const contact = errors.contact;
-  const holder = [
-    ...item("contact.firstName", "Titular — Nome", contact?.firstName?.message),
-    ...item("contact.lastName", "Titular — Sobrenome", contact?.lastName?.message),
-    ...item("contact.email", "Titular — E-mail", contact?.email?.message),
-    ...item("contact.phone", "Titular — Telefone", contact?.phone?.message),
+  const holder = `${t.errorSummary.holder} — `;
+  const holderItems = [
+    ...item("contact.firstName", `${holder}${t.fields.firstName}`, contact?.firstName?.message),
+    ...item("contact.lastName", `${holder}${t.fields.lastName}`, contact?.lastName?.message),
+    ...item("contact.email", `${holder}${t.fields.email}`, contact?.email?.message),
+    ...item("contact.phone", `${holder}${t.fields.phone}`, contact?.phone?.message),
   ];
   const others = companionKinds.flatMap((kind, index) => {
     const row = errors.companions?.[index];
-    const guest = `Hóspede ${index + 2}`;
+    const guest = `${t.errorSummary.guest(index + 2)} — `;
     return [
-      ...item(`companions.${index}.firstName`, `${guest} — Nome`, row?.firstName?.message),
-      ...item(`companions.${index}.lastName`, `${guest} — Sobrenome`, row?.lastName?.message),
+      ...item(
+        `companions.${index}.firstName`,
+        `${guest}${t.fields.firstName}`,
+        row?.firstName?.message,
+      ),
+      ...item(
+        `companions.${index}.lastName`,
+        `${guest}${t.fields.lastName}`,
+        row?.lastName?.message,
+      ),
       ...(kind === "child"
-        ? item(`companions.${index}.age`, `${guest} — Idade`, row?.age?.message)
+        ? item(`companions.${index}.age`, `${guest}${t.errorSummary.age}`, row?.age?.message)
         : []),
     ];
   });
-  return [...holder, ...others];
+  return [...holderItems, ...others];
 };
 
-const paymentItems = ({ errors, documentType }: SummaryContext): CheckoutSummaryItem[] => {
+const paymentItems = ({ errors, documentType, locale }: SummaryContext): CheckoutSummaryItem[] => {
+  const t = checkoutMessages.get(locale);
   const payment = errors.payment;
   return [
-    ...item("payment.cardNumber", "Número do cartão", payment?.cardNumber?.message),
-    ...item("payment.cardName", "Nome no cartão", payment?.cardName?.message),
-    ...item("payment.expiry", "Validade", payment?.expiry?.message),
-    ...item("payment.cvv", "CVV", payment?.cvv?.message),
+    ...item("payment.cardNumber", t.payment.number, payment?.cardNumber?.message),
+    ...item("payment.cardName", t.errorSummary.cardName, payment?.cardName?.message),
+    ...item("payment.expiry", t.payment.expiry, payment?.expiry?.message),
+    ...item("payment.cvv", t.payment.cvv, payment?.cvv?.message),
     ...item(
       "payment.document",
-      documentType === "cpf" ? "CPF" : "Passaporte",
+      documentType === "cpf" ? t.payment.cpf : t.payment.passport,
       payment?.document?.message,
     ),
   ];
@@ -64,7 +82,11 @@ export const summarizeCheckoutErrors = (context: SummaryContext): CheckoutSummar
     case "payment":
       return paymentItems(context);
     case "review":
-      return item("termsAccepted", "Termos", context.errors.termsAccepted?.message);
+      return item(
+        "termsAccepted",
+        checkoutMessages.get(context.locale).errorSummary.terms,
+        context.errors.termsAccepted?.message,
+      );
     default: {
       const unreachable: never = context.step;
       return unreachable;

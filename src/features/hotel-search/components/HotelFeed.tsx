@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Amenity, Hotel } from "@/shared/api/schemas";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import type { FeedState } from "../hooks/results-model";
@@ -11,6 +11,7 @@ import { useFocusFeedItem } from "../hooks/useFocusFeedItem";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
 import { useSeenCount } from "../hooks/useSeenCount";
 import type { GeoPoint } from "../model/distance";
+import { useMapSync } from "../store/map-sync";
 import { FeedFooter } from "./FeedFooter";
 import { FeedItems } from "./FeedItems";
 
@@ -42,6 +43,16 @@ export const HotelFeed = ({ hotels, headingId, feed, ...rest }: HotelFeedProps) 
   const { virtualizer, scrollMargin, focusIndex } = useFeedVirtualizer({ feedRef, keys });
   const seenCount = useSeenCount(feed.queryKey, virtualizer.getVirtualItems());
   const footerTargets = useMemo(() => [buttonRef, endRef], []);
+
+  // "Mostrar na lista" do mapa: rola até o card (mesmo se virtualizado fora da janela) e foca.
+  const registerReveal = useMapSync((state) => state.registerReveal);
+  useEffect(() => {
+    registerReveal((hotelId) => {
+      const index = keys.indexOf(hotelId);
+      if (index >= 0) focusIndex(index);
+    });
+    return () => registerReveal(null);
+  }, [keys, focusIndex, registerReveal]);
 
   const loadMore = useFocusFeedItem({
     loaded: feed.loaded,

@@ -2,6 +2,7 @@
 
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useRef } from "react";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { cn } from "../../lib/cn";
 import { focusWhenReady } from "../../lib/focus";
 import { motionPreset } from "../../lib/motion";
@@ -39,7 +40,8 @@ const useAutoDismiss = (item: ToastItemData, paused: boolean) => {
 
   useEffect(() => {
     if (state.current.version !== version) state.current = { version, remaining: duration };
-    if (paused) return;
+    // Persistente (`duration` infinita): nunca fecha sozinho.
+    if (paused || !Number.isFinite(state.current.remaining)) return;
     const startedAt = Date.now();
     const timer = setTimeout(() => toast.dismiss(id), state.current.remaining);
     return () => {
@@ -62,6 +64,7 @@ const restoreFocus = (item: ToastItemData): void => {
 /** Um toast animado (entrada `y`+fade, saída em fade). O tempo é pausado pela região. */
 export const ToastItem = ({ item, paused }: { item: ToastItemData; paused: boolean }) => {
   const preset = motionPreset("toast", useReducedMotion() ?? false);
+  const t = useCommonMessages().ui;
   const close = () => toast.dismiss(item.id);
   useAutoDismiss(item, paused);
 
@@ -94,7 +97,7 @@ export const ToastItem = ({ item, paused }: { item: ToastItemData; paused: boole
         ) : null}
       </div>
       <IconButton
-        aria-label="Fechar notificação"
+        aria-label={t.closeNotification}
         icon={<XIcon className="size-5" />}
         className="-m-2"
         onClick={close}

@@ -1,6 +1,8 @@
 "use client";
 
 import { type FormEvent, type RefObject, useEffect, useRef, useState } from "react";
+import { useLocale } from "@/shared/i18n/client";
+import type { Locale } from "@/shared/i18n/config";
 import { cn } from "@/shared/lib/cn";
 import {
   AlertCircleIcon,
@@ -11,6 +13,7 @@ import {
   Input,
   TagIcon,
 } from "@/shared/ui";
+import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { CouponView } from "../hooks/useCoupon";
 import { type CouponSnapshot, describeCouponTransition } from "../model/coupon-announcement";
 import { couponBenefit, couponMessage } from "../model/coupons";
@@ -26,16 +29,22 @@ type CouponFormProps = {
   onRemove: () => void;
 };
 
-const snapshotOf = (view: CouponView, status: CouponStatus): CouponSnapshot => {
+const snapshotOf = (view: CouponView, status: CouponStatus, locale: Locale): CouponSnapshot => {
   if (view.kind === "error") return { kind: "error", message: view.message };
   if (status.state === "valid") return { kind: "valid", code: status.coupon.code };
   if (status.state === "ineligible") {
-    return { kind: "ineligible", code: status.coupon.code, message: couponMessage(status.reason) };
+    return {
+      kind: "ineligible",
+      code: status.coupon.code,
+      message: couponMessage(status.reason, locale),
+    };
   }
   return { kind: "none" };
 };
 
 const AppliedRow = ({ status }: { status: Exclude<CouponStatus, { state: "none" }> }) => {
+  const locale = useLocale();
+  const t = useCheckoutMessages().coupon;
   const valid = status.state === "valid";
   return (
     <div
@@ -51,8 +60,8 @@ const AppliedRow = ({ status }: { status: Exclude<CouponStatus, { state: "none" 
       )}
       <span className="min-w-0 break-words">
         {valid
-          ? `${status.coupon.code} · ${couponBenefit(status.coupon)}`
-          : `${status.coupon.code} não vale para esta reserva`}
+          ? `${status.coupon.code} · ${couponBenefit(status.coupon, locale)}`
+          : t.notValidHere(status.coupon.code)}
       </span>
     </div>
   );
@@ -65,28 +74,33 @@ type AppliedBlockProps = {
   onRemove: () => void;
 };
 
-const AppliedBlock = ({ status, locked, removeRef, onRemove }: AppliedBlockProps) => (
-  <fieldset className="flex min-w-0 flex-col gap-1.5">
-    <legend className="mb-1.5 text-sm font-medium text-fg">Cupom de desconto</legend>
-    <div className="flex items-start gap-2">
-      <AppliedRow status={status} />
-      <Button
-        ref={removeRef}
-        variant="ghost"
-        size="sm"
-        aria-disabled={locked || undefined}
-        onClick={() => {
-          if (!locked) onRemove();
-        }}
-      >
-        Remover<span className="sr-only"> cupom</span>
-      </Button>
-    </div>
-    {status.state === "ineligible" ? (
-      <p className="text-sm text-fg">{couponMessage(status.reason)}</p>
-    ) : null}
-  </fieldset>
-);
+const AppliedBlock = ({ status, locked, removeRef, onRemove }: AppliedBlockProps) => {
+  const locale = useLocale();
+  const t = useCheckoutMessages().coupon;
+  return (
+    <fieldset className="flex min-w-0 flex-col gap-1.5">
+      <legend className="mb-1.5 text-sm font-medium text-fg">{t.label}</legend>
+      <div className="flex items-start gap-2">
+        <AppliedRow status={status} />
+        <Button
+          ref={removeRef}
+          variant="ghost"
+          size="sm"
+          aria-disabled={locked || undefined}
+          onClick={() => {
+            if (!locked) onRemove();
+          }}
+        >
+          {t.remove}
+          <span className="sr-only">{t.removeSr}</span>
+        </Button>
+      </div>
+      {status.state === "ineligible" ? (
+        <p className="text-sm text-fg">{couponMessage(status.reason, locale)}</p>
+      ) : null}
+    </fieldset>
+  );
+};
 
 type InputBlockProps = {
   text: string;
@@ -97,34 +111,38 @@ type InputBlockProps = {
   onChange: (value: string) => void;
 };
 
-const InputBlock = ({ text, error, validating, locked, inputRef, onChange }: InputBlockProps) => (
-  <Field label="Cupom de desconto" description="Letras e números, sem espaços." error={error}>
-    {(control) => (
-      <div className="flex items-start gap-2">
-        <Input
-          {...control}
-          ref={inputRef}
-          value={text}
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          className="min-w-0 flex-1"
-          onChange={(event) => onChange(event.target.value)}
-        />
-        <Button
-          type="submit"
-          variant="secondary"
-          loading={validating}
-          loadingText="Aplicando…"
-          aria-disabled={locked || undefined}
-          className="min-w-28 shrink-0"
-        >
-          Aplicar<span className="sr-only"> cupom</span>
-        </Button>
-      </div>
-    )}
-  </Field>
-);
+const InputBlock = ({ text, error, validating, locked, inputRef, onChange }: InputBlockProps) => {
+  const t = useCheckoutMessages().coupon;
+  return (
+    <Field label={t.label} description={t.hint} error={error}>
+      {(control) => (
+        <div className="flex items-start gap-2">
+          <Input
+            {...control}
+            ref={inputRef}
+            value={text}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            className="min-w-0 flex-1"
+            onChange={(event) => onChange(event.target.value)}
+          />
+          <Button
+            type="submit"
+            variant="secondary"
+            loading={validating}
+            loadingText={t.applying}
+            aria-disabled={locked || undefined}
+            className="min-w-28 shrink-0"
+          >
+            {t.apply}
+            <span className="sr-only">{t.applySr}</span>
+          </Button>
+        </div>
+      )}
+    </Field>
+  );
+};
 
 type FocusTarget = "input" | "remove" | null;
 
@@ -137,13 +155,14 @@ const useCouponFeedback = (
   status: CouponStatus,
   setText: (text: string) => void,
 ) => {
+  const locale = useLocale();
   const [focusTarget, setFocusTarget] = useState<FocusTarget>(null);
   const [announcement, setAnnouncement] = useState("");
-  const [previous, setPrevious] = useState({ view, snapshot: snapshotOf(view, status) });
+  const [previous, setPrevious] = useState({ view, snapshot: snapshotOf(view, status, locale) });
 
-  const snapshot = snapshotOf(view, status);
+  const snapshot = snapshotOf(view, status, locale);
   if (previous.view !== view || previous.snapshot.kind !== snapshot.kind) {
-    const message = describeCouponTransition(previous.snapshot, snapshot);
+    const message = describeCouponTransition(previous.snapshot, snapshot, locale);
     // O texto alterna um caractere invisível para a leitura se repetir quando o erro é o mesmo.
     if (message) setAnnouncement((now) => (now.endsWith("\u200b") ? message : `${message}\u200b`));
     if (view.kind === "applied" && previous.view.kind !== "applied") setFocusTarget("remove");
@@ -182,6 +201,7 @@ export const CouponForm = ({
   onCancel,
   onRemove,
 }: CouponFormProps) => {
+  const t = useCheckoutMessages().coupon;
   const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -213,7 +233,7 @@ export const CouponForm = ({
         className="self-start"
         onClick={() => setExpanded((value) => !value)}
       >
-        Tenho um cupom de desconto
+        {t.toggle}
       </Button>
       <div id="coupon-panel" hidden={!open}>
         {status.state !== "none" ? (

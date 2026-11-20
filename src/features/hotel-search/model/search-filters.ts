@@ -34,6 +34,8 @@ export type SearchFilters = {
   sort: SortOption;
   /** `pages` é o padrão (omitido na URL). */
   view: ListMode;
+  /** Painel do mapa aberto (`map=1`). Preferência de exibição, como `view`: não é filtro. */
+  map: boolean;
   /** ≥ 1. Sempre 1 em `view=infinite`. */
   page: number;
 };
@@ -46,6 +48,7 @@ export const DEFAULT_FILTERS: SearchFilters = {
   amenities: [],
   sort: "popular",
   view: "pages",
+  map: false,
   page: 1,
 };
 
@@ -58,6 +61,7 @@ export const FILTER_PARAM_KEYS = [
   "amenity",
   "sort",
   "view",
+  "map",
   "page",
 ] as const;
 
@@ -95,6 +99,9 @@ const parseSort = (raw: string | null): SortOption =>
 const parseView = (raw: string | null): ListMode =>
   LIST_MODES.find((option) => option === raw) ?? DEFAULT_FILTERS.view;
 
+/** Só `map=1` abre o painel; qualquer outro valor (ou ausência) é fechado. */
+const parseMap = (raw: string | null): boolean => raw === "1";
+
 const parsePage = (raw: string | null): number => {
   const page = parseInteger(raw);
   return page !== null && page >= 1 ? page : DEFAULT_FILTERS.page;
@@ -117,6 +124,7 @@ export const parseSearchFilters = (params: ParamsInput): SearchFilters => {
     amenities: parseEnumList(amenitySchema.options, params.getAll("amenity")),
     sort: parseSort(params.get("sort")),
     view,
+    map: parseMap(params.get("map")),
     // Na rolagem contínua não existe página: a URL canônica a ignora.
     page: view === "infinite" ? DEFAULT_FILTERS.page : parsePage(params.get("page")),
   };
@@ -139,6 +147,7 @@ export const serializeSearchFilters = (filters: SearchFilters): URLSearchParams 
   }
   if (filters.sort !== DEFAULT_FILTERS.sort) params.set("sort", filters.sort);
   if (filters.view !== DEFAULT_FILTERS.view) params.set("view", filters.view);
+  if (filters.map) params.set("map", "1");
   if (filters.view === "pages" && filters.page > DEFAULT_FILTERS.page) {
     params.set("page", String(filters.page));
   }
@@ -162,7 +171,7 @@ export const withFilters = (params: URLSearchParams, filters: SearchFilters): UR
 
 /**
  * Quantos filtros estão ativos (o contador de "Filtros (3)"): faixa de preço conta 1, nota 1 e
- * cada tipo/comodidade marcado 1. Ordenação, modo de exibição e página não são filtros.
+ * cada tipo/comodidade marcado 1. Ordenação, modo de exibição, mapa e página não são filtros.
  */
 export const countActiveFilters = (filters: SearchFilters): number => {
   const price = filters.minPrice > PRICE_RANGE.min || filters.maxPrice < PRICE_RANGE.max ? 1 : 0;

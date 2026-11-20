@@ -5,6 +5,7 @@ import { cn } from "@/shared/lib/cn";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { Alert, Button, ChevronDownIcon, cardClassName } from "@/shared/ui";
 import { useFocusAfterDates } from "../hooks/useFocusAfterDates";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { STAY_EDIT_TITLE_ID } from "../model/sections";
 import { useStayEdit } from "./StayEditContext";
 
@@ -21,23 +22,29 @@ type HotelStayBarProps = {
   datesForm: ReactNode;
 };
 
-const Panel = ({ children }: { children: ReactNode }) => (
-  <div id={PANEL_ID}>
-    <h3 id={STAY_EDIT_TITLE_ID} className="sr-only">
-      Alterar datas e hóspedes
-    </h3>
-    {children}
-  </div>
-);
+const Panel = ({ children }: { children: ReactNode }) => {
+  const t = useHotelDetailsMessages().stayBar;
+  return (
+    <div id={PANEL_ID}>
+      <h3 id={STAY_EDIT_TITLE_ID} className="sr-only">
+        {t.change}
+      </h3>
+      {children}
+    </div>
+  );
+};
 
-const MissingDates = ({ datesForm }: { datesForm: ReactNode }) => (
-  <div className="flex flex-col gap-4">
-    <Alert tone="info" title="Escolha as datas para reservar">
-      Com as datas e os hóspedes, mostramos o preço total e a disponibilidade de cada quarto.
-    </Alert>
-    <Panel>{datesForm}</Panel>
-  </div>
-);
+const MissingDates = ({ datesForm }: { datesForm: ReactNode }) => {
+  const t = useHotelDetailsMessages().stayBar;
+  return (
+    <div className="flex flex-col gap-4">
+      <Alert tone="info" title={t.missingTitle}>
+        {t.missingBody}
+      </Alert>
+      <Panel>{datesForm}</Panel>
+    </div>
+  );
+};
 
 /**
  * Barra da estadia no topo de "Quartos". Com critérios: resumo + "Alterar datas e hóspedes"
@@ -45,6 +52,7 @@ const MissingDates = ({ datesForm }: { datesForm: ReactNode }) => (
  * aberto. Enviar o formulário fecha o painel (os critérios mudam) e leva o foco ao h2 "Quartos".
  */
 export const HotelStayBar = ({ criteria, summary, pastDates, datesForm }: HotelStayBarProps) => {
+  const t = useHotelDetailsMessages().stayBar;
   const key = criteria ? searchCriteriaToQueryString(criteria) : "none";
   const { open, toggle } = useStayEdit();
   useFocusAfterDates(key);
@@ -59,7 +67,7 @@ export const HotelStayBar = ({ criteria, summary, pastDates, datesForm }: HotelS
         })}
       >
         <div>
-          <p className="text-sm font-medium text-fg-muted">Sua estadia</p>
+          <p className="text-sm font-medium text-fg-muted">{t.stay}</p>
           <p className="text-base font-semibold text-fg tabular-nums">{summary}</p>
         </div>
         <Button
@@ -72,14 +80,13 @@ export const HotelStayBar = ({ criteria, summary, pastDates, datesForm }: HotelS
           }
           onClick={toggle}
         >
-          Alterar datas e hóspedes
+          {t.change}
         </Button>
       </div>
       {open ? <Panel>{datesForm}</Panel> : null}
       {pastDates ? (
-        <Alert tone="warning" title="As datas desta busca já passaram">
-          Preços e disponibilidade podem ter mudado. Use “Alterar datas e hóspedes” para escolher
-          novas datas.
+        <Alert tone="warning" title={t.pastTitle}>
+          {t.pastBody}
         </Alert>
       ) : null}
     </div>

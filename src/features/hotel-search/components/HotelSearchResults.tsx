@@ -4,6 +4,7 @@ import { useCallback, useId, useState } from "react";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ErrorBoundary, SkipLink } from "@/shared/ui";
 import { focusResultsHeading } from "../hooks/useFocusOnPageChange";
+import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import { useRememberSearch } from "../hooks/useRememberSearch";
 import { useResultsController } from "../hooks/useResultsController";
 import { useResultsText } from "../hooks/useResultsText";
@@ -25,9 +26,11 @@ type HotelSearchResultsProps = {
  * cliente (`useQuery`); filtros, ordenação e página vêm da URL.
  */
 export const HotelSearchResults = ({ destination, criteria }: HotelSearchResultsProps) => {
+  const t = useHotelSearchMessages();
   useRememberSearch(criteria);
   const headingId = useId();
   const distanceHelpId = useId();
+  const mapPanelId = useId();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const { filters, update, pageHref, results, headingRef, sectionRef, sectionMinHeight, retry } =
@@ -41,7 +44,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
     <div className="lg:grid lg:grid-cols-[18rem_1fr] lg:gap-8">
       <SkipLink
         targetId={headingId}
-        label="Pular para os resultados"
+        label={t.list.skipToResults}
         onClick={(event) => {
           event.preventDefault();
           focusResultsHeading(headingRef.current);
@@ -67,6 +70,7 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
           destination={destination}
           onChange={update}
           onOpenFilters={() => setDrawerOpen(true)}
+          mapPanelId={filters.map && view.kind === "results" ? mapPanelId : undefined}
         />
         <ErrorBoundary
           resetKeys={[resetKey]}
@@ -80,6 +84,8 @@ export const HotelSearchResults = ({ destination, criteria }: HotelSearchResults
             page={filters.page}
             headingId={headingId}
             feed={results.feed}
+            mapOpen={filters.map}
+            mapPanelId={mapPanelId}
             destination={destination}
             criteria={criteria}
             selectedAmenities={filters.amenities}

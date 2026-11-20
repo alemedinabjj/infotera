@@ -1,3 +1,7 @@
+import { commonMessages } from "../i18n/common/messages";
+import type { Locale } from "../i18n/config";
+import { plural } from "../i18n/messages";
+import { formatUnit } from "../i18n/units";
 /** Quartos restantes a partir dos quais o card avisa que está acabando. */
 export const SCARCE_THRESHOLD = 2;
 
@@ -35,13 +39,14 @@ type DescribeInput = {
   status: AvailabilityStatus;
   /** Hóspedes da busca (adultos + crianças), para o texto de `no-fit`. */
   guests?: number;
+  locale: Locale;
   availableRooms: number;
   requestedRooms: number;
   /** `stay` tem datas; no `browse` o esgotado diz "no momento". */
   hasDates: boolean;
 };
 
-const roomsText = (count: number): string => `${count} ${count === 1 ? "quarto" : "quartos"}`;
+const roomsText = (count: number, locale: Locale): string => formatUnit(count, "room", locale);
 
 /** Selo e nota do card para cada disponibilidade (textos do design system §6.6). */
 export const describeAvailability = ({
@@ -50,31 +55,37 @@ export const describeAvailability = ({
   requestedRooms,
   hasDates,
   guests = 0,
+  locale,
 }: DescribeInput): AvailabilityDescription => {
+  const t = commonMessages.get(locale).availability;
   switch (status) {
     case "sold-out":
       return {
-        badge: { tone: "danger", text: "Esgotado" },
-        note: hasDates
-          ? "Sem quartos disponíveis para estas datas."
-          : "Sem quartos disponíveis no momento.",
+        badge: { tone: "danger", text: t.soldOut },
+        note: hasDates ? t.soldOutDates : t.soldOutNow,
       };
     case "insufficient":
       return {
         badge: {
           tone: "warning",
-          text: `Só ${availableRooms} ${availableRooms === 1 ? "quarto disponível" : "quartos disponíveis"}`,
+          text: t.onlyRoomsAvailable({
+            count: availableRooms,
+            rooms: plural(availableRooms, t.roomAvailable),
+          }),
         },
-        note: `Sua busca pede ${roomsText(requestedRooms)}.`,
+        note: t.requestAsks({ rooms: roomsText(requestedRooms, locale) }),
       };
     case "no-fit":
       return {
-        badge: { tone: "warning", text: "Não comporta o grupo" },
-        note: `Nenhum quarto acomoda ${guests} ${guests === 1 ? "hóspede" : "hóspedes"} em ${roomsText(requestedRooms)}.`,
+        badge: { tone: "warning", text: t.noFitBadge },
+        note: t.noFitNote({
+          guests: formatUnit(guests, "guest", locale),
+          rooms: roomsText(requestedRooms, locale),
+        }),
       };
     case "scarce":
       return {
-        badge: { tone: "warning", text: `Apenas ${roomsText(availableRooms)}!` },
+        badge: { tone: "warning", text: t.scarce({ rooms: roomsText(availableRooms, locale) }) },
         note: null,
       };
     case "available":

@@ -1,7 +1,11 @@
-import { formatRating, pluralize, ratingLabel } from "../../lib/format";
+import { commonMessages } from "../../i18n/common/messages";
+import type { Locale } from "../../i18n/config";
+import { formatUnit } from "../../i18n/units";
+import { formatRating, ratingLabel } from "../../lib/format";
 import { Stars } from "../atoms/Stars";
 
 type RatingScoreProps = {
+  locale: Locale;
   rating: number;
   /** Omitido: nota solta (de um comentário), sem contagem nem rótulo qualitativo. */
   reviewCount?: number;
@@ -19,22 +23,28 @@ const NOTE_SIZE = { sm: "text-sm", md: "text-base" } as const;
  * Sem `reviewCount`: `5 ★★★★★` ("Nota 5 de 5", inteiros sem casa decimal).
  */
 export const RatingScore = ({
+  locale,
   rating,
   reviewCount,
   showLabel = true,
   size = "md",
 }: RatingScoreProps) => {
-  if (reviewCount === 0) return <p className="text-sm text-fg-subtle">Sem avaliações</p>;
+  const t = commonMessages.get(locale).rating;
+  if (reviewCount === 0) return <p className="text-sm text-fg-subtle">{t.none}</p>;
   const standalone = reviewCount === undefined;
 
   return (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-      <span className="sr-only">Nota </span>
+      <span className="sr-only">{t.score} </span>
       <span className={`${NOTE_SIZE[size]} font-semibold text-fg tabular-nums`}>
-        {standalone && Number.isInteger(rating) ? rating : formatRating(rating)}
+        {standalone && Number.isInteger(rating) ? rating : formatRating(rating, locale)}
       </span>
-      <span className="sr-only"> de 5{standalone ? "" : ","}</span>
-      <Stars value={rating} decorative />
+      <span className="sr-only">
+        {" "}
+        {t.outOf}
+        {standalone ? "" : ","}
+      </span>
+      <Stars locale={locale} value={rating} decorative />
       {standalone ? null : (
         <>
           {/* Rótulo, separador e contagem formam um bloco só: se não couber, o bloco inteiro desce
@@ -42,14 +52,16 @@ export const RatingScore = ({
           <span className="inline-flex items-center gap-x-2 whitespace-nowrap">
             {showLabel ? (
               <>
-                <span className="text-sm font-medium text-fg-muted">{ratingLabel(rating)}</span>
+                <span className="text-sm font-medium text-fg-muted">
+                  {ratingLabel(rating, locale)}
+                </span>
                 <span aria-hidden="true" className="text-sm text-fg-subtle">
                   ·
                 </span>
               </>
             ) : null}
             <span className="text-sm text-fg-subtle">
-              {pluralize(reviewCount, "avaliação", "avaliações")}
+              {formatUnit(reviewCount, "review", locale)}
             </span>
           </span>
         </>

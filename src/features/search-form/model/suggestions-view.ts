@@ -1,3 +1,5 @@
+import type { Locale } from "@/shared/i18n/config";
+import { searchFormMessages } from "../i18n/messages";
 import { describeResultCount } from "./suggestion-text";
 
 /** O que o popover mostra: nada (`idle`), carregando, lista, vazio ou erro (inclui offline). */
@@ -19,11 +21,10 @@ export type SuggestionsViewInput = {
   offline: boolean;
 };
 
-const ERROR_MESSAGE = "Não foi possível carregar os destinos.";
-const OFFLINE_MESSAGE = "Você está sem internet. Assim que a conexão voltar, tente de novo.";
-
-export const suggestionsErrorMessage = (offline: boolean): string =>
-  offline ? OFFLINE_MESSAGE : ERROR_MESSAGE;
+export const suggestionsErrorMessage = (offline: boolean, locale: Locale): string => {
+  const t = searchFormMessages.get(locale).suggestions;
+  return offline ? t.offline : t.loadError;
+};
 
 /**
  * Decide a visão do popover. Offline sem dados da busca atual vira erro (linha offline) e nunca
@@ -47,11 +48,14 @@ type AnnouncementInput = {
   text: string;
   /** A lista já é a da busca atual (nada em andamento, nem placeholder). */
   isCurrent: boolean;
+  locale: Locale;
 };
 
 /** Texto da região `aria-live` do combobox: erro/offline, contagem de resultados ou nada. */
 export const describeSuggestionsAnnouncement = (input: AnnouncementInput): string => {
-  if (input.view === "error") return suggestionsErrorMessage(input.offline);
+  if (input.view === "error") return suggestionsErrorMessage(input.offline, input.locale);
   const hasOutcome = input.view === "results" || input.view === "empty";
-  return hasOutcome && input.isCurrent ? describeResultCount(input.itemCount, input.text) : "";
+  return hasOutcome && input.isCurrent
+    ? describeResultCount(input.itemCount, input.text, input.locale)
+    : "";
 };

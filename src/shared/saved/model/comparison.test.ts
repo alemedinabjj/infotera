@@ -58,11 +58,16 @@ describe("sanitizeComparison", () => {
 
 describe("compareHref", () => {
   it("repete o parâmetro hotel na ordem dada", () => {
-    expect(compareHref([1, 4, 7])).toBe("/compare?hotel=1&hotel=4&hotel=7");
+    expect(compareHref("pt-BR", [1, 4, 7])).toBe("/compare?hotel=1&hotel=4&hotel=7");
+  });
+
+  it("em inglês o caminho público leva o prefixo /en", () => {
+    expect(compareHref("en-US", [1, 4])).toBe("/en/compare?hotel=1&hotel=4");
+    expect(compareHref("en-US", [])).toBe("/en/compare");
   });
 
   it("sem ids aponta para a página vazia", () => {
-    expect(compareHref([])).toBe("/compare");
+    expect(compareHref("pt-BR", [])).toBe("/compare");
   });
 });
 
@@ -77,13 +82,13 @@ describe("compareHref com critérios", () => {
   } as const;
 
   it("leva os critérios da busca de origem depois dos hotéis", () => {
-    expect(compareHref([1, 4], criteria)).toBe(
+    expect(compareHref("pt-BR", [1, 4], criteria)).toBe(
       "/compare?hotel=1&hotel=4&destination=Rio+de+Janeiro%2C+RJ&checkIn=2030-01-10&checkOut=2030-01-13&rooms=1&adults=2&children=0",
     );
   });
 
   it("sem critérios (ou sem hotéis) o link é o simples", () => {
-    expect(compareHref([1, 4], null)).toBe("/compare?hotel=1&hotel=4");
-    expect(compareHref([], criteria)).toBe("/compare");
+    expect(compareHref("pt-BR", [1, 4], null)).toBe("/compare?hotel=1&hotel=4");
+    expect(compareHref("pt-BR", [], criteria)).toBe("/compare");
   });
 });

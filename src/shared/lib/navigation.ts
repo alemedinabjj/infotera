@@ -6,3 +6,8 @@
 export const assignLocation = (path: string): void => {
   window.location.assign(path);
 };
+
+/** Recarrega o documento (wrapper fino, para os testes espiarem a chamada). */
+export const reloadPage = (): void => {
+  window.location.reload();
+};

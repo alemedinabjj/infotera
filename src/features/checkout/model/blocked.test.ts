@@ -10,6 +10,7 @@ const criteria = makeSearchCriteria({
 });
 const copy = (reason: BlockedReason) =>
   describeBlocked({
+    locale: "pt-BR",
     reason,
     criteria,
     roomName: "Suíte",

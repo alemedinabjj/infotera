@@ -64,9 +64,9 @@ describe("searchPageTitle / searchPageDestination", () => {
   const missing = parseSearchPage(new URLSearchParams(""));
 
   it("título por modo", () => {
-    expect(searchPageTitle(stay)).toBe("Hotéis em Rio de Janeiro, RJ | Infotera Hotéis");
-    expect(searchPageTitle(browse)).toBe("Hotéis em Bonito, MS | Infotera Hotéis");
-    expect(searchPageTitle(missing)).toBe("Buscar hotéis | Infotera Hotéis");
+    expect(searchPageTitle(stay, "pt-BR")).toBe("Hotéis em Rio de Janeiro, RJ | Infotera Hotéis");
+    expect(searchPageTitle(browse, "pt-BR")).toBe("Hotéis em Bonito, MS | Infotera Hotéis");
+    expect(searchPageTitle(missing, "pt-BR")).toBe("Buscar hotéis | Infotera Hotéis");
   });
 
   it("destino por modo", () => {
@@ -80,28 +80,29 @@ describe("describeSearchSummary", () => {
   const stay = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-15" });
 
   it("stay: datas, noites e hóspedes", () => {
-    expect(describeSearchSummary(stay, "2026-11-01")).toBe(
+    expect(describeSearchSummary(stay, "2026-11-01", "pt-BR")).toBe(
       "12–15 dez · 3 noites · 2 adultos · 1 quarto",
     );
   });
 
   it("crianças e vários quartos", () => {
-    expect(describeSearchSummary({ ...stay, rooms: 2, adults: 3, children: 1 }, "2026-11-01")).toBe(
-      "12–15 dez · 3 noites · 3 adultos, 1 criança · 2 quartos",
-    );
+    expect(
+      describeSearchSummary({ ...stay, rooms: 2, adults: 3, children: 1 }, "2026-11-01", "pt-BR"),
+    ).toBe("12–15 dez · 3 noites · 3 adultos, 1 criança · 2 quartos");
   });
 
   it("1 noite no singular e ano quando a estadia é em outro ano", () => {
     const summary = describeSearchSummary(
       { ...stay, checkIn: "2027-01-10", checkOut: "2027-01-11" },
       "2026-11-01",
+      "pt-BR",
     );
     expect(summary).toContain("1 noite");
     expect(summary).toContain("2027");
   });
 
   it("browse: datas não definidas", () => {
-    expect(describeSearchSummary(null, "2026-11-01")).toBe("Datas não definidas");
+    expect(describeSearchSummary(null, "2026-11-01", "pt-BR")).toBe("Datas não definidas");
   });
 });
 

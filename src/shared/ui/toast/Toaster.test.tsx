@@ -230,3 +230,16 @@ describe("Toaster", () => {
     expect(document.body).toHaveFocus();
   });
 });
+
+describe("toast persistente", () => {
+  it("não fecha sozinho, mesmo muito depois do prazo de um toast com ação", () => {
+    render(<Toaster />);
+    act(() => {
+      toast.info("Nova versão disponível.", { persistent: true });
+    });
+    act(() => {
+      vi.advanceTimersByTime(600_000);
+    });
+    expect(screen.getByText("Nova versão disponível.")).toBeInTheDocument();
+  });
+});

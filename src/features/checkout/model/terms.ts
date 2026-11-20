@@ -1,5 +1,8 @@
 import type { CancellationPolicy } from "@/shared/api/schemas";
+import type { Locale } from "@/shared/i18n/config";
 import { cancellationDetails } from "@/shared/lib/cancellation";
+import { formatClockTime } from "@/shared/lib/clock";
+import { checkoutMessages } from "../i18n/messages";
 
 export type TermsSection = { title: string; paragraphs: string[] };
 
@@ -10,39 +13,27 @@ type TermsInput = {
 };
 
 /** Texto dos termos (dados, sem JSX). Cancelamento e horários vêm do hotel quando já carregou. */
-export const termsSections = ({
-  policy,
-  checkInTime,
-  checkOutTime,
-}: TermsInput): TermsSection[] => [
-  {
-    title: "Reserva",
-    paragraphs: [
-      "A reserva vale para o hotel, o quarto, as datas e os hóspedes mostrados no resumo. O hotel pode pedir documento com foto de todos os hóspedes no check-in.",
-    ],
-  },
-  {
-    title: "Pagamento",
-    paragraphs: [
-      "Este é um ambiente de demonstração: o pagamento é simulado e nenhum valor é cobrado. O total inclui taxa de serviço de 10% e ISS de 5%.",
-    ],
-  },
-  {
-    title: "Cancelamento",
-    paragraphs: policy
-      ? cancellationDetails(policy).details
-      : ["As regras de cancelamento são as da política do hotel mostrada no resumo."],
-  },
-  {
-    title: "Horários",
-    paragraphs: [
-      `Check-in a partir de ${checkInTime ?? "15:00"} e check-out até ${checkOutTime ?? "12:00"}, no horário local do hotel.`,
-    ],
-  },
-  {
-    title: "Seus dados",
-    paragraphs: [
-      "Usamos nome, e-mail e telefone só para esta reserva. Os dados do cartão e o documento não são salvos nem enviados.",
-    ],
-  },
-];
+export const termsSections = (
+  { policy, checkInTime, checkOutTime }: TermsInput,
+  locale: Locale,
+): TermsSection[] => {
+  const t = checkoutMessages.get(locale).terms;
+  return [
+    { title: t.booking.title, paragraphs: [t.booking.text] },
+    { title: t.payment.title, paragraphs: [t.payment.text] },
+    {
+      title: t.cancellation.title,
+      paragraphs: policy ? cancellationDetails(policy, locale).details : [t.cancellation.fallback],
+    },
+    {
+      title: t.schedule.title,
+      paragraphs: [
+        t.schedule.text(
+          formatClockTime(checkInTime ?? "15:00", locale),
+          formatClockTime(checkOutTime ?? "12:00", locale),
+        ),
+      ],
+    },
+    { title: t.data.title, paragraphs: [t.data.text] },
+  ];
+};

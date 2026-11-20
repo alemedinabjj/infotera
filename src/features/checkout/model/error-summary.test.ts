@@ -12,6 +12,7 @@ describe("summarizeCheckoutErrors", () => {
       companions: [{ firstName: err("c1") }, { age: err("idade") }],
     };
     const items = summarizeCheckoutErrors({
+      locale: "pt-BR",
       errors,
       step: "personal",
       companionKinds: ["adult", "child"],
@@ -30,7 +31,13 @@ describe("summarizeCheckoutErrors", () => {
       payment: { document: err("d"), cardNumber: err("c") },
     };
     const run = (documentType: "cpf" | "passport") =>
-      summarizeCheckoutErrors({ errors, step: "payment", companionKinds: [], documentType });
+      summarizeCheckoutErrors({
+        locale: "pt-BR",
+        errors,
+        step: "payment",
+        companionKinds: [],
+        documentType,
+      });
     expect(run("cpf").map((i) => i.label)).toEqual(["Número do cartão", "CPF"]);
     expect(run("passport").map((i) => i.label)).toEqual(["Número do cartão", "Passaporte"]);
   });
@@ -41,13 +48,20 @@ describe("summarizeCheckoutErrors", () => {
       termsAccepted: err("t"),
     };
     expect(
-      summarizeCheckoutErrors({ errors, step: "review", companionKinds: [], documentType: "cpf" }),
+      summarizeCheckoutErrors({
+        locale: "pt-BR",
+        errors,
+        step: "review",
+        companionKinds: [],
+        documentType: "cpf",
+      }),
     ).toEqual([{ id: "termsAccepted", label: "Termos", message: "t" }]);
   });
 
   it("sem erros devolve lista vazia", () => {
     expect(
       summarizeCheckoutErrors({
+        locale: "pt-BR",
         errors: {},
         step: "personal",
         companionKinds: [],

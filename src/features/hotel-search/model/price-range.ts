@@ -1,10 +1,12 @@
+import type { Locale } from "@/shared/i18n/config";
 import { formatBRL } from "@/shared/lib/currency";
+import { hotelSearchMessages } from "../i18n/messages";
 import { PRICE_RANGE, type SearchFilters, serializeSearchFilters } from "./search-filters";
 
 export type PriceDraft = { min: number; max: number };
 export type PriceThumb = "min" | "max";
 
-const reais = (value: number): string => formatBRL(value, { cents: false });
+const reais = (value: number, locale: Locale): string => formatBRL(value, { cents: false, locale });
 
 /**
  * Move um polegar sem ultrapassar o outro: o arrastado para no valor do outro (os papéis nunca
@@ -18,17 +20,20 @@ export const movePriceThumb = (draft: PriceDraft, thumb: PriceThumb, value: numb
 };
 
 /** `aria-valuetext` do slider: `R$ 500`; o topo do máximo é `R$ 3.000 ou mais`. */
-export const priceValueText = (thumb: PriceThumb, value: number): string =>
-  thumb === "max" && value >= PRICE_RANGE.max ? `${reais(value)} ou mais` : reais(value);
+export const priceValueText = (thumb: PriceThumb, value: number, locale: Locale): string =>
+  thumb === "max" && value >= PRICE_RANGE.max
+    ? hotelSearchMessages.get(locale).controls.priceMax({ price: reais(value, locale) })
+    : reais(value, locale);
 
 /** Resumo em texto acima dos sliders. */
-export const describePriceSummary = ({ min, max }: PriceDraft): string => {
+export const describePriceSummary = ({ min, max }: PriceDraft, locale: Locale): string => {
+  const t = hotelSearchMessages.get(locale).controls;
   const hasMin = min > PRICE_RANGE.min;
   const hasMax = max < PRICE_RANGE.max;
-  if (hasMin && hasMax) return `${reais(min)} – ${reais(max)}`;
-  if (hasMin) return `A partir de ${reais(min)}`;
-  if (hasMax) return `Até ${reais(max)}`;
-  return "Qualquer preço";
+  if (hasMin && hasMax) return `${reais(min, locale)} – ${reais(max, locale)}`;
+  if (hasMin) return t.priceFrom({ price: reais(min, locale) });
+  if (hasMax) return t.priceUpTo({ price: reais(max, locale) });
+  return t.priceAny;
 };
 
 /**

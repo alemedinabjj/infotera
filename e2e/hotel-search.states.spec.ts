@@ -186,7 +186,7 @@ test.describe("API com falha (_fail)", () => {
 });
 
 test.describe("sem rede", () => {
-  test("offline ao trocar o filtro: some a lista antiga e aparece o aviso", async ({
+  test("offline ao trocar o filtro: a lista anterior fica com o aviso de que não atualiza", async ({
     page,
     context,
     isMobile,
@@ -196,8 +196,9 @@ test.describe("sem rede", () => {
     await expect(cards(page)).toHaveCount(10);
     await context.setOffline(true);
     await page.getByRole("checkbox", { name: "Piscina" }).check();
-    await expect(page.getByText("Você está sem internet.")).toBeVisible();
-    await expect(cards(page)).toHaveCount(0);
+    await expect(page.getByText("Sem internet para atualizar a lista")).toBeVisible();
+    await expect(page.getByText("Atualizando resultados…")).toHaveCount(0);
+    await expect(cards(page)).toHaveCount(10);
     await context.setOffline(false);
     await expect(cards(page)).toHaveCount(7);
   });

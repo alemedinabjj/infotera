@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useCommonMessages } from "../../i18n/common/useCommonMessages";
 import { revealBelowHeader } from "../../lib/scroll";
 import { Alert } from "./Alert";
-import { describeErrorCount } from "./error-count";
 
 export type ErrorSummaryItem<Id extends string = string> = {
   id: Id;
@@ -21,6 +21,7 @@ type ErrorSummaryProps<Id extends string> = {
  * Monte com `key` diferente a cada tentativa para ser anunciado de novo.
  */
 export const ErrorSummary = <Id extends string>({ items, onSelect }: ErrorSummaryProps<Id>) => {
+  const t = useCommonMessages().ui;
   const ref = useRef<HTMLDivElement>(null);
   // Depois que o foco levou ao 1º campo inválido, garante que o resumo não ficou escondido acima
   // da dobra ou atrás do header fixo.
@@ -28,7 +29,7 @@ export const ErrorSummary = <Id extends string>({ items, onSelect }: ErrorSummar
 
   return (
     <div ref={ref}>
-      <Alert tone="danger" title={describeErrorCount(items.length)}>
+      <Alert tone="danger" title={t.fixFields({ count: items.length })}>
         <ul className="list-disc pl-5">
           {items.map((item) => (
             <li key={item.id}>

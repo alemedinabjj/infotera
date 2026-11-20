@@ -25,21 +25,23 @@ describe("movePriceThumb", () => {
 
 describe("priceValueText", () => {
   it("formata em reais sem centavos", () => {
-    expect(plain(priceValueText("min", 500))).toBe("R$ 500");
-    expect(plain(priceValueText("max", 500))).toBe("R$ 500");
+    expect(plain(priceValueText("min", 500, "pt-BR"))).toBe("R$ 500");
+    expect(plain(priceValueText("max", 500, "pt-BR"))).toBe("R$ 500");
   });
 
   it("o topo do máximo é 'ou mais'", () => {
-    expect(plain(priceValueText("max", 3000))).toBe("R$ 3.000 ou mais");
-    expect(plain(priceValueText("min", 3000))).toBe("R$ 3.000");
+    expect(plain(priceValueText("max", 3000, "pt-BR"))).toBe("R$ 3.000 ou mais");
+    expect(plain(priceValueText("min", 3000, "pt-BR"))).toBe("R$ 3.000");
   });
 });
 
 describe("describePriceSummary", () => {
   it("cobre as quatro frases", () => {
-    expect(plain(describePriceSummary({ min: 0, max: 3000 }))).toBe("Qualquer preço");
-    expect(plain(describePriceSummary({ min: 200, max: 3000 }))).toBe("A partir de R$ 200");
-    expect(plain(describePriceSummary({ min: 0, max: 1500 }))).toBe("Até R$ 1.500");
-    expect(plain(describePriceSummary({ min: 200, max: 1500 }))).toBe("R$ 200 – R$ 1.500");
+    expect(plain(describePriceSummary({ min: 0, max: 3000 }, "pt-BR"))).toBe("Qualquer preço");
+    expect(plain(describePriceSummary({ min: 200, max: 3000 }, "pt-BR"))).toBe(
+      "A partir de R$ 200",
+    );
+    expect(plain(describePriceSummary({ min: 0, max: 1500 }, "pt-BR"))).toBe("Até R$ 1.500");
+    expect(plain(describePriceSummary({ min: 200, max: 1500 }, "pt-BR"))).toBe("R$ 200 – R$ 1.500");
   });
 });

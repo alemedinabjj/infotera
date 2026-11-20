@@ -7,22 +7,29 @@ const criteria = makeSearchCriteria({ checkIn: "2026-12-12", checkOut: "2026-12-
 describe("deriveCardPricing", () => {
   it("stay disponível: total com taxas (serviço + ISS) de diária × noites × quartos (critério 3)", () => {
     const hotel = makeHotel({ pricePerNight: 180, availableRooms: 9 });
-    expect(deriveCardPricing(hotel, criteria)).toMatchObject({
+    expect(deriveCardPricing(hotel, criteria, undefined, "pt-BR")).toMatchObject({
       status: "available",
       nightly: 180,
       stay: { total: 621, nights: 3, rooms: 1 },
     });
-    expect(deriveCardPricing(hotel, { ...criteria, rooms: 2, adults: 2 }).stay?.total).toBe(1242);
+    expect(
+      deriveCardPricing(hotel, { ...criteria, rooms: 2, adults: 2 }, undefined, "pt-BR").stay
+        ?.total,
+    ).toBe(1242);
   });
 
   it("browse: sem total", () => {
-    expect(deriveCardPricing(makeHotel({ availableRooms: 9 }), null).stay).toBeNull();
+    expect(
+      deriveCardPricing(makeHotel({ availableRooms: 9 }), null, undefined, "pt-BR").stay,
+    ).toBeNull();
   });
 
   it("escassez ainda tem total e selo", () => {
     const pricing = deriveCardPricing(
       makeHotel({ pricePerNight: 100, availableRooms: 1 }),
       criteria,
+      undefined,
+      "pt-BR",
     );
     expect(pricing.stay?.total).toBe(345);
     expect(pricing.availability.badge?.text).toBe("Apenas 1 quarto!");
@@ -32,13 +39,20 @@ describe("deriveCardPricing", () => {
     const soldOut = deriveCardPricing(
       makeHotel({ availableRooms: 0, pricePerNight: 250 }),
       criteria,
+      undefined,
+      "pt-BR",
     );
     expect(soldOut).toMatchObject({ status: "sold-out", stay: null, nightly: 250 });
-    const insufficient = deriveCardPricing(makeHotel({ availableRooms: 2 }), {
-      ...criteria,
-      rooms: 3,
-      adults: 3,
-    });
+    const insufficient = deriveCardPricing(
+      makeHotel({ availableRooms: 2 }),
+      {
+        ...criteria,
+        rooms: 3,
+        adults: 3,
+      },
+      undefined,
+      "pt-BR",
+    );
     expect(insufficient).toMatchObject({ status: "insufficient", stay: null });
     expect(insufficient.availability.note).toBe("Sua busca pede 3 quartos.");
   });
@@ -83,7 +97,7 @@ describe("deriveCardPricing com quartos", () => {
 
   it("hotel 1: 'a partir de' é o quarto de 800, não o pricePerNight 1200 do hotel", () => {
     const hotel = makeHotel({ id: 1, pricePerNight: 1200, availableRooms: 12 });
-    const pricing = deriveCardPricing(hotel, stay, HOTEL_1);
+    const pricing = deriveCardPricing(hotel, stay, HOTEL_1, "pt-BR");
     expect(pricing.nightly).toBe(800);
     expect(pricing.stay?.total).toBe(2760);
   });
@@ -91,7 +105,7 @@ describe("deriveCardPricing com quartos", () => {
   it("grupo de 3 em São Paulo: hotel 20 mostra o quarto de 1310 e o total dele", () => {
     const group = { ...stay, adults: 2, children: 1 };
     const hotel = makeHotel({ id: 20, pricePerNight: 1270, availableRooms: 8 });
-    const pricing = deriveCardPricing(hotel, group, HOTEL_20);
+    const pricing = deriveCardPricing(hotel, group, HOTEL_20, "pt-BR");
     expect(pricing).toMatchObject({ status: "available", nightly: 1310 });
     expect(pricing.stay?.total).toBe(4519.5);
   });
@@ -99,18 +113,21 @@ describe("deriveCardPricing com quartos", () => {
   it("nenhum quarto serve ao grupo: 'no-fit', sem total, com nota", () => {
     const group = { ...stay, adults: 2, children: 1 };
     const hotel = makeHotel({ id: 5, pricePerNight: 1500, availableRooms: 4 });
-    const pricing = deriveCardPricing(hotel, group, HOTEL_5);
+    const pricing = deriveCardPricing(hotel, group, HOTEL_5, "pt-BR");
     expect(pricing).toMatchObject({ status: "no-fit", stay: null });
     expect(pricing.availability.note).toBe("Nenhum quarto acomoda 3 hóspedes em 1 quarto.");
   });
 
   it("sem quartos conhecidos (falha do request): usa o pricePerNight do hotel", () => {
     const hotel = makeHotel({ pricePerNight: 180, availableRooms: 9 });
-    expect(deriveCardPricing(hotel, stay, undefined).stay?.total).toBe(621);
+    expect(deriveCardPricing(hotel, stay, undefined, "pt-BR").stay?.total).toBe(621);
   });
 
   it("browse: 'a partir de' do mais barato livre, sem total", () => {
     const hotel = makeHotel({ id: 4, pricePerNight: 890, availableRooms: 8 });
-    expect(deriveCardPricing(hotel, null, HOTEL_4)).toMatchObject({ nightly: 720, stay: null });
+    expect(deriveCardPricing(hotel, null, HOTEL_4, "pt-BR")).toMatchObject({
+      nightly: 720,
+      stay: null,
+    });
   });
 });

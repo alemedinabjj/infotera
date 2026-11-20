@@ -1,15 +1,15 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { queryKeys } from "@/shared/api/query-keys";
 import {
   type BookingHistoryEntry,
   clearBookingHistory,
   restoreBookingHistory,
 } from "@/shared/lib/booking-history";
 import { Button, Dialog, toast } from "@/shared/ui";
-import { HISTORY_MESSAGES } from "../model/messages";
-
-const MESSAGES = HISTORY_MESSAGES.clear;
+import { useHistoryMessages } from "../hooks/useHistoryMessages";
 
 type ClearHistoryButtonProps = {
   entries: readonly BookingHistoryEntry[];
@@ -21,17 +21,22 @@ type ClearHistoryButtonProps = {
 
 /** "Limpar histórico" com confirmação em Dialog; confirmar mostra o toast com Desfazer. */
 export const ClearHistoryButton = ({ entries, onCleared, onRestored }: ClearHistoryButtonProps) => {
+  const ALL = useHistoryMessages();
+  const CLEAR = ALL.clear;
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
   const confirm = () => {
     const previous = [...entries];
     clearBookingHistory();
+    // Os hotéis das reservas saem do cache em memória junto com a lista.
+    queryClient.removeQueries({ queryKey: queryKeys.historyHotels.all });
     setOpen(false);
     onCleared();
-    toast.info(MESSAGES.done, {
+    toast.info(CLEAR.done, {
       key: "history:clear",
       action: {
-        label: HISTORY_MESSAGES.undo,
+        label: ALL.undo,
         onClick: () => {
           restoreBookingHistory(previous);
           onRestored();
@@ -45,25 +50,25 @@ export const ClearHistoryButton = ({ entries, onCleared, onRestored }: ClearHist
   return (
     <>
       <Button variant="ghost" onClick={() => setOpen(true)}>
-        {MESSAGES.open}
+        {CLEAR.open}
       </Button>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        title={MESSAGES.title}
+        title={CLEAR.title}
         size="sm"
         footer={
           <>
             <Button variant="secondary" onClick={() => setOpen(false)}>
-              {MESSAGES.cancel}
+              {CLEAR.cancel}
             </Button>
             <Button variant="danger" onClick={confirm}>
-              {MESSAGES.confirm}
+              {CLEAR.confirm}
             </Button>
           </>
         }
       >
-        <p className="text-fg-muted">{MESSAGES.description}</p>
+        <p className="text-fg-muted">{CLEAR.description}</p>
       </Dialog>
     </>
   );

@@ -8,8 +8,13 @@ describe("SkipLink + SiteHeader", () => {
   it("o skip link é o primeiro focável e aponta para #main-content", async () => {
     render(
       <>
-        <SkipLink />
-        <SiteHeader />
+        <SkipLink locale="pt-BR" />
+        <SiteHeader
+          homeLabel="Infotera Hotéis, página inicial"
+          homeHref="/"
+          brand="Infotera"
+          brandSuffix="Hotéis"
+        />
       </>,
     );
     await userEvent.tab();
@@ -19,7 +24,14 @@ describe("SkipLink + SiteHeader", () => {
   });
 
   it("o header tem link para a home", () => {
-    render(<SiteHeader />);
+    render(
+      <SiteHeader
+        homeLabel="Infotera Hotéis, página inicial"
+        homeHref="/"
+        brand="Infotera"
+        brandSuffix="Hotéis"
+      />,
+    );
     expect(screen.getByRole("link", { name: /Infotera Hotéis/ })).toHaveAttribute("href", "/");
   });
 });

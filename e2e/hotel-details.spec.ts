@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
 import { headerHeight, hotelPath, waitForHydration } from "./helpers/hotel-details";
 import { CHECK_IN, cards, criteriaQuery, searchPath } from "./helpers/hotel-search";
 

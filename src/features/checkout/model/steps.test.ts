@@ -20,9 +20,9 @@ describe("steps", () => {
   });
 
   it("textos de cada passo", () => {
-    expect(stepCounter("payment")).toBe("Passo 2 de 3");
-    expect(stepTitle("review")).toBe("Revise e confirme");
-    expect(stepDocumentTitle("personal")).toBe("Passo 1 de 3: Dados dos hóspedes");
+    expect(stepCounter("payment", "pt-BR")).toBe("Passo 2 de 3");
+    expect(stepTitle("review", "pt-BR")).toBe("Revise e confirme");
+    expect(stepDocumentTitle("personal", "pt-BR")).toBe("Passo 1 de 3: Dados dos hóspedes");
   });
 
   it("furthestStep", () => {

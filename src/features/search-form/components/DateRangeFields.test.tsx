@@ -8,10 +8,12 @@ import type { DateNotice } from "../model/notices";
 import { searchFormResolver } from "../model/search-form.resolver";
 import {
   DEFAULT_SEARCH_FORM_VALUES,
-  FORM_MESSAGES,
+  formMessages,
   type SearchFormValues,
 } from "../model/search-form.schema";
 import { DateRangeFields } from "./DateRangeFields";
+
+const FORM_MESSAGES = formMessages("pt-BR");
 
 const Harness = ({ initialNotice = null }: { initialNotice?: DateNotice | null }) => {
   const form = useForm<SearchFormValues>({

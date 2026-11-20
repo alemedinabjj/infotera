@@ -1,5 +1,6 @@
-export const YES = "Sim";
-export const NO = "Não";
+/** Células booleanas são valores semânticos; o texto ("Sim"/"Yes") vem do dicionário na renderização. */
+export const YES = "yes";
+export const NO = "no";
 
 export type ComparisonRow = {
   key: string;

@@ -1,3 +1,6 @@
+import type { Locale } from "@/shared/i18n/config";
+import { checkoutMessages } from "../i18n/messages";
+
 export type CouponSnapshot =
   /** Sem cupom aplicado. */
   | { kind: "none" }
@@ -14,21 +17,21 @@ const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text
 export const describeCouponTransition = (
   previous: CouponSnapshot,
   next: CouponSnapshot,
+  locale: Locale,
 ): string | null => {
+  const t = checkoutMessages.get(locale).coupon;
   if (previous.kind === next.kind && previous.kind !== "error") {
     return null;
   }
   switch (next.kind) {
     case "valid":
-      return previous.kind === "ineligible"
-        ? `Cupom ${next.code} aplicado de novo.`
-        : `Cupom ${next.code} aplicado.`;
+      return previous.kind === "ineligible" ? t.appliedAgain(next.code) : t.applied(next.code);
     case "ineligible":
-      return `O cupom ${next.code} deixou de valer: ${lowerFirst(next.message)} O total foi atualizado.`;
+      return t.stoppedWorking(next.code, lowerFirst(next.message));
     case "error":
       return next.message;
     case "none":
-      return previous.kind === "valid" || previous.kind === "ineligible" ? "Cupom removido." : null;
+      return previous.kind === "valid" || previous.kind === "ineligible" ? t.removed : null;
     default: {
       const unreachable: never = next;
       return unreachable;

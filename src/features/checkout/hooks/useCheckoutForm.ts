@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useDeferredBlur } from "@/shared/hooks/useDeferredBlur";
+import { useLocale } from "@/shared/i18n/client";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { checkoutResolver } from "../model/checkout.resolver";
+import { checkoutMessages } from "../i18n/messages";
+import { makeCheckoutResolver } from "../model/checkout.resolver";
 import type { CheckoutFieldPath, CheckoutValues } from "../model/checkout.schema";
 import { stepOfField, summarizeCheckoutErrors } from "../model/error-summary";
 import {
@@ -20,17 +22,17 @@ import { useCheckoutDraft } from "./useCheckoutDraft";
 import { useCheckoutFocus } from "./useCheckoutFocus";
 import { usePaymentWipe } from "./usePaymentWipe";
 
-export const INVALID_FIELD_MESSAGE = "Confira este dado e tente de novo.";
-
 /**
  * Um `useForm` para os 3 passos (valores sobrevivem à troca de passo): validação por passo com
  * `trigger`, foco no `h2` ao trocar de passo, resumo de erros, rascunho e limpeza do pagamento.
  * O passo fica em estado do componente (não na URL).
  */
 export const useCheckoutForm = (criteria: SearchCriteria, couponCode: string | null = null) => {
+  const locale = useLocale();
   const [initial] = useState(() => loadInitialCheckout(criteria));
+  const resolver = useMemo(() => makeCheckoutResolver(locale), [locale]);
   const form = useForm<CheckoutValues>({
-    resolver: checkoutResolver,
+    resolver,
     mode: "onTouched",
     reValidateMode: "onChange",
     defaultValues: initial.values,
@@ -57,6 +59,7 @@ export const useCheckoutForm = (criteria: SearchCriteria, couponCode: string | n
     step,
     companionKinds: fields.map((field) => field.kind),
     documentType,
+    locale,
   });
   const focus = useCheckoutFocus(form, summaryItems[0]?.id);
 
@@ -92,7 +95,10 @@ export const useCheckoutForm = (criteria: SearchCriteria, couponCode: string | n
 
   /** Mostra o erro de um campo (ex.: resposta `invalid` do servidor) levando ao passo dele. */
   const showFieldError = (path: CheckoutFieldPath) => {
-    form.setError(path, { type: "server", message: INVALID_FIELD_MESSAGE });
+    form.setError(path, {
+      type: "server",
+      message: checkoutMessages.get(locale).submit.invalidField,
+    });
     moveTo(stepOfField(path));
     setAttempts((count) => count + 1);
     focus.focusField(path);

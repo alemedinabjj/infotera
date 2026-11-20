@@ -5,6 +5,7 @@ import { countActiveFilters, type SearchFilters } from "../model/search-filters"
 import { DistanceHelp } from "./DistanceHelp";
 import { FiltersTrigger } from "./FiltersDrawer";
 import { ListModeSelect } from "./ListModeSelect";
+import { MapToggle } from "./MapToggle";
 import { ResultsToolbar } from "./ResultsToolbar";
 import { SortSelect } from "./SortSelect";
 
@@ -18,6 +19,8 @@ type ResultsControlsProps = {
   destination: string;
   onChange: (change: FilterChange) => void;
   onOpenFilters: () => void;
+  /** Id do painel do mapa quando ele está no DOM. */
+  mapPanelId: string | undefined;
 };
 
 /** Toolbar (contagem + Filtros, Ordenar por, Exibir) e o texto de ajuda da ordenação por distância. */
@@ -31,6 +34,7 @@ export const ResultsControls = ({
   destination,
   onChange,
   onOpenFilters,
+  mapPanelId,
 }: ResultsControlsProps) => (
   <>
     <ResultsToolbar
@@ -49,6 +53,14 @@ export const ResultsControls = ({
         <ListModeSelect
           value={filters.view}
           onChange={(value) => onChange({ type: "setView", value })}
+        />
+      }
+      mapToggle={
+        <MapToggle
+          open={filters.map}
+          controls={mapPanelId}
+          onToggle={() => onChange({ type: "toggleMap" })}
+          className="min-[23rem]:col-span-2 min-[23rem]:justify-self-start sm:col-span-1 lg:self-center"
         />
       }
       sort={

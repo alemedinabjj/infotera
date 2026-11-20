@@ -1,6 +1,8 @@
 import { Fragment } from "react";
+import type { Locale } from "@/shared/i18n/config";
 import { formatCents } from "@/shared/lib/price-breakdown";
 import { cardClassName } from "@/shared/ui";
+import { confirmationMessages } from "../i18n/messages";
 import { shortBookingCode, splitNumberGroups } from "../model/booking-number";
 import { CopyBookingNumber } from "./CopyBookingNumber";
 
@@ -10,6 +12,7 @@ type BookingNumberProps = {
   number: string;
   stayLabel: string;
   totalCents: number;
+  locale: Locale;
 };
 
 /**
@@ -17,7 +20,8 @@ type BookingNumberProps = {
  * o botão de copiar e a linha `Estadia · Total`. Tudo vem da reserva e aparece na hora, antes do
  * hotel e do quarto.
  */
-export const BookingNumber = ({ number, stayLabel, totalCents }: BookingNumberProps) => {
+export const BookingNumber = ({ number, stayLabel, totalCents, locale }: BookingNumberProps) => {
+  const t = confirmationMessages.get(locale).number;
   const groups = splitNumberGroups(number);
   return (
     <div
@@ -26,14 +30,14 @@ export const BookingNumber = ({ number, stayLabel, totalCents }: BookingNumberPr
       })}
     >
       <dl>
-        <dt className="text-sm font-medium text-fg-muted">Código</dt>
+        <dt className="text-sm font-medium text-fg-muted">{t.code}</dt>
         <dd
           translate="no"
           className="mt-1 mb-3 font-mono text-2xl font-bold tracking-wider text-fg select-all"
         >
           {shortBookingCode(number)}
         </dd>
-        <dt className="text-sm font-medium text-fg-muted">Número da reserva</dt>
+        <dt className="text-sm font-medium text-fg-muted">{t.number}</dt>
         <dd
           id={NUMBER_ID}
           translate="no"
@@ -50,13 +54,13 @@ export const BookingNumber = ({ number, stayLabel, totalCents }: BookingNumberPr
       <CopyBookingNumber value={number} numberId={NUMBER_ID} />
       <dl className="mt-2 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
         <div>
-          <dt className="text-sm text-fg-muted">Estadia</dt>
+          <dt className="text-sm text-fg-muted">{t.stay}</dt>
           <dd className="text-base font-semibold text-fg tabular-nums">{stayLabel}</dd>
         </div>
         <div>
-          <dt className="text-sm text-fg-muted">Total</dt>
+          <dt className="text-sm text-fg-muted">{t.total}</dt>
           <dd className="text-2xl font-bold whitespace-nowrap text-fg tabular-nums">
-            {formatCents(totalCents)}
+            {formatCents(totalCents, locale)}
           </dd>
         </div>
       </dl>

@@ -1,7 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { seedHotel } from "@/shared/testing/seed";
+import { loadInteractiveMap } from "@/shared/ui/map/loader";
 import { HotelOverview } from "./HotelOverview";
 import { HotelPolicies } from "./HotelPolicies";
 import { LocationMap } from "./LocationMap";
@@ -10,7 +11,7 @@ const hotel = seedHotel(1);
 
 describe("HotelOverview (critério 12)", () => {
   it("descrição e comodidades com rótulos pt-BR e ícones decorativos", () => {
-    const { container } = render(<HotelOverview hotel={hotel} />);
+    const { container } = render(<HotelOverview locale="pt-BR" hotel={hotel} />);
     expect(screen.getByRole("heading", { level: 2, name: "Visão geral" })).toBeInTheDocument();
     expect(screen.getByText(hotel.description)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Comodidades" })).toBeInTheDocument();
@@ -21,7 +22,7 @@ describe("HotelOverview (critério 12)", () => {
   });
 
   it("a seção é ligada ao h2 e o h2 aceita foco", () => {
-    render(<HotelOverview hotel={hotel} />);
+    render(<HotelOverview locale="pt-BR" hotel={hotel} />);
     const section = screen.getByRole("region", { name: "Visão geral" });
     expect(section).toHaveAttribute("id", "visao-geral");
     expect(screen.getByRole("heading", { name: "Visão geral" })).toHaveAttribute("tabindex", "-1");
@@ -30,7 +31,7 @@ describe("HotelOverview (critério 12)", () => {
 
 describe("HotelPolicies (critério 13)", () => {
   it("horários e política", () => {
-    render(<HotelPolicies hotel={hotel} />);
+    render(<HotelPolicies locale="pt-BR" hotel={hotel} />);
     expect(screen.getByText("A partir de 15:00")).toBeInTheDocument();
     expect(screen.getByText("Até 12:00")).toBeInTheDocument();
     expect(screen.getByText("Cancelamento grátis")).toBeInTheDocument();
@@ -38,7 +39,7 @@ describe("HotelPolicies (critério 13)", () => {
 
   it("as regras abrem por teclado (Enter e Espaço no summary)", async () => {
     const user = userEvent.setup();
-    const { container } = render(<HotelPolicies hotel={hotel} />);
+    const { container } = render(<HotelPolicies locale="pt-BR" hotel={hotel} />);
     const details = container.querySelector("details");
     const summary = screen.getByText("Ver regras de cancelamento");
     expect(details).not.toHaveAttribute("open");
@@ -54,30 +55,45 @@ describe("HotelPolicies (critério 13)", () => {
 
   it("moderate e strict mudam selo e texto", () => {
     const { rerender } = render(
-      <HotelPolicies hotel={{ ...hotel, cancellationPolicy: "moderate" }} />,
+      <HotelPolicies locale="pt-BR" hotel={{ ...hotel, cancellationPolicy: "moderate" }} />,
     );
     expect(screen.getByText("Cancelamento com reembolso parcial")).toBeInTheDocument();
-    rerender(<HotelPolicies hotel={{ ...hotel, cancellationPolicy: "strict" }} />);
+    rerender(<HotelPolicies locale="pt-BR" hotel={{ ...hotel, cancellationPolicy: "strict" }} />);
     expect(screen.getByText("Sem reembolso em caso de cancelamento")).toBeInTheDocument();
   });
 });
 
 describe("LocationMap (critério 14)", () => {
-  it("mapa com role=img e o endereço, marcador e tiles sem alt", () => {
-    const { container } = render(<LocationMap hotel={hotel} />);
-    const map = screen.getByRole("img", { name: `Mapa: ${hotel.address}` });
-    const tiles = map.querySelectorAll("img");
+  it("mapa com role=img e o endereço, marcador e tiles sem alt (um canvas por proporção)", () => {
+    const { container } = render(<LocationMap hotel={hotel} locale="pt-BR" />);
+    const [compact, wide] = screen.getAllByRole("img", { name: `Mapa: ${hotel.address}` });
+    // 4:3 abaixo de `sm` (3×3 tiles) e 2:1 a partir de `sm` (3×2); a outra proporção é `display: none`.
+    expect(compact?.className).toContain("sm:hidden");
+    expect(wide?.className).toContain("hidden sm:block");
+    const tiles = wide?.querySelectorAll("img") ?? [];
     expect(tiles.length).toBe(6);
-    for (const tile of tiles) expect(tile).toHaveAttribute("alt", "");
+    expect(compact?.querySelectorAll("img").length).toBeGreaterThanOrEqual(tiles.length);
+    for (const tile of tiles) {
+      expect(tile).toHaveAttribute("alt", "");
+      expect(tile).toHaveAttribute("crossorigin", "anonymous");
+    }
     expect(tiles[0]).toHaveAttribute("src", expect.stringContaining("tile.openstreetmap.org/15/"));
     expect(container.querySelector("svg[aria-hidden='true'].text-primary")).toBeInTheDocument();
   });
 
+  it("pede o chunk do mapa, mas o Leaflet de verdade não monta no teste (o estático fica)", async () => {
+    const { container } = render(<LocationMap hotel={hotel} locale="pt-BR" />);
+    await waitFor(() => expect(vi.mocked(loadInteractiveMap)).toHaveBeenCalled());
+    expect(container.querySelector(".leaflet-container")).toBeNull();
+    expect(screen.getAllByRole("img", { name: /Mapa:/ })).toHaveLength(2);
+  });
+
   it("atribuição fora do role=img e link do OSM em nova aba, avisado no nome", () => {
-    render(<LocationMap hotel={hotel} />);
-    const map = screen.getByRole("img", { name: /Mapa:/ });
+    render(<LocationMap hotel={hotel} locale="pt-BR" />);
     const attribution = screen.getByRole("link", { name: "© colaboradores do OpenStreetMap" });
-    expect(map).not.toContainElement(attribution);
+    for (const map of screen.getAllByRole("img", { name: /Mapa:/ })) {
+      expect(map).not.toContainElement(attribution);
+    }
     const open = screen.getByRole("link", {
       name: /^Abrir no OpenStreetMap\s*\(abre em nova aba\)$/,
     });
