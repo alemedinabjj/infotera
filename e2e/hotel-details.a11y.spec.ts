@@ -34,7 +34,7 @@ test.describe("axe (wcag2a/aa)", () => {
   test("lightbox aberto", async ({ page }) => {
     await page.goto(hotelPath(1));
     await waitForHydration(page);
-    await page.getByRole("button", { name: "Ver todas as fotos (5)" }).click();
+    await page.getByRole("link", { name: "Ver todas as fotos (5)" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await expectNoViolations(page);
   });
@@ -83,7 +83,7 @@ test.describe("320 px", () => {
     await page.getByRole("button", { name: "Comparar quartos (4)" }).click();
     await expect(page.getByRole("table")).toBeVisible();
     expect(await noHorizontalScroll(page)).toBe(true);
-    await page.getByRole("button", { name: "Ver todas as fotos (5)" }).click();
+    await page.getByRole("link", { name: "Ver todas as fotos (5)" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     expect(await noHorizontalScroll(page)).toBe(true);
   });

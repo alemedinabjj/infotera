@@ -1,13 +1,27 @@
 import { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeHotel, makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
+import type { ComponentProps } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { makeHotel, makeSearchCriteria } from "@/shared/testing/fixtures";
 import { renderWithProviders } from "@/shared/testing/render";
 import { resetMapSync, useMapSync } from "../store/map-sync";
 import { HotelCard } from "./HotelCard";
 import { HotelCardSkeleton } from "./HotelCardSkeleton";
 
+const linkMock = vi.hoisted(() => ({ last: null as { prefetch?: unknown } | null }));
+vi.mock("next/link", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/link")>()),
+  // `next/link` mockado: só expõe o `prefetch` recebido (o resto vem do módulo real).
+  default: ({
+    prefetch,
+    children,
+    ...rest
+  }: ComponentProps<"a"> & { prefetch?: boolean | "auto" | null }) => {
+    linkMock.last = { prefetch };
+    return <a {...rest}>{children}</a>;
+  },
+}));
 vi.mock(
   "next/navigation",
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
@@ -172,62 +186,26 @@ describe("HotelCard: conteúdo (critérios 2 a 5)", () => {
   });
 });
 
-describe("HotelCard: prefetch com intenção (critério 6)", () => {
-  const fetchMock = vi.fn(
-    async (url: string) =>
-      new Response(
-        JSON.stringify(
-          url.includes("/rooms") ? [makeRoom({ hotelId: 13 })] : makeHotel({ id: 13 }),
-        ),
-      ),
-  );
-
-  beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    vi.stubGlobal("fetch", fetchMock);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
-    fetchMock.mockClear();
-  });
-
-  const urls = () => fetchMock.mock.calls.map(([url]) => url);
-
-  it("mouse parado por 150 ms prefetcha hotel e quartos uma vez, sem repetir", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+describe("HotelCard: prefetch por intenção (F7c, critério 26)", () => {
+  it("começa em 'auto' (só a casca genérica) e vira true ao entrar com o mouse", async () => {
+    const user = userEvent.setup();
     renderCard();
     const link = screen.getByRole("link");
+    expect(linkMock.last?.prefetch).toBe("auto");
     await user.hover(link);
-    expect(urls()).toEqual([]);
-    await vi.advanceTimersByTimeAsync(160);
-    expect(urls().sort()).toEqual([
-      "http://api.test/hotels/13",
-      "http://api.test/rooms?hotelId=13",
-    ]);
-    await user.unhover(link);
-    await user.hover(link);
-    await vi.advanceTimersByTimeAsync(200);
-    expect(urls()).toHaveLength(2);
+    expect(linkMock.last?.prefetch).toBe(true);
   });
 
-  it("passar rápido por cima não dispara", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  it("o foco por teclado também liga o prefetch", () => {
     renderCard();
-    const link = screen.getByRole("link");
-    await user.hover(link);
-    await vi.advanceTimersByTimeAsync(80);
-    await user.unhover(link);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(urls()).toEqual([]);
+    act(() => screen.getByRole("link").focus());
+    expect(linkMock.last?.prefetch).toBe(true);
   });
 
-  it("foco no link prefetcha na hora", async () => {
+  it("o toque (touchstart) liga o prefetch", () => {
     renderCard();
-    screen.getByRole("link").focus();
-    await vi.advanceTimersByTimeAsync(0);
-    expect(urls()).toHaveLength(2);
+    fireEvent.touchStart(screen.getByRole("link"));
+    expect(linkMock.last?.prefetch).toBe(true);
   });
 });
 

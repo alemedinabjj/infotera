@@ -1,10 +1,8 @@
-import { screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { act, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import { formatClockTime } from "@/shared/lib/clock";
 import { makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
-import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
+import { renderWithProviders } from "@/shared/testing/render";
 import { seedHotel, seedRooms } from "@/shared/testing/seed";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { Gallery } from "../components/Gallery";
@@ -22,7 +20,12 @@ import { helpfulLabel, reviewsRangeLabel } from "../model/reviews";
 import { buildRoomComparison, comparisonAnnouncement } from "../model/room-comparison";
 import { roomCapacityLabel, roomSizeLabel, roomTypesLabel } from "../model/room-labels";
 import { selectabilityBadge, selectabilityMessage } from "../model/room-selectability";
+import { setStayCriteria } from "../testing/stay-aware";
 
+vi.mock(
+  "../components/StayAware",
+  async () => (await import("../testing/stay-aware")).stayAwareMock,
+);
 vi.mock(
   "next/navigation",
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
@@ -71,22 +74,25 @@ describe("hotel-details por idioma: lógica pura", () => {
 
 describe("hotel-details por idioma: componentes", () => {
   it("cabeçalho, migalhas e navegação em inglês, com o conteúdo da API marcado em pt-BR", () => {
-    const queryClient = makeTestQueryClient();
-    queryClient.setQueryData(hotelRoomsQueryOptions(hotel.id).queryKey, seedRooms(hotel.id));
-    const breadcrumb = hotelBreadcrumb(hotel, null, "en-US");
     renderWithProviders(
       <>
-        <Breadcrumb {...breadcrumb} />
-        <HotelHeader locale="en-US" hotel={hotel} stayLabel="Dec 12–15 · 3 nights">
+        <Breadcrumb
+          build={(c) => hotelBreadcrumb(hotel, c, "en-US")}
+          criteria={Promise.resolve(null)}
+        />
+        <HotelHeader
+          locale="en-US"
+          hotel={hotel}
+          rooms={{ kind: "ok", value: seedRooms(hotel.id) }}
+        >
           <p>gallery</p>
         </HotelHeader>
         <SectionNav locale="en-US" />
       </>,
-      { queryClient, locale: "en-US" },
+      { locale: "en-US" },
     );
     expect(screen.getByRole("navigation", { name: "You are here" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/en");
-    expect(screen.getByText("Your stay: Dec 12–15 · 3 nights")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /View rooms/ })).toHaveAttribute("href", "#quartos");
     const nav = screen.getByRole("navigation", { name: "Page sections" });
     expect(within(nav).getByRole("link", { name: "Rooms" })).toBeInTheDocument();
@@ -111,36 +117,39 @@ describe("hotel-details por idioma: componentes", () => {
     expect(screen.getByRole("link", { name: "Start a new search" })).toHaveAttribute("href", "/en");
   });
 
-  it("galeria e lightbox em inglês", async () => {
-    const user = userEvent.setup();
+  it("galeria em inglês: links para a rota da foto sob /en", () => {
     const images = ["https://images.unsplash.com/photo-1", "https://images.unsplash.com/photo-2"];
-    renderWithProviders(<Gallery name="Hotel X" images={images} />, { locale: "en-US" });
-    expect(screen.getByRole("button", { name: "Open photo 1 of 2" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "See all photos (2)" }));
-    expect(screen.getByRole("dialog", { name: "Photos of Hotel X" })).toBeInTheDocument();
-    expect(screen.getByText("Photo 1 of 2")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Next photo" })).toBeInTheDocument();
+    renderWithProviders(<Gallery locale="en-US" hotelId={1} images={images} />, {
+      locale: "en-US",
+    });
+    expect(screen.getByRole("link", { name: "Open photo 1 of 2" })).toHaveAttribute(
+      "href",
+      "/en/hotel/1/photos/1",
+    );
+    expect(screen.getByRole("link", { name: "See all photos (2)" })).toBeInTheDocument();
   });
 
-  it("quartos em inglês: contagem, botão com o nome do quarto e motivo do bloqueio", () => {
-    const queryClient = makeTestQueryClient();
+  it("quartos em inglês: contagem, botão com o nome do quarto e motivo do bloqueio", async () => {
     const rooms = [
       makeRoom({ id: 1, name: "Suite", available: 3, maxGuests: 2 }),
       makeRoom({ id: 2, name: "Studio", available: 0 }),
     ];
-    queryClient.setQueryData(hotelRoomsQueryOptions(hotel.id).queryKey, rooms);
-    renderWithProviders(
-      <StayEditProvider criteriaKey="a">
-        <RoomsSection
-          hotelId={hotel.id}
-          hotelAvailableRooms={5}
-          cancellationPolicy="free"
-          criteria={makeSearchCriteria()}
-          pastDates={false}
-        />
-      </StayEditProvider>,
-      { queryClient, locale: "en-US" },
-    );
+    setStayCriteria(makeSearchCriteria());
+    await act(async () => {
+      renderWithProviders(
+        <StayEditProvider>
+          <RoomsSection
+            locale="en-US"
+            hotelId={hotel.id}
+            rooms={{ kind: "ok", value: rooms }}
+            hotelAvailableRooms={5}
+            cancellationPolicy="free"
+            criteria={Promise.resolve(makeSearchCriteria())}
+          />
+        </StayEditProvider>,
+        { locale: "en-US" },
+      );
+    });
     expect(screen.getAllByText("2 room types").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Select room: Suite" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sold out: Studio" })).toBeInTheDocument();

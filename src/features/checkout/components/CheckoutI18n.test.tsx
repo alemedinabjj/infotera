@@ -1,6 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { assignLocation } from "@/shared/lib/navigation";
 import { navigationSpies } from "@/shared/testing/next-navigation";
 import { useToastStore } from "@/shared/ui/toast/toast-store";
 import { createBookingAction } from "../api/create-booking.action";
@@ -17,6 +18,7 @@ vi.mock(
   "next/navigation",
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
 );
+vi.mock("@/shared/lib/navigation", () => ({ assignLocation: vi.fn(), reloadPage: vi.fn() }));
 vi.mock("../api/create-booking.action", () => ({ createBookingAction: vi.fn() }));
 
 const action = vi.mocked(createBookingAction);
@@ -100,9 +102,7 @@ describe("checkout em en-US", () => {
     expect(screen.getByText(en.review.card("Visa", "1111", "12/30"))).toBeVisible();
     await user.click(screen.getByRole("checkbox", { name: en.terms.checkbox }));
     await user.click(screen.getByRole("button", { name: en.steps.primary.review }));
-    await waitFor(() =>
-      expect(navigationSpies.replace).toHaveBeenCalledWith("/en/confirmation/b-1"),
-    );
+    await waitFor(() => expect(assignLocation).toHaveBeenCalledWith("/en/confirmation/b-1"));
   });
 
   it("falha do envio: alerta em inglês com a ação de tentar de novo", async () => {

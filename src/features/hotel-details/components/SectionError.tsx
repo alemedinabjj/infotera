@@ -7,6 +7,8 @@ import { revealBelowHeader } from "@/shared/lib/scroll";
 import { ErrorState } from "@/shared/ui";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { useSectionRetry } from "../hooks/useSectionRetry";
+import { useStillFailing } from "../hooks/useStillFailing";
+import { StillFailingNotice } from "./StillFailingNotice";
 
 type SectionErrorProps<TData, TKey extends QueryKey> = {
   title: string;
@@ -30,6 +32,7 @@ export const SectionError = <TData, TKey extends QueryKey>({
   const t = useHotelDetailsMessages().errors;
   const locale = useLocale();
   const { retry, retrying } = useSectionRetry(options, { onFinished });
+  const stillFailing = useStillFailing(retrying);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!focusRetry) return;
@@ -47,6 +50,7 @@ export const SectionError = <TData, TKey extends QueryKey>({
         onRetry={() => void retry()}
         retrying={retrying}
       />
+      <StillFailingNotice show={stillFailing} message={t.stillFailing} />
     </div>
   );
 };

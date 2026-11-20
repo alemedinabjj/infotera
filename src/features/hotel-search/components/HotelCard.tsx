@@ -15,7 +15,7 @@ import { CheckIcon, cardClassName, RatingScore, RemoteImage } from "@/shared/ui"
 import { useCardMapSync } from "../hooks/useCardMapSync";
 import { useHotelRooms } from "../hooks/useHotelRooms";
 import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
-import { usePrefetchHotel } from "../hooks/usePrefetchHotel";
+import { useIntentPrefetch } from "../hooks/useIntentPrefetch";
 import { pickCardAmenities } from "../model/card-amenities";
 import { deriveCardPricing } from "../model/card-pricing";
 import type { GeoPoint } from "../model/distance";
@@ -106,7 +106,7 @@ export const HotelCard = ({
 }: HotelCardProps) => {
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
   const titleId = useId();
-  const prefetch = usePrefetchHotel(hotel.id);
+  const { prefetch, handlers } = useIntentPrefetch();
   const locale = useLocale();
   const pricing = deriveCardPricing(hotel, criteria, useHotelRooms(hotel.id), locale);
   const sync = useCardMapSync(hotel.id);
@@ -146,7 +146,8 @@ export const HotelCard = ({
             href={localizePath(locale, hotelHref(hotel.id, criteria))}
             data-hotel-link={hotel.id}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
-            {...prefetch}
+            prefetch={prefetch}
+            {...handlers}
           >
             {hotel.name}
             <OpeningIndicator />

@@ -119,6 +119,8 @@ describe("cacheRuleFor: 5. documentos públicos: rede primeiro com página offli
     ["/en", "/en/offline"],
     ["/en/search?x=1", "/en/offline"],
     ["/en/hotel/7", "/en/offline"],
+    ["/hotel/1/photos/3", "/offline"],
+    ["/en/hotel/1/photos/3", "/en/offline"],
     ["/en/offline", "/en/offline"],
   ])("%s", (path, offlinePath) => {
     expect(cacheRuleFor(doc(path))).toEqual(NETWORK_FIRST_PAGE(offlinePath));
@@ -126,16 +128,19 @@ describe("cacheRuleFor: 5. documentos públicos: rede primeiro com página offli
 });
 
 describe("cacheRuleFor: 6. RSC público", () => {
-  it.each(["/search?_rsc=1", "/hotel/1", "/en/hotel/1", "/"])("RSC de %s", (path) => {
-    expect(cacheRuleFor(rsc(path))).toEqual({
-      kind: "network-first",
-      cache: "pages-rsc",
-      timeoutSeconds: 3,
-      maxEntries: 40,
-      maxAgeSeconds: 86_400,
-      offlinePath: null,
-    });
-  });
+  it.each(["/search?_rsc=1", "/hotel/1", "/en/hotel/1", "/hotel/1/photos/3", "/"])(
+    "RSC de %s",
+    (path) => {
+      expect(cacheRuleFor(rsc(path))).toEqual({
+        kind: "network-first",
+        cache: "pages-rsc",
+        timeoutSeconds: 3,
+        maxEntries: 40,
+        maxAgeSeconds: 86_400,
+        offlinePath: null,
+      });
+    },
+  );
 });
 
 describe("cacheRuleFor: 7 e 8. imagens e tiles", () => {
@@ -190,6 +195,11 @@ describe("cacheRuleFor: o prefixo parecido não é privado nem público por enga
 
   it("/hotel sem id não é rota pública", () => {
     expect(cacheRuleFor(doc("/hotel"))).toEqual({ kind: "passthrough" });
+  });
+
+  it("a rota da foto só é pública com o id e a foto: /hotel/1/photos e /hotel/1/photos/3/x não", () => {
+    expect(cacheRuleFor(doc("/hotel/1/photos"))).toEqual({ kind: "passthrough" });
+    expect(cacheRuleFor(doc("/hotel/1/photos/3/x"))).toEqual({ kind: "passthrough" });
   });
 });
 

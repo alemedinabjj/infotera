@@ -70,6 +70,20 @@ describe("Pagination", () => {
     expect(onPageChange).toHaveBeenLastCalledWith(2);
   });
 
+  it("disabled: todos os botões (inclusive o da página atual) ficam desabilitados e não chamam nada", async () => {
+    const onPageChange = vi.fn();
+    render(
+      <Pagination locale="pt-BR" page={2} totalPages={3} onPageChange={onPageChange} disabled />,
+    );
+    for (const button of screen.getAllByRole("button")) expect(button).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Página 2" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Próxima/ }));
+    expect(onPageChange).not.toHaveBeenCalled();
+  });
+
   it("reticências ficam escondidas dos leitores de tela", () => {
     render(<Pagination locale="pt-BR" page={5} totalPages={10} onPageChange={() => undefined} />);
     const ellipses = screen.getAllByText("…");

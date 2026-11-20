@@ -59,3 +59,14 @@
 - **Costuras com a F7b/F7c**: `bookingQueryOptions` tem `meta: { sensitive: true }` (o cache offline não deve persistir PII); todo texto novo está em
   `messages.ts` por módulo; `ComparisonView` aceita `headingLevel` e lê a URL (modal por Parallel Routes); `isTrayHiddenOn` é a condição da bandeja.
 
+
+## Extras de Next.js (F7c): decisões para registrar
+
+- **PPR (`cacheComponents` + `partialPrefetching`)**: a página do hotel é uma casca estática do catálogo (`"use cache"`: hotel, quartos, comentários e similares) com buracos só para o que depende
+  da estadia (resumo, total e botão por quarto, links com critérios), alimentados por uma promessa de `searchParams` criada sem `await`.
+- **ISR**: `generateStaticParams` lista todos os hotéis da API (60) com retry (8 tentativas, 2 s a 15 s) por causa do cold start da mock-api no Render. **`npm run build` precisa da API no ar**
+  (`cd mock-api && npm run server`); acorde a API antes do deploy.
+- **Galeria como rota**: `/hotel/{id}/photos/{n}` abre como modal por Parallel + Intercepting Route e como página cheia em reload/link direto. Voltar do navegador fecha o modal.
+- **Server Actions**: continua uma só (`createBookingAction`), com `bodySizeLimit: "64kb"`. Favoritos/comparação/histórico vivem no dispositivo; não existe endpoint para eles.
+- **Edge Runtime: avaliado e descartado**: `runtime = 'edge'` é *deprecated* no 16.4 e incompatível com `cacheComponents` (e o Proxy roda em Node). PPR + ISR servem a página do cache sem tocar na API.
+- **Checkout continua dinâmico** (`ƒ`, nonce da CSP por request) e a confirmação nunca guarda PII na casca. `npm run test:e2e:prod` roda os testes `@prod` contra `next build && next start`.

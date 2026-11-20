@@ -11,6 +11,7 @@ export const PUBLIC_ROUTES = [
   "/",
   "/search",
   "/hotel/:id",
+  "/hotel/:id/photos/:photo",
   "/offline",
   "/offline/checkout",
   "/offline/bookings",

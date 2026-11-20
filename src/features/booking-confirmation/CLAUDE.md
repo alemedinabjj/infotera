@@ -15,6 +15,7 @@ components/ BookingConfirmation (RSC) → ConfirmationView → Header/BookingNum
 ```
 
 ## Decisões que valem daqui para frente
+- **Rota privada sob `cacheComponents`:** `app/.../confirmation/[bookingId]/page.tsx` embrulha `BookingConfirmation` em `WipeOnHide` (`shared/ui`). Sem isso o Activity deixava hóspedes, e-mail mascarado, cartão final e número da reserva no DOM escondido (aparecia em `getByRole('main')` do `/my-bookings` e duplicava textos no E2E). E2E: `e2e/activity.spec.ts` (descarta os `<script>` do payload RSC do carregamento direto).
 - **Rota sempre dinâmica** (`await connection()`), `no-store`, `noindex, nofollow`. **Nota para a F7:** não aplicar PPR/ISR/`use cache`
   nesta rota (tem PII). O histórico (`shared/lib/booking-history`, `infotera:booking-history`) guarda só `{ id, savedAt }`; a F7 lista
   com `GET /bookings/:id` por id e remove os 404 (`removeFromHistory`).

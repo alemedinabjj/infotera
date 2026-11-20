@@ -24,15 +24,12 @@ export const ptBR = {
     description: "O link pode estar errado ou o hotel não está mais disponível.",
   },
   loading: {
-    hotel: "Carregando hotel…",
-    slow: "Está demorando mais que o normal…",
     rooms: "Carregando quartos…",
     reviews: "Carregando avaliações…",
-    similar: "Carregando hotéis similares…",
+    slow: "Está demorando mais que o normal…",
   },
   header: {
     featured: "Destaque",
-    stay: ({ label }: { label: string }) => `Sua estadia: ${label}`,
     viewRooms: "Ver quartos",
     copyLink: "Copiar link",
   },
@@ -80,6 +77,31 @@ export const ptBR = {
     next: "Próxima foto",
     failed: "Não foi possível carregar esta foto.",
     loading: "Carregando foto…",
+    modalLoadingTitle: "Fotos do hotel",
+    close: "Fechar",
+    openError: "Não foi possível abrir a foto",
+    openErrorBody: "Verifique sua conexão e tente de novo.",
+    offlineTitle: "Você está sem internet",
+    offlineBody: "A foto abre assim que a conexão voltar.",
+    reconnectedTitle: "Conexão de volta",
+    reconnectedBody: "Tente de novo.",
+    stillFailing: "Ainda não foi possível abrir a foto. Tente de novo.",
+  },
+  build: {
+    waiting: ({ attempt, total }: { attempt: number; total: number }) =>
+      `Aguardando a mock-api (tentativa ${attempt}/${total})…`,
+    unreachable: ({ url }: { url: string }) =>
+      `Não foi possível listar os hotéis para o build: a mock-api em ${url} não respondeu. Suba a API (cd mock-api && npm run server) ou confira NEXT_PUBLIC_API_URL.`,
+    noHotels: "A API não listou nenhum hotel: não há o que pré-renderizar.",
+  },
+  photoPage: {
+    back: "Voltar para o hotel",
+    metaTitle: ({ index, total, hotel }: { index: number; total: number; hotel: string }) =>
+      `Foto ${index} de ${total} · ${hotel} | Infotera Hotéis`,
+    metaNotFound: "Foto não encontrada | Infotera Hotéis",
+    notFoundTitle: "Foto não encontrada",
+    notFoundBody: "Este endereço não corresponde a nenhuma foto deste hotel.",
+    viewHotel: "Ver o hotel",
   },
   rooms: {
     emptyTitle: "Nenhum quarto para reserva",
@@ -192,6 +214,7 @@ export const ptBR = {
   },
   errors: {
     sectionRetry: "Verifique sua conexão e tente de novo.",
+    stillFailing: "Ainda não foi possível carregar. Tente de novo.",
   },
 };
 

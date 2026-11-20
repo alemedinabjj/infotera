@@ -7,6 +7,7 @@ import {
   type RefObject,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
 } from "react";
 import { useCommonMessages } from "../../i18n/common/useCommonMessages";
@@ -88,6 +89,10 @@ type DialogProps = {
    * `role="region"` nomeada pelo título) e recebe o foco inicial, para setas/PageDown rolarem.
    */
   focusableBody?: boolean;
+  /** `id` do texto que descreve o diálogo (`aria-describedby`): ex.: o contador "Foto 3 de 5". */
+  describedBy?: string;
+  /** Depois da saída animada e de o `<dialog>` fechar (o foco já voltou ao gatilho). */
+  onClosed?: () => void;
   /** Teclas dentro do dialog (ex.: setas do lightbox). `Esc` e `Tab` já são nativos. */
   onKeyDown?: KeyboardEventHandler<HTMLDialogElement>;
   className?: string;
@@ -96,6 +101,15 @@ type DialogProps = {
 type DialogSession = {
   /** Fecha o `<dialog>` nativo, destrava o scroll e devolve o foco ao gatilho (depois da saída). */
   finish: () => void;
+  /** `close` do `<dialog>`: `false` quando fomos nós que fechamos (não é um pedido da pessoa). */
+  consumeUserClose: () => boolean;
+};
+
+/** Fecha o `<dialog>` e marca o `close` que o navegador dispara em seguida como nosso, não do usuário. */
+const closeProgrammatically = (dialog: HTMLDialogElement, expected: { current: boolean }) => {
+  if (!dialog.open) return;
+  expected.current = true;
+  dialog.close();
 };
 
 /**
@@ -106,25 +120,31 @@ const useDialogLifecycle = (
   ref: RefObject<HTMLDialogElement | null>,
   open: boolean,
   initialFocus: string | undefined,
+  onClosed: (() => void) | undefined,
 ): DialogSession => {
   const trigger = useRef<Element | null>(null);
   const previousOverflow = useRef<string | null>(null);
+  const expectedClose = useRef(false);
 
   const finish = () => {
     const dialog = ref.current;
-    if (dialog?.open) dialog.close();
+    if (dialog) closeProgrammatically(dialog, expectedClose);
     if (previousOverflow.current !== null) document.body.style.overflow = previousOverflow.current;
     previousOverflow.current = null;
     if (trigger.current instanceof HTMLElement) trigger.current.focus();
     trigger.current = null;
+    onClosed?.();
   };
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog || !open) return;
+    // Aberto mas fora do top layer (o React tirou e recolocou o nó ao reexibir um Activity): é um
+    // `<dialog>` não modal, sem fundo inerte nem Esc. Fecha e abre de novo como modal.
+    if (dialog.open && !dialog.matches(":modal")) closeProgrammatically(dialog, expectedClose);
     if (!dialog.open) {
       trigger.current = document.activeElement;
-      previousOverflow.current = document.body.style.overflow;
+      previousOverflow.current ??= document.body.style.overflow;
       dialog.showModal();
     }
     // `showModal` foca o 1º focável (o "Fechar"); aqui a feature escolhe um controle mais útil.
@@ -132,18 +152,27 @@ const useDialogLifecycle = (
     document.body.style.overflow = "hidden";
   }, [ref, open, initialFocus]);
 
-  // Desmontou com o dialog aberto (ex.: troca de rota): destrava o scroll sem esperar animação.
-  useEffect(() => {
-    const dialog = ref;
+  // Desmontou ou foi escondido (Activity) com o dialog aberto: fecha de verdade e destrava o scroll,
+  // sem esperar a animação. É `useLayoutEffect` e guarda o nó no setup: ao esconder, o React solta o
+  // `ref` antes do cleanup passivo, e um `<dialog>` modal escondido ficaria aberto e fora do top layer.
+  useLayoutEffect(() => {
+    const dialog = ref.current;
     return () => {
-      if (dialog.current?.open) dialog.current.close();
+      if (dialog) closeProgrammatically(dialog, expectedClose);
       if (previousOverflow.current !== null) {
         document.body.style.overflow = previousOverflow.current;
+        previousOverflow.current = null;
       }
     };
   }, [ref]);
 
-  return { finish };
+  const consumeUserClose = () => {
+    const ours = expectedClose.current;
+    expectedClose.current = false;
+    return !ours;
+  };
+
+  return { finish, consumeUserClose };
 };
 
 type PanelProps = {
@@ -226,6 +255,8 @@ export const Dialog = ({
   closeOnBackdrop = false,
   initialFocus,
   focusableBody = false,
+  describedBy,
+  onClosed,
   onKeyDown,
   className,
 }: DialogProps) => {
@@ -233,10 +264,11 @@ export const Dialog = ({
   const commonClose = useCommonMessages().dialog.close;
   const titleId = useId();
   const pressStartedOnBackdrop = useRef(false);
-  const { finish } = useDialogLifecycle(
+  const { finish, consumeUserClose } = useDialogLifecycle(
     ref,
     open,
     focusableBody ? "[data-dialog-body]" : initialFocus,
+    onClosed,
   );
   const layout = layoutFor(size, placement);
 
@@ -244,10 +276,11 @@ export const Dialog = ({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      aria-describedby={describedBy}
       data-closing={open ? undefined : ""}
       onKeyDown={onKeyDown}
       onClose={() => {
-        if (open) onClose();
+        if (consumeUserClose() && open) onClose();
       }}
       onCancel={(event) => {
         // O pai é a fonte da verdade: Esc só pede o fechamento, quem fecha é `open`.

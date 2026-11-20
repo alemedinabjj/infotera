@@ -1,5 +1,6 @@
 "use client";
 
+import { useResetOnHide } from "@/shared/hooks/useResetOnHide";
 import { useLocale } from "@/shared/i18n/client";
 import { cn } from "@/shared/lib/cn";
 import { Button, Dialog, FilterIcon, Spinner } from "@/shared/ui";
@@ -37,6 +38,8 @@ export const FiltersDrawer = ({
   announcement,
 }: FiltersDrawerProps) => {
   useCloseOnDesktop(open, onClose);
+  // Activity (cacheComponents) esconde a rota em vez de desmontar: ao voltar o sheet não pode estar aberto.
+  useResetOnHide(onClose);
   const t = useHotelSearchMessages().controls;
   const locale = useLocale();
   const action = describeSheetAction(view, total, locale);

@@ -1,105 +1,55 @@
-"use client";
-
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { useOnline } from "@/shared/hooks/useOnline";
-import { useLocale } from "@/shared/i18n/client";
-import { getTotalPages } from "@/shared/lib/pagination";
-import { Alert, EmptyState, Pagination, RatingScore, Spinner, WifiOffIcon } from "@/shared/ui";
-import { REVIEWS_PAGE_SIZE, reviewsQueryOptions } from "../api/reviews";
-import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
-import { useFocusOnNewPage, useReviewsPage } from "../hooks/useReviewsPage";
-import { reviewsRangeLabel } from "../model/reviews";
+import { Suspense } from "react";
+import type { Locale } from "@/shared/i18n/config";
+import { EmptyState, RatingScore } from "@/shared/ui";
+import type { FirstReviews } from "../api/catalog.cached";
+import type { Settled } from "../api/settled";
+import { hotelDetailsMessages } from "../i18n/messages";
 import { sectionHeadingId } from "../model/sections";
-import { ReviewList } from "./ReviewList";
-import { ReviewsSkeleton } from "./ReviewsSkeleton";
-import { SectionBoundary } from "./SectionBoundary";
+import { RequestOnly } from "./RequestOnly";
+import { ReviewsPager } from "./ReviewsPager";
+import { ReviewsStatic } from "./ReviewsStatic";
+import { SectionRefreshError } from "./SectionRefreshError";
 
 type ReviewsSectionProps = {
+  locale: Locale;
   hotelId: number;
   /** Nota agregada do hotel (a contagem `reviewCount` é de avaliações, não de comentários). */
   rating: number;
   reviewCount: number;
-};
-
-type ContentProps = {
-  hotelId: number;
-  page: number;
-  pending: boolean;
-  onPageChange: (page: number) => void;
-};
-
-const OfflineNotice = () => {
-  const t = useHotelDetailsMessages().reviews;
-  return (
-    <Alert
-      tone="warning"
-      title={t.offlineTitle}
-      icon={<WifiOffIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
-    >
-      {t.offlineBody}
-    </Alert>
-  );
-};
-
-const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) => {
-  const locale = useLocale();
-  const t = useHotelDetailsMessages().reviews;
-  const { data } = useSuspenseQuery(reviewsQueryOptions(hotelId, page));
-  const online = useOnline();
-  useFocusOnNewPage(page);
-
-  if (data.total === 0) {
-    return <EmptyState headingLevel={3} title={t.emptyTitle} description={t.emptyBody} />;
-  }
-
-  // Offline: só o aviso (sem spinner nem lista esmaecida: nada está carregando de fato). Ele vem
-  // **depois** da paginação para não empurrar o botão que a pessoa acabou de usar.
-  const loading = pending && online;
-  return (
-    <>
-      <p aria-live="polite" className="flex min-h-5 items-center gap-2 text-sm text-fg-muted">
-        {loading ? (
-          <>
-            <Spinner />
-            {t.updating}
-          </>
-        ) : (
-          reviewsRangeLabel(page, data.total, REVIEWS_PAGE_SIZE, locale)
-        )}
-      </p>
-      <ReviewList reviews={data.items} busy={loading} />
-      <Pagination
-        locale={locale}
-        page={page}
-        totalPages={getTotalPages(data.total, REVIEWS_PAGE_SIZE)}
-        onPageChange={onPageChange}
-        className="mt-2"
-      />
-      {pending && !online ? <OfflineNotice /> : null}
-    </>
-  );
+  first: Settled<FirstReviews>;
 };
 
 /**
- * Avaliações paginadas (`useSuspenseQuery` + transition na troca de página). O h2 e a nota do hotel
- * ficam fora; loading e erro (com retry no lugar) trocam só o miolo.
+ * Avaliações. A página 1 é HTML da casca (snapshot do catálogo); o `ReviewsPager` assume dentro do
+ * Suspense, com `initialData`, e cuida das páginas seguintes. O h2 fica fora. Falha da 1ª página: erro
+ * da seção com retry, só por request (`RequestOnly`).
  */
-export const ReviewsSection = ({ hotelId, rating, reviewCount }: ReviewsSectionProps) => {
-  const t = useHotelDetailsMessages().reviews;
-  const locale = useLocale();
-  const { page, pending, changePage, changed } = useReviewsPage();
+export const ReviewsSection = ({
+  locale,
+  hotelId,
+  rating,
+  reviewCount,
+  first,
+}: ReviewsSectionProps) => {
+  const t = hotelDetailsMessages.get(locale).reviews;
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <RatingScore locale={locale} rating={rating} reviewCount={reviewCount} />
-      <SectionBoundary
-        headingId={sectionHeadingId("avaliacoes")}
-        errorTitle={t.loadError}
-        options={reviewsQueryOptions(hotelId, page)}
-        loading={<ReviewsSkeleton />}
-        focusRetryOnError={changed}
-      >
-        <ReviewsContent hotelId={hotelId} page={page} pending={pending} onPageChange={changePage} />
-      </SectionBoundary>
+      {first.kind === "error" ? (
+        <RequestOnly>
+          <SectionRefreshError headingId={sectionHeadingId("avaliacoes")} title={t.loadError} />
+        </RequestOnly>
+      ) : first.value.page.total === 0 ? (
+        <EmptyState headingLevel={3} title={t.emptyTitle} description={t.emptyBody} />
+      ) : (
+        <Suspense fallback={<ReviewsStatic page={first.value.page} />}>
+          <ReviewsPager
+            hotelId={hotelId}
+            initialPage={first.value.page}
+            fetchedAt={first.value.fetchedAt}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

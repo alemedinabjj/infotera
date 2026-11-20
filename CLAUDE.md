@@ -24,7 +24,7 @@ requisitos por feature, o que escolhemos dos avançados e os detalhes da mock-ap
 ```bash
 cd mock-api && npm install && npm run server   # API em http://localhost:3333 (delay 300ms)
 npm run dev          # front em http://localhost:3000
-npm run build        # build de produção
+npm run build        # build de produção (EXIGE a mock-api no ar: `generateStaticParams` lista os hotéis; F7c)
 npm run typecheck    # tsc --noEmit
 npm run lint         # biome check
 npm run format       # biome check --write (formata e organiza imports)
@@ -40,6 +40,7 @@ npm run test:e2e     # playwright test --trace off (sobe mock-api, control-proxy
 # PWA/offline: contra o build (o service worker é desligado no `next dev`)
 npm run build && npx next start -p 3100   # depois, noutro terminal:
 PLAYWRIGHT_BASE_URL=http://localhost:3100 npm run test:e2e:build   # e2e/pwa.build.spec.ts
+npm run test:e2e:prod # E2E contra `next build && next start` (testes `@prod`: PPR, ISR, nonce da CSP sob cacheComponents)
 npx -y react-doctor@0.9.23 . --scope changed --base main --verbose --no-telemetry
                      # saúde React: componentes gigantes/aninhados, perf, a11y (também roda em toda PR)
 ```
@@ -66,7 +67,7 @@ Estrutura interna de cada feature (crie só as pastas que usar):
 ```
 features/<nome>/
   CLAUDE.md      instruções da feature para a IA (leia antes de editar)
-  index.ts       API pública — a ÚNICA coisa que app/ pode importar
+  index.ts       API pública — o que app/ importa (exceção: `client.ts`, entrada só-cliente, ver abaixo)
   api/           query keys, queryOptions, mutations (TanStack Query)
   model/         schemas Zod, tipos e lógica pura (sem React) — 100% testável
   hooks/         hooks que ligam model + api + store
@@ -79,6 +80,11 @@ features/<nome>/
 - `app → features → shared`. Nunca o contrário.
 - Uma feature **não importa** outra feature. Estado ou tipo que duas features precisam vai para `shared/`.
 - `app/` importa features só pelo `index.ts` (`@/features/checkout`), nunca deep import.
+  **Exceção:** um arquivo `error.tsx`/`not-found.tsx` (`"use client"`) pode importar o `client.ts` da feature
+  (`@/features/hotel-details/client`), uma segunda entrada pública que reexporta só o que é seguro no
+  bundle do cliente. Motivo: com `cacheComponents` o `index.ts` leva funções `"use cache"` e o loader do
+  build (`server-only`) junto; importá-lo de um componente cliente quebraria o bundle. Hoje só
+  `hotel-details` tem `client.ts`; não crie outro sem o mesmo motivo.
 - Server Components por padrão. `"use client"` só no componente que tem interação, o mais folha possível.
 
 ## Regras de código (avaliadas pelo teste)

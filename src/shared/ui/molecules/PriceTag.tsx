@@ -28,9 +28,11 @@ type PriceTagProps = { locale: Locale } & (
       nightly: number;
     }
   | {
-      /** Quarto sem datas: **R$ 1.200** / `por noite` (preço exato). */
-      variant: "room-nightly";
-      nightly: number;
+      /** Só as 2 primeiras linhas de `stay` (total + detalhe): a diária fica em outro lugar (F7c). */
+      variant: "stay-total";
+      total: number;
+      nights: number;
+      rooms: number;
     }
   | {
       /** Quando o total não pode ser reservado: só a diária, discreta. */
@@ -38,6 +40,8 @@ type PriceTagProps = { locale: Locale } & (
       nightly: number;
       /** Preço exato (de um quarto): `R$ 1.200 por noite`, sem "a partir de". */
       exact?: boolean;
+      /** Acrescenta `, sem taxas` (a 3ª linha de `stay`, sempre presente no card do quarto). */
+      withoutFees?: boolean;
     }
 );
 
@@ -83,13 +87,16 @@ export const PriceTag = (props: PriceTagProps) => {
           <span className="text-sm text-fg-muted">{t.perNight}</span>
         </p>
       );
-    case "room-nightly":
+    case "stay-total":
       return (
         <p className="flex flex-col items-end">
-          <span className="text-xl font-bold whitespace-nowrap text-fg tabular-nums">
-            {money(props.nightly, locale)}
+          <span className="min-h-7 text-xl font-bold whitespace-nowrap text-fg tabular-nums">
+            {formatBRL(props.total, { locale })}
           </span>
-          <span className="text-sm text-fg-muted">{t.perNight}</span>
+          <span className="min-h-5 text-sm text-fg-muted">
+            {t.totalWithFees} · {formatUnit(props.nights, "night", locale)} ·{" "}
+            {formatUnit(props.rooms, "room", locale)}
+          </span>
         </p>
       );
     case "nightly-line":
@@ -98,6 +105,7 @@ export const PriceTag = (props: PriceTagProps) => {
           {props.exact ? null : `${t.from} `}
           <span className="whitespace-nowrap tabular-nums">{money(props.nightly, locale)}</span>{" "}
           {t.perNight}
+          {props.withoutFees ? `, ${t.withoutFees}` : null}
         </p>
       );
     default: {

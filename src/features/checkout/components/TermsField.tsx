@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { useController, useFormContext } from "react-hook-form";
+import { useResetOnHide } from "@/shared/hooks/useResetOnHide";
 import { AlertCircleIcon, Button, Checkbox } from "@/shared/ui";
 import { useCheckoutMessages } from "../hooks/useCheckoutMessages";
 import type { CheckoutValues } from "../model/checkout.schema";
@@ -16,6 +17,7 @@ export const TermsField = ({ sections }: { sections: TermsSection[] }) => {
   const { control, clearErrors } = useFormContext<CheckoutValues>();
   const { field, fieldState } = useController({ control, name: "termsAccepted" });
   const [open, setOpen] = useState(false);
+  useResetOnHide(() => setOpen(false)); // Activity: o modal de termos não volta aberto
   const errorId = useId();
   const t = useCheckoutMessages().terms;
   const error = fieldState.error?.message;

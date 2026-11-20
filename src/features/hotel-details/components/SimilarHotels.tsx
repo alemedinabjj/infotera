@@ -7,14 +7,15 @@ import { localizePath } from "@/shared/i18n/paths";
 import { searchHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { buttonClassName, CompactHotelCard } from "@/shared/ui";
-import { fetchSimilarHotels } from "../api/similar";
+import { getSimilarHotelsSnapshot } from "../api/catalog.cached";
 import { hotelDetailsMessages } from "../i18n/messages";
+import { StayAware } from "./StayAware";
 
 type SimilarHotelsProps = {
   locale: Locale;
   hotelId: number;
   destination: string;
-  criteria: SearchCriteria | null;
+  criteria: Promise<SearchCriteria | null>;
 };
 
 const LINK = "w-fit font-medium text-primary hover:underline";
@@ -28,7 +29,8 @@ const logFailure = (hotelId: number, error: unknown): void => {
 };
 
 /**
- * Hotéis do mesmo destino, sem JS (RSC assíncrono sob Suspense). É recomendação: se falhar, a
+ * Hotéis do mesmo destino, do snapshot do catálogo (RSC assíncrono sob Suspense). Os links dos cartões
+ * ganham os critérios por `StayAware`. É recomendação: se falhar, a
  * página não cai nem pede retry; mostra um texto e um link para a lista do destino.
  */
 export const SimilarHotels = async ({
@@ -41,15 +43,19 @@ export const SimilarHotels = async ({
   const { routes } = commonMessages.get(locale);
   let hotels: Hotel[];
   try {
-    hotels = await fetchSimilarHotels(destination, hotelId);
+    hotels = await getSimilarHotelsSnapshot(destination, hotelId);
   } catch (error) {
     logFailure(hotelId, error);
     return (
       <div className="flex flex-col items-start gap-1 text-fg-muted">
         <p>{t.similar.failed}</p>
-        <Link href={localizePath(locale, searchHref(destination, criteria))} className={LINK}>
-          {t.similar.seeIn({ destination })}
-        </Link>
+        <StayAware criteria={criteria}>
+          {(resolved) => (
+            <Link href={localizePath(locale, searchHref(destination, resolved))} className={LINK}>
+              {t.similar.seeIn({ destination })}
+            </Link>
+          )}
+        </StayAware>
       </div>
     );
   }
@@ -72,7 +78,9 @@ export const SimilarHotels = async ({
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
       {hotels.map((hotel) => (
         <li key={hotel.id} className="flex">
-          <CompactHotelCard locale={locale} hotel={hotel} criteria={criteria} />
+          <StayAware criteria={criteria}>
+            {(resolved) => <CompactHotelCard locale={locale} hotel={hotel} criteria={resolved} />}
+          </StayAware>
         </li>
       ))}
     </ul>

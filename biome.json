@@ -169,8 +169,8 @@
               "options": {
                 "patterns": [
                   {
-                    "group": ["@/features/*/**"],
-                    "message": "app importa features s\u00f3 pelo index.ts (@/features/<nome>)."
+                    "group": ["@/features/*/**", "!@/features/*/client"],
+                    "message": "app importa features s\u00f3 pelo index.ts (@/features/<nome>) ou pelo client.ts (entrada segura para o cliente, ex.: error.tsx)."
                   }
                 ]
               }

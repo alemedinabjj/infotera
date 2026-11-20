@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import {
   describeSearchSummary,
   HotelSearchResults,
@@ -44,6 +45,9 @@ const SearchPage = async ({ params, searchParams }: PageProps<"/[locale]/search"
   const stay = page.kind === "stay" ? page.criteria : null;
   const destination = stay?.destination ?? (page.kind === "browse" ? page.destination : "");
   const key = searchPageKey(page);
+  // O relógio só é lido no pedido: sem isto, o prerender de runtime (1ª visita no `next start`)
+  // avisa "unstable value new Date()". Só o miolo dinâmico espera; a casca do layout não muda.
+  await connection();
   const today = todayISO();
 
   return (

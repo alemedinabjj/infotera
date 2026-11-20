@@ -25,15 +25,12 @@ export const enUS: HotelDetailsMessages = {
     description: "The link may be wrong or the hotel is no longer available.",
   },
   loading: {
-    hotel: "Loading hotel…",
-    slow: "This is taking longer than usual…",
     rooms: "Loading rooms…",
     reviews: "Loading reviews…",
-    similar: "Loading similar hotels…",
+    slow: "This is taking longer than usual…",
   },
   header: {
     featured: "Featured",
-    stay: ({ label }) => `Your stay: ${label}`,
     viewRooms: "View rooms",
     copyLink: "Copy link",
   },
@@ -78,6 +75,30 @@ export const enUS: HotelDetailsMessages = {
     next: "Next photo",
     failed: "We couldn't load this photo.",
     loading: "Loading photo…",
+    modalLoadingTitle: "Hotel photos",
+    close: "Close",
+    openError: "We couldn't open the photo",
+    openErrorBody: "Check your connection and try again.",
+    offlineTitle: "You're offline",
+    offlineBody: "The photo will open once you're back online.",
+    reconnectedTitle: "Back online",
+    reconnectedBody: "Try again.",
+    stillFailing: "Still couldn't open the photo. Try again.",
+  },
+  build: {
+    waiting: ({ attempt, total }) => `Waiting for the mock-api (attempt ${attempt}/${total})…`,
+    unreachable: ({ url }) =>
+      `Could not list the hotels for the build: the mock-api at ${url} did not respond. Start the API (cd mock-api && npm run server) or check NEXT_PUBLIC_API_URL.`,
+    noHotels: "The API listed no hotels: there is nothing to prerender.",
+  },
+  photoPage: {
+    back: "Back to hotel",
+    metaTitle: ({ index, total, hotel }) =>
+      `Photo ${index} of ${total} · ${hotel} | Infotera Hotéis`,
+    metaNotFound: "Photo not found | Infotera Hotéis",
+    notFoundTitle: "Photo not found",
+    notFoundBody: "This address doesn't match any photo of this hotel.",
+    viewHotel: "View hotel",
   },
   rooms: {
     emptyTitle: "No rooms to book",
@@ -176,5 +197,6 @@ export const enUS: HotelDetailsMessages = {
   },
   errors: {
     sectionRetry: "Check your connection and try again.",
+    stillFailing: "Still couldn't load. Try again.",
   },
 };

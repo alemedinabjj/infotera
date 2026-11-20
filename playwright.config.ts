@@ -4,6 +4,9 @@ const externalBaseURL = process.env.PLAYWRIGHT_BASE_URL;
 const frontPort = Number(process.env.E2E_FRONT_PORT ?? 3000);
 const baseURL = externalBaseURL ?? `http://localhost:${frontPort}`;
 const isCI = Boolean(process.env.CI);
+// `E2E_PROD=1`: o front sobe de `next build && next start`. PPR, ISR e o nonce sob `cacheComponents` só existem
+// no build de produção (`npm run test:e2e:prod`, testes `@prod`).
+const isProd = process.env.E2E_PROD === "1";
 // Cadeia do E2E: navegador e servidor do Next -> proxy de controle (`e2e/helpers/control-proxy.mjs`)
 // -> mock-api. O proxy repassa tudo e deixa os testes atrasar/falhar/segurar requests do servidor
 // do Next (que o `page.route` não vê). Portas por env para conviver com outros servidores.
@@ -50,10 +53,14 @@ export default defineConfig({
           env: { PROXY_PORT: String(proxyPort), UPSTREAM_URL: upstreamURL },
         },
         {
-          command: `npm run dev -- -p ${frontPort}`,
+          command: isProd
+            ? `npm run build && npm run start -- -p ${frontPort}`
+            : `npm run dev -- -p ${frontPort}`,
           url: baseURL,
           reuseExistingServer: !isCI,
-          env: { NEXT_PUBLIC_API_URL: proxyURL },
+          env: { NEXT_PUBLIC_API_URL: proxyURL, E2E_HIDE_DEV_INDICATORS: "1" },
+          // O build espera a mock-api (retry de `generateStaticParams`) e prerenderiza 120 páginas.
+          timeout: isProd ? 600_000 : 60_000,
         },
       ],
 });

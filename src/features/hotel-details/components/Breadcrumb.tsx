@@ -1,20 +1,18 @@
 import Link from "next/link";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 import { ArrowLeftIcon, ChevronRightIcon } from "@/shared/ui";
-import type { BreadcrumbItem } from "../model/breadcrumb";
+import type { HotelBreadcrumb } from "../model/breadcrumb";
+import { StayAware } from "./StayAware";
 
 type BreadcrumbProps = {
-  /** Nome acessível do `nav` (já no idioma). */
-  navLabel: string;
-  items: readonly BreadcrumbItem[];
-  /** Nível acima: no celular o breadcrumb vira só este link ("← Hotéis em São Paulo"). */
-  backHref: string;
-  backLabel: string;
+  /** Migalhas para os critérios dados (`null`: o fallback da casca, sem datas). */
+  build: (criteria: SearchCriteria | null) => HotelBreadcrumb;
+  criteria: Promise<SearchCriteria | null>;
 };
 
 const LINK = "text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2";
 
-/** `nav` "Você está aqui". Abaixo de `sm`, só o link de voltar (não quebra em 320 px). */
-export const Breadcrumb = ({ navLabel, items, backHref, backLabel }: BreadcrumbProps) => (
+const BreadcrumbNav = ({ navLabel, items, backHref, backLabel }: HotelBreadcrumb) => (
   <nav aria-label={navLabel}>
     <ol className="hidden flex-wrap items-center gap-x-1 gap-y-1 text-sm sm:flex">
       {items.map((item, index) => (
@@ -42,4 +40,12 @@ export const Breadcrumb = ({ navLabel, items, backHref, backLabel }: BreadcrumbP
       {backLabel}
     </Link>
   </nav>
+);
+
+/**
+ * `nav` "Você está aqui". Abaixo de `sm`, só o link de voltar (não quebra em 320 px). O link de
+ * resultados ganha os critérios por `StayAware`; na casca é o mesmo link sem eles.
+ */
+export const Breadcrumb = ({ build, criteria }: BreadcrumbProps) => (
+  <StayAware criteria={criteria}>{(resolved) => <BreadcrumbNav {...build(resolved)} />}</StayAware>
 );

@@ -37,3 +37,4 @@ export { RatingScore } from "./molecules/RatingScore";
 export { copyCurrentUrl } from "./toast/copyCurrentUrl";
 export { Toaster } from "./toast/Toaster";
 export { toast } from "./toast/toast-store";
+export { WipeOnHide } from "./WipeOnHide";

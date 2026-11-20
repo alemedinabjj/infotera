@@ -4,6 +4,7 @@ import {
   canSelect,
   type RoomSelectability,
   roomSelectability,
+  roomStaticBadge,
   selectabilityBadge,
   selectabilityMessage,
 } from "./room-selectability";
@@ -156,5 +157,16 @@ describe("mensagens e selos", () => {
     expect(canSelect({ kind: "selectable", scarce: null })).toBe(true);
     expect(canSelect({ kind: "needs-dates" })).toBe(false);
     expect(canSelect({ kind: "sold-out" })).toBe(false);
+  });
+});
+
+describe("roomStaticBadge", () => {
+  it("esgotado, escassez do quarto e nenhum selo quando sobra estoque", () => {
+    expect(roomStaticBadge(makeRoom({ available: 0 }), "pt-BR")).toEqual({
+      tone: "danger",
+      text: "Esgotado",
+    });
+    expect(roomStaticBadge(makeRoom({ available: 2 }), "pt-BR")?.text).toBe("Apenas 2 quartos!");
+    expect(roomStaticBadge(makeRoom({ available: 9 }), "pt-BR")).toBeNull();
   });
 });

@@ -84,7 +84,7 @@ test.describe("página do hotel em inglês", () => {
   test("galeria e lightbox em inglês", async ({ page, request }) => {
     await page.goto(EN_HOTEL);
     await waitForHydration(page);
-    await page.getByRole("button", { name: /^See all photos/ }).click();
+    await page.getByRole("link", { name: /^See all photos/ }).click();
     const dialog = page.getByRole("dialog", { name: /^Photos of/ });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Next photo" })).toBeVisible();

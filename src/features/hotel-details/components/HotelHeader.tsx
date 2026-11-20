@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
-import type { Hotel } from "@/shared/api/schemas";
+import type { Hotel, Room } from "@/shared/api/schemas";
 import { contentLang, type Locale } from "@/shared/i18n/config";
 import { propertyTypeLabel } from "@/shared/lib/labels";
 import { CompareCheckbox } from "@/shared/saved/components/CompareCheckbox";
 import { FavoriteButton } from "@/shared/saved/components/FavoriteButton";
 import { Badge, buttonClassName, ChevronDownIcon, MapPinIcon, RatingScore } from "@/shared/ui";
+import type { Settled } from "../api/settled";
 import { hotelDetailsMessages } from "../i18n/messages";
 import { FromPrice } from "./FromPrice";
 import { ShareButton } from "./ShareButton";
@@ -12,8 +13,8 @@ import { ShareButton } from "./ShareButton";
 type HotelHeaderProps = {
   locale: Locale;
   hotel: Hotel;
-  /** `12–15 dez · 3 noites · 2 adultos · 1 quarto`; `null` sem critérios. */
-  stayLabel: string | null;
+  /** Quartos do snapshot do catálogo: o "a partir de" vem deles. */
+  rooms: Settled<readonly Room[]>;
   /** Galeria: fica entre o nome e o preço (a mesma ordem em todas as larguras). */
   children: ReactNode;
 };
@@ -22,7 +23,7 @@ type HotelHeaderProps = {
  * Topo da página: contexto, h1, endereço, nota, galeria (slot) e, abaixo, preço "a partir de" +
  * ações. Ordem do DOM = ordem visual (sem `order-*`).
  */
-export const HotelHeader = ({ locale, hotel, stayLabel, children }: HotelHeaderProps) => {
+export const HotelHeader = ({ locale, hotel, rooms, children }: HotelHeaderProps) => {
   const t = hotelDetailsMessages.get(locale).header;
   return (
     <div className="flex flex-col gap-4">
@@ -49,10 +50,7 @@ export const HotelHeader = ({ locale, hotel, stayLabel, children }: HotelHeaderP
       {children}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-col gap-1">
-          <FromPrice hotelId={hotel.id} />
-          {stayLabel ? (
-            <p className="text-sm text-fg-muted tabular-nums">{t.stay({ label: stayLabel })}</p>
-          ) : null}
+          <FromPrice locale={locale} rooms={rooms} />
         </div>
         <div className="grid grid-cols-2 items-center gap-3 sm:flex">
           <CompareCheckbox hotelId={hotel.id} hotelName={hotel.name} />
