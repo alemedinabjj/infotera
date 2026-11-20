@@ -55,6 +55,16 @@ describe("classifyHistoryResults", () => {
     expect(classifyHistoryResults([entry(1)], [paused])[0]?.kind).toBe("failed");
   });
 
+  it("refazer depois de falhar (volta a pending com erro anterior) segue failed", () => {
+    const refetching: HistoryQueryResult = {
+      status: "pending",
+      data: undefined,
+      error: null,
+      failedBefore: true,
+    };
+    expect(classifyHistoryResults([entry(1)], [refetching])[0]?.kind).toBe("failed");
+  });
+
   it("sem resultado ainda é pending", () => {
     expect(classifyHistoryResults([entry(1)], [])[0]?.kind).toBe("pending");
   });

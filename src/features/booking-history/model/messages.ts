@@ -19,6 +19,7 @@ export const HISTORY_MESSAGES = {
   failed: "Não foi possível carregar esta reserva.",
   unreadable: "Não foi possível exibir esta reserva.",
   retry: "Tentar de novo",
+  retrying: "Tentando…",
   vanished: (count: number) =>
     count === 1
       ? "1 reserva não existe mais e saiu da lista. Reservas de teste são apagadas quando o sistema reinicia."

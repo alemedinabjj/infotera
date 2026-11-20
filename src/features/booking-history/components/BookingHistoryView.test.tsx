@@ -122,6 +122,44 @@ describe("BookingHistoryView", () => {
     expect(readBookingHistory()).toHaveLength(2);
   });
 
+  it("tentar de novo mantém a linha, o foco e os nomes dos outros hotéis", async () => {
+    const user = userEvent.setup();
+    save([ID_A, ID_C]);
+    let release: (response: Response) => void = () => undefined;
+    let attempts = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = new URL(String(input));
+        if (url.pathname === `/bookings/${ID_C}`) {
+          attempts += 1;
+          if (attempts === 1) return json({ error: "x" }, 500);
+          return new Promise<Response>((resolve) => {
+            release = resolve;
+          });
+        }
+        if (url.pathname.startsWith("/bookings/")) {
+          return json(makeBooking({ id: ID_A, hotelId: 1 }));
+        }
+        return json(url.searchParams.getAll("id").map((id) => seedHotel(Number(id))));
+      }),
+    );
+    renderPage();
+    const retry = await screen.findByRole("button", { name: "Tentar de novo" });
+    expect(
+      await screen.findByRole("heading", { level: 2, name: seedHotel(1).name }),
+    ).toBeInTheDocument();
+    retry.focus();
+    await user.click(retry);
+    const busy = await screen.findByRole("button", { name: /Tentando/ });
+    expect(busy).toHaveFocus();
+    expect(screen.getByRole("heading", { level: 2, name: seedHotel(1).name })).toBeInTheDocument();
+    release(json(makeBooking({ id: ID_C, hotelId: 1 })));
+    await waitFor(() =>
+      expect(screen.queryByText("Não foi possível carregar esta reserva.")).not.toBeInTheDocument(),
+    );
+  });
+
   it("corpo ilegível: mensagem própria sem retry", async () => {
     save([ID_A]);
     stub(() => json({ lixo: true }));

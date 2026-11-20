@@ -31,7 +31,7 @@ export const HistoryItemFailed = ({ unreadable, retrying, onRetry, removeButton 
           variant="secondary"
           size="sm"
           loading={retrying}
-          loadingText="Tentando…"
+          loadingText={MESSAGES.retrying}
           onClick={onRetry}
         >
           {MESSAGES.retry}
