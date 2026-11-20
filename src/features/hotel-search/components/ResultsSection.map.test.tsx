@@ -41,7 +41,10 @@ const renderSection = (view: ResultsView, mapOpen: boolean) =>
 
 describe("ResultsSection: painel do mapa", () => {
   it("visão results com o mapa aberto mostra o painel acima da lista", () => {
-    renderSection({ kind: "results", stale: false, offlineWithData: false }, true);
+    renderSection(
+      { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
+      true,
+    );
     const panel = document.getElementById("painel");
     const list = screen.getAllByRole("list")[0];
     expect(panel).toBeInTheDocument();
@@ -49,7 +52,10 @@ describe("ResultsSection: painel do mapa", () => {
   });
 
   it("mapa fechado: sem painel", () => {
-    renderSection({ kind: "results", stale: false, offlineWithData: false }, false);
+    renderSection(
+      { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
+      false,
+    );
     expect(document.getElementById("painel")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Pular o mapa" })).not.toBeInTheDocument();
   });

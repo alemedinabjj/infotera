@@ -19,7 +19,7 @@ describe("busca por idioma", () => {
     expect(describeResultCount(14, "en-US")).toBe("14 hotels found");
     expect(describeResultCount(14, "pt-BR")).toBe("14 hotéis encontrados");
     const { status } = describeToolbar({
-      view: { kind: "results", stale: false, offlineWithData: false },
+      view: { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
       slow: false,
       total: 14,
       listing: { mode: "pages", page: 2 },

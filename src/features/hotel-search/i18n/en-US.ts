@@ -20,7 +20,12 @@ export const enUS: HotelSearchMessages = {
     sheetMany: ({ count }) => `See ${count} hotels`,
     sheetSee: "See results",
     offlineTitle: "You're offline.",
-    offlineNoData: "Hotels will show up as soon as the connection is back.",
+    notSavedTitle: "These results aren't saved offline yet",
+    notSavedBody:
+      "Switch back to the previous option or wait for the connection: the list will update on its own.",
+    cannotUpdateTitle: "Can't update the list offline",
+    cannotUpdateBody:
+      "The list below is still from your previous selection. It will update on its own when you're back online.",
     offlineStale: "The results may be out of date.",
     errorTitle: "We couldn't load the hotels",
     errorDescription: "Check your connection and try again.",

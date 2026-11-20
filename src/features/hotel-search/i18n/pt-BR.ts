@@ -23,7 +23,11 @@ export const ptBR = {
     sheetMany: ({ count }: { count: number }) => `Ver ${count} hotéis`,
     sheetSee: "Ver resultados",
     offlineTitle: "Você está sem internet.",
-    offlineNoData: "Os hotéis aparecem assim que a conexão voltar.",
+    notSavedTitle: "Estes resultados ainda não estão salvos offline",
+    notSavedBody: "Volte à opção anterior ou espere a conexão voltar: a lista atualiza sozinha.",
+    cannotUpdateTitle: "Sem internet para atualizar a lista",
+    cannotUpdateBody:
+      "A lista abaixo ainda é da seleção anterior. Ela atualiza sozinha quando a conexão voltar.",
     offlineStale: "Os resultados podem estar desatualizados.",
     errorTitle: "Não foi possível carregar os hotéis",
     errorDescription: "Verifique sua conexão e tente de novo.",

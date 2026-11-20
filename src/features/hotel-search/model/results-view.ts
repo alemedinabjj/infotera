@@ -24,7 +24,16 @@ export type ResultsView =
   | { kind: "empty-destination" }
   | { kind: "empty-filters" }
   | { kind: "out-of-range"; lastPage: number }
-  | { kind: "results"; stale: boolean; offlineWithData: boolean };
+  | {
+      kind: "results";
+      stale: boolean;
+      offlineWithData: boolean;
+      /**
+       * Os dados são da seleção anterior **e** a rede está fora: a troca de ordenação, filtro ou página
+       * não vai chegar agora. Em vez de "Atualizando…" para sempre, a lista fica com um aviso.
+       */
+      staleOffline: boolean;
+    };
 
 /** Última página válida quando `page` passou do fim (com total > 0); senão `null`. */
 export const outOfRangePage = (page: number, total: number): number | null => {
@@ -32,18 +41,25 @@ export const outOfRangePage = (page: number, total: number): number | null => {
   return total > 0 && page > totalPages ? totalPages : null;
 };
 
+/** Erro, ou sem rede e sem lista (própria ou anterior) para mostrar: a lista some. */
+const blockedView = (input: ResultsViewInput): ResultsView | null => {
+  const { hasData, isError, isPlaceholderData, isPaused, total } = input;
+  if (hasData && !isPlaceholderData) return null;
+  if (isError) return { kind: "error" };
+  return isPaused && !(hasData && total > 0) ? { kind: "offline" } : null;
+};
+
 /**
- * Estado da tela a partir dos fatos da query. Dados de OUTRA chave (placeholder) nunca aparecem
- * em erro ou offline: a lista dos filtros antigos não pode ficar sob os controles novos.
+ * Estado da tela a partir dos fatos da query. Dados de OUTRA chave (placeholder) nunca aparecem em
+ * erro. Sem rede, a lista anterior fica (`staleOffline`, com aviso de que não atualiza agora) em vez
+ * de um "Atualizando…" sem fim; sem lista anterior, a visão é `offline` ("ainda não salvo offline").
  */
 export const deriveResultsView = (input: ResultsViewInput): ResultsView => {
-  const { hasData, isError, isPlaceholderData, isPaused, total, page, hasActiveFilters } = input;
+  const { hasData, isPlaceholderData, isPaused, total, page, hasActiveFilters } = input;
   const ownData = hasData && !isPlaceholderData;
 
-  if (!ownData) {
-    if (isError) return { kind: "error" };
-    if (isPaused) return { kind: "offline" };
-  }
+  const blocked = blockedView(input);
+  if (blocked) return blocked;
   if (!hasData) return { kind: "loading" };
   if (total === 0) {
     // Zero da busca anterior não diz nada sobre a nova: espera o dado novo.
@@ -52,7 +68,12 @@ export const deriveResultsView = (input: ResultsViewInput): ResultsView => {
   }
   const lastPage = outOfRangePage(page, total);
   if (lastPage !== null && !isPlaceholderData) return { kind: "out-of-range", lastPage };
-  return { kind: "results", stale: isPlaceholderData, offlineWithData: ownData && isPaused };
+  return {
+    kind: "results",
+    stale: isPlaceholderData,
+    offlineWithData: ownData && isPaused,
+    staleOffline: isPlaceholderData && isPaused,
+  };
 };
 
 const msgs = (locale: Locale) => hotelSearchMessages.get(locale).list;
@@ -153,6 +174,16 @@ const describeListing = (
       }
     : { srSuffix: "", statusText: describeLoadedCount(listing.loaded, total, locale) };
 
+/** Linha de status dos resultados: troca em andamento (spinner), sem rede para trocar (nada) ou o texto da faixa. */
+const resultsStatus = (
+  view: Extract<ResultsView, { kind: "results" }>,
+  updatingText: string,
+  statusText: string,
+): ToolbarStatus => {
+  if (view.staleOffline) return { kind: "none" };
+  return view.stale ? { kind: "spinner", text: updatingText } : { kind: "text", text: statusText };
+};
+
 /** Título (h2, alvo de foco) e linha de status da toolbar para cada visão. */
 export const describeToolbar = ({
   view,
@@ -176,9 +207,7 @@ export const describeToolbar = ({
       const { srSuffix, statusText } = describeListing(listing, total, locale);
       return {
         heading: { kind: "text", text: describeResultCount(total, locale), srSuffix },
-        status: view.stale
-          ? { kind: "spinner", text: t.updatingResults }
-          : { kind: "text", text: statusText },
+        status: resultsStatus(view, t.updatingResults, statusText),
       };
     }
     case "empty-destination":
@@ -217,6 +246,7 @@ export const describeSheetAction = (
     case "out-of-range":
       return { text: t.sheetUpdating, updating: true };
     case "results":
+      if (view.staleOffline) return { text: t.sheetSee, updating: false };
       if (view.stale) return { text: t.sheetUpdating, updating: true };
       return {
         text: total === 1 ? t.sheetOne : t.sheetMany({ count: total }),
