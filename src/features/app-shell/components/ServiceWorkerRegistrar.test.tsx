@@ -42,6 +42,9 @@ vi.mock("@serwist/window", () => ({
   },
 }));
 
+const nav = vi.hoisted(() => ({ pathname: "/" }));
+vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
+
 const renderRegistrar = (locale: "pt-BR" | "en-US" = "pt-BR") =>
   render(
     <I18nProvider locale={locale}>
@@ -84,13 +87,13 @@ describe("ServiceWorkerRegistrar", () => {
     expect(mock.instances[0]?.register).toHaveBeenCalled();
   });
 
-  it("versão em espera vira toast persistente com 'Atualizar'", async () => {
+  it("versão em espera vira toast persistente com 'Atualizar agora'", async () => {
     vi.useFakeTimers();
     vi.stubEnv("NODE_ENV", "production");
     renderRegistrar();
     act(() => mock.instances[0]?.listeners.get("waiting")?.());
     expect(screen.getByText("Nova versão disponível.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Atualizar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar agora" })).toBeInTheDocument();
     // Persistente: continua depois de muito mais que os 10 s de um toast com ação.
     act(() => {
       vi.advanceTimersByTime(120_000);
@@ -99,16 +102,36 @@ describe("ServiceWorkerRegistrar", () => {
     vi.useRealTimers();
   });
 
-  it("'Atualizar' manda SKIP_WAITING e recarrega quando a versão nova assume", async () => {
+  it("'Atualizar agora' manda SKIP_WAITING e recarrega quando a versão nova assume", async () => {
     const reload = vi.spyOn(navigation, "reloadPage").mockImplementation(() => undefined);
     vi.stubEnv("NODE_ENV", "production");
     renderRegistrar();
     act(() => mock.instances[0]?.listeners.get("waiting")?.());
     mock.skip = () => mock.instances[0]?.listeners.get("controlling")?.();
-    await userEvent.click(screen.getByRole("button", { name: "Atualizar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Atualizar agora" }));
     expect(mock.instances[0]?.messageSkipWaiting).toHaveBeenCalledTimes(1);
     expect(reload).toHaveBeenCalledTimes(1);
     mock.skip = undefined;
+  });
+
+  it("no checkout o aviso fica pendente e aparece na próxima rota", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    window.history.replaceState(null, "", "/checkout");
+    nav.pathname = "/checkout";
+    const { rerender } = renderRegistrar();
+    act(() => mock.instances[0]?.listeners.get("waiting")?.());
+    expect(screen.queryByText("Nova versão disponível.")).not.toBeInTheDocument();
+    window.history.replaceState(null, "", "/confirmation/1");
+    nav.pathname = "/confirmation/1";
+    rerender(
+      <I18nProvider locale="pt-BR">
+        <ServiceWorkerRegistrar />
+        <Toaster />
+      </I18nProvider>,
+    );
+    expect(screen.getByText("Nova versão disponível.")).toBeInTheDocument();
+    window.history.replaceState(null, "", "/");
+    nav.pathname = "/";
   });
 
   it("dois avisos seguidos não empilham (mesma chave)", () => {
@@ -126,6 +149,6 @@ describe("ServiceWorkerRegistrar", () => {
     renderRegistrar("en-US");
     act(() => mock.instances[0]?.listeners.get("waiting")?.());
     expect(screen.getByText("New version available.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Update" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Update now" })).toBeInTheDocument();
   });
 });

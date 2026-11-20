@@ -24,8 +24,13 @@ worker/       sw.ts (service worker; só importa `model/cache-rules` e `shared/i
   `Service-Worker-Allowed: /`). A estratégia de cada request vem de `model/cache-rules.ts` (`cacheRuleFor`, allowlist de rotas): rotas privadas
   (`/checkout`, `/confirmation/*`, `/my-bookings`, com ou sem `/en`) **nunca** gravam; a API fica fora (o dado offline vem do persister do TanStack).
   Caches `pages-*`/`pages-rsc-*`/`static-*` levam o build no nome e o `activate` apaga os antigos. `skipWaiting: false`.
-- **ServiceWorkerRegistrar** (só em produção): registra, avisa "Nova versão disponível." (toast `persistent`) e "Atualizar" manda `SKIP_WAITING` e recarrega no
+- **ServiceWorkerRegistrar** (só em produção): registra, avisa "Nova versão disponível." (toast `persistent`, chave `app-update`; **não aparece em `/checkout`**: fica pendente até a próxima rota, `canShowUpdateToast`) e "Atualizar agora" manda `SKIP_WAITING` e recarrega no
   `controlling`. Também importa `store/install-store` (o listener de `beforeinstallprompt`/`appinstalled` fica no escopo do módulo) e mostra "App instalado.".
 - **InstallPromptCard** (home): `installPromptView` (`show` só com evento, fora do standalone e sem dispensa nos últimos 30 dias); "Agora não" grava
   `infotera:install-dismissed-at` (ISO).
-- **OfflinePage** (`/offline`, `/en/offline`): estática, pré-cacheada; o proxy não aplica o cookie de idioma em `/offline` (o precache usa a URL pt-BR).
+- **OfflinePage** (`variant`: `public` · `checkout` · `bookings`; rotas `/offline`, `/offline/checkout`, `/offline/bookings` e as de `/en`): estáticas, as seis
+  no precache (`OFFLINE_PATHS` em `shared/i18n/paths`); o SW escolhe pela rota com `offlinePathFor` (checkout → `checkout`, confirmação e histórico → `bookings`, o resto → `public`).
+  O h1 nunca repete o banner. O proxy não aplica o cookie de idioma nessas rotas (o precache usa a URL pt-BR).
+- **InstallPromptCard**: "Instalar app" é `secondary`; qualquer saída do cartão (`useFocusSearchOnExit`, efeito de layout) leva o foco a "Buscar hotéis"; a região `role="status"`
+  fica sempre montada fora do cartão e anuncia a dispensa; `dismissed` do prompt nativo vale como "Agora não".
+- **Header**: breakpoint `xs` = 25rem; abaixo dele o logo é só "Infotera" e o seletor mostra "EN"/"PT" (nome acessível "EN English", sem `aria-label`).

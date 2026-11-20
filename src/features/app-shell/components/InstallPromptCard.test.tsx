@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "@/shared/i18n/client";
@@ -47,7 +47,12 @@ const fireInstallPrompt = () => {
 const renderCard = (locale: "pt-BR" | "en-US" = "pt-BR") =>
   render(
     <I18nProvider locale={locale}>
-      <InstallPromptCard />
+      <main>
+        <form>
+          <button type="submit">Buscar hotéis</button>
+        </form>
+        <InstallPromptCard />
+      </main>
     </I18nProvider>,
   );
 
@@ -70,14 +75,14 @@ describe("InstallPromptCard", () => {
     expect(event.defaultPrevented).toBe(true);
     expect(screen.getByRole("heading", { name: "Instale o Infotera Hotéis" })).toBeInTheDocument();
     expect(screen.getByText("Abra suas buscas mais rápido, até sem internet.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Instalar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Instalar app" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Agora não" })).toBeInTheDocument();
   });
 
   it("'Instalar' chama prompt() uma vez e o cartão some", async () => {
     renderCard();
     const { prompt } = fireInstallPrompt();
-    await userEvent.click(screen.getByRole("button", { name: "Instalar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Instalar app" }));
     expect(prompt).toHaveBeenCalledTimes(1);
     expect(
       screen.queryByRole("heading", { name: "Instale o Infotera Hotéis" }),
@@ -88,7 +93,7 @@ describe("InstallPromptCard", () => {
     const { unmount } = renderCard();
     fireInstallPrompt();
     await userEvent.click(screen.getByRole("button", { name: "Agora não" }));
-    expect(screen.queryByRole("button", { name: "Instalar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Instalar app" })).not.toBeInTheDocument();
     const stored = window.localStorage.getItem(DISMISSED_KEY);
     expect(JSON.parse(stored ?? "null")).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     unmount();
@@ -97,7 +102,48 @@ describe("InstallPromptCard", () => {
     useInstallStore.setState({ event: null });
     renderCard();
     fireInstallPrompt();
-    expect(screen.queryByRole("button", { name: "Instalar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Instalar app" })).not.toBeInTheDocument();
+  });
+
+  it("'Agora não' devolve o foco a 'Buscar hotéis' e anuncia no status sempre montado", async () => {
+    renderCard();
+    const status = screen.getByRole("status");
+    expect(status).toBeEmptyDOMElement();
+    fireInstallPrompt();
+    await userEvent.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(screen.getByRole("button", { name: "Buscar hotéis" })).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Tudo bem. Você pode instalar depois pelo menu do navegador.",
+    );
+  });
+
+  it("aceitar o prompt nativo devolve o foco a 'Buscar hotéis'", async () => {
+    renderCard();
+    fireInstallPrompt();
+    await userEvent.click(screen.getByRole("button", { name: "Instalar app" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Buscar hotéis" })).toHaveFocus(),
+    );
+  });
+
+  it("recusar o prompt nativo vale como 'Agora não': foco, status e dispensa gravada", async () => {
+    renderCard();
+    const { event } = fireInstallPrompt();
+    Object.assign(event, { userChoice: Promise.resolve({ outcome: "dismissed" as const }) });
+    await userEvent.click(screen.getByRole("button", { name: "Instalar app" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Buscar hotéis" })).toHaveFocus(),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Tudo bem.");
+    expect(window.localStorage.getItem(DISMISSED_KEY)).not.toBeNull();
+  });
+
+  it("'Instalar app' é secundário (a home já tem um primário)", () => {
+    renderCard();
+    fireInstallPrompt();
+    expect(screen.getByRole("button", { name: "Instalar app" }).className).toContain(
+      "border-primary",
+    );
   });
 
   it("dispensa de mais de 30 dias não vale mais", () => {
@@ -105,14 +151,14 @@ describe("InstallPromptCard", () => {
     window.localStorage.setItem(DISMISSED_KEY, JSON.stringify(old));
     renderCard();
     fireInstallPrompt();
-    expect(screen.getByRole("button", { name: "Instalar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Instalar app" })).toBeInTheDocument();
   });
 
   it("já em modo standalone nunca aparece", () => {
     mockStandalone(true);
     renderCard();
     fireInstallPrompt();
-    expect(screen.queryByRole("button", { name: "Instalar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Instalar app" })).not.toBeInTheDocument();
   });
 
   it("em inglês", () => {
@@ -132,11 +178,11 @@ describe("InstallPromptCard", () => {
       </I18nProvider>,
     );
     fireInstallPrompt();
-    expect(screen.getByRole("button", { name: "Instalar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Instalar app" })).toBeInTheDocument();
     act(() => {
       window.dispatchEvent(new Event("appinstalled"));
     });
-    expect(screen.queryByRole("button", { name: "Instalar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Instalar app" })).not.toBeInTheDocument();
     expect(screen.getByText("App instalado.")).toBeInTheDocument();
   });
 });

@@ -7,26 +7,41 @@ export const enUS: AppShellMessages = {
   languageSwitch: {
     targetName: "Português",
     targetShort: "PT",
-    label: "Switch language to Português",
   },
   install: {
     title: "Install Infotera Hotéis",
     description: "Open your searches faster, even offline.",
-    install: "Install",
+    install: "Install app",
     dismiss: "Not now",
+    dismissed: "No problem. You can install it later from the browser menu.",
     installed: "App installed.",
   },
   update: {
     available: "New version available.",
-    reload: "Update",
+    reload: "Update now",
   },
   offlinePage: {
-    title: "You're offline",
-    description:
-      "This page hasn't been saved for offline use yet. The searches and hotels you've already opened are still available.",
+    public: {
+      title: "This page isn't available offline",
+      description:
+        "It hasn't been saved on this device yet. Searches and hotels you've already opened are still available.",
+      metaTitle: "Offline | Infotera Hotéis",
+    },
+    checkout: {
+      title: "Booking needs an internet connection",
+      description:
+        "Nothing was charged and your selection is still saved on this device. Once you're back online, select “Try again”.",
+      metaTitle: "Offline | Infotera Hotéis",
+    },
+    bookings: {
+      title: "Your bookings need an internet connection",
+      description:
+        "For your security, booking details aren't saved on this device. Your bookings haven't been affected.",
+      metaTitle: "Offline | Infotera Hotéis",
+    },
     retry: "Try again",
-    home: "Go to the start page",
-    metaTitle: "Offline | Infotera Hotéis",
+    retrying: "Trying…",
+    home: "Go to homepage",
   },
   offlineBanner: {
     offline:

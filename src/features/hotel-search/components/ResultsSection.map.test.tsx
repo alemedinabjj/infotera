@@ -10,7 +10,10 @@ vi.mock(
   async () => (await import("@/shared/testing/next-navigation")).navigationMock,
 );
 vi.mock("@/shared/hooks/useOnline", () => ({ useOnline: () => true }));
-vi.mock("@/shared/ui/map", () => ({ useInteractiveMap: () => ({ status: "loading" }) }));
+vi.mock("@/shared/ui/map", () => ({
+  useInteractiveMap: () => ({ status: "loading" }),
+  MapHint: ({ id }: { id: string }) => <p id={id} />,
+}));
 
 const hotels = [makeHotel({ id: 1 }), makeHotel({ id: 2, name: "Outro" })];
 
@@ -38,7 +41,10 @@ const renderSection = (view: ResultsView, mapOpen: boolean) =>
 
 describe("ResultsSection: painel do mapa", () => {
   it("visão results com o mapa aberto mostra o painel acima da lista", () => {
-    renderSection({ kind: "results", stale: false, offlineWithData: false }, true);
+    renderSection(
+      { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
+      true,
+    );
     const panel = document.getElementById("painel");
     const list = screen.getAllByRole("list")[0];
     expect(panel).toBeInTheDocument();
@@ -46,9 +52,12 @@ describe("ResultsSection: painel do mapa", () => {
   });
 
   it("mapa fechado: sem painel", () => {
-    renderSection({ kind: "results", stale: false, offlineWithData: false }, false);
+    renderSection(
+      { kind: "results", stale: false, offlineWithData: false, staleOffline: false },
+      false,
+    );
     expect(document.getElementById("painel")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Pular o mapa" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pular o mapa" })).not.toBeInTheDocument();
   });
 
   it.each<ResultsView>([

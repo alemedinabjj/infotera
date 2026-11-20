@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
+import { formatClockTime } from "@/shared/lib/clock";
 import { makeRoom, makeSearchCriteria } from "@/shared/testing/fixtures";
 import { makeTestQueryClient, renderWithProviders } from "@/shared/testing/render";
 import { seedHotel, seedRooms } from "@/shared/testing/seed";
@@ -102,7 +103,9 @@ describe("hotel-details por idioma: componentes", () => {
       { locale: "en-US" },
     );
     expect(screen.getByText("Check-in")).toBeInTheDocument();
-    expect(screen.getByText(`From ${hotel.checkInTime}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`From ${formatClockTime(hotel.checkInTime, "en-US")}`),
+    ).toBeInTheDocument();
     expect(screen.getByText("This hotel is sold out for these dates")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Hotel not found" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Start a new search" })).toHaveAttribute("href", "/en");

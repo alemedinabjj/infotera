@@ -18,6 +18,13 @@ type MapData = {
 };
 
 /**
+ * `combine` no escopo do módulo: com uma função nova a cada render, o TanStack refaz o resultado e
+ * `rooms` muda de identidade, e os marcadores seriam recriados (o `memo` do marcador não valeria).
+ */
+const combineData = <T>(results: readonly { data: T }[]): T[] =>
+  results.map((result) => result.data);
+
+/**
  * Marcadores dos hotéis exibidos. Os quartos vêm do cache (já semeados pela lista, só leitura: nada
  * é pedido), então o preço do marcador é o mesmo do card.
  */
@@ -29,7 +36,7 @@ export const useMapMarkers = (
   const messages = useHotelSearchMessages().map;
   const rooms = useQueries({
     queries: hotels.map((hotel) => ({ ...hotelRoomsQueryOptions(hotel.id), enabled: false })),
-    combine: (results) => results.map((result) => result.data),
+    combine: combineData,
   });
 
   return useMemo(() => {

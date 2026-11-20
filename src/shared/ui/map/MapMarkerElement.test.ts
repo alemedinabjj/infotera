@@ -46,15 +46,34 @@ describe("createMarkerIcon", () => {
 describe("decorateMarkerElement", () => {
   it("aplica nome acessível, id e estado ativo", () => {
     const element = document.createElement("div");
-    decorateMarkerElement(element, base, true);
+    decorateMarkerElement(element, base, { active: true, expanded: null });
     expect(element).toHaveAttribute("aria-label", base.label);
     expect(element).toHaveAttribute("data-active", "true");
     expect(element).toHaveAttribute("data-marker-id", "1");
-    decorateMarkerElement(element, base, false);
+    decorateMarkerElement(element, base, { active: false, expanded: null });
     expect(element).toHaveAttribute("data-active", "false");
   });
 
+  it("marcador com popup declara aria-haspopup e o estado em aria-expanded", () => {
+    const element = document.createElement("div");
+    decorateMarkerElement(element, base, { active: false, expanded: false });
+    expect(element).toHaveAttribute("aria-haspopup", "dialog");
+    expect(element).toHaveAttribute("aria-expanded", "false");
+    decorateMarkerElement(element, base, { active: true, expanded: true });
+    expect(element).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("sem popup remove os atributos de popup", () => {
+    const element = document.createElement("div");
+    decorateMarkerElement(element, base, { active: false, expanded: true });
+    decorateMarkerElement(element, base, { active: false, expanded: null });
+    expect(element).not.toHaveAttribute("aria-haspopup");
+    expect(element).not.toHaveAttribute("aria-expanded");
+  });
+
   it("ignora elemento ausente", () => {
-    expect(() => decorateMarkerElement(undefined, base, false)).not.toThrow();
+    expect(() =>
+      decorateMarkerElement(undefined, base, { active: false, expanded: null }),
+    ).not.toThrow();
   });
 });

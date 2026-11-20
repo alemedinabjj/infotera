@@ -1,4 +1,5 @@
 import { createSerwistRoute } from "@serwist/turbopack";
+import { OFFLINE_PATHS } from "@/shared/i18n/paths";
 
 const VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
 
@@ -11,10 +12,7 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
   {
     swSrc: "src/features/app-shell/worker/sw.ts",
     useNativeEsbuild: true,
-    additionalPrecacheEntries: [
-      { url: "/offline", revision: VERSION },
-      { url: "/en/offline", revision: VERSION },
-    ],
+    additionalPrecacheEntries: OFFLINE_PATHS.map((url) => ({ url, revision: VERSION })),
     esbuildOptions: {
       define: {
         "process.env.NEXT_PUBLIC_APP_VERSION": JSON.stringify(VERSION),

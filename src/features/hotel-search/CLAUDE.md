@@ -172,6 +172,9 @@ index.ts                  API pública usada por app/search
   `useMapMarkers` lê os quartos do cache (só leitura): o preço do marcador é o do card (`deriveCardPricing`); esgotado vira "Esgotado" apagado.
 - `store/map-sync` (Zustand): `activeHotelId` + `revealCard` registrado pelo modo de lista ativo (`usePagesReveal` foca o link do card; o `HotelFeed`
   usa `focusIndex`). Cada card/marcador assina `s.activeHotelId === id`. `useCardMapSync` liga pointer/foco do card.
+- MapToggle: rótulo fixo "Mapa", `aria-pressed`, `aria-controls` só com o painel. Dica de teclado abaixo da moldura (`MapHint`, `group-has-[:focus-visible]`); popup com × nosso,
+  foco a cada abertura e Tab/Shift+Tab/Esc/Espaço conforme o DS §9.9 (lógica em `shared/ui/map/popup-keys`). Falha do chunk: o painel vira o `Alert` e o retry pede o chunk
+  de novo no mesmo lugar (foco no contêiner do mapa se der certo; senão recarrega). Sem rede ao trocar ordenação/filtro/página: a lista anterior fica com aviso (`staleOffline`).
 - "Pular o mapa" leva o foco ao **primeiro card** (não ao h2, que fica acima do mapa e reiniciaria o Tab pela toolbar).
 - `i18n/` já existe só com a seção `map` (a tradução do resto da feature entra na parte 2 da F7b).
 - **Hidratação**: `useHotelResults`/`useHotelFeed` tratam "sem dado" até `useHydrated()` (o cache persistido só existe no cliente; sem isto a lista

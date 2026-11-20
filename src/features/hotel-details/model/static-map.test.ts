@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seedHotel } from "@/shared/testing/seed";
-import { staticMapLayout } from "./static-map";
+import { STATIC_MAP_FRAMES, staticMapLayout } from "./static-map";
 
 const hotel = seedHotel(1);
 const INPUT = { lat: hotel.latitude, lon: hotel.longitude, zoom: 15, width: 640, height: 320 };
@@ -65,5 +65,26 @@ describe("staticMapLayout: bordas", () => {
     const map = staticMapLayout({ lat: 89, lon: -179.9, zoom: 3, width: 640, height: 320 });
     expect(map.tiles.every((tile) => tile.y >= 0 && tile.y < 8)).toBe(true);
     expect(map.tiles.some((tile) => tile.x === 7)).toBe(true);
+  });
+});
+
+describe("STATIC_MAP_FRAMES", () => {
+  it("compact é 4:3 e wide é 2:1, com o marcador no centro das duas", () => {
+    const { compact, wide } = STATIC_MAP_FRAMES;
+    expect(compact.width / compact.height).toBeCloseTo(4 / 3, 6);
+    expect(wide.width / wide.height).toBeCloseTo(2, 6);
+    for (const frame of [compact, wide]) {
+      const map = staticMapLayout({ ...INPUT, ...frame });
+      expect(map.marker.leftPct).toBeCloseTo(50, 6);
+      expect(map.marker.topPct).toBeCloseTo(50, 6);
+    }
+  });
+
+  it("o canvas 4:3 é mais alto: cobre mais linhas de tiles que o 2:1", () => {
+    const compact = staticMapLayout({ ...INPUT, ...STATIC_MAP_FRAMES.compact });
+    const wide = staticMapLayout({ ...INPUT, ...STATIC_MAP_FRAMES.wide });
+    expect(new Set(compact.tiles.map((tile) => tile.y)).size).toBeGreaterThanOrEqual(
+      new Set(wide.tiles.map((tile) => tile.y)).size,
+    );
   });
 });

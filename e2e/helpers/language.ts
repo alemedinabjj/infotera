@@ -7,6 +7,7 @@ const PT_ACCENTS = /[ãõçáéíóúâêôà]/i;
  */
 const PT_WORDS =
   /(?:^|\s)(?:de|da|para|com|sem|não|você|voc[êe]s|hotéis|quartos?|noites?|hóspedes?|buscar|favoritos|reservas?|esgotado|preço|nova|busca|tentar)(?:\s|$)/i;
+const BRAND_SUFFIX = "Hotéis";
 const NAME_ATTRIBUTES = ["aria-label", "alt", "title", "placeholder"];
 
 /** Textos visíveis fora de `[lang="pt-BR"]` (nós de texto, sem script/style/title). */
@@ -45,6 +46,8 @@ const looksPortuguese = (text: string): boolean => PT_ACCENTS.test(text) || PT_W
  */
 export const portugueseLeftovers = async (page: Page, ignore: string[]): Promise<string[]> => {
   const texts = [...(await visibleTexts(page)), ...(await nameTexts(page))];
-  const clean = (text: string) => ignore.reduce((acc, name) => acc.split(name).join(" "), text);
+  // O logo parte a marca em "Infotera" + "Hotéis" (o complemento some em telas estreitas).
+  const names = [...ignore, BRAND_SUFFIX];
+  const clean = (text: string) => names.reduce((acc, name) => acc.split(name).join(" "), text);
   return texts.map(clean).filter(looksPortuguese);
 };

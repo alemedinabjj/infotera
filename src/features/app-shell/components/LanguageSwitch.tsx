@@ -47,18 +47,19 @@ export const LanguageSwitch = () => {
     <a
       href={href}
       hrefLang={target}
-      aria-label={messages.label}
       onClick={onClick}
       onPointerEnter={refresh}
       onFocus={refresh}
       className={cn(buttonClassName({ variant: "ghost", size: "sm" }), "shrink-0 px-2 sm:px-3")}
     >
       <GlobeIcon />
-      <span lang={target} className="hidden min-[361px]:inline">
-        {messages.targetName}
-      </span>
-      <span lang={target} aria-hidden="true" className="min-[361px]:hidden">
+      {/* Sem aria-label: o nome sai do conteúdo. Abaixo de `xs` o texto visível ("EN") vem primeiro
+          e o nome completo fica só para o leitor de tela ("EN English"): label-in-name. */}
+      <span lang={target} className="xs:hidden">
         {messages.targetShort}
+      </span>{" "}
+      <span lang={target} className="sr-only xs:not-sr-only">
+        {messages.targetName}
       </span>
     </a>
   );

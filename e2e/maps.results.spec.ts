@@ -4,7 +4,7 @@ import { analyzeAccessibility } from "./helpers/axe";
 import { noHorizontalScroll } from "./helpers/hotel-details";
 import { API_URL, cardByName, cards, hotelName, searchPath } from "./helpers/hotel-search";
 
-const mapButton = (page: Page) => page.getByRole("button", { name: /^(Mostrar|Ocultar) mapa$/ });
+const mapButton = (page: Page) => page.getByRole("button", { name: "Mapa", exact: true });
 const markers = (page: Page) => page.locator(".leaflet-marker-icon");
 /** O invólucro do marcador tem tamanho zero (é só o foco e os atributos): a pílula é o que se vê e clica. */
 const marker = (page: Page, id: number) =>
@@ -24,7 +24,7 @@ test.beforeEach(({ isMobile }, testInfo) => {
 });
 
 test.describe("mapa dos resultados", () => {
-  test("Mostrar mapa grava map=1 sem nova entrada no histórico e mostra um marcador por hotel", async ({
+  test("ligar o mapa grava map=1 sem nova entrada no histórico e mostra um marcador por hotel", async ({
     page,
   }) => {
     await page.goto(searchPath());
@@ -35,7 +35,7 @@ test.describe("mapa dos resultados", () => {
     await expect(page).toHaveURL(/[?&]map=1/);
     expect(await page.evaluate(() => history.length)).toBe(before);
     await expect(mapButton(page)).toHaveAttribute("aria-pressed", "true");
-    await expect(mapButton(page)).toHaveText("Ocultar mapa");
+    await expect(mapButton(page)).toHaveText("Mapa");
     await expect(page.locator(MAP)).toBeVisible();
     await expect(markers(page)).toHaveCount(10);
     await expect(cards(page)).toHaveCount(10);
@@ -124,7 +124,7 @@ test.describe("mapa dos resultados", () => {
     await openResultsMap(page);
     await mapButton(page).focus();
     await page.keyboard.press("Tab");
-    const skip = page.getByRole("link", { name: "Pular o mapa" });
+    const skip = page.getByRole("button", { name: "Pular o mapa" });
     await expect(skip).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.locator(MAP)).toBeFocused();
@@ -165,6 +165,144 @@ test.describe("mapa dos resultados", () => {
   });
 });
 
+/** O popup aberto no marcador `index` (ordem da lista), pelo teclado. */
+const openPopupByKeyboard = async (page: Page, index: number, key = "Enter") => {
+  const target = markers(page).nth(index);
+  await target.focus();
+  await page.keyboard.press(key);
+  const popup = page.locator(".leaflet-popup");
+  await expect(popup.getByRole("link", { name: "Ver hotel" })).toBeFocused();
+  return { popup, target };
+};
+
+test.describe("popup: teclado", () => {
+  test("o botão do mapa tem rótulo fixo 'Mapa' e só o aria-pressed muda", async ({ page }) => {
+    await page.goto(searchPath());
+    await expect(cards(page)).toHaveCount(10);
+    await expect(mapButton(page)).toHaveAccessibleName("Mapa");
+    await expect(mapButton(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(mapButton(page)).not.toHaveAttribute("aria-controls");
+    await mapButton(page).click();
+    await expect(mapButton(page)).toHaveAccessibleName("Mapa");
+    await expect(mapButton(page)).toHaveAttribute("aria-pressed", "true");
+    await expect(mapButton(page)).toHaveAttribute("aria-controls", /.+/);
+  });
+
+  test("Enter abre com o foco em 'Ver hotel'; Tab percorre Mostrar na lista e Fechar; no último, fecha e foca o próximo marcador", async ({
+    page,
+  }) => {
+    await openResultsMap(page);
+    const { popup, target } = await openPopupByKeyboard(page, 0);
+    await expect(target).toHaveAttribute("aria-expanded", "true");
+    await expect(popup.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Tab");
+    await expect(popup.getByRole("button", { name: "Mostrar na lista" })).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(popup.getByRole("button", { name: "Fechar" })).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(popup).toHaveCount(0);
+    await expect(markers(page).nth(1)).toBeFocused();
+  });
+
+  test("Shift+Tab no primeiro, Esc e o × voltam ao marcador; Espaço abre como o Enter e reabrir foca o popup de novo", async ({
+    page,
+  }) => {
+    await openResultsMap(page);
+    let { popup, target } = await openPopupByKeyboard(page, 2, "Space");
+    await page.keyboard.press("Shift+Tab");
+    await expect(popup).toHaveCount(0);
+    await expect(target).toBeFocused();
+
+    ({ popup, target } = await openPopupByKeyboard(page, 2));
+    await page.keyboard.press("Escape");
+    await expect(popup).toHaveCount(0);
+    await expect(target).toBeFocused();
+
+    ({ popup, target } = await openPopupByKeyboard(page, 2));
+    await popup.getByRole("button", { name: "Fechar" }).click();
+    await expect(popup).toHaveCount(0);
+    await expect(target).toBeFocused();
+  });
+
+  test("Tab no último marcador abre e fecha de volta ao próprio marcador", async ({ page }) => {
+    await openResultsMap(page);
+    const last = (await markers(page).count()) - 1;
+    const { popup, target } = await openPopupByKeyboard(page, last);
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await expect(popup).toHaveCount(0);
+    await expect(target).toBeFocused();
+  });
+
+  test("o popup tem × de 44 px, nota com estrelas, e nenhuma margem de parágrafo", async ({
+    page,
+  }) => {
+    await openResultsMap(page);
+    const { popup } = await openPopupByKeyboard(page, 0);
+    const close = popup.getByRole("button", { name: "Fechar" });
+    expect((await close.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    await expect(popup.getByText(/^Nota/)).toBeAttached();
+    const margins = await popup
+      .locator("p")
+      .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).marginTop));
+    expect(margins.every((margin) => margin === "0px")).toBe(true);
+    expect((await popup.locator(".leaflet-popup-close-button").count()) === 0).toBe(true);
+  });
+
+  test("a dica fica abaixo da moldura e só aparece com foco de teclado; 'Pular o mapa' aparece sobre o canto do mapa", async ({
+    page,
+  }) => {
+    await openResultsMap(page);
+    const hint = page.locator(`[id="${await page.locator(MAP).getAttribute("aria-describedby")}"]`);
+    await expect(hint).toHaveCSS("opacity", "0");
+    await mapButton(page).focus();
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("button", { name: "Pular o mapa" });
+    await expect(skip).toBeFocused();
+    const map = await page.locator(MAP).boundingBox();
+    const skipBox = await skip.boundingBox();
+    expect(skipBox?.x ?? 0).toBeGreaterThanOrEqual(map?.x ?? 0);
+    expect(skipBox?.y ?? 0).toBeGreaterThanOrEqual(map?.y ?? 0);
+    expect(skipBox?.y ?? 0).toBeLessThan((map?.y ?? 0) + 24);
+    await page.keyboard.press("Tab");
+    await expect(page.locator(MAP)).toBeFocused();
+    await expect(hint).toHaveCSS("opacity", "1");
+    const hintBox = await hint.boundingBox();
+    expect(hintBox?.y ?? 0).toBeGreaterThanOrEqual((map?.y ?? 0) + (map?.height ?? 0));
+  });
+
+  test("em 320 px o popup dos resultados cabe na moldura e não cobre o zoom", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await openResultsMap(page);
+    await page.locator(MAP).scrollIntoViewIfNeeded();
+    await markers(page).first().focus();
+    await page.keyboard.press("Enter");
+    const popup = page.locator(".leaflet-popup-content-wrapper");
+    await expect(popup).toBeVisible();
+    const zoomIn = page.getByRole("button", { name: "Ampliar o mapa" });
+    await expect
+      .poll(async () => {
+        const map = await page.locator(MAP).boundingBox();
+        const box = await popup.boundingBox();
+        const plus = await zoomIn.boundingBox();
+        if (!map || !box || !plus) return false;
+        const inside =
+          box.x >= map.x &&
+          box.x + box.width <= map.x + map.width &&
+          box.y >= map.y &&
+          box.y + box.height <= map.y + map.height;
+        const overlapsZoom =
+          box.x < plus.x + plus.width &&
+          box.x + box.width > plus.x &&
+          box.y < plus.y + plus.height &&
+          box.y + box.height > plus.y;
+        return inside && !overlapsZoom;
+      })
+      .toBe(true);
+  });
+});
+
 test.describe("estados do painel", () => {
   test("carregando o chunk mostra skeleton e anúncio; liberar mostra o mapa", async ({ page }) => {
     await page.goto(searchPath());
@@ -199,6 +337,11 @@ test.describe("estados do painel", () => {
     const alert = page.getByRole("alert").filter({ hasText: "Não foi possível carregar o mapa." });
     // O runtime do Next tenta o chunk mais uma vez antes de rejeitar.
     await expect(alert).toBeVisible({ timeout: 15_000 });
+    // O painel encolhe para o alerta: sem moldura vazia e com a garantia sobre a lista.
+    await expect(alert).toContainText("A lista abaixo continua disponível.");
+    await expect(page.locator(MAP)).toHaveCount(0);
+    const retry = alert.getByRole("button", { name: "Tentar de novo" });
+    expect((await retry.boundingBox())?.width ?? 0).toBeLessThan(400);
     failing = false;
     await alert.getByRole("button", { name: "Tentar de novo" }).click();
     await expect(markers(page).first().locator("span")).toBeVisible();
@@ -226,7 +369,7 @@ test.describe("estados do painel", () => {
     await context.setOffline(true);
     await mapButton(page).click();
     await expect(
-      page.getByText("O mapa precisa de internet. A lista continua disponível."),
+      page.getByText("O mapa precisa de internet. A lista abaixo continua disponível."),
     ).toBeVisible();
     await expect(cards(page)).toHaveCount(10);
     await context.setOffline(false);

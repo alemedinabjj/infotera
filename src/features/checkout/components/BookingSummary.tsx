@@ -8,6 +8,7 @@ import { useLocale } from "@/shared/i18n/client";
 import { contentLang } from "@/shared/i18n/config";
 import { localizePath } from "@/shared/i18n/paths";
 import { cancellationDetails } from "@/shared/lib/cancellation";
+import { formatClockTime } from "@/shared/lib/clock";
 import { cn } from "@/shared/lib/cn";
 import { todayISO } from "@/shared/lib/dates";
 import { hotelHref } from "@/shared/lib/links";
@@ -127,7 +128,10 @@ const Details = ({
             {describeLongDate(criteria.checkIn, locale)}
           </dd>
           <dd className="text-sm text-fg-muted">
-            <HotelTime hotel={hotel} text={(data) => t.from(data.checkInTime)} />
+            <HotelTime
+              hotel={hotel}
+              text={(data) => t.from(formatClockTime(data.checkInTime, locale))}
+            />
           </dd>
         </div>
         <div>
@@ -136,7 +140,10 @@ const Details = ({
             {describeLongDate(criteria.checkOut, locale)}
           </dd>
           <dd className="text-sm text-fg-muted">
-            <HotelTime hotel={hotel} text={(data) => t.until(data.checkOutTime)} />
+            <HotelTime
+              hotel={hotel}
+              text={(data) => t.until(formatClockTime(data.checkOutTime, locale))}
+            />
           </dd>
         </div>
       </dl>

@@ -63,21 +63,29 @@ describe("HotelPolicies (critério 13)", () => {
 });
 
 describe("LocationMap (critério 14)", () => {
-  it("mapa com role=img e o endereço, marcador e tiles sem alt", () => {
+  it("mapa com role=img e o endereço, marcador e tiles sem alt (um canvas por proporção)", () => {
     const { container } = render(<LocationMap hotel={hotel} locale="pt-BR" />);
-    const map = screen.getByRole("img", { name: `Mapa: ${hotel.address}` });
-    const tiles = map.querySelectorAll("img");
+    const [compact, wide] = screen.getAllByRole("img", { name: `Mapa: ${hotel.address}` });
+    // 4:3 abaixo de `sm` (3×3 tiles) e 2:1 a partir de `sm` (3×2); a outra proporção é `display: none`.
+    expect(compact?.className).toContain("sm:hidden");
+    expect(wide?.className).toContain("hidden sm:block");
+    const tiles = wide?.querySelectorAll("img") ?? [];
     expect(tiles.length).toBe(6);
-    for (const tile of tiles) expect(tile).toHaveAttribute("alt", "");
+    expect(compact?.querySelectorAll("img").length).toBeGreaterThanOrEqual(tiles.length);
+    for (const tile of tiles) {
+      expect(tile).toHaveAttribute("alt", "");
+      expect(tile).toHaveAttribute("crossorigin", "anonymous");
+    }
     expect(tiles[0]).toHaveAttribute("src", expect.stringContaining("tile.openstreetmap.org/15/"));
     expect(container.querySelector("svg[aria-hidden='true'].text-primary")).toBeInTheDocument();
   });
 
   it("atribuição fora do role=img e link do OSM em nova aba, avisado no nome", () => {
     render(<LocationMap hotel={hotel} locale="pt-BR" />);
-    const map = screen.getByRole("img", { name: /Mapa:/ });
     const attribution = screen.getByRole("link", { name: "© colaboradores do OpenStreetMap" });
-    expect(map).not.toContainElement(attribution);
+    for (const map of screen.getAllByRole("img", { name: /Mapa:/ })) {
+      expect(map).not.toContainElement(attribution);
+    }
     const open = screen.getByRole("link", {
       name: /^Abrir no OpenStreetMap\s*\(abre em nova aba\)$/,
     });

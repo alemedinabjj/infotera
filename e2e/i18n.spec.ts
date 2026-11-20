@@ -65,7 +65,7 @@ test.describe("seletor de idioma", () => {
   test("troca para Português preservando a página, o cookie e a seleção", async ({ page }) => {
     await seedSelection(page, { hotelId: 1, roomId: 1, criteria: criteria() });
     await page.goto(`/en/hotel/1?${criteriaQuery()}`);
-    const link = page.getByRole("link", { name: "Switch language to Português" });
+    const link = page.getByRole("link", { name: /Português$/ });
     // O href real só existe depois de hidratar: é o sinal de que o clique já é tratado.
     await expect(link).toHaveAttribute("href", `/hotel/1?${criteriaQuery()}`);
     await link.click();
@@ -81,7 +81,7 @@ test.describe("seletor de idioma", () => {
     page,
   }) => {
     await page.goto("/search?destination=Rio");
-    const link = page.getByRole("link", { name: "Mudar idioma para English" });
+    const link = page.getByRole("link", { name: /English$/ });
     await expect(link).toHaveAttribute("href", "/en/search?destination=Rio");
     await link.click();
     await expect(page).toHaveURL("/en/search?destination=Rio");
@@ -96,7 +96,7 @@ test("em 320 px o cabeçalho cabe sem rolagem horizontal e o seletor tem alvo de
   await page.setViewportSize({ width: 320, height: 700 });
   for (const path of ["/", "/en"]) {
     await page.goto(path);
-    const link = page.getByRole("link", { name: /idioma|language/i });
+    const link = page.locator("header a[hreflang]");
     await expect(link).toBeVisible();
     expect(await noHorizontalScroll(page)).toBe(true);
     const box = await link.boundingBox();

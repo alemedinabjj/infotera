@@ -197,3 +197,27 @@ test.describe("banner global de conexão", () => {
     await context.setOffline(false);
   });
 });
+
+test.describe("lista offline: ordenação não salva", () => {
+  test("com a lista anterior ela fica com o aviso, sem 'Atualizando resultados…' infinito", async ({
+    page,
+    context,
+  }) => {
+    await page.goto(searchPath());
+    await expect(cards(page)).toHaveCount(10);
+    await context.setOffline(true);
+    await page.getByLabel("Ordenar por").selectOption({ label: "Menor preço" });
+    const warning = page
+      .getByRole("status")
+      .filter({ hasText: "Sem internet para atualizar a lista" });
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText("A lista abaixo ainda é da seleção anterior.");
+    await expect(page.getByText("Atualizando resultados…")).toHaveCount(0);
+    await expect(page.getByText("Não foi possível carregar os hotéis")).toHaveCount(0);
+    await expect(cards(page)).toHaveCount(10);
+    // Voltou a rede: a lista atualiza sozinha e o aviso some.
+    await context.setOffline(false);
+    await expect(warning).toHaveCount(0);
+    await expect(cards(page)).toHaveCount(10);
+  });
+});

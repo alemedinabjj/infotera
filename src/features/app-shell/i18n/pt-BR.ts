@@ -8,26 +8,41 @@ export const ptBR = {
     targetName: "English",
     /** Sigla visível em telas muito estreitas. */
     targetShort: "EN",
-    label: "Mudar idioma para English",
   },
   install: {
     title: "Instale o Infotera Hotéis",
     description: "Abra suas buscas mais rápido, até sem internet.",
-    install: "Instalar",
+    install: "Instalar app",
     dismiss: "Agora não",
+    dismissed: "Tudo bem. Você pode instalar depois pelo menu do navegador.",
     installed: "App instalado.",
   },
   update: {
     available: "Nova versão disponível.",
-    reload: "Atualizar",
+    reload: "Atualizar agora",
   },
   offlinePage: {
-    title: "Você está sem internet",
-    description:
-      "Esta página ainda não foi salva para uso offline. As buscas e hotéis que você já abriu continuam disponíveis.",
+    public: {
+      title: "Esta página não está disponível offline",
+      description:
+        "Ela ainda não foi salva neste aparelho. As buscas e os hotéis que você já abriu continuam disponíveis.",
+      metaTitle: "Sem internet | Infotera Hotéis",
+    },
+    checkout: {
+      title: "A reserva precisa de internet",
+      description:
+        "Nada foi cobrado e sua seleção continua salva neste aparelho. Assim que a conexão voltar, toque em “Tentar de novo”.",
+      metaTitle: "Sem internet | Infotera Hotéis",
+    },
+    bookings: {
+      title: "Suas reservas precisam de internet",
+      description:
+        "Por segurança, os dados das reservas não ficam salvos neste aparelho. Suas reservas não foram afetadas.",
+      metaTitle: "Sem internet | Infotera Hotéis",
+    },
     retry: "Tentar de novo",
+    retrying: "Tentando…",
     home: "Ir para o início",
-    metaTitle: "Sem internet | Infotera Hotéis",
   },
   offlineBanner: {
     offline:

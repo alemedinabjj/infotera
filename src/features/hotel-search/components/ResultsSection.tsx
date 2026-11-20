@@ -4,7 +4,7 @@ import type { Amenity, Hotel } from "@/shared/api/schemas";
 import { useLocale } from "@/shared/i18n/client";
 import { getTotalPages } from "@/shared/lib/pagination";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { Alert, Pagination, WifiOffIcon } from "@/shared/ui";
+import { Alert, EmptyState, Pagination, WifiOffIcon } from "@/shared/ui";
 import type { FeedState } from "../hooks/results-model";
 import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import { usePagesReveal } from "../hooks/usePagesReveal";
@@ -60,6 +60,11 @@ const ResultsContent = (props: ResultsContentProps) => {
           {t.offlineStale}
         </Alert>
       ) : null}
+      {view.staleOffline ? (
+        <Alert tone="warning" title={t.cannotUpdateTitle} icon={<OfflineIcon />} className="mb-4">
+          {t.cannotUpdateBody}
+        </Alert>
+      ) : null}
       {props.mapOpen ? (
         <div className="mb-4">
           <ResultsMap id={props.mapPanelId} hotels={props.hotels} criteria={props.criteria} />
@@ -72,7 +77,7 @@ const ResultsContent = (props: ResultsContentProps) => {
             criteria={props.criteria}
             selectedAmenities={props.selectedAmenities}
             center={props.center}
-            stale={view.stale}
+            stale={view.stale && !view.staleOffline}
           />
           <Pagination
             locale={locale}
@@ -90,7 +95,7 @@ const ResultsContent = (props: ResultsContentProps) => {
           criteria={props.criteria}
           selectedAmenities={props.selectedAmenities}
           center={props.center}
-          stale={view.stale}
+          stale={view.stale && !view.staleOffline}
           feed={props.feed}
         />
       )}
@@ -115,9 +120,11 @@ export const ResultsSection = (props: ResultsSectionProps) => {
     case "offline":
       return (
         <RevealOnMount>
-          <Alert tone="warning" title={t.offlineTitle} icon={<OfflineIcon />}>
-            {t.offlineNoData}
-          </Alert>
+          <EmptyState
+            icon={<WifiOffIcon aria-hidden="true" className="size-8" />}
+            title={t.notSavedTitle}
+            description={t.notSavedBody}
+          />
         </RevealOnMount>
       );
     case "empty-destination":

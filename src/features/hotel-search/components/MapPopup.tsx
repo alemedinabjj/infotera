@@ -3,11 +3,13 @@
 import Link from "next/link";
 import type { Hotel } from "@/shared/api/schemas";
 import { useLocale } from "@/shared/i18n/client";
+import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
 import { localizePath } from "@/shared/i18n/paths";
+import { cn } from "@/shared/lib/cn";
 import { formatBRL } from "@/shared/lib/currency";
-import { formatRating } from "@/shared/lib/format";
 import { hotelHref } from "@/shared/lib/links";
 import type { SearchCriteria } from "@/shared/lib/search-params";
+import { Badge, Button, buttonClassName, RatingScore } from "@/shared/ui";
 import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import type { CardPricing } from "../model/card-pricing";
 
@@ -15,41 +17,49 @@ type MapPopupProps = {
   hotel: Hotel;
   pricing: CardPricing;
   criteria: SearchCriteria | null;
-  /** "Mostrar na lista": leva o foco ao card (e o popup fecha). */
+  /** Id do título: nomeia o diálogo (vem do mapa). */
+  titleId: string;
+  /** "Mostrar na lista": fecha o popup e leva o foco ao card. */
   onShowInList: () => void;
 };
 
 // `leaflet.css` pinta todo `a` dentro do mapa e vence os utilitários: a cor do link usa `!`.
-const PRIMARY_LINK =
-  "inline-flex min-h-11 items-center justify-center rounded-control bg-primary px-3 font-medium text-fg-on-primary! hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
-const SECONDARY_BUTTON =
-  "inline-flex min-h-11 items-center justify-center rounded-control border border-primary px-3 font-medium text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
+const VIEW_HOTEL = cn(
+  buttonClassName({ variant: "primary", fullWidth: true }),
+  "text-fg-on-primary!",
+);
 
-/** Conteúdo do popup do marcador: nome, nota, preço por noite e os dois destinos. */
-export const MapPopup = ({ hotel, pricing, criteria, onShowInList }: MapPopupProps) => {
+/**
+ * Conteúdo do popup do marcador: nome, nota, preço por noite e os dois destinos. O botão "×" e a
+ * ordem do teclado (Ver hotel, Mostrar na lista, Fechar) são do mapa; aqui só o conteúdo.
+ */
+export const MapPopup = ({ hotel, pricing, criteria, titleId, onShowInList }: MapPopupProps) => {
   const locale = useLocale();
   const messages = useHotelSearchMessages().map;
-  const soldOut = pricing.status === "sold-out";
-  const rating = formatRating(hotel.rating, locale);
+  const perNight = useCommonMessages().price.perNight;
   const price = formatBRL(pricing.nightly, { cents: false, locale });
   return (
-    <div className="flex min-w-48 flex-col gap-2">
-      <h3 className="pr-8 text-sm font-semibold text-fg">{hotel.name}</h3>
-      <p className="text-fg-muted">
-        <span aria-hidden="true">★ {rating}</span>
-        <span className="sr-only">{messages.popupRating({ rating })}</span>
-      </p>
-      <p className="font-medium text-fg">
-        {soldOut ? messages.soldOut : messages.popupPerNight({ price })}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <Link href={localizePath(locale, hotelHref(hotel.id, criteria))} className={PRIMARY_LINK}>
-          {messages.viewHotel}
-        </Link>
-        <button type="button" onClick={onShowInList} className={SECONDARY_BUTTON}>
-          {messages.showInList}
-        </button>
-      </div>
+    <div className="flex flex-col gap-2 p-3">
+      <h3 id={titleId} className="line-clamp-2 pr-11 text-sm font-semibold text-fg">
+        {hotel.name}
+      </h3>
+      <RatingScore rating={hotel.rating} size="sm" locale={locale} />
+      {pricing.status === "sold-out" ? (
+        <Badge tone="danger" className="self-start">
+          {messages.soldOut}
+        </Badge>
+      ) : (
+        <p>
+          <span className="font-semibold text-fg tabular-nums">{price}</span>{" "}
+          <span className="text-sm text-fg-muted">{perNight}</span>
+        </p>
+      )}
+      <Link href={localizePath(locale, hotelHref(hotel.id, criteria))} className={VIEW_HOTEL}>
+        {messages.viewHotel}
+      </Link>
+      <Button variant="secondary" fullWidth onClick={onShowInList}>
+        {messages.showInList}
+      </Button>
     </div>
   );
 };

@@ -126,6 +126,8 @@ export const enUS: CommonMessages = {
     optional: "(optional)",
     skipToContent: "Skip to content",
     homeLabel: "Infotera Hotéis, home page",
+    brand: "Infotera",
+    brandSuffix: "Hotéis",
     tryAgain: "Try again",
     retrying: "Trying…",
     closeNotification: "Close notification",

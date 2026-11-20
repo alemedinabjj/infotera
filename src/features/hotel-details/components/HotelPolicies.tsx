@@ -1,6 +1,7 @@
 import type { Hotel } from "@/shared/api/schemas";
 import type { Locale } from "@/shared/i18n/config";
 import { cancellationDetails } from "@/shared/lib/cancellation";
+import { formatClockTime } from "@/shared/lib/clock";
 import { Badge, ChevronDownIcon } from "@/shared/ui";
 import { hotelDetailsMessages } from "../i18n/messages";
 import { Section } from "./Section";
@@ -20,10 +21,13 @@ export const HotelPolicies = ({ hotel, locale }: { hotel: Hotel; locale: Locale 
     <Section id="politicas" title={t.sections.policies}>
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2">
         <dl className="grid grid-cols-2 gap-4 self-start">
-          <Time label={t.policies.checkIn} value={t.policies.from({ time: hotel.checkInTime })} />
+          <Time
+            label={t.policies.checkIn}
+            value={t.policies.from({ time: formatClockTime(hotel.checkInTime, locale) })}
+          />
           <Time
             label={t.policies.checkOut}
-            value={t.policies.until({ time: hotel.checkOutTime })}
+            value={t.policies.until({ time: formatClockTime(hotel.checkOutTime, locale) })}
           />
         </dl>
         <div className="flex flex-col items-start gap-2">

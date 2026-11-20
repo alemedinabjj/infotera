@@ -11,8 +11,8 @@ import {
   Serwist,
   type SerwistGlobalConfig,
 } from "serwist";
-import { parsePublicPath } from "@/shared/i18n/paths";
-import { type CacheRule, cacheRuleFor } from "../model/cache-rules";
+import { OFFLINE_PATHS } from "@/shared/i18n/paths";
+import { type CacheRule, cacheRuleFor, offlinePathFor } from "../model/cache-rules";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -85,8 +85,13 @@ const runtimeCaching: RuntimeCaching[] = [
 
 const isDocument = ({ request }: { request: Request }): boolean =>
   request.destination === "document";
-const isEnglishDocument = ({ request }: { request: Request }): boolean =>
-  isDocument({ request }) && parsePublicPath(new URL(request.url).pathname).locale === "en-US";
+
+/** Uma entrada por página offline: vale a que `offlinePathFor` escolhe pela rota e pelo idioma da URL. */
+const offlineFallbacks = OFFLINE_PATHS.map((path) => ({
+  url: path,
+  matcher: ({ request }: { request: Request }) =>
+    isDocument({ request }) && offlinePathFor(new URL(request.url).pathname) === path,
+}));
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -96,13 +101,8 @@ const serwist = new Serwist({
   clientsClaim: false,
   navigationPreload: false,
   runtimeCaching,
-  // Documento sem rede e sem cópia: a página offline do idioma da URL (pré-cacheada no install).
-  fallbacks: {
-    entries: [
-      { url: "/en/offline", matcher: isEnglishDocument },
-      { url: "/offline", matcher: isDocument },
-    ],
-  },
+  // Documento sem rede e sem cópia: a página offline da variante e do idioma da URL (pré-cacheadas no install).
+  fallbacks: { entries: offlineFallbacks },
 });
 
 /** Remove os caches de builds anteriores (`pages-*`, `pages-rsc-*`, `static-*` com outro sufixo). */

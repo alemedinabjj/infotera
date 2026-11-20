@@ -27,15 +27,35 @@ describe("useInteractiveMap", () => {
     expect(result.current).toEqual({ status: "ready", Map: FakeMap });
   });
 
-  it("falha do chunk vira erro e o retry recarrega a página (o runtime não repete import() rejeitado)", async () => {
-    const reload = vi.spyOn(navigation, "reloadPage").mockImplementation(() => undefined);
+  const failFirstLoad = async () => {
     loadInteractiveMap.mockRejectedValueOnce(new Error("chunk"));
-    const { result } = renderHook(() => useInteractiveMap(true));
-    await waitFor(() => expect(result.current.status).toBe("error"));
-    const current = result.current;
+    const hook = renderHook(() => useInteractiveMap(true));
+    await waitFor(() => expect(hook.result.current.status).toBe("error"));
+    const current = hook.result.current;
     if (current.status !== "error") throw new Error("esperava erro");
-    act(() => current.retry());
-    expect(reload).toHaveBeenCalledTimes(1);
-    expect(loadInteractiveMap).toHaveBeenCalledTimes(1);
+    return { ...hook, retry: current.retry };
+  };
+
+  it("falha do chunk vira erro com retry disponível", async () => {
+    const { result } = await failFirstLoad();
+    expect(result.current).toMatchObject({ status: "error", retrying: false });
+  });
+
+  it("retry pede o chunk de novo no mesmo lugar e, se der certo, vira ready sem recarregar", async () => {
+    const reload = vi.spyOn(navigation, "reloadPage").mockImplementation(() => undefined);
+    const { result, retry } = await failFirstLoad();
+    loadInteractiveMap.mockResolvedValueOnce(FakeMap);
+    act(() => retry());
+    expect(result.current).toMatchObject({ status: "error", retrying: true });
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("se o retry falhar de novo (o runtime guarda a rejeição), recarrega a página", async () => {
+    const reload = vi.spyOn(navigation, "reloadPage").mockImplementation(() => undefined);
+    const { retry } = await failFirstLoad();
+    loadInteractiveMap.mockRejectedValueOnce(new Error("chunk"));
+    act(() => retry());
+    await waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
   });
 });

@@ -1,17 +1,26 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useId, useRef } from "react";
 import type { Hotel } from "@/shared/api/schemas";
 import { useOnline } from "@/shared/hooks/useOnline";
 import { useCommonMessages } from "@/shared/i18n/common/useCommonMessages";
 import type { SearchCriteria } from "@/shared/lib/search-params";
-import { Alert, Button, Skeleton, SkipLink, WifiOffIcon } from "@/shared/ui";
-import { type InteractiveMapLoad, type MapLabels, useInteractiveMap } from "@/shared/ui/map";
+import { Skeleton } from "@/shared/ui";
+import {
+  type InteractiveMapLoad,
+  MapHint,
+  type MapLabels,
+  type PopupApi,
+  useInteractiveMap,
+} from "@/shared/ui/map";
+import { useFocusMapAfterRetry } from "../hooks/useFocusMapAfterRetry";
 import { useHotelSearchMessages } from "../hooks/useHotelSearchMessages";
 import { useMapMarkers } from "../hooks/useMapMarkers";
 import { hotelIdOfMarker } from "../model/map-markers";
 import { useIsActiveHotelId, useMapSync } from "../store/map-sync";
+import { MapLoadAlert, MapOfflineAlert } from "./MapPanelAlerts";
 import { MapPopup } from "./MapPopup";
+import { SkipMapLink } from "./SkipMapLink";
 
 type ResultsMapProps = {
   /** Id do painel (`aria-controls` do botão). */
@@ -20,12 +29,15 @@ type ResultsMapProps = {
   criteria: SearchCriteria | null;
 };
 
-const PANEL =
-  "relative isolate h-[clamp(280px,45dvh,420px)] overflow-hidden rounded-card border border-border bg-surface-sunken";
+const FRAME =
+  "relative h-[clamp(280px,45dvh,420px)] overflow-hidden rounded-card border border-border bg-surface-sunken";
 
-type PanelBodyProps = ResultsMapProps & { load: InteractiveMapLoad; online: boolean };
+type ReadyMapProps = ResultsMapProps & {
+  MapView: Extract<InteractiveMapLoad, { status: "ready" }>["Map"];
+  hintId: string;
+};
 
-const PanelBody = ({ hotels, criteria, load, online }: PanelBodyProps) => {
+const ReadyMap = ({ MapView, hotels, criteria, hintId }: ReadyMapProps) => {
   const messages = useHotelSearchMessages().map;
   const common = useCommonMessages().map;
   const { markers, pricingById } = useMapMarkers(hotels, criteria);
@@ -38,109 +50,103 @@ const PanelBody = ({ hotels, criteria, load, online }: PanelBodyProps) => {
     [setActive],
   );
 
+  const renderPopup = useCallback(
+    (markerId: string, { close, titleId }: PopupApi) => {
+      const hotelId = hotelIdOfMarker(markerId);
+      const hotel = hotels.find((item) => item.id === hotelId);
+      const pricing = hotelId === null ? undefined : pricingById.get(hotelId);
+      if (!hotel || !pricing) return null;
+      return (
+        <MapPopup
+          hotel={hotel}
+          pricing={pricing}
+          criteria={criteria}
+          titleId={titleId}
+          onShowInList={() => {
+            close();
+            revealCard?.(hotel.id);
+          }}
+        />
+      );
+    },
+    [hotels, pricingById, criteria, revealCard],
+  );
+
   const labels: MapLabels = {
     region: messages.region,
-    hint: messages.keyboardHint,
     zoomIn: common.zoomIn,
     zoomOut: common.zoomOut,
     closePopup: common.closePopup,
     attribution: common.attribution,
   };
 
-  if (!online && load.status !== "ready") {
-    return (
-      <Alert
-        tone="warning"
-        icon={<WifiOffIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
-        className="m-3"
-      >
-        {messages.offline}
-      </Alert>
-    );
-  }
-  if (load.status === "error") {
-    return (
-      <Alert
-        tone="danger"
-        className="m-3"
-        action={
-          <Button variant="secondary" size="sm" onClick={load.retry}>
-            {messages.retry}
-          </Button>
-        }
-      >
-        {messages.loadError}
-      </Alert>
-    );
-  }
-  if (load.status !== "ready") {
-    return (
-      <div role="status" aria-live="polite" className="size-full">
-        <Skeleton shape="block" className="size-full rounded-none" />
-        <p className="sr-only">{messages.loading}</p>
-        <p
-          aria-hidden="true"
-          className="absolute inset-0 grid place-items-center text-sm text-fg-muted"
-        >
-          {messages.loading}
-        </p>
-      </div>
-    );
-  }
   return (
-    <load.Map
+    <MapView
       className="size-full"
       markers={markers}
       activeId={activeId === null ? null : String(activeId)}
       onActiveChange={onActiveChange}
       labels={labels}
-      renderPopup={(markerId, close) => {
-        const hotelId = hotelIdOfMarker(markerId);
-        const hotel = hotels.find((item) => item.id === hotelId);
-        const pricing = hotelId === null ? undefined : pricingById.get(hotelId);
-        if (!hotel || !pricing) return null;
-        return (
-          <MapPopup
-            hotel={hotel}
-            pricing={pricing}
-            criteria={criteria}
-            onShowInList={() => {
-              revealCard?.(hotel.id);
-              close();
-            }}
-          />
-        );
-      }}
+      hintId={hintId}
+      renderPopup={renderPopup}
     />
   );
 };
 
+const LoadingFrame = ({ label }: { label: string }) => (
+  <div role="status" aria-live="polite" className="size-full">
+    <Skeleton shape="block" className="size-full rounded-none" />
+    <p className="sr-only">{label}</p>
+    <p
+      aria-hidden="true"
+      className="absolute inset-0 grid place-items-center text-sm text-fg-muted"
+    >
+      {label}
+    </p>
+  </div>
+);
+
 /**
  * Painel do mapa acima da lista (só na visão `results`): um marcador de preço por hotel exibido,
- * sincronizado com os cards. É complemento: a lista abaixo é a alternativa completa. Offline mostra
- * um aviso (a lista continua), carregando mostra skeleton e falha do chunk mostra retry.
+ * sincronizado com os cards. É complemento: a lista abaixo é a alternativa completa. Sem internet ou
+ * com o chunk falhando, o painel encolhe para um alerta (a lista continua); carregando mostra
+ * skeleton. A dica de teclado fica abaixo da moldura, em fluxo.
  */
 export const ResultsMap = (props: ResultsMapProps) => {
   const messages = useHotelSearchMessages().map;
   const online = useOnline();
   const load = useInteractiveMap(online);
-  const revealCard = useMapSync((state) => state.revealCard);
-  const firstId = props.hotels[0]?.id;
+  const hintId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusMapAfterRetry(panelRef, load.status);
+
+  const alert =
+    !online && load.status !== "ready" ? (
+      <MapOfflineAlert />
+    ) : load.status === "error" ? (
+      <MapLoadAlert retrying={load.retrying} onRetry={load.retry} />
+    ) : null;
 
   return (
-    <div className="flex flex-col gap-2">
-      <SkipLink
-        targetId={props.id}
-        label={messages.skip}
-        onClick={(event) => {
-          // Pula o mapa: o foco vai para o início da lista (o primeiro card), não para o topo da página.
-          event.preventDefault();
-          if (firstId !== undefined) revealCard?.(firstId);
-        }}
-      />
-      <div id={props.id} className={PANEL}>
-        <PanelBody {...props} load={load} online={online} />
-      </div>
+    <div
+      id={props.id}
+      ref={panelRef}
+      aria-busy={load.status === "loading"}
+      className="group/map relative isolate"
+    >
+      {load.status === "ready" ? <SkipMapLink firstHotelId={props.hotels[0]?.id} /> : null}
+      {alert ?? (
+        <>
+          <div className={FRAME}>
+            {load.status === "ready" ? (
+              <ReadyMap {...props} MapView={load.Map} hintId={hintId} />
+            ) : (
+              <LoadingFrame label={messages.loading} />
+            )}
+          </div>
+          <MapHint id={hintId} text={messages.keyboardHint} active={load.status === "ready"} />
+        </>
+      )}
     </div>
   );
 };

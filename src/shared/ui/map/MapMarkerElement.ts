@@ -47,14 +47,27 @@ export const createMarkerIcon = (marker: DrawnMarker): L.DivIcon =>
     iconAnchor: [0, 0],
   });
 
+export type MarkerState = {
+  active: boolean;
+  /** `null`: o marcador não abre popup; senão, se o popup está aberto (`aria-expanded`). */
+  expanded: boolean | null;
+};
+
 /** Aplica nome acessível e estado ao invólucro do marcador que o Leaflet criou. */
 export const decorateMarkerElement = (
   element: HTMLElement | undefined,
   marker: Pick<MapMarker, "id" | "label">,
-  active: boolean,
+  { active, expanded }: MarkerState,
 ): void => {
   if (!element) return;
   element.setAttribute("aria-label", marker.label);
   element.setAttribute("data-active", String(active));
   element.setAttribute("data-marker-id", marker.id);
+  if (expanded === null) {
+    element.removeAttribute("aria-haspopup");
+    element.removeAttribute("aria-expanded");
+    return;
+  }
+  element.setAttribute("aria-haspopup", "dialog");
+  element.setAttribute("aria-expanded", String(expanded));
 };

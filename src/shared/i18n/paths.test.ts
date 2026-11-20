@@ -107,6 +107,8 @@ describe("resolveLocaleRequest", () => {
     ["/", "en-US", redirect(307, "/en")],
     ["/checkout", "en-US", redirect(307, "/en/checkout")],
     ["/offline", "en-US", rewrite("pt-BR", "/pt-BR/offline")],
+    ["/offline/checkout", "en-US", rewrite("pt-BR", "/pt-BR/offline/checkout")],
+    ["/offline/bookings", "en-US", rewrite("pt-BR", "/pt-BR/offline/bookings")],
     ["/hotel/1", "fr-FR", rewrite("pt-BR", "/pt-BR/hotel/1")],
     ["/hotel/1", "", rewrite("pt-BR", "/pt-BR/hotel/1")],
   ] as const)("%s com cookie %j", (pathname, cookie, expected) => {

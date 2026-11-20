@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type CacheRequest, type CacheRule, cacheRuleFor } from "./cache-rules";
+import { OFFLINE_PATHS } from "@/shared/i18n/paths";
+import { type CacheRequest, type CacheRule, cacheRuleFor, offlinePathFor } from "./cache-rules";
 
 const APP = "https://app.exemplo.com";
 const API = "https://api.exemplo.com";
@@ -48,13 +49,13 @@ describe("cacheRuleFor: 1. método diferente de GET passa direto", () => {
 
 describe("cacheRuleFor: 2. rotas privadas nunca gravam", () => {
   it.each([
-    ["/checkout", "/offline"],
-    ["/en/checkout", "/en/offline"],
-    ["/checkout/", "/offline"],
-    ["/confirmation/3f2a9c1e-7b4d-4e8a-9f12-6c0d3b2a1e57", "/offline"],
-    ["/en/confirmation/x", "/en/offline"],
-    ["/my-bookings", "/offline"],
-    ["/en/my-bookings", "/en/offline"],
+    ["/checkout", "/offline/checkout"],
+    ["/en/checkout", "/en/offline/checkout"],
+    ["/checkout/", "/offline/checkout"],
+    ["/confirmation/3f2a9c1e-7b4d-4e8a-9f12-6c0d3b2a1e57", "/offline/bookings"],
+    ["/en/confirmation/x", "/en/offline/bookings"],
+    ["/my-bookings", "/offline/bookings"],
+    ["/en/my-bookings", "/en/offline/bookings"],
   ])("documento %s → rede, com a página offline %s", (path, offlinePath) => {
     expect(cacheRuleFor(doc(path))).toEqual({ kind: "network-only", offlinePath });
   });
@@ -189,5 +190,35 @@ describe("cacheRuleFor: o prefixo parecido não é privado nem público por enga
 
   it("/hotel sem id não é rota pública", () => {
     expect(cacheRuleFor(doc("/hotel"))).toEqual({ kind: "passthrough" });
+  });
+});
+
+describe("offlinePathFor: a variante da página offline pela rota e pelo idioma", () => {
+  it.each([
+    ["/checkout", "/offline/checkout"],
+    ["/en/checkout", "/en/offline/checkout"],
+    ["/confirmation/abc", "/offline/bookings"],
+    ["/en/confirmation/abc", "/en/offline/bookings"],
+    ["/my-bookings", "/offline/bookings"],
+    ["/en/my-bookings", "/en/offline/bookings"],
+    ["/hotel/7", "/offline"],
+    ["/en/hotel/7", "/en/offline"],
+    ["/rota-desconhecida", "/offline"],
+    ["/checkouts", "/offline"],
+  ])("%s → %s", (pathname, expected) => {
+    expect(offlinePathFor(pathname)).toBe(expected);
+  });
+
+  it("as seis páginas offline estão no precache (3 variantes × 2 idiomas)", () => {
+    expect([...OFFLINE_PATHS].sort()).toEqual(
+      [
+        "/offline",
+        "/offline/bookings",
+        "/offline/checkout",
+        "/en/offline",
+        "/en/offline/bookings",
+        "/en/offline/checkout",
+      ].sort(),
+    );
   });
 });

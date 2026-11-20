@@ -5,6 +5,9 @@
 @custom-variant roomy (@media (min-width: 40rem) and (min-height: 601px));
 
 @theme {
+  /* Header: abaixo de 25rem o logo e o seletor de idioma encurtam (DS 1.6). */
+  --breakpoint-xs: 25rem;
+
   /* Fonte (a variável --font-inter vem do next/font no layout) */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 

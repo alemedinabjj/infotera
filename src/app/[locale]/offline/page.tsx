@@ -7,12 +7,12 @@ export const generateMetadata = async ({
 }: PageProps<"/[locale]/offline">): Promise<Metadata> => {
   const { locale } = await params;
   return {
-    title: isLocale(locale) ? appShellMessages.get(locale).offlinePage.metaTitle : undefined,
+    title: isLocale(locale) ? appShellMessages.get(locale).offlinePage.public.metaTitle : undefined,
     robots: { index: false },
   };
 };
 
-/** Página offline do idioma: estática, pré-cacheada pelo service worker. */
-const OfflineRoute = () => <OfflinePage />;
+/** Página offline (public) do idioma: estática, pré-cacheada pelo service worker. */
+const OfflineRoute = () => <OfflinePage variant="public" />;
 
 export default OfflineRoute;

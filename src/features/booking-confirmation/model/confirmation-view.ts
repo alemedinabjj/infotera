@@ -2,6 +2,7 @@ import type { Booking, Hotel, Room } from "@/shared/api/schemas";
 import type { Locale } from "@/shared/i18n/config";
 import { formatUnit } from "@/shared/i18n/units";
 import { type CancellationDetails, cancellationDetails } from "@/shared/lib/cancellation";
+import { formatClockTime } from "@/shared/lib/clock";
 import { reaisToCents } from "@/shared/lib/currency";
 import { formatDate, formatDateRange, type ISODate, nightsBetween } from "@/shared/lib/dates";
 import { formatGuests } from "@/shared/lib/format";
@@ -160,8 +161,8 @@ export const checkTimes = (
   switch (hotel.status) {
     case "ok":
       return {
-        checkInTime: t.checkInFrom(hotel.data.checkInTime),
-        checkOutTime: t.checkOutUntil(hotel.data.checkOutTime),
+        checkInTime: t.checkInFrom(formatClockTime(hotel.data.checkInTime, locale)),
+        checkOutTime: t.checkOutUntil(formatClockTime(hotel.data.checkOutTime, locale)),
       };
     case "missing":
       return { checkInTime: t.askHotel, checkOutTime: t.askHotel };
