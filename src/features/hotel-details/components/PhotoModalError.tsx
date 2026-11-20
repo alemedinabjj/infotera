@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useOnline } from "@/shared/hooks/useOnline";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
+import { PHOTO_RETRY_SELECTOR, photoOpenStatus } from "../model/photo-open-status";
 import { PhotoModalFrame } from "./PhotoModalFrame";
-import { PHOTO_RETRY_SELECTOR, PhotoOpenError, photoOpenStatus } from "./PhotoOpenError";
+import { PhotoOpenError } from "./PhotoOpenError";
 
 type PhotoModalErrorProps = { retry: () => void };
 

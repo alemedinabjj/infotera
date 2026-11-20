@@ -6,8 +6,9 @@ import { useOnline } from "@/shared/hooks/useOnline";
 import { Dialog } from "@/shared/ui";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { usePhotoOpening } from "../hooks/usePhotoOpening";
+import { PHOTO_RETRY_SELECTOR, photoOpenStatus } from "../model/photo-open-status";
 import { PhotoLoadingBody, PhotoLoadingFooter } from "./PhotoModalLoading";
-import { PHOTO_RETRY_SELECTOR, PhotoOpenError, photoOpenStatus } from "./PhotoOpenError";
+import { PhotoOpenError } from "./PhotoOpenError";
 
 type PhotoLinkProps = {
   href: string;

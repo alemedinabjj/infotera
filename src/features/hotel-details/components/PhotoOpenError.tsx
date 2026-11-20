@@ -2,18 +2,10 @@ import { useState } from "react";
 import { useLocale } from "@/shared/i18n/client";
 import { ErrorState } from "@/shared/ui";
 import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
+import type { PhotoOpenStatus } from "../model/photo-open-status";
 import { StillFailingNotice } from "./StillFailingNotice";
 
-/** `failed`: a rota falhou; `offline`: sem internet; `reconnected`: a conexão voltou com o cartão aberto. */
-export type PhotoOpenStatus = "failed" | "offline" | "reconnected";
-
 type PhotoOpenErrorProps = { status: PhotoOpenStatus; onRetry: () => void };
-
-/** Status do cartão a partir da rede: com o cartão `offline` aberto e a conexão de volta, a mensagem neutra. */
-export const photoOpenStatus = (offlineCard: boolean, online: boolean): PhotoOpenStatus => {
-  if (!offlineCard) return online ? "failed" : "offline";
-  return online ? "reconnected" : "offline";
-};
 
 /**
  * Corpo do erro ao abrir a foto (rota falhou ou sem internet): cartão **claro** sobre a moldura escura
@@ -49,6 +41,3 @@ export const PhotoOpenError = ({ status, onRetry }: PhotoOpenErrorProps) => {
     </div>
   );
 };
-
-/** Seletor do "Tentar de novo": o foco inicial do erro. */
-export const PHOTO_RETRY_SELECTOR = "[role='alert'] button";
