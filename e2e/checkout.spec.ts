@@ -30,6 +30,7 @@ test.describe("fluxo feliz: da página do hotel à reserva criada", () => {
     expect(navigation).toMatch(/\/checkout$/);
 
     await expect(page.getByRole("heading", { level: 2, name: "Dados dos hóspedes" })).toBeVisible();
+    await expect(page).toHaveTitle("Passo 1 de 3: Dados dos hóspedes | Infotera Hotéis");
     await goToReview(page, {
       companions: [
         { first: "Bruno", last: "Souza" },

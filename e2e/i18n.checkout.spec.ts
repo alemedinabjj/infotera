@@ -56,7 +56,7 @@ test.describe("checkout em inglês", () => {
   }) => {
     await openCheckout(page);
     await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
-    await expect(page).toHaveTitle(/^(Complete your booking|Step 1 of 3: Guest details) \| /);
+    await expect(page).toHaveTitle(/^Step 1 of 3: Guest details \| /);
     await expect(
       page.getByRole("heading", { level: 1, name: "Complete your booking" }),
     ).toBeVisible();
