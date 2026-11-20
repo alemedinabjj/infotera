@@ -117,14 +117,14 @@ export const HotelCard = ({
       className={cardClassName({
         variant: "interactive",
         className:
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:flex-row [--card-image-w:14rem] [--card-fav-size:2.75rem]",
       })}
     >
       <RemoteImage
         src={hotel.thumbnail}
         alt={hotel.name}
         sizes={CARD_IMAGE_SIZES}
-        className="aspect-[5/2] w-full shrink-0 sm:aspect-auto sm:min-h-42 sm:w-56"
+        className="aspect-[5/2] w-full shrink-0 sm:aspect-auto sm:min-h-42 sm:w-(--card-image-w)"
         muted={pricing.status === "sold-out"}
         priority={priority}
       />
@@ -138,8 +138,9 @@ export const HotelCard = ({
             {hotel.name}
           </Link>
         </h3>
-        {/* Controle secundário: depois do link no DOM, acima do ::after; sobre a foto (w-56 em sm+). */}
-        <div className="absolute top-2 right-2 z-10 sm:right-auto sm:left-[10.75rem]">
+        {/* Controle secundário: depois do link no DOM, acima do ::after. Em sm+ o canto da foto vem da
+            mesma variável que dá a largura da foto (`--card-image-w`), sem número solto. */}
+        <div className="absolute top-2 right-2 z-10 sm:right-auto sm:left-[calc(var(--card-image-w)-var(--card-fav-size)-0.5rem)]">
           <FavoriteButton hotelId={hotel.id} hotelName={hotel.name} variant="overlay" />
         </div>
         <p className="text-sm text-fg-muted">

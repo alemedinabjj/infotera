@@ -158,7 +158,7 @@ index.ts                  API pública usada por app/search
 `HotelCard` segue aqui.
 
 ## F7a (extras)
-- `HotelCard` tem o coração sobre a foto (`FavoriteButton overlay`, `sm:left-[10.75rem]` para cair na foto de `w-56`) e a linha
+- `HotelCard` tem o coração sobre a foto (`FavoriteButton overlay`, posicionado por `--card-image-w` (a mesma variável da largura da foto)) e a linha
   "Comparar" (`CompareCheckbox`, `relative z-10 min-h-11`) **depois do link no DOM**: ordem de Tab nome → coração → Comparar.
   O skeleton ganhou a linha. `HotelCard` é `m.article`: prop `fade` (`{ delay }` ou `null`) liga o fade de opacidade no 1º mount.
 - Lista paginada: `staggerDelay(index)`. Feed virtualizado: `useSeenCount(queryKey, itens)` + `shouldAnimateItem`; item
