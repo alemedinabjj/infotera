@@ -26,6 +26,10 @@ const nextConfig: NextConfig = {
   // PPR: no 16.x é `cacheComponents` (F7c, Decisão 1). `partialPrefetching` evita o warning da doc.
   cacheComponents: true,
   partialPrefetching: true,
+  // Com `cacheComponents` o Next mostra o selo "Cache disabled" no canto inferior esquerdo sempre que a
+  // requisição vai com `Cache-Control: no-cache`, que é o que o Playwright manda ao usar `page.route`. O
+  // selo cobre botões no mobile e intercepta cliques do E2E; só o E2E (`playwright.config.ts`) o desliga.
+  devIndicators: process.env.E2E_HIDE_DEV_INDICATORS === "1" ? false : undefined,
   // A única Server Action é a reserva: o maior envio possível (3 quartos, hóspedes, contato, cupom) fica
   // bem abaixo de 16 KB. O padrão (1 MB) só convidaria abuso.
   experimental: { serverActions: { bodySizeLimit: "64kb" } },

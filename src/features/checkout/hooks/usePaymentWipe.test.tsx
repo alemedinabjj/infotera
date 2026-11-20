@@ -61,6 +61,12 @@ const RestoreProbe = ({ onRestored }: { onRestored: () => void }) => {
   return null;
 };
 
+const HiddenProbe = ({ onHidden }: { onHidden: () => void }) => {
+  const form = useForm<CheckoutValues>();
+  usePaymentWipe(form, () => undefined, onHidden);
+  return <input aria-label="Número do cartão" {...form.register("payment.cardNumber")} />;
+};
+
 const Host = () => {
   const [mode, setMode] = useState<Mode>("visible");
   return (
@@ -119,5 +125,21 @@ describe("usePaymentWipe dentro de Activity (F7c, critério 22)", () => {
     unmount();
     window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
     expect(onRestored).not.toHaveBeenCalled();
+  });
+
+  it("avisa `onHidden` depois de zerar o formulário, para a tela voltar ao pagamento", async () => {
+    const user = userEvent.setup();
+    const seen: string[] = [];
+    const onHidden = vi.fn(() => seen.push("hidden"));
+    render(
+      <HostWith>
+        <HiddenProbe onHidden={onHidden} />
+      </HostWith>,
+    );
+    expect(onHidden).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "esconder" }));
+
+    expect(onHidden).toHaveBeenCalledTimes(1);
   });
 });

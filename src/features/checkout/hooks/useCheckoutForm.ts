@@ -73,12 +73,23 @@ export const useCheckoutForm = (criteria: SearchCriteria, couponCode: string | n
     focus.focusHeading();
   };
 
-  // Volta do bfcache depois do `pagehide`: o cartão foi apagado, então a revisão não pode aparecer.
-  usePaymentWipe(form, () => {
-    if (stepRef.current === "personal") return;
+  const backToPaymentWiped = () => {
     moveTo("payment");
     setNotice({ kind: "payment-wiped", step: "payment" });
-  });
+  };
+
+  // Volta do bfcache depois do `pagehide`: o cartão foi apagado, então a revisão não pode aparecer. O mesmo
+  // vale quando a rota é escondida (`Activity`) na revisão: o resumo do cartão sai do DOM escondido.
+  usePaymentWipe(
+    form,
+    () => {
+      if (stepRef.current === "personal") return;
+      backToPaymentWiped();
+    },
+    () => {
+      if (stepRef.current === "review") backToPaymentWiped();
+    },
+  );
 
   const markAttempt = () => {
     focus.requestFieldFocus();

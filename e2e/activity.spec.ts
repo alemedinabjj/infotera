@@ -4,6 +4,7 @@ import {
   criteria,
   fillPayment,
   fillPersonal,
+  futureExpiry,
   seedSelection,
 } from "./helpers/checkout";
 import { cards, searchPath } from "./helpers/hotel-search";
@@ -11,6 +12,13 @@ import { test } from "./helpers/mock-api-server";
 
 // F7c, critérios 21, 22, 24 e 25. Com `cacheComponents` o Next não desmonta a rota que o usuário deixou:
 // esconde (`<Activity mode="hidden">`) e a restaura no Voltar. Só o build mostra o ciclo completo.
+//
+// Por que os testes do cartão esperam (`expect.poll`) em vez de ler uma vez: o React esconde a rota (`display: none`)
+// e só depois roda o cleanup do layout effect que apaga os campos (`useResetOnHide`). Medido em `next dev`: no
+// instante em que a home aparece, o cartão ainda estava no DOM em 4 de 12 execuções e sumia 12-26 ms depois, sempre
+// com a rota já invisível (`checkVisibility() === false`). Nada é restaurado nem recriado: é só a ordem do commit
+// (esconder, depois apagar), mais lenta no dev. Para o usuário o cartão nunca fica visível nem persistido; o critério
+// (campos vazios com a rota escondida) é o mesmo, só a leitura aguarda esse commit.
 
 const PAYMENT_FIELDS = [
   "payment.cardNumber",
@@ -64,7 +72,7 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeVisible();
 
     // A rota do checkout está escondida, mas anexada: nenhum campo guarda dígito algum.
-    expect(await paymentValues(page)).toEqual(PAYMENT_FIELDS.map(() => ""));
+    await expect.poll(() => paymentValues(page)).toEqual(PAYMENT_FIELDS.map(() => ""));
     const leaked = await page.evaluate(
       () =>
         Array.from(document.querySelectorAll("input")).filter(
@@ -81,6 +89,31 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await expect(page.getByRole("textbox", { name: "CPF" })).toHaveValue("");
   });
 
+  test("o resumo do cartão na revisão sai do DOM ao esconder a rota e o Voltar leva ao pagamento (critério 22)", async ({
+    page,
+  }) => {
+    await goToPayment(page);
+    await fillPayment(page);
+    await clickPrimary(page, "Revisar reserva");
+    await page.getByRole("heading", { level: 2, name: "Revise e confirme" }).waitFor();
+    await expect(page.getByText(/^Visa •••• 1111/)).toBeVisible();
+    const secrets = ["•••• 1111", futureExpiry(), "ANA SOUZA", "982.247"];
+    const html = () => page.evaluate(() => document.body.innerHTML);
+    for (const secret of secrets) expect(await html()).toContain(secret);
+
+    await logo(page).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeVisible();
+    // A rota escondida continua anexada: nada do cartão pode ter ficado no texto dela.
+    for (const secret of secrets) await expect.poll(html).not.toContain(secret);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/checkout$/);
+    await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
+    await expect(page.getByText(/os dados do cartão não ficam salvos/)).toBeVisible();
+    await expect(page.getByLabel("Número do cartão")).toHaveValue("");
+  });
+
   test("o termo de aceite aberto aparece fechado ao voltar (critério 25)", async ({ page }) => {
     await goToPayment(page);
     await fillPayment(page);
@@ -94,7 +127,8 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await expect(page).toHaveURL(/\/$/);
     await page.goBack();
     await expect(page).toHaveURL(/\/checkout$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Revise e confirme" })).toBeVisible();
+    // O cartão foi apagado ao esconder a rota: a revisão não volta, o pagamento sim (critério 22).
+    await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
     await expect(terms).toBeHidden();
   });
 });
