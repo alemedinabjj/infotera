@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addBookingToHistory,
   BOOKING_HISTORY_KEY,
@@ -19,7 +19,12 @@ const RAW_KEY = `infotera:${BOOKING_HISTORY_KEY}`;
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const at = (minutes: number) => new Date(Date.UTC(2026, 10, 19, 12, minutes));
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  // Os `savedAt` dos testes são de 19/11/2026: o relógio fixo evita que expirem (30 dias).
+  vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-11-19T15:00:00Z") });
+});
+afterEach(() => vi.useRealTimers());
 
 describe("addBookingToHistory", () => {
   it("adiciona no topo", () => {

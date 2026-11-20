@@ -22,7 +22,7 @@ const seedHistory = (page: Page, ids: string[]) =>
         JSON.stringify(
           list.map((id, index) => ({
             id,
-            savedAt: new Date(Date.UTC(2026, 10, 19, 12, 10 - index)).toISOString(),
+            savedAt: new Date(Date.now() - index * 60_000).toISOString(),
           })),
         ),
       );

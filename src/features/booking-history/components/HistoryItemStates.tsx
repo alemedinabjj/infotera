@@ -3,14 +3,30 @@ import { HISTORY_MESSAGES } from "../model/messages";
 
 const MESSAGES = HISTORY_MESSAGES;
 
-/** Skeleton da linha: mesma altura mínima do estado de erro. */
+/**
+ * Skeleton da linha: mesma estrutura e alturas do `HistoryItem` em cada breakpoint (selo 24,
+ * título 28, datas em 2 linhas abaixo de `sm`, total 28, "Reservada em" 20 e os dois botões que
+ * se empilham no celular), para o card não crescer quando a reserva chega.
+ */
 export const HistoryItemSkeleton = () => (
-  <div aria-busy="true" className="flex min-h-44 flex-col gap-2 p-4">
-    <Skeleton className="h-6 w-32" />
-    <Skeleton className="h-7 w-3/4" />
-    <Skeleton className="h-5 w-2/3" />
-    <Skeleton className="h-7 w-28" />
-    <Skeleton className="h-11 w-48" />
+  <div aria-busy="true" className="flex flex-col sm:flex-row">
+    <Skeleton shape="block" className="hidden min-h-32 w-40 shrink-0 rounded-none sm:block" />
+    <div className="flex flex-1 flex-col gap-1 p-4">
+      <div className="min-h-6">
+        <Skeleton className="h-6 w-28" />
+      </div>
+      <Skeleton className="h-7 w-3/4" />
+      <div className="flex flex-col">
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-1/2 sm:hidden" />
+      </div>
+      <Skeleton className="h-7 w-40" />
+      <Skeleton className="h-5 w-48" />
+      <div className="mt-2 flex flex-wrap gap-3">
+        <Skeleton shape="block" className="h-11 w-28" />
+        <Skeleton shape="block" className="h-11 w-44" />
+      </div>
+    </div>
   </div>
 );
 
