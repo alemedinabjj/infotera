@@ -19,10 +19,11 @@ type PhotoPageProps = { locale: Locale; hotel: Hotel; index: number };
 export const PhotoPage = ({ locale, hotel, index }: PhotoPageProps) => {
   const t = hotelDetailsMessages.get(locale);
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex w-full flex-col gap-4 lg:mx-auto lg:max-w-4xl">
       <Link
         href={localizePath(locale, `/hotel/${hotel.id}`)}
-        className={`${buttonClassName({ variant: "ghost" })} self-start`}
+        // `-ml-4` compensa o padding do ghost: o texto alinha com o h1 e com a moldura.
+        className={`${buttonClassName({ variant: "ghost" })} -ml-4 self-start`}
       >
         <ChevronLeftIcon aria-hidden="true" className="size-5" />
         {t.photoPage.back}

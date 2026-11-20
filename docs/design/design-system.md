@@ -1209,7 +1209,7 @@ Confirmação: `Copiar número da reserva` / `Copiado` · `Ver página do hotel`
 | Similares não carregaram (recomendação) | `Não foi possível carregar hotéis similares.` | link `Ver hotéis em {destino}` (sem retry) |
 | Foto do lightbox quebrada | `Não foi possível carregar esta foto.` | — (setas seguem) |
 | Modal da foto não abriu (F7c) | Cartão claro sobre o modal: `Não foi possível abrir a foto` · `Verifique sua conexão e tente de novo.` (offline: `Você está sem internet` · `A foto abre assim que a conexão voltar.`) | `Tentar de novo` + `Fechar` |
-| Foto não encontrada (F7c) | h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto de {hotel}.` | `Ver o hotel` |
+| Foto não encontrada (F7c) | h1 `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto deste hotel.` | `Ver o hotel` |
 | Envio da reserva offline | Alert warning: `Você está sem internet` · `Assim que a conexão voltar, tente de novo. Nada foi cobrado e seus dados foram mantidos.` + toast `Não foi possível confirmar a reserva.` | `Tentar de novo` |
 | Preço mudou no envio | Alert warning: `O total da reserva mudou` · `Passou de R$ 4.140,00 para R$ 4.320,00. Confira o novo valor e confirme de novo. Nada foi cobrado.` | (o próprio `Confirmar reserva`) |
 | Cupom recusado no envio | Alert warning: `O cupom BEMVINDO10 não vale mais` · `Removemos o desconto e o total agora é R$ 4.140,00. Confira e confirme de novo. Nada foi cobrado.` | — |
@@ -1603,4 +1603,4 @@ Sem token novo. Comportamento completo na spec `docs/specs/F7c-nextjs-extras.md`
 | Offline ao abrir | `Você está sem internet` · `A foto abre assim que a conexão voltar.` | `You're offline` · `The photo will open once you're back online.` |
 | Link da página cheia | `Voltar para o hotel` | `Back to hotel` |
 | Título da aba | `Foto 3 de 5 · {hotel} \| Infotera Hotéis` | `Photo 3 of 5 · {hotel} \| Infotera Hotéis` |
-| Foto inexistente | `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto de {hotel}.` · `Ver o hotel` | `Photo not found` · `This address doesn't match any photo of {hotel}.` · `View hotel` |
+| Foto inexistente | `Foto não encontrada` · `Este endereço não corresponde a nenhuma foto deste hotel.` · `Ver o hotel` | `Photo not found` · `This address doesn't match any photo of this hotel.` · `View hotel` |

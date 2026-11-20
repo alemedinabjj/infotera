@@ -12,6 +12,18 @@ const Overlay = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+const HIDE_LOADING_RULE = "[data-photo-loading]{display:none!important}";
+
+/**
+ * Sem JavaScript o `onLoad` nunca roda e o "Carregando foto…" ficaria para sempre por cima da foto. O
+ * `<noscript>` só vale sem JS: esconde o overlay de carregamento e deixa a imagem do HTML à mostra.
+ */
+const HideLoadingWithoutScript = () => (
+  <noscript>
+    <style>{HIDE_LOADING_RULE}</style>
+  </noscript>
+);
+
 /**
  * Foto inteira (`object-contain`) com estado próprio: carregando (spinner + texto) e quebrada
  * (ícone + texto, as setas continuam). Montar com `key` = foto para reiniciar o estado. Serve ao modal
@@ -40,11 +52,14 @@ export const PhotoFrame = ({ src, alt }: PhotoFrameProps) => {
         }
       />
       {status === "loading" ? (
-        <Overlay>
-          <Spinner />
-          <p>{t.loading}</p>
-        </Overlay>
+        <div data-photo-loading="" className="contents">
+          <Overlay>
+            <Spinner />
+            <p>{t.loading}</p>
+          </Overlay>
+        </div>
       ) : null}
+      <HideLoadingWithoutScript />
     </div>
   );
 };

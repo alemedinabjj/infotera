@@ -96,7 +96,7 @@ export const enUS: HotelDetailsMessages = {
       `Photo ${index} of ${total} · ${hotel} | Infotera Hotéis`,
     metaNotFound: "Photo not found | Infotera Hotéis",
     notFoundTitle: "Photo not found",
-    notFoundBody: ({ hotel }) => `This address doesn't match any photo of ${hotel}.`,
+    notFoundBody: "This address doesn't match any photo of this hotel.",
     viewHotel: "View hotel",
   },
   rooms: {

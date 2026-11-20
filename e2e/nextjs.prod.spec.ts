@@ -29,14 +29,14 @@ test.describe("prerender manifest @prod", () => {
 
 test.describe("hotel sem JavaScript: a casca estática @prod", () => {
   test.use({ javaScriptEnabled: false });
-  // PENDENTE (critério 5/19): o HTML do build entrega o conteúdo do hotel num segmento Suspense
-  // "outlined" (`<div hidden id="S:…">`) que só aparece com o script de troca do React; sem JS fica o
-  // skeleton do `loading.tsx`. Precisa de uma decisão (ver relatório da F7c).
-  test.fixme(true, "sem JS o segmento outlined do loading.tsx não é trocado");
 
   test("nome, foto, quartos, diárias, 'a partir de', comentários e similares no HTML; buracos em skeleton", async ({
     page,
   }) => {
+    // PENDENTE (critério 5): o HTML do build entrega o conteúdo do hotel num segmento Suspense
+    // "outlined" (`<div hidden id="S:…">`) que só aparece com o script de troca do React; sem JS fica o
+    // skeleton do `loading.tsx` do hotel (arquivo da outra frente, não é desta).
+    test.fixme(true, "sem JS o segmento outlined do loading.tsx do hotel não é trocado");
     await page.goto(hotelPath(1));
     await expect(
       page.getByRole("heading", { level: 1, name: "Hotel Copacabana Palace" }),
@@ -58,6 +58,18 @@ test.describe("hotel sem JavaScript: a casca estática @prod", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Fotos de Hotel Copacabana Palace" }),
     ).toBeVisible();
+  });
+
+  test("página cheia da foto aberta direto: h1, foto e controles já no HTML, sem 'Carregando' (critério 19)", async ({
+    page,
+  }) => {
+    await page.goto("/hotel/1/photos/3");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Fotos de Hotel Copacabana Palace" }),
+    ).toBeVisible();
+    await expect(page.getByText("Foto 3 de 5", { exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Voltar para o hotel" })).toBeVisible();
+    await expect(page.getByText("Carregando foto…")).toBeHidden();
   });
 });
 

@@ -4,3 +4,4 @@
  */
 export { PhotoModalError } from "./components/PhotoModalError";
 export { PhotoModalLoading } from "./components/PhotoModalLoading";
+export { PhotoNotFound } from "./components/PhotoNotFound";

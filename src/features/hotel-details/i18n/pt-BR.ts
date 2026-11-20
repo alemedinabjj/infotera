@@ -99,8 +99,7 @@ export const ptBR = {
       `Foto ${index} de ${total} · ${hotel} | Infotera Hotéis`,
     metaNotFound: "Foto não encontrada | Infotera Hotéis",
     notFoundTitle: "Foto não encontrada",
-    notFoundBody: ({ hotel }: { hotel: string }) =>
-      `Este endereço não corresponde a nenhuma foto de ${hotel}.`,
+    notFoundBody: "Este endereço não corresponde a nenhuma foto deste hotel.",
     viewHotel: "Ver o hotel",
   },
   rooms: {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeHotel } from "@/shared/testing/fixtures";
-import { toPrerenderParams } from "./prerender";
+import { toPhotoPrerenderParams, toPrerenderParams } from "./prerender";
 
 describe("toPrerenderParams", () => {
   it("ordena por id e devolve o id como string", () => {
@@ -19,6 +19,35 @@ describe("toPrerenderParams", () => {
 
   it("lança com mensagem em português se a lista for vazia", () => {
     expect(() => toPrerenderParams([])).toThrow(
+      "A API não listou nenhum hotel: não há o que pré-renderizar.",
+    );
+  });
+});
+
+const IMG = "https://images.unsplash.com/photo-1";
+
+describe("toPhotoPrerenderParams", () => {
+  it("uma entrada por foto (1-based, como na URL), por hotel em ordem de id", () => {
+    const hotels = [
+      makeHotel({ id: 2, images: [IMG, IMG] }),
+      makeHotel({ id: 1, images: [IMG, IMG, IMG] }),
+    ];
+    expect(toPhotoPrerenderParams(hotels)).toEqual([
+      { hotelId: "1", photo: "1" },
+      { hotelId: "1", photo: "2" },
+      { hotelId: "1", photo: "3" },
+      { hotelId: "2", photo: "1" },
+      { hotelId: "2", photo: "2" },
+    ]);
+  });
+
+  it("deduplica hotéis repetidos", () => {
+    const hotel = makeHotel({ id: 3, images: [IMG] });
+    expect(toPhotoPrerenderParams([hotel, hotel])).toEqual([{ hotelId: "3", photo: "1" }]);
+  });
+
+  it("sem nenhuma foto em nenhum hotel, lança (a lista nunca pode ser vazia)", () => {
+    expect(() => toPhotoPrerenderParams([makeHotel({ id: 1, images: [] })])).toThrow(
       "A API não listou nenhum hotel: não há o que pré-renderizar.",
     );
   });
