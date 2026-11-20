@@ -3,7 +3,7 @@ import { apiGet } from "@/shared/api/http";
 import { hotelSchema } from "@/shared/api/schemas";
 import { z } from "@/shared/lib/zod";
 import { hotelDetailsMessages } from "../i18n/messages";
-import { backoffDelays, withRetry } from "../model/build-retry";
+import { backoffDelays, isRetryableBuildError, withRetry } from "../model/build-retry";
 import {
   type PhotoPrerenderParam,
   type PrerenderParam,
@@ -34,6 +34,7 @@ const loadHotels = ({
   withRetry(() => apiGet("/hotels", hotelsSchema, { query: { _sort: "id", _order: "asc" } }), {
     delays: backoffDelays(ATTEMPTS, BASE_DELAY_MS, MAX_DELAY_MS),
     sleep,
+    retryIf: isRetryableBuildError,
     onRetry: ({ attempt, total }) => log(t.waiting({ attempt, total })),
   }).catch((cause: unknown) => {
     throw new Error(t.unreachable({ url: env.NEXT_PUBLIC_API_URL }), { cause });

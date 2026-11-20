@@ -1,3 +1,5 @@
+import { isApiError } from "@/shared/api/http";
+
 /**
  * Esperas (ms) entre `attempts` tentativas: dobram a partir de `baseMs` e param em `maxMs`. Há uma
  * espera a menos que tentativas (não se espera depois da última).
@@ -16,6 +18,18 @@ type RetryOptions = {
   sleep: (ms: number) => Promise<void>;
   /** Chamado antes de dormir, com o número da tentativa que vem a seguir. */
   onRetry: (info: RetryInfo) => void;
+  /** Decide se o erro vale outra tentativa. Padrão: todo erro. `false` relança na hora. */
+  retryIf?: (error: unknown) => boolean;
+};
+
+/**
+ * Só vale repetir quando a API pode estar acordando: falha de rede, timeout ou 5xx. Resposta fora
+ * do schema (`parse`), 404 e demais 4xx não mudam com o tempo, então falham alto de primeira.
+ */
+export const isRetryableBuildError = (error: unknown): boolean => {
+  if (!isApiError(error)) return false;
+  if (error.kind === "network" || error.kind === "timeout") return true;
+  return error.kind === "http" && error.status !== null && error.status >= 500;
 };
 
 /**
@@ -24,13 +38,14 @@ type RetryOptions = {
  */
 export const withRetry = async <T>(
   fn: () => Promise<T>,
-  { delays, sleep, onRetry }: RetryOptions,
+  { delays, sleep, onRetry, retryIf = () => true }: RetryOptions,
 ): Promise<T> => {
   const total = delays.length + 1;
   for (const [index, delay] of delays.entries()) {
     try {
       return await fn();
     } catch (error) {
+      if (!retryIf(error)) throw error;
       onRetry({ attempt: index + 2, total, error });
       await sleep(delay);
     }

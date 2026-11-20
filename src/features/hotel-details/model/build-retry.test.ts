@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { backoffDelays, withRetry } from "./build-retry";
+import { ApiError } from "@/shared/api/http";
+import { backoffDelays, isRetryableBuildError, withRetry } from "./build-retry";
 
 describe("backoffDelays", () => {
   it("cresce de forma exponencial e respeita o teto", () => {
@@ -53,5 +54,39 @@ describe("withRetry", () => {
     await expect(withRetry(fn, { delays, sleep, onRetry: vi.fn() })).rejects.toThrow("falha 5");
     expect(calls).toBe(5);
     expect(sleep).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("isRetryableBuildError", () => {
+  it("repete falha de rede, timeout e 5xx", () => {
+    expect(isRetryableBuildError(new ApiError("network", null, "off"))).toBe(true);
+    expect(isRetryableBuildError(new ApiError("timeout", null, "lento"))).toBe(true);
+    expect(isRetryableBuildError(new ApiError("http", 503, "acordando"))).toBe(true);
+  });
+
+  it("não repete 404, outros 4xx, resposta fora do schema nem erro desconhecido", () => {
+    expect(isRetryableBuildError(new ApiError("http", 404, "nao achou"))).toBe(false);
+    expect(isRetryableBuildError(new ApiError("http", 400, "ruim"))).toBe(false);
+    expect(isRetryableBuildError(new ApiError("parse", 200, "schema"))).toBe(false);
+    expect(isRetryableBuildError(new Error("x"))).toBe(false);
+  });
+});
+
+describe("withRetry com retryIf", () => {
+  it("relança na hora o erro que não deve ser repetido, sem dormir", async () => {
+    const sleep = vi.fn(async () => undefined);
+    const fn = vi.fn(async () => {
+      throw new ApiError("http", 404, "nao achou");
+    });
+    await expect(
+      withRetry(fn, {
+        delays: [10, 20],
+        sleep,
+        onRetry: vi.fn(),
+        retryIf: isRetryableBuildError,
+      }),
+    ).rejects.toThrow("nao achou");
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
   });
 });
