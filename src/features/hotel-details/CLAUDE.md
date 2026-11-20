@@ -94,7 +94,7 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
 - **Casca + 3 buracos**, todos de **uma promessa** `criteria: Promise<SearchCriteria | null>`: `HotelStayBar` (RSC async em Suspense; `StayBarView` é o cliente), `RoomStayAction`
   (cliente, `use(criteria)`, um Suspense por quarto; fallback `RoomStayActionSkeleton` com as alturas do total e do botão, `animate-none`, `aria-hidden`) e `StayAware`
   (render prop; fallback = o mesmo link sem critérios: breadcrumb, similares, alerta de esgotado). Diária `R$ … por noite, sem taxas` fica na casca (`PriceTag nightly-line withoutFees`);
-  o selo do card é do quarto (`roomStaticBadge`: esgotado ou "Apenas N"); "Só N disponíveis" (insufficient) virou só o texto do motivo.
+  o selo da casca é do quarto (`roomStaticBadge`: esgotado ou "Apenas N"); com `insufficient` o `RoomStayAction` troca por `selectabilityBadge` ("Só N disponíveis", mesma posição e altura).
 - `StayEditProvider` não recebe mais a chave dos critérios: `useStayEdit(criteriaKey)` (a chave só existe depois da promessa). `RoomSelectionProvider` guarda o "Selecionando…" da lista
   (atravessa as ilhas). `todayISO()` só depois de `await connection()` (servidor) ou depois do `use(criteria)` (cliente).
 - **Falha de quartos/comentários não derruba a página (critério 24 da F4)**: `HotelDetailsView` resolve os dois **fora** do escopo cacheado com `settle()` (`api/settled.ts`:

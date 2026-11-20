@@ -209,7 +209,9 @@ describe("RoomsSection: disponibilidade (critérios 17–20)", () => {
       search: { ...criteria, rooms: 3, adults: 3 },
     });
     const room = card("Quarto Duplo");
-    expect(within(room).getByText("Apenas 2 quartos!")).toBeInTheDocument();
+    // O selo estático ("Apenas 2 quartos!") dá lugar ao da estadia, no mesmo lugar.
+    expect(within(room).getByText("Só 2 disponíveis")).toBeInTheDocument();
+    expect(within(room).queryByText("Apenas 2 quartos!")).not.toBeInTheDocument();
     const button = within(room).getByRole("button", { name: /Selecionar quarto/ });
     expect(button).toHaveAccessibleDescription(
       "Sua busca pede 3 quartos. Diminua a quantidade de quartos ou escolha outro tipo.",

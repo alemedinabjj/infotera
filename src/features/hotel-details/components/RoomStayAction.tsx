@@ -3,14 +3,16 @@
 import { type ReactNode, use } from "react";
 import type { Room } from "@/shared/api/schemas";
 import { useLocale } from "@/shared/i18n/client";
+import type { Locale } from "@/shared/i18n/config";
 import { isBeforeToday, nightsBetween, todayISO } from "@/shared/lib/dates";
 import { stayTotalWithFees } from "@/shared/lib/pricing";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
-import { InfoIcon, PriceTag } from "@/shared/ui";
+import { Badge, InfoIcon, PriceTag } from "@/shared/ui";
 import { useSelectRoom } from "../hooks/useSelectRoom";
 import {
   type RoomSelectability,
   roomSelectability,
+  selectabilityBadge,
   selectabilityMessage,
 } from "../model/room-selectability";
 import { RoomFooterLayout } from "./RoomFooterLayout";
@@ -58,7 +60,17 @@ const Total = ({
 };
 
 /**
- * O que do card do quarto depende da estadia: total, motivo do bloqueio e botão. Ilha cliente que
+ * "Só N disponíveis" (a busca pede mais quartos que os livres) troca o selo estático do quarto, na
+ * mesma posição e com a mesma altura. Nos demais casos vale o selo da casca (`badge`).
+ */
+const stayBadge = (selectability: RoomSelectability, locale: Locale, fallback: ReactNode) => {
+  if (selectability.kind !== "insufficient") return fallback;
+  const dynamic = selectabilityBadge(selectability, locale);
+  return dynamic ? <Badge tone={dynamic.tone}>{dynamic.text}</Badge> : fallback;
+};
+
+/**
+ * O que do card do quarto depende da estadia: selo "Só N disponíveis", total, motivo e botão. Ilha cliente que
  * espera a promessa dos critérios (`use`): na casca ela fica pendente e o Suspense mostra o
  * `RoomStayActionSkeleton`; por request resolve na hora. A regra é `roomSelectability`.
  */
@@ -84,7 +96,7 @@ export const RoomStayAction = ({
   return (
     <RoomFooterLayout
       selecting={selecting}
-      badge={badge}
+      badge={stayBadge(selectability, locale, badge)}
       nightly={nightly}
       total={<Total room={room} criteria={criteria} selectability={selectability} />}
       reason={
