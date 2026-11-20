@@ -95,7 +95,7 @@ test("em 320 px o cabeçalho cabe sem rolagem horizontal e o seletor tem alvo de
   await page.setViewportSize({ width: 320, height: 700 });
   for (const path of ["/", "/en"]) {
     await page.goto(path);
-    const link = page.getByRole("link", { name: /idioma|language/i });
+    const link = page.locator("header a[hreflang]");
     await expect(link).toBeVisible();
     expect(await noHorizontalScroll(page)).toBe(true);
     const box = await link.boundingBox();

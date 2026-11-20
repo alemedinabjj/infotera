@@ -38,6 +38,12 @@ const EN_HOTEL = `/en/hotel/${HOTEL_ID}?${criteriaQuery()}`;
 const PT_HOTEL = `/hotel/${HOTEL_ID}?${criteriaQuery()}`;
 
 test.describe("página do hotel em inglês", () => {
+  test("check-in e check-out em 12 h", async ({ page }) => {
+    await page.goto(EN_HOTEL);
+    await expect(page.getByText("From 3:00 PM")).toBeVisible();
+    await expect(page.getByText("Until 12:00 PM")).toBeVisible();
+  });
+
   test.beforeEach(({ isMobile }) => {
     test.skip(isMobile, "roda no desktop");
   });

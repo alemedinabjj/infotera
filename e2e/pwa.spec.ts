@@ -81,11 +81,31 @@ test.describe("cartão de instalação", () => {
     await expect(card(page)).toHaveCount(0);
   });
 
-  test("'Instalar' chama prompt() e appinstalled mostra o toast", async ({ page }) => {
+  test("'Agora não' devolve o foco a 'Buscar hotéis' e anuncia no status; só há um botão primário", async ({
+    page,
+  }) => {
     await page.goto("/");
     await fireInstallPrompt(page);
-    await page.getByRole("button", { name: "Instalar" }).click();
+    await expect(card(page)).toBeVisible();
+    const install = page.getByRole("button", { name: "Instalar app" });
+    // "Buscar hotéis" é o único primário da home; "Instalar app" é secundário (contorno, sem preenchimento).
+    expect(await install.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe(
+      "rgb(255, 255, 255)",
+    );
+    await page.getByRole("button", { name: "Agora não" }).click();
     await expect(card(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeFocused();
+    await expect(page.getByRole("status")).toContainText(
+      "Tudo bem. Você pode instalar depois pelo menu do navegador.",
+    );
+  });
+
+  test("'Instalar app' chama prompt() e appinstalled mostra o toast", async ({ page }) => {
+    await page.goto("/");
+    await fireInstallPrompt(page);
+    await page.getByRole("button", { name: "Instalar app" }).click();
+    await expect(card(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeFocused();
     expect(await page.evaluate(() => Reflect.get(window, "__installPrompts"))).toBe(1);
     await page.evaluate(() => window.dispatchEvent(new Event("appinstalled")));
     await expect(page.getByText("App instalado.")).toBeVisible();
