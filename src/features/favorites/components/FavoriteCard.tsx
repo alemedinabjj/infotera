@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Hotel } from "@/shared/api/schemas";
 import { cn } from "@/shared/lib/cn";
 import { focusWhenReady } from "@/shared/lib/focus";
+import { useLastSearch } from "@/shared/lib/last-search";
 import { motionPreset, staggerDelay } from "@/shared/lib/motion";
 import {
   CompareCheckbox,
@@ -50,6 +51,7 @@ type FocusTarget = "undo" | "heart" | null;
  */
 export const FavoriteCard = ({ hotel, entry, index, price }: FavoriteCardProps) => {
   const favorite = useIsFavorite(hotel.id);
+  const lastSearch = useLastSearch();
   const preset = motionPreset("list-item", useReducedMotion() ?? false);
   const [focus, setFocus] = useState<FocusTarget>(null);
   const undoRef = useRef<HTMLButtonElement>(null);
@@ -84,6 +86,7 @@ export const FavoriteCard = ({ hotel, entry, index, price }: FavoriteCardProps) 
         <CompactHotelCard
           hotel={hotel}
           criteria={null}
+          linkCriteria={lastSearch}
           layout="vertical"
           headingLevel={2}
           showDestination

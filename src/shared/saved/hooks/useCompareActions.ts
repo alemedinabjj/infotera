@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { readLastSearch } from "../../lib/last-search";
 import { toast } from "../../ui/toast/toast-store";
 import { SAVED_MESSAGES } from "../messages";
 import { type CompareEntry, compareHref } from "../model/comparison";
@@ -37,7 +38,7 @@ export const useCompareActions = (): CompareActions => {
           key: "compare:limit",
           action: {
             label: MESSAGES.viewAction,
-            onClick: () => router.push(compareHref(ids)),
+            onClick: () => router.push(compareHref(ids, readLastSearch())),
             navigates: true,
           },
         });

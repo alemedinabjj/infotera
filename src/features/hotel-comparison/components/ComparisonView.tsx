@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 import { compareHref, useComparison } from "@/shared/saved";
 import {
   Alert,
@@ -45,9 +46,13 @@ const EmptyCompare = () => {
   );
 };
 
-type BodyProps = { state: ComparisonState; ids: readonly number[] };
+type BodyProps = {
+  state: ComparisonState;
+  ids: readonly number[];
+  criteria: SearchCriteria | null;
+};
 
-const Body = ({ state, ids }: BodyProps) => {
+const Body = ({ state, ids, criteria }: BodyProps) => {
   switch (state.kind) {
     case "empty":
       return <EmptyCompare />;
@@ -86,7 +91,11 @@ const Body = ({ state, ids }: BodyProps) => {
               columns={state.hotels.map((hotel) => ({
                 id: hotel.id,
                 header: (
-                  <HotelColumnHeader hotel={hotel} onRemove={(id) => removeColumn(ids, id)} />
+                  <HotelColumnHeader
+                    hotel={hotel}
+                    criteria={criteria}
+                    onRemove={(id) => removeColumn(ids, id, criteria)}
+                  />
                 ),
               }))}
               rows={state.comparison.rows}
@@ -122,7 +131,7 @@ type ComparisonViewProps = {
  * compartilhável e funciona sem storage. Os 4 estados + offline, avisos e remoção de coluna.
  */
 export const ComparisonView = ({ headingLevel = 1 }: ComparisonViewProps) => {
-  const { ids, state } = useComparisonPage();
+  const { ids, criteria, state } = useComparisonPage();
   const Heading = headingLevel === 1 ? "h1" : "h2";
   return (
     <div className="flex flex-col gap-4">
@@ -134,7 +143,7 @@ export const ComparisonView = ({ headingLevel = 1 }: ComparisonViewProps) => {
       >
         {MESSAGES.title}
       </Heading>
-      <Body state={state} ids={ids} />
+      <Body state={state} ids={ids} criteria={criteria} />
     </div>
   );
 };

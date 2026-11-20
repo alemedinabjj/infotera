@@ -7,6 +7,7 @@ import { orderByIds } from "@/shared/api/ids";
 import { hotelsByIdsQueryOptions, roomsByHotelsQueryOptions } from "@/shared/api/queries";
 import type { Hotel, Room } from "@/shared/api/schemas";
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
+import { parseSearchCriteria, type SearchCriteria } from "@/shared/lib/search-params";
 import { parseCompareParams } from "../model/compare-params";
 import { buildHotelComparison, type HotelComparison } from "../model/hotel-comparison";
 import { usePruneNotFound } from "./usePruneNotFound";
@@ -18,7 +19,12 @@ export type ComparisonState =
   | { kind: "error"; retrying: boolean; retry: () => void }
   | { kind: "success"; hotels: Hotel[]; comparison: HotelComparison; notFound: number };
 
-type Result = { ids: number[]; state: ComparisonState };
+type Result = {
+  ids: number[];
+  /** Busca de origem na URL (`?destination=…&checkIn=…`): os links dos hotéis a levam junto. */
+  criteria: SearchCriteria | null;
+  state: ComparisonState;
+};
 
 const retryFailed = (queries: readonly UseQueryResult<unknown>[]) => {
   for (const query of queries) if (query.isError) void query.refetch();
@@ -60,6 +66,10 @@ const derive = (
 export const useComparisonPage = (): Result => {
   const params = useSearchParams();
   const ids = useMemo(() => parseCompareParams(new URLSearchParams(params.toString())), [params]);
+  const criteria = useMemo(() => {
+    const parsed = parseSearchCriteria(new URLSearchParams(params.toString()));
+    return parsed.success ? parsed.data : null;
+  }, [params]);
   const hotelsQuery = useQuery({
     ...hotelsByIdsQueryOptions(ids),
     placeholderData: keepPreviousData,
@@ -74,6 +84,7 @@ export const useComparisonPage = (): Result => {
     ids,
     hotelsQuery.data,
     hotelsQuery.isSuccess && !hotelsQuery.isPlaceholderData,
+    criteria,
   );
-  return { ids, state: derive(ids, hotelsQuery, roomsQuery, slow, notFound) };
+  return { ids, criteria, state: derive(ids, hotelsQuery, roomsQuery, slow, notFound) };
 };

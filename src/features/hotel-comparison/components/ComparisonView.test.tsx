@@ -67,6 +67,21 @@ describe("ComparisonView", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Comparar hotéis" })).toBeInTheDocument();
   });
 
+  it("links dos hotéis levam os critérios da busca de origem; Remover os mantém na URL", async () => {
+    const user = userEvent.setup();
+    const query =
+      "destination=Rio+de+Janeiro%2C+RJ&checkIn=2030-01-10&checkOut=2030-01-13&rooms=1&adults=2&children=0";
+    setTestUrl(`/compare?hotel=1&hotel=4&${query}`);
+    stub();
+    renderWithProviders(<ComparisonView />);
+    const link = await screen.findByRole("link", { name: seedHotel(1).name });
+    expect(link).toHaveAttribute("href", `/hotel/1?${query}`);
+    await user.click(
+      screen.getByRole("button", { name: `Remover ${seedHotel(4).name} da comparação` }),
+    );
+    expect(window.location.search).toBe(`?hotel=1&${query}`);
+  });
+
   it("mostra só diferenças e anuncia a contagem", async () => {
     const user = userEvent.setup();
     setTestUrl("/compare?hotel=1&hotel=4");

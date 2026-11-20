@@ -1,6 +1,7 @@
 "use client";
 
 import { revealBelowHeader } from "@/shared/lib/scroll";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 import { compareHref, comparisonActions } from "@/shared/saved";
 
 export const COMPARE_TITLE_ID = "compare-title";
@@ -10,8 +11,19 @@ export const COMPARE_TITLE_ID = "compare-title";
  * da bandeja se estiver nela (mesma intenção) e leva o foco ao título, porque a coluna e o botão
  * que tinham o foco somem.
  */
-export const removeColumn = (ids: readonly number[], id: number): void => {
-  window.history.replaceState(null, "", compareHref(ids.filter((item) => item !== id)));
+export const removeColumn = (
+  ids: readonly number[],
+  id: number,
+  criteria: SearchCriteria | null,
+): void => {
+  window.history.replaceState(
+    null,
+    "",
+    compareHref(
+      ids.filter((item) => item !== id),
+      criteria,
+    ),
+  );
   comparisonActions.remove(id);
   const title = document.getElementById(COMPARE_TITLE_ID);
   title?.focus({ preventScroll: true });
@@ -22,7 +34,18 @@ export const removeColumn = (ids: readonly number[], id: number): void => {
  * Tira ids que a API não devolveu: URL por `replaceState` e bandeja (o aviso "saiu da comparação"
  * precisa ser verdade). Não mexe no foco: ninguém clicou em nada.
  */
-export const dropMissingIds = (ids: readonly number[], missing: readonly number[]): void => {
-  window.history.replaceState(null, "", compareHref(ids.filter((id) => !missing.includes(id))));
+export const dropMissingIds = (
+  ids: readonly number[],
+  missing: readonly number[],
+  criteria: SearchCriteria | null,
+): void => {
+  window.history.replaceState(
+    null,
+    "",
+    compareHref(
+      ids.filter((id) => !missing.includes(id)),
+      criteria,
+    ),
+  );
   for (const id of missing) comparisonActions.remove(id);
 };

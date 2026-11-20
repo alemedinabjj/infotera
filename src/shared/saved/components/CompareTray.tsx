@@ -3,6 +3,7 @@
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useId } from "react";
+import { useLastSearch } from "../../lib/last-search";
 import { motionPreset } from "../../lib/motion";
 import { Button } from "../../ui/atoms/Button";
 import { IconButton } from "../../ui/atoms/IconButton";
@@ -39,6 +40,7 @@ const clearComparison = () => {
 };
 
 const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
+  const lastSearch = useLastSearch();
   const titleId = useId();
   const measure = useBottomBarInset();
   const { remove } = useCompareActions();
@@ -83,7 +85,13 @@ const TrayBar = ({ items }: { items: readonly CompareEntry[] }) => {
         >
           {MESSAGES.clear}
         </Button>
-        <CompareTrayAction count={items.length} href={compareHref(items.map((item) => item.id))} />
+        <CompareTrayAction
+          count={items.length}
+          href={compareHref(
+            items.map((item) => item.id),
+            lastSearch,
+          )}
+        />
       </div>
     </m.section>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { missingIds } from "@/shared/api/ids";
 import type { Hotel } from "@/shared/api/schemas";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 import { dropMissingIds } from "./compare-url";
 
 /**
@@ -14,6 +15,7 @@ export const usePruneNotFound = (
   ids: readonly number[],
   hotels: readonly Hotel[] | undefined,
   settled: boolean,
+  criteria: SearchCriteria | null,
 ): number => {
   const [removed, setRemoved] = useState(0);
   const missing = settled && hotels ? missingIds(ids, hotels) : [];
@@ -21,7 +23,7 @@ export const usePruneNotFound = (
   // biome-ignore lint/correctness/useExhaustiveDependencies: `key` resume `missing`/`ids`
   useEffect(() => {
     if (missing.length === 0) return;
-    dropMissingIds(ids, missing);
+    dropMissingIds(ids, missing, criteria);
     setRemoved((count) => count + missing.length);
   }, [key]);
   return removed;

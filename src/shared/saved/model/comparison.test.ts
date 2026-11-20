@@ -65,3 +65,25 @@ describe("compareHref", () => {
     expect(compareHref([])).toBe("/compare");
   });
 });
+
+describe("compareHref com critérios", () => {
+  const criteria = {
+    destination: "Rio de Janeiro, RJ",
+    checkIn: "2030-01-10",
+    checkOut: "2030-01-13",
+    rooms: 1,
+    adults: 2,
+    children: 0,
+  } as const;
+
+  it("leva os critérios da busca de origem depois dos hotéis", () => {
+    expect(compareHref([1, 4], criteria)).toBe(
+      "/compare?hotel=1&hotel=4&destination=Rio+de+Janeiro%2C+RJ&checkIn=2030-01-10&checkOut=2030-01-13&rooms=1&adults=2&children=0",
+    );
+  });
+
+  it("sem critérios (ou sem hotéis) o link é o simples", () => {
+    expect(compareHref([1, 4], null)).toBe("/compare?hotel=1&hotel=4");
+    expect(compareHref([], criteria)).toBe("/compare");
+  });
+});

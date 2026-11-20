@@ -3,14 +3,20 @@
 import Link from "next/link";
 import type { Hotel } from "@/shared/api/schemas";
 import { hotelHref } from "@/shared/lib/links";
+import type { SearchCriteria } from "@/shared/lib/search-params";
 import { FavoriteButton } from "@/shared/saved";
 import { Button, RemoteImage } from "@/shared/ui";
 import { COMPARISON_MESSAGES } from "../model/messages";
 
-type HotelColumnHeaderProps = { hotel: Hotel; onRemove: (id: number) => void };
+type HotelColumnHeaderProps = {
+  hotel: Hotel;
+  /** Busca de origem: o link abre o hotel com as mesmas datas. */
+  criteria: SearchCriteria | null;
+  onRemove: (id: number) => void;
+};
 
 /** Cabeçalho de coluna: foto, nome (link para o hotel), coração e "Remover". */
-export const HotelColumnHeader = ({ hotel, onRemove }: HotelColumnHeaderProps) => (
+export const HotelColumnHeader = ({ hotel, criteria, onRemove }: HotelColumnHeaderProps) => (
   <div className="flex min-w-36 flex-col gap-2 font-normal">
     <RemoteImage
       src={hotel.thumbnail}
@@ -20,7 +26,7 @@ export const HotelColumnHeader = ({ hotel, onRemove }: HotelColumnHeaderProps) =
     />
     <div className="flex items-start justify-between gap-1">
       <Link
-        href={hotelHref(hotel.id, null)}
+        href={hotelHref(hotel.id, criteria)}
         className="font-semibold text-fg hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         {hotel.name}

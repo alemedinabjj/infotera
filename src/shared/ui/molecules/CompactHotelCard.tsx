@@ -23,6 +23,8 @@ type CompactHotelCardProps = {
   showDestination?: boolean;
   /** Sobre a foto (ex.: coração). Controle secundário: `relative z-10`, depois do link no DOM. */
   media?: ReactNode;
+  /** Critérios só para o link (sem mudar o selo de disponibilidade): ex.: a última busca nos favoritos. */
+  linkCriteria?: SearchCriteria | null;
   /** Preço no lugar do padrão (`pricePerNight` do hotel, que diverge dos quartos em alguns hotéis). */
   price?: ReactNode;
   /** Linha no fim do card (ex.: "Comparar"). Controle secundário: `relative z-10`. */
@@ -50,6 +52,7 @@ export const CompactHotelCard = ({
   showDestination = false,
   media,
   price,
+  linkCriteria,
   actions,
   className,
 }: CompactHotelCardProps) => {
@@ -76,7 +79,7 @@ export const CompactHotelCard = ({
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3 sm:p-4">
         <Heading className="line-clamp-2 text-base font-semibold text-fg">
           <Link
-            href={hotelHref(hotel.id, criteria)}
+            href={hotelHref(hotel.id, linkCriteria ?? criteria)}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-hover:underline"
           >
             {hotel.name}
