@@ -18,6 +18,12 @@ compõe componentes vindos de `@/features/<nome>` (pelo `index.ts`).
   de `app/` (fora do idioma e fora do matcher do proxy). Não leia `cookies()` no layout (a F7c precisa de PPR): o idioma vem do segmento.
 - `[locale]/offline/page.tsx` é a página offline (estática). `global-error.tsx` ainda é pt-BR fixo (vira por idioma na tradução da parte 2).
 
+## Build (`next build`)
+- `/[locale]` sai como **SSG** (`●`): `generateStaticParams` do layout lista `pt-BR` e `en-US`, então `/pt-BR` e `/en-US` são HTML pré-renderizado.
+  O público `/` e `/en` não aparecem na tabela porque o `proxy.ts` os reescreve para esses segmentos internos; servem o mesmo HTML estático.
+  Também SSG: `/compare`, `/favorites`, `/my-bookings`, `/offline`. Dinâmicas (`ƒ`): `/checkout`, `/confirmation/[bookingId]`, `/hotel/[hotelId]`,
+  `/search` e `[...rest]` (404 por idioma).
+
 ## Mapa de rotas
 | Rota | Feature |
 |---|---|

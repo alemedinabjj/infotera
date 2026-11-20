@@ -132,9 +132,9 @@ para `shared/` quando aparecer o segundo uso.
   `alternatesFor`, `resolveLocaleRequest` do proxy), `messages` (`defineMessages`, `plural`), `client` (`I18nProvider`, `useLocale`), `server` (`getLocale` por
   `next/root-params`), `cookie`, `common/` (dicionário comum + `useCommonMessages`). Rotas: pt-BR sem prefixo, en-US em `/en`; o `app/[locale]` recebe a
   URL reescrita pelo `proxy.ts`. **Nunca derive `href` de `usePathname()` em render** (rewrite do proxy): use `localizePath(useLocale(), "/rota")`.
-  Todo texto novo nasce em `i18n/` (a catraca `src/i18n-guard.test.ts` conta o que ainda está fora).
-- **Traduzido (parte 2)**: `i18n/common` (erros, rótulos de comodidade/tipo/cama, disponibilidade, cancelamento, preço, paginação, `routes.*`), `i18n/units` (`formatUnit`), `saved/i18n`. Os helpers de `lib/` aceitam `locale` (padrão pt-BR). `SiteHeader` recebe `homeLabel`/`homeHref`; `copyCurrentUrl(locale)`.
-- Formatadores (`formatBRL`, `formatRating`, `formatDate`, `formatDateRange`, `formatCount`) aceitam `locale` (opcional, padrão pt-BR).
+  Todo texto novo nasce em `i18n/` (a catraca `src/i18n-guard.test.ts` está em 0: texto fora de `i18n/` quebra o teste).
+- **Traduzido (parte 2)**: `i18n/common` (erros, rótulos de comodidade/tipo/cama, disponibilidade, cancelamento, preço, paginação, `routes.*`), `i18n/units` (`formatUnit`), `saved/i18n`. Os helpers de `lib/` recebem `locale` (obrigatório, sem default). `SiteHeader` recebe `homeLabel`/`homeHref`; `copyCurrentUrl(locale)`.
+- Formatadores (`formatBRL`, `formatRating`, `formatDate`, `formatDateRange`, `formatCount`) recebem `locale` (obrigatório). `Dialog` usa `common.dialog.close` quando `closeLabel` não vem.
 - **Mapa**: `lib/map-tiles` (`TILE_ORIGIN`/`TILE_URL`/`MAX_ZOOM`/`tileUrl`, única fonte da CSP e do cache do SW), `lib/geo` (`boundsOf`, `fitPlan`, `osmLink`),
   `ui/map/` (`InteractiveMapImpl` react-leaflet + `MapMarkerElement` (DOM por `textContent`, nunca HTML) + `map.css` + `useInteractiveMap` que carrega o
   chunk sob demanda; o `retry` recarrega a página, porque o runtime do Turbopack guarda a promessa rejeitada do chunk e um novo `import()` falha igual). `leaflet.css` é CSS sem camada e vence os utilitários do Tailwind (cor de `a` dentro do mapa usa `!`).

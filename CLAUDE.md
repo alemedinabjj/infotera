@@ -94,9 +94,12 @@ features/<nome>/
 - Toda tela com dado remoto tem os 4 estados: loading (skeleton), erro (com retry), vazio, sucesso.
 - Identificadores e código em inglês; documentação em pt-BR. **Texto de UI só em `i18n/`** (pt-BR é a fonte, en-US é obrigatório:
   chave faltando = erro de compilação). Rotas vivem em `app/[locale]/`; links internos sempre por `localizePath(locale, "/rota")`
-  (nunca string `"/..."` crua nem `usePathname()` em render); `<html lang>` vem do locale; formatadores recebem `locale`.
-  A catraca `src/i18n-guard.test.ts` conta o texto que ainda está fora do dicionário (hoje: checkout, booking-confirmation,
-  hotel-details, favoritos/comparação/histórico) e só pode descer.
+  (nunca string `"/..."` crua nem `usePathname()` em render); `<html lang>` vem do locale; formatadores e funções de `model/`
+  recebem `locale` **obrigatório** (sem default: o tipo obriga o chamador; constantes técnicas de módulo passam `DEFAULT_LOCALE` de propósito).
+  Conteúdo da API (descrição, quartos, avaliações) fica no idioma original e leva `lang={contentLang(locale)}`.
+  A catraca `src/i18n-guard.test.ts` está em `COPY_BASELINE = 0` (nenhuma feature pendente): texto de UI fora de `i18n/` quebra o teste.
+  Ela pega JSX/atributos com letras, literais com acento, palavra funcional pt e uma lista curada de palavras de UI pt sem acento
+  (`Esgotado`, `Quartos`...; ids kebab-case minúsculos não contam). Palavra nova que escapar entra em `PT_UI_WORDS`.
 - Não commitar `node_modules`, `.env`, `mock-api/db.json`.
 
 ## Fluxo de trabalho com os agentes
