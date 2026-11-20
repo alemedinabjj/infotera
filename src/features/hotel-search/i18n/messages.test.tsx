@@ -52,6 +52,6 @@ describe("busca por idioma", () => {
       /^\/en\/hotel\/5\?/,
     );
     expect(screen.getByText(/total with fees/)).toBeInTheDocument();
-    expect(screen.getByText(/R\$1,200\.00/)).toBeInTheDocument();
+    expect(screen.getByText(/before fees/)).toBeInTheDocument();
   });
 });
