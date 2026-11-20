@@ -1,14 +1,29 @@
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+
 /** `pluralize(1, "noite", "noites")` → `"1 noite"`; 0 e n > 1 usam o plural. */
 export const pluralize = (count: number, singular: string, plural: string): string =>
   `${count.toLocaleString("pt-BR")} ${count === 1 ? singular : plural}`;
 
-const ratingFormatter = new Intl.NumberFormat("pt-BR", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
+const ratingFormatters = new Map<Locale, Intl.NumberFormat>();
 
-/** Nota com uma casa decimal e vírgula: `4,5`. */
-export const formatRating = (rating: number): string => ratingFormatter.format(rating);
+const ratingFormatter = (locale: Locale): Intl.NumberFormat => {
+  const cached = ratingFormatters.get(locale);
+  if (cached) return cached;
+  const created = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+  ratingFormatters.set(locale, created);
+  return created;
+};
+
+/** Nota com uma casa decimal: `4,5` em pt-BR e `4.5` em en-US. */
+export const formatRating = (rating: number, locale: Locale = DEFAULT_LOCALE): string =>
+  ratingFormatter(locale).format(rating);
+
+/** Inteiro agrupado pelo idioma: `1.200` em pt-BR e `1,200` em en-US. */
+export const formatCount = (count: number, locale: Locale = DEFAULT_LOCALE): string =>
+  count.toLocaleString(locale);
 
 type GuestCounts = { adults: number; children: number; rooms: number };
 

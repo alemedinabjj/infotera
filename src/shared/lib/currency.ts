@@ -1,19 +1,34 @@
-const withCents = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const withoutCents = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+
+const formatters = new Map<string, Intl.NumberFormat>();
+
+const currencyFormatter = (locale: Locale, cents: boolean): Intl.NumberFormat => {
+  const key = `${locale}:${cents}`;
+  const cached = formatters.get(key);
+  if (cached) return cached;
+  const created = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "BRL",
+    ...(cents ? {} : { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+  });
+  formatters.set(key, created);
+  return created;
+};
 
 type FormatBRLOptions = {
   /** `false` omite os centavos (ex.: preço por noite compacto). Padrão: `true`. */
   cents?: boolean;
+  /** Idioma da formatação (padrão pt-BR). O valor continua em BRL, sem conversão de câmbio. */
+  locale?: Locale;
 };
 
-/** Formata um valor em reais como `R$ 1.200,00` (espaço não separável entre `R$` e o número). */
-export const formatBRL = (reais: number, { cents = true }: FormatBRLOptions = {}): string =>
-  (cents ? withCents : withoutCents).format(reais);
+/**
+ * Formata um valor em reais: `R$ 1.200,00` em pt-BR (espaço não separável) e `R$1,200.00` em en-US.
+ */
+export const formatBRL = (
+  reais: number,
+  { cents = true, locale = DEFAULT_LOCALE }: FormatBRLOptions = {},
+): string => currencyFormatter(locale, cents).format(reais);
 
 /** Converte reais em centavos inteiros, sem erro de ponto flutuante. */
 export const reaisToCents = (reais: number): number => Math.round(reais * 100);

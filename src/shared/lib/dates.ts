@@ -1,4 +1,5 @@
 import { z } from "@/shared/lib/zod";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
 
 /** Data de calendário no formato `YYYY-MM-DD` (sem hora e sem fuso). */
 export type ISODate = string;
@@ -75,75 +76,79 @@ export const nightsBetween = (checkIn: ISODate, checkOut: ISODate): number =>
 export const isBeforeToday = (value: ISODate, today: ISODate): boolean =>
   toUTCms(value) < toUTCms(today);
 
-type DateFormat = "short" | "long";
+type DateFormat = "short" | "long" | "medium";
 
-const shortFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-const longFormatter = new Intl.DateTimeFormat("pt-BR", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
-
-/** Formata uma data ISO sem off-by-one de fuso. `short` = 01/12/2026. */
-export const formatDate = (value: ISODate, format: DateFormat = "short"): string => {
-  const date = new Date(toUTCms(value));
-  switch (format) {
-    case "short":
-      return shortFormatter.format(date);
-    case "long":
-      return longFormatter.format(date);
-    default: {
-      const unreachable: never = format;
-      return unreachable;
-    }
-  }
+const OPTIONS: Readonly<Record<DateFormat, Intl.DateTimeFormatOptions>> = {
+  short: { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" },
+  long: { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" },
+  medium: { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" },
 };
 
-const MONTHS_SHORT = [
-  "jan",
-  "fev",
-  "mar",
-  "abr",
-  "mai",
-  "jun",
-  "jul",
-  "ago",
-  "set",
-  "out",
-  "nov",
-  "dez",
-] as const;
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+const dateFormatter = (locale: Locale, format: DateFormat): Intl.DateTimeFormat => {
+  const key = `${locale}:${format}`;
+  const cached = dateFormatters.get(key);
+  if (cached) return cached;
+  const created = new Intl.DateTimeFormat(locale, OPTIONS[format]);
+  dateFormatters.set(key, created);
+  return created;
+};
+
+/**
+ * Formata uma data ISO sem off-by-one de fuso. `short` = `01/12/2026` (pt-BR) ou `12/01/2026`
+ * (en-US); `medium` = `1 de dez. de 2026` ou `Dec 1, 2026`; `long` inclui o dia da semana.
+ */
+export const formatDate = (
+  value: ISODate,
+  format: DateFormat = "short",
+  locale: Locale = DEFAULT_LOCALE,
+): string => dateFormatter(locale, format).format(new Date(toUTCms(value)));
+
+const MONTHS_SHORT: Readonly<Record<Locale, readonly string[]>> = {
+  "pt-BR": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
+  "en-US": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+};
 
 type DayMonthYear = { day: number; month: string; year: number };
 
-const toDayMonthYear = (value: ISODate): DayMonthYear => {
+const toDayMonthYear = (value: ISODate, locale: Locale): DayMonthYear => {
   const date = new Date(toUTCms(value));
   return {
     day: date.getUTCDate(),
-    month: MONTHS_SHORT[date.getUTCMonth()] ?? "",
+    month: MONTHS_SHORT[locale][date.getUTCMonth()] ?? "",
     year: date.getUTCFullYear(),
   };
 };
 
+/** `12 dez` (pt-BR) ou `Dec 12` (en-US), com o ano quando pedido (`Dec 12, 2027`). */
+const dayAndMonth = (part: DayMonthYear, locale: Locale, withYear: boolean): string => {
+  if (locale === "en-US") return `${part.month} ${part.day}${withYear ? `, ${part.year}` : ""}`;
+  return `${part.day} ${part.month}${withYear ? ` ${part.year}` : ""}`;
+};
+
 /**
- * Período curto para listas e resumos: `12–15 dez` (mesmo mês), `30 dez – 2 jan` (meses
- * diferentes). O ano só aparece quando alguma das pontas não é o ano de `today`.
+ * Período curto para listas e resumos: `12–15 dez` / `Dec 12–15` (mesmo mês), `30 dez – 2 jan` /
+ * `Dec 30 – Jan 2` (meses diferentes). O ano só aparece quando alguma das pontas não é o ano de `today`.
  */
-export const formatDateRange = (checkIn: ISODate, checkOut: ISODate, today: ISODate): string => {
-  const start = toDayMonthYear(checkIn);
-  const end = toDayMonthYear(checkOut);
-  const currentYear = toDayMonthYear(today).year;
+export const formatDateRange = (
+  checkIn: ISODate,
+  checkOut: ISODate,
+  today: ISODate,
+  locale: Locale = DEFAULT_LOCALE,
+): string => {
+  const start = toDayMonthYear(checkIn, locale);
+  const end = toDayMonthYear(checkOut, locale);
+  const currentYear = toDayMonthYear(today, locale).year;
   const showYear = start.year !== currentYear || end.year !== currentYear;
-  const withYear = (part: DayMonthYear) => `${part.day} ${part.month} ${part.year}`;
-  if (start.year !== end.year) return `${withYear(start)} – ${withYear(end)}`;
-  const year = showYear ? ` ${end.year}` : "";
-  if (start.month === end.month) return `${start.day}–${end.day} ${end.month}${year}`;
-  return `${start.day} ${start.month} – ${end.day} ${end.month}${year}`;
+  if (start.year !== end.year) {
+    return `${dayAndMonth(start, locale, true)} – ${dayAndMonth(end, locale, true)}`;
+  }
+  if (start.month !== end.month) {
+    return `${dayAndMonth(start, locale, false)} – ${dayAndMonth(end, locale, showYear)}`;
+  }
+  if (locale === "en-US") {
+    return `${start.month} ${start.day}–${end.day}${showYear ? `, ${end.year}` : ""}`;
+  }
+  return `${start.day}–${end.day} ${end.month}${showYear ? ` ${end.year}` : ""}`;
 };

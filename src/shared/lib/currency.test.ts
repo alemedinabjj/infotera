@@ -30,3 +30,15 @@ describe("reaisToCents / centsToReais", () => {
     expect(centsToReais(1999)).toBe(19.99);
   });
 });
+
+describe("formatBRL por idioma", () => {
+  it("en-US usa o padrão americano sem converter a moeda", () => {
+    expect(formatBRL(1200, { locale: "en-US" })).toBe("R$1,200.00");
+    expect(formatBRL(1200, { locale: "en-US", cents: false })).toBe("R$1,200");
+    expect(formatBRL(0, { locale: "en-US" })).toBe("R$0.00");
+  });
+
+  it("pt-BR explícito é igual ao padrão", () => {
+    expect(formatBRL(1200, { locale: "pt-BR" })).toBe(formatBRL(1200));
+  });
+});
