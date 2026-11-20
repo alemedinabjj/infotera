@@ -153,7 +153,8 @@ describe("InteractiveMapImpl (Leaflet real no jsdom)", () => {
     const first = markerButton(/Hotel 1,/);
     act(() => first.focus());
     pressEnter(first);
-    await screen.findByRole("dialog");
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(dialog).getByRole("link")).toHaveFocus());
     await user.tab();
     expect(screen.getByRole("button", { name: "Mostrar na lista" })).toHaveFocus();
     await user.tab();
@@ -169,7 +170,8 @@ describe("InteractiveMapImpl (Leaflet real no jsdom)", () => {
     const second = markerButton(/Hotel 2,/);
     act(() => second.focus());
     pressEnter(second);
-    await screen.findByRole("dialog");
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(dialog).getByRole("link")).toHaveFocus());
     await user.tab();
     await user.tab();
     await user.tab();
@@ -182,7 +184,8 @@ describe("InteractiveMapImpl (Leaflet real no jsdom)", () => {
     const first = markerButton(/Hotel 1,/);
     act(() => first.focus());
     pressEnter(first);
-    await screen.findByRole("dialog");
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(dialog).getByRole("link")).toHaveFocus());
     await user.tab({ shift: true });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(markerButton(/Hotel 1,/)).toHaveFocus();
