@@ -134,9 +134,7 @@ export const ResultsMap = (props: ResultsMapProps) => {
       aria-busy={load.status === "loading"}
       className="group/map relative isolate"
     >
-      {load.status === "ready" ? (
-        <SkipMapLink panelId={props.id} firstHotelId={props.hotels[0]?.id} />
-      ) : null}
+      {load.status === "ready" ? <SkipMapLink firstHotelId={props.hotels[0]?.id} /> : null}
       {alert ?? (
         <>
           <div className={FRAME}>

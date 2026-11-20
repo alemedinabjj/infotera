@@ -92,7 +92,7 @@ describe("ResultsMap", () => {
     const reveal = vi.fn();
     useMapSync.getState().registerReveal(reveal);
     renderMap();
-    await userEvent.click(screen.getByRole("link", { name: "Pular o mapa" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pular o mapa" }));
     expect(reveal).toHaveBeenCalledWith(1);
   });
 
@@ -181,7 +181,7 @@ describe("ResultsMap", () => {
   it("'Pular o mapa' é o primeiro filho do painel e só existe com o mapa pronto", () => {
     renderMap();
     expect(document.getElementById("painel")?.firstElementChild).toBe(
-      screen.getByRole("link", { name: "Pular o mapa" }),
+      screen.getByRole("button", { name: "Pular o mapa" }),
     );
   });
 

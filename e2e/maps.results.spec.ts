@@ -124,7 +124,7 @@ test.describe("mapa dos resultados", () => {
     await openResultsMap(page);
     await mapButton(page).focus();
     await page.keyboard.press("Tab");
-    const skip = page.getByRole("link", { name: "Pular o mapa" });
+    const skip = page.getByRole("button", { name: "Pular o mapa" });
     await expect(skip).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.locator(MAP)).toBeFocused();
@@ -258,7 +258,7 @@ test.describe("popup: teclado", () => {
     await expect(hint).toHaveCSS("opacity", "0");
     await mapButton(page).focus();
     await page.keyboard.press("Tab");
-    const skip = page.getByRole("link", { name: "Pular o mapa" });
+    const skip = page.getByRole("button", { name: "Pular o mapa" });
     await expect(skip).toBeFocused();
     const map = await page.locator(MAP).boundingBox();
     const skipBox = await skip.boundingBox();

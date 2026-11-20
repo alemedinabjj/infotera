@@ -67,14 +67,14 @@ type PopupBodyProps = {
  * último fecha e vai ao próximo marcador.
  */
 const PopupBody = ({ titleId, openCount, closeLabel, onClose, children }: PopupBodyProps) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDialogElement>(null);
 
   // O Leaflet mantém o popup `visibility: hidden` até posicioná-lo (e `focus()` num elemento oculto
   // não faz nada): o foco entra no primeiro quadro em que o popup já está visível.
   // biome-ignore lint/correctness/useExhaustiveDependencies: o gatilho é o contador de aberturas
   useEffect(() => focusWhenVisible(() => focusables(ref.current)[0]), [openCount]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
     const items = focusables(ref.current);
     const action = popupKeyAction({
       key: event.key,
@@ -89,12 +89,13 @@ const PopupBody = ({ titleId, openCount, closeLabel, onClose, children }: PopupB
   };
 
   return (
-    <div
+    // `<dialog open>` (não modal, sem `showModal`): a semântica de diálogo vem do elemento nativo.
+    <dialog
       ref={ref}
-      role="dialog"
+      open
       aria-labelledby={titleId}
       onKeyDown={onKeyDown}
-      className="relative"
+      className="relative m-0 block w-auto max-w-none border-0 bg-transparent p-0 text-inherit"
     >
       {children}
       <IconButton
@@ -103,7 +104,7 @@ const PopupBody = ({ titleId, openCount, closeLabel, onClose, children }: PopupB
         onClick={() => onClose("marker")}
         className="absolute top-1 right-1"
       />
-    </div>
+    </dialog>
   );
 };
 

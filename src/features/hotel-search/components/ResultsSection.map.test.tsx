@@ -57,7 +57,7 @@ describe("ResultsSection: painel do mapa", () => {
       false,
     );
     expect(document.getElementById("painel")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Pular o mapa" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pular o mapa" })).not.toBeInTheDocument();
   });
 
   it.each<ResultsView>([
