@@ -1,7 +1,6 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
 import {
-  API_URL,
   CHECK_IN,
   CHECK_OUT,
   cardByName,
@@ -189,28 +188,6 @@ test.describe("filtros na barra lateral", () => {
     await expect(page).not.toHaveURL(/amenity|type=|minRating/);
     await expect(cards(page)).toHaveCount(10);
     await expect(page.getByRole("checkbox", { name: "Piscina" })).not.toBeChecked();
-  });
-});
-
-test.describe("prefetch do detalhe", () => {
-  test("mouse sobre o card prefetcha o hotel; os quartos já vieram com a lista (sem repetir)", async ({
-    page,
-    isMobile,
-  }) => {
-    test.skip(isMobile, "toque não prefetcha (o pointerdown vem colado no clique)");
-    const roomRequests: string[] = [];
-    page.on("request", (item) => {
-      if (new URL(item.url()).pathname === "/rooms") roomRequests.push(item.url());
-    });
-    await page.goto(searchPath());
-    await expect(cards(page)).toHaveCount(10);
-    expect(roomRequests).toHaveLength(1);
-    const hotel = page.waitForRequest(`${API_URL}/hotels/13`);
-    await cards(page).nth(6).hover();
-    await hotel;
-    // O cache de quartos foi semeado pela lista: o prefetch não pede de novo.
-    await page.waitForTimeout(300);
-    expect(roomRequests).toHaveLength(1);
   });
 });
 

@@ -58,7 +58,7 @@ export default defineConfig({
             : `npm run dev -- -p ${frontPort}`,
           url: baseURL,
           reuseExistingServer: !isCI,
-          env: { NEXT_PUBLIC_API_URL: proxyURL },
+          env: { NEXT_PUBLIC_API_URL: proxyURL, E2E_HIDE_DEV_INDICATORS: "1" },
           // O build espera a mock-api (retry de `generateStaticParams`) e prerenderiza 120 páginas.
           timeout: isProd ? 600_000 : 60_000,
         },
