@@ -4,6 +4,7 @@ import {
   criteria,
   fillPayment,
   fillPersonal,
+  futureExpiry,
   seedSelection,
 } from "./helpers/checkout";
 import { cards, searchPath } from "./helpers/hotel-search";
@@ -81,6 +82,32 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await expect(page.getByRole("textbox", { name: "CPF" })).toHaveValue("");
   });
 
+  test("o resumo do cartão na revisão sai do DOM ao esconder a rota e o Voltar leva ao pagamento (critério 22)", async ({
+    page,
+  }) => {
+    await goToPayment(page);
+    await fillPayment(page);
+    await clickPrimary(page, "Revisar reserva");
+    await page.getByRole("heading", { level: 2, name: "Revise e confirme" }).waitFor();
+    await expect(page.getByText(/^Visa •••• 1111/)).toBeVisible();
+    const secrets = ["•••• 1111", futureExpiry(), "ANA SOUZA", "982.247"];
+    const html = () => page.evaluate(() => document.body.innerHTML);
+    for (const secret of secrets) expect(await html()).toContain(secret);
+
+    await logo(page).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: "Buscar hotéis" })).toBeVisible();
+    // A rota escondida continua anexada: nada do cartão pode ter ficado no texto dela.
+    const hidden = await html();
+    for (const secret of secrets) expect(hidden).not.toContain(secret);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/checkout$/);
+    await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
+    await expect(page.getByText(/os dados do cartão não ficam salvos/)).toBeVisible();
+    await expect(page.getByLabel("Número do cartão")).toHaveValue("");
+  });
+
   test("o termo de aceite aberto aparece fechado ao voltar (critério 25)", async ({ page }) => {
     await goToPayment(page);
     await fillPayment(page);
@@ -94,7 +121,8 @@ test.describe("checkout: o cartão não fica no DOM escondido @prod", () => {
     await expect(page).toHaveURL(/\/$/);
     await page.goBack();
     await expect(page).toHaveURL(/\/checkout$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Revise e confirme" })).toBeVisible();
+    // O cartão foi apagado ao esconder a rota: a revisão não volta, o pagamento sim (critério 22).
+    await expect(page.getByRole("heading", { level: 2, name: "Pagamento" })).toBeVisible();
     await expect(terms).toBeHidden();
   });
 });
