@@ -1,18 +1,27 @@
-/** `Mostrando 1–5 de 14 comentários` · `3 comentários` (uma página só) · `1 comentário`. */
-export const reviewsRangeLabel = (page: number, total: number, pageSize: number): string => {
-  if (total === 1) return "1 comentário";
-  if (total <= pageSize) return `${total} comentários`;
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { formatCount } from "@/shared/lib/format";
+import { hotelDetailsMessages } from "../i18n/messages";
+
+/** `Mostrando 1–5 de 14 comentários` · `3 comentários` (uma página só) · `1 comentário` (e em inglês). */
+export const reviewsRangeLabel = (
+  page: number,
+  total: number,
+  pageSize: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => {
+  const t = hotelDetailsMessages.get(locale).reviews;
+  if (total === 1) return t.one;
+  if (total <= pageSize) return t.many({ count: total });
   const from = (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
-  return `Mostrando ${from}–${to} de ${total} comentários`;
+  return t.range({ from, to, total });
 };
 
 /** `42 pessoas acharam útil` · `1 pessoa achou útil` · `null` quando ninguém votou. */
-export const helpfulLabel = (count: number): string | null => {
+export const helpfulLabel = (count: number, locale: Locale = DEFAULT_LOCALE): string | null => {
   if (count <= 0) return null;
-  return count === 1
-    ? "1 pessoa achou útil"
-    : `${count.toLocaleString("pt-BR")} pessoas acharam útil`;
+  const t = hotelDetailsMessages.get(locale).reviews;
+  return count === 1 ? t.helpfulOne : t.helpfulMany({ count: formatCount(count, locale) });
 };
 
 /** Até 2 iniciais (primeiro e último nome) para o avatar sem foto: `Maria Silva` → `MS`. */

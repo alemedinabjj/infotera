@@ -4,11 +4,13 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { hotelRoomsQueryOptions } from "@/shared/api/queries";
 import { getServerQueryClient } from "@/shared/api/server-query-client";
+import type { Locale } from "@/shared/i18n/config";
 import { isBeforeToday, todayISO } from "@/shared/lib/dates";
 import { type SearchCriteria, searchCriteriaToQueryString } from "@/shared/lib/search-params";
 import { describeStay } from "@/shared/lib/stay-summary";
 import { loadHotel } from "../api/hotel.server";
 import { reviewsQueryOptions } from "../api/reviews";
+import { hotelDetailsMessages } from "../i18n/messages";
 import { hotelBreadcrumb } from "../model/breadcrumb";
 import { Breadcrumb } from "./Breadcrumb";
 import { Gallery } from "./Gallery";
@@ -27,6 +29,8 @@ import { SoldOutAlert } from "./SoldOutAlert";
 import { StayEditProvider } from "./StayEditContext";
 
 type HotelDetailsViewProps = {
+  /** Idioma da rota (`[locale]`): vem dos params da página. */
+  locale: Locale;
   hotelId: number;
   /** `null`: acesso direto, sem datas. */
   criteria: SearchCriteria | null;
@@ -44,6 +48,7 @@ type HotelDetailsViewProps = {
  * chaves com `useSuspenseQuery` (streaming por seção). Hotel inexistente → `notFound()`.
  */
 export const HotelDetailsView = async ({
+  locale,
   hotelId,
   criteria,
   renderDatesForm,
@@ -56,9 +61,10 @@ export const HotelDetailsView = async ({
   if (loaded.kind === "not-found") notFound();
   const { hotel } = loaded;
 
+  const t = hotelDetailsMessages.get(locale);
   const today = todayISO();
-  const summary = criteria ? describeStay(criteria, today) : null;
-  const breadcrumb = hotelBreadcrumb(hotel, criteria);
+  const summary = criteria ? describeStay(criteria, today, locale) : null;
+  const breadcrumb = hotelBreadcrumb(hotel, criteria, locale);
   const pastDates = criteria ? isBeforeToday(criteria.checkIn, today) : false;
 
   return (
@@ -66,14 +72,16 @@ export const HotelDetailsView = async ({
       <div className="flex flex-col gap-8 lg:gap-12">
         <div className="flex flex-col gap-4">
           <Breadcrumb {...breadcrumb} />
-          <HotelHeader hotel={hotel} stayLabel={summary}>
+          <HotelHeader locale={locale} hotel={hotel} stayLabel={summary}>
             <Gallery name={hotel.name} images={hotel.images} />
           </HotelHeader>
-          <SectionNav />
+          <SectionNav locale={locale} />
         </div>
-        <HotelOverview hotel={hotel} />
-        <Section id="quartos" title="Quartos">
-          {hotel.availableRooms === 0 ? <SoldOutAlert hasDates={criteria !== null} /> : null}
+        <HotelOverview hotel={hotel} locale={locale} />
+        <Section id="quartos" title={t.sections.rooms}>
+          {hotel.availableRooms === 0 ? (
+            <SoldOutAlert hasDates={criteria !== null} locale={locale} />
+          ) : null}
           <StayEditProvider criteriaKey={criteria ? searchCriteriaToQueryString(criteria) : "none"}>
             <HotelStayBar
               criteria={criteria}
@@ -90,18 +98,23 @@ export const HotelDetailsView = async ({
             />
           </StayEditProvider>
         </Section>
-        <LocationMap hotel={hotel} />
-        <HotelPolicies hotel={hotel} />
-        <Section id="avaliacoes" title="Avaliações">
+        <LocationMap hotel={hotel} locale={locale} />
+        <HotelPolicies hotel={hotel} locale={locale} />
+        <Section id="avaliacoes" title={t.sections.reviews}>
           <ReviewsSection
             hotelId={hotel.id}
             rating={hotel.rating}
             reviewCount={hotel.reviewCount}
           />
         </Section>
-        <Section id="similares" title={`Hotéis similares em ${hotel.destination}`}>
-          <Suspense fallback={<SimilarHotelsSkeleton />}>
-            <SimilarHotels hotelId={hotel.id} destination={hotel.destination} criteria={criteria} />
+        <Section id="similares" title={t.sections.similarIn({ destination: hotel.destination })}>
+          <Suspense fallback={<SimilarHotelsSkeleton locale={locale} />}>
+            <SimilarHotels
+              locale={locale}
+              hotelId={hotel.id}
+              destination={hotel.destination}
+              criteria={criteria}
+            />
           </Suspense>
         </Section>
       </div>

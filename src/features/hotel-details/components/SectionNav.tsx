@@ -1,12 +1,17 @@
+import type { Locale } from "@/shared/i18n/config";
 import { buttonClassName } from "@/shared/ui";
-import { HOTEL_SECTIONS } from "../model/sections";
+import { hotelDetailsMessages } from "../i18n/messages";
+import { HOTEL_SECTIONS, sectionLabel } from "../model/sections";
 
 /**
  * Âncoras das seções (sem JS). Estática, não sticky: um segundo elemento fixo somaria com o header
  * e esconderia o foco. No celular rola na horizontal dentro de si.
  */
-export const SectionNav = () => (
-  <nav aria-label="Seções da página" className="border-y border-border">
+export const SectionNav = ({ locale }: { locale: Locale }) => (
+  <nav
+    aria-label={hotelDetailsMessages.get(locale).sections.navLabel}
+    className="border-y border-border"
+  >
     <ul
       className={
         // Celular: a borda direita esmaece para indicar que dá para rolar; o `pr-8` deixa o último
@@ -20,7 +25,7 @@ export const SectionNav = () => (
             href={`#${section.id}`}
             className={`${buttonClassName({ variant: "ghost", size: "sm" })} whitespace-nowrap`}
           >
-            {section.label}
+            {sectionLabel(section.key, locale)}
           </a>
         </li>
       ))}

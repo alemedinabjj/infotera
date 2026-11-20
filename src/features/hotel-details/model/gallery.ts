@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { hotelDetailsMessages } from "../i18n/messages";
+
 /** Fotos mostradas na página: a principal + até 4 miniaturas. */
 export const GALLERY_PREVIEW_COUNT = 5;
 
@@ -41,16 +44,26 @@ export const galleryKeyAction = (key: string): GalleryAction | null => {
 };
 
 /** `Hotel Copacabana Palace, foto 2 de 5` (índice base 0). */
-export const photoAlt = (name: string, index: number, total: number): string =>
-  `${name}, foto ${index + 1} de ${total}`;
+export const photoAlt = (
+  name: string,
+  index: number,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => hotelDetailsMessages.get(locale).gallery.photoAlt({ name, index: index + 1, total });
 
 /** Nome acessível do botão-foto: `Abrir foto 2 de 5`. */
-export const photoOpenLabel = (index: number, total: number): string =>
-  `Abrir foto ${index + 1} de ${total}`;
+export const photoOpenLabel = (
+  index: number,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => hotelDetailsMessages.get(locale).gallery.openPhoto({ index: index + 1, total });
 
 /** `Foto 2 de 5` (contador do lightbox). */
-export const photoCounter = (index: number, total: number): string =>
-  `Foto ${index + 1} de ${total}`;
+export const photoCounter = (
+  index: number,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => hotelDetailsMessages.get(locale).gallery.counter({ index: index + 1, total });
 
 export type GalleryPreview = {
   /** Índice (na lista completa) das miniaturas mostradas: 1..4. */

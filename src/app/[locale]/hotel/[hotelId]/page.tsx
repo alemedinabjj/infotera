@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
+  datesFormLabels,
   HotelDetailsView,
   hotelPageTitle,
   loadHotel,
   parseHotelId,
   STAY_EDIT_TITLE_ID,
 } from "@/features/hotel-details";
+import { DEFAULT_LOCALE, isLocale } from "@/shared/i18n/config";
 import { alternatesFor } from "@/shared/i18n/paths";
 import { parseSearchCriteria } from "@/shared/lib/search-params";
 import { HotelDatesForm } from "./HotelDatesForm";
@@ -14,8 +16,10 @@ import { HotelDatesForm } from "./HotelDatesForm";
 export const generateMetadata = async ({
   params,
 }: PageProps<"/[locale]/hotel/[hotelId]">): Promise<Metadata> => {
-  const id = parseHotelId((await params).hotelId);
-  if (id === null) return { title: hotelPageTitle({ kind: "not-found" }) };
+  const { locale: rawLocale, hotelId } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
+  const id = parseHotelId(hotelId);
+  if (id === null) return { title: hotelPageTitle({ kind: "not-found" }, locale) };
   const alternates = { languages: alternatesFor(`/hotel/${id}`) };
   try {
     const loaded = await loadHotel(id);
@@ -23,12 +27,12 @@ export const generateMetadata = async ({
       alternates,
       title:
         loaded.kind === "found"
-          ? hotelPageTitle({ kind: "found", name: loaded.hotel.name })
-          : hotelPageTitle({ kind: "not-found" }),
+          ? hotelPageTitle({ kind: "found", name: loaded.hotel.name }, locale)
+          : hotelPageTitle({ kind: "not-found" }, locale),
     };
   } catch {
     // Metadata nunca derruba a página: o erro real aparece (com retry) no `error.tsx`.
-    return { title: hotelPageTitle({ kind: "error" }), alternates };
+    return { title: hotelPageTitle({ kind: "error" }, locale), alternates };
   }
 };
 
@@ -37,13 +41,16 @@ export const generateMetadata = async ({
  * compõe a feature; o formulário de datas (F2) entra por `renderDatesForm`.
  */
 const HotelPage = async ({ params, searchParams }: PageProps<"/[locale]/hotel/[hotelId]">) => {
-  const hotelId = parseHotelId((await params).hotelId);
+  const { locale: rawLocale, hotelId: rawId } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
+  const hotelId = parseHotelId(rawId);
   if (hotelId === null) notFound();
   const parsed = parseSearchCriteria(await searchParams);
   const criteria = parsed.success ? parsed.data : null;
 
   return (
     <HotelDetailsView
+      locale={locale}
       hotelId={hotelId}
       criteria={criteria}
       renderDatesForm={(destination) => (
@@ -52,6 +59,7 @@ const HotelPage = async ({ params, searchParams }: PageProps<"/[locale]/hotel/[h
           destination={destination}
           criteria={criteria}
           labelledBy={STAY_EDIT_TITLE_ID}
+          labels={datesFormLabels(locale)}
         />
       )}
     />

@@ -24,7 +24,7 @@ const renderHeader = (
   const queryClient = makeTestQueryClient();
   queryClient.setQueryData(hotelRoomsQueryOptions(hotelId).queryKey, rooms);
   return renderWithProviders(
-    <HotelHeader hotel={seedHotel(hotelId)} stayLabel={stayLabel}>
+    <HotelHeader locale="pt-BR" hotel={seedHotel(hotelId)} stayLabel={stayLabel}>
       <p>galeria</p>
     </HotelHeader>,
     { queryClient },
@@ -65,7 +65,7 @@ describe("HotelHeader (critério 7)", () => {
   it("destaque vira badge", () => {
     const hotel = makeHotel({ featured: true });
     renderWithProviders(
-      <HotelHeader hotel={hotel} stayLabel={null}>
+      <HotelHeader locale="pt-BR" hotel={hotel} stayLabel={null}>
         <p>galeria</p>
       </HotelHeader>,
     );
@@ -86,7 +86,7 @@ describe("HotelHeader (critério 7)", () => {
   it("enquanto os quartos carregam: skeleton, sem texto de preço", () => {
     vi.stubGlobal("fetch", () => new Promise<Response>(() => undefined));
     const { container } = renderWithProviders(
-      <HotelHeader hotel={makeHotel()} stayLabel={null}>
+      <HotelHeader locale="pt-BR" hotel={makeHotel()} stayLabel={null}>
         <p>galeria</p>
       </HotelHeader>,
     );
@@ -100,7 +100,7 @@ describe("HotelHeader (critério 7)", () => {
       vi.fn(async () => new Response("{}", { status: 500 })),
     );
     const { container } = renderWithProviders(
-      <HotelHeader hotel={makeHotel()} stayLabel={null}>
+      <HotelHeader locale="pt-BR" hotel={makeHotel()} stayLabel={null}>
         <p>galeria</p>
       </HotelHeader>,
     );
@@ -114,7 +114,7 @@ describe("HotelHeader (critério 7)", () => {
       vi.fn(async () => new Response("{}", { status: 500 })),
     );
     const { queryClient, container } = renderWithProviders(
-      <HotelHeader hotel={makeHotel()} stayLabel={null}>
+      <HotelHeader locale="pt-BR" hotel={makeHotel()} stayLabel={null}>
         <p>galeria</p>
       </HotelHeader>,
     );
@@ -181,7 +181,7 @@ describe("Breadcrumb e SectionNav (critérios 6 e 11)", () => {
   });
 
   it("a barra de seções tem âncora para cada seção, na ordem da página", () => {
-    render(<SectionNav />);
+    render(<SectionNav locale="pt-BR" />);
     const nav = screen.getByRole("navigation", { name: "Seções da página" });
     const links = within(nav).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual([

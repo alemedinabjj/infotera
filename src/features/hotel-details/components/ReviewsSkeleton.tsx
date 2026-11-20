@@ -2,6 +2,7 @@
 
 import { useSlowLoading } from "@/shared/hooks/useSlowLoading";
 import { Skeleton, Spinner } from "@/shared/ui";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 
 const ReviewSkeleton = () => (
   <li className="flex flex-col gap-2 py-5">
@@ -21,12 +22,13 @@ const ReviewSkeleton = () => (
 
 /** Skeleton das avaliações com a geometria do item, e o aviso de lentidão após 5 s. */
 export const ReviewsSkeleton = () => {
+  const t = useHotelDetailsMessages().loading;
   const slow = useSlowLoading(true);
   return (
     <div aria-busy="true" className="flex flex-col gap-2">
       <p className="flex min-h-5 items-center gap-2 text-sm text-fg-muted">
         <Spinner />
-        {slow ? "Está demorando mais que o normal…" : "Carregando avaliações…"}
+        {slow ? t.slow : t.reviews}
       </p>
       <ul className="divide-y divide-border">
         <ReviewSkeleton />

@@ -1,6 +1,9 @@
 import type { Room } from "@/shared/api/schemas";
+import { commonMessages } from "@/shared/i18n/common/messages";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import { SCARCE_THRESHOLD } from "@/shared/lib/availability";
 import { guestsPerRoom, type SearchCriteria } from "@/shared/lib/search-params";
+import { hotelDetailsMessages } from "../i18n/messages";
 
 export type RoomSelectability =
   | { kind: "sold-out" }
@@ -45,28 +48,25 @@ export const selectabilityMessage = (
   selectability: RoomSelectability,
   hasDates: boolean,
   otherRooms = true,
+  locale: Locale = DEFAULT_LOCALE,
 ): string | null => {
+  const t = hotelDetailsMessages.get(locale).selectability;
   switch (selectability.kind) {
     case "sold-out":
-      return hasDates
-        ? "Sem quartos disponíveis para estas datas."
-        : "Sem quartos disponíveis no momento.";
+      return hasDates ? t.soldOutDates : t.soldOutNow;
     case "too-small": {
       const capacity =
-        selectability.maxGuests === 1
-          ? "Acomoda 1 hóspede."
-          : `Acomoda até ${selectability.maxGuests} hóspedes.`;
-      const advice = otherRooms
-        ? "Escolha outro quarto ou altere os hóspedes."
-        : "Altere os hóspedes.";
-      return `${capacity} Sua busca tem ${selectability.guestsPerRoom} por quarto. ${advice}`;
+        selectability.maxGuests === 1 ? t.fitsOne : t.fitsUpTo({ count: selectability.maxGuests });
+      return t.tooSmall({
+        capacity,
+        perRoom: selectability.guestsPerRoom,
+        advice: otherRooms ? t.adviceOther : t.adviceGuests,
+      });
     }
-    case "insufficient": {
-      const requested = `Sua busca pede ${selectability.requested} ${selectability.requested === 1 ? "quarto" : "quartos"}.`;
-      return `${requested} ${otherRooms ? "Diminua a quantidade de quartos ou escolha outro tipo." : "Diminua a quantidade de quartos."}`;
-    }
+    case "insufficient":
+      return `${t.asks({ count: selectability.requested })} ${otherRooms ? t.reduceOther : t.reduce}`;
     case "past-dates":
-      return "As datas desta busca já passaram.";
+      return t.pastDates;
     case "needs-dates":
     case "selectable":
       return null;
@@ -80,25 +80,26 @@ export const selectabilityMessage = (
 export type SelectabilityBadge = { tone: "danger" | "warning"; text: string };
 
 /** Selo colado ao preço: esgotado, "Só N disponíveis" ou "Apenas N quartos!". */
-export const selectabilityBadge = (selectability: RoomSelectability): SelectabilityBadge | null => {
+export const selectabilityBadge = (
+  selectability: RoomSelectability,
+  locale: Locale = DEFAULT_LOCALE,
+): SelectabilityBadge | null => {
+  const t = hotelDetailsMessages.get(locale).selectability;
   switch (selectability.kind) {
     case "sold-out":
-      return { tone: "danger", text: "Esgotado" };
+      return { tone: "danger", text: commonMessages.get(locale).availability.soldOut };
     case "insufficient":
       return {
         tone: "warning",
         text:
           selectability.available === 1
-            ? "Só 1 disponível"
-            : `Só ${selectability.available} disponíveis`,
+            ? t.onlyOne
+            : t.onlyMany({ count: selectability.available }),
       };
     case "selectable":
       return selectability.scarce === null
         ? null
-        : {
-            tone: "warning",
-            text: `Apenas ${selectability.scarce} ${selectability.scarce === 1 ? "quarto" : "quartos"}!`,
-          };
+        : { tone: "warning", text: t.scarce({ count: selectability.scarce }) };
     case "needs-dates":
     case "past-dates":
     case "too-small":

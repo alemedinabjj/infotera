@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
  * descer: se passar, o teste lista os ofensores; se ficar abaixo, obriga a baixar a constante no
  * mesmo commit. A meta da F7b é 0 (tarefa 28) com `COPY_ALLOWLIST` explícita.
  */
-const COPY_BASELINE = 442;
+const COPY_BASELINE = 280;
 
 /** Textos que não são copy (nome próprio, símbolo). Comparação exata com o texto aparado. */
 const COPY_ALLOWLIST: readonly string[] = ["Infotera Hotéis"];

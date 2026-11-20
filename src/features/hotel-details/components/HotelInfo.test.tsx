@@ -10,7 +10,7 @@ const hotel = seedHotel(1);
 
 describe("HotelOverview (critério 12)", () => {
   it("descrição e comodidades com rótulos pt-BR e ícones decorativos", () => {
-    const { container } = render(<HotelOverview hotel={hotel} />);
+    const { container } = render(<HotelOverview locale="pt-BR" hotel={hotel} />);
     expect(screen.getByRole("heading", { level: 2, name: "Visão geral" })).toBeInTheDocument();
     expect(screen.getByText(hotel.description)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Comodidades" })).toBeInTheDocument();
@@ -21,7 +21,7 @@ describe("HotelOverview (critério 12)", () => {
   });
 
   it("a seção é ligada ao h2 e o h2 aceita foco", () => {
-    render(<HotelOverview hotel={hotel} />);
+    render(<HotelOverview locale="pt-BR" hotel={hotel} />);
     const section = screen.getByRole("region", { name: "Visão geral" });
     expect(section).toHaveAttribute("id", "visao-geral");
     expect(screen.getByRole("heading", { name: "Visão geral" })).toHaveAttribute("tabindex", "-1");
@@ -30,7 +30,7 @@ describe("HotelOverview (critério 12)", () => {
 
 describe("HotelPolicies (critério 13)", () => {
   it("horários e política", () => {
-    render(<HotelPolicies hotel={hotel} />);
+    render(<HotelPolicies locale="pt-BR" hotel={hotel} />);
     expect(screen.getByText("A partir de 15:00")).toBeInTheDocument();
     expect(screen.getByText("Até 12:00")).toBeInTheDocument();
     expect(screen.getByText("Cancelamento grátis")).toBeInTheDocument();
@@ -38,7 +38,7 @@ describe("HotelPolicies (critério 13)", () => {
 
   it("as regras abrem por teclado (Enter e Espaço no summary)", async () => {
     const user = userEvent.setup();
-    const { container } = render(<HotelPolicies hotel={hotel} />);
+    const { container } = render(<HotelPolicies locale="pt-BR" hotel={hotel} />);
     const details = container.querySelector("details");
     const summary = screen.getByText("Ver regras de cancelamento");
     expect(details).not.toHaveAttribute("open");
@@ -54,17 +54,17 @@ describe("HotelPolicies (critério 13)", () => {
 
   it("moderate e strict mudam selo e texto", () => {
     const { rerender } = render(
-      <HotelPolicies hotel={{ ...hotel, cancellationPolicy: "moderate" }} />,
+      <HotelPolicies locale="pt-BR" hotel={{ ...hotel, cancellationPolicy: "moderate" }} />,
     );
     expect(screen.getByText("Cancelamento com reembolso parcial")).toBeInTheDocument();
-    rerender(<HotelPolicies hotel={{ ...hotel, cancellationPolicy: "strict" }} />);
+    rerender(<HotelPolicies locale="pt-BR" hotel={{ ...hotel, cancellationPolicy: "strict" }} />);
     expect(screen.getByText("Sem reembolso em caso de cancelamento")).toBeInTheDocument();
   });
 });
 
 describe("LocationMap (critério 14)", () => {
   it("mapa com role=img e o endereço, marcador e tiles sem alt", () => {
-    const { container } = render(<LocationMap hotel={hotel} />);
+    const { container } = render(<LocationMap hotel={hotel} locale="pt-BR" />);
     const map = screen.getByRole("img", { name: `Mapa: ${hotel.address}` });
     const tiles = map.querySelectorAll("img");
     expect(tiles.length).toBe(6);
@@ -74,7 +74,7 @@ describe("LocationMap (critério 14)", () => {
   });
 
   it("atribuição fora do role=img e link do OSM em nova aba, avisado no nome", () => {
-    render(<LocationMap hotel={hotel} />);
+    render(<LocationMap hotel={hotel} locale="pt-BR" />);
     const map = screen.getByRole("img", { name: /Mapa:/ });
     const attribution = screen.getByRole("link", { name: "© colaboradores do OpenStreetMap" });
     expect(map).not.toContainElement(attribution);

@@ -3,6 +3,8 @@ import { ArrowLeftIcon, ChevronRightIcon } from "@/shared/ui";
 import type { BreadcrumbItem } from "../model/breadcrumb";
 
 type BreadcrumbProps = {
+  /** Nome acessível do `nav` (já no idioma). */
+  navLabel: string;
   items: readonly BreadcrumbItem[];
   /** Nível acima: no celular o breadcrumb vira só este link ("← Hotéis em São Paulo"). */
   backHref: string;
@@ -12,8 +14,8 @@ type BreadcrumbProps = {
 const LINK = "text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2";
 
 /** `nav` "Você está aqui". Abaixo de `sm`, só o link de voltar (não quebra em 320 px). */
-export const Breadcrumb = ({ items, backHref, backLabel }: BreadcrumbProps) => (
-  <nav aria-label="Você está aqui">
+export const Breadcrumb = ({ navLabel, items, backHref, backLabel }: BreadcrumbProps) => (
+  <nav aria-label={navLabel}>
     <ol className="hidden flex-wrap items-center gap-x-1 gap-y-1 text-sm sm:flex">
       {items.map((item, index) => (
         <li key={item.label} className="flex items-center gap-1">

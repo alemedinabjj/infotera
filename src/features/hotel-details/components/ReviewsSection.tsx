@@ -2,9 +2,11 @@
 
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useOnline } from "@/shared/hooks/useOnline";
+import { useLocale } from "@/shared/i18n/client";
 import { getTotalPages } from "@/shared/lib/pagination";
 import { Alert, EmptyState, Pagination, RatingScore, Spinner, WifiOffIcon } from "@/shared/ui";
 import { REVIEWS_PAGE_SIZE, reviewsQueryOptions } from "../api/reviews";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { useFocusOnNewPage, useReviewsPage } from "../hooks/useReviewsPage";
 import { reviewsRangeLabel } from "../model/reviews";
 import { sectionHeadingId } from "../model/sections";
@@ -26,29 +28,28 @@ type ContentProps = {
   onPageChange: (page: number) => void;
 };
 
-const OfflineNotice = () => (
-  <Alert
-    tone="warning"
-    title="Você está sem internet."
-    icon={<WifiOffIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
-  >
-    As avaliações aparecem assim que a conexão voltar.
-  </Alert>
-);
+const OfflineNotice = () => {
+  const t = useHotelDetailsMessages().reviews;
+  return (
+    <Alert
+      tone="warning"
+      title={t.offlineTitle}
+      icon={<WifiOffIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
+    >
+      {t.offlineBody}
+    </Alert>
+  );
+};
 
 const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) => {
+  const locale = useLocale();
+  const t = useHotelDetailsMessages().reviews;
   const { data } = useSuspenseQuery(reviewsQueryOptions(hotelId, page));
   const online = useOnline();
   useFocusOnNewPage(page);
 
   if (data.total === 0) {
-    return (
-      <EmptyState
-        headingLevel={3}
-        title="Ainda sem comentários"
-        description="Este hotel ainda não recebeu comentários de hóspedes."
-      />
-    );
+    return <EmptyState headingLevel={3} title={t.emptyTitle} description={t.emptyBody} />;
   }
 
   // Offline: só o aviso (sem spinner nem lista esmaecida: nada está carregando de fato). Ele vem
@@ -60,10 +61,10 @@ const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) 
         {loading ? (
           <>
             <Spinner />
-            Atualizando avaliações…
+            {t.updating}
           </>
         ) : (
-          reviewsRangeLabel(page, data.total, REVIEWS_PAGE_SIZE)
+          reviewsRangeLabel(page, data.total, REVIEWS_PAGE_SIZE, locale)
         )}
       </p>
       <ReviewList reviews={data.items} busy={loading} />
@@ -83,13 +84,14 @@ const ReviewsContent = ({ hotelId, page, pending, onPageChange }: ContentProps) 
  * ficam fora; loading e erro (com retry no lugar) trocam só o miolo.
  */
 export const ReviewsSection = ({ hotelId, rating, reviewCount }: ReviewsSectionProps) => {
+  const t = useHotelDetailsMessages().reviews;
   const { page, pending, changePage, changed } = useReviewsPage();
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <RatingScore rating={rating} reviewCount={reviewCount} />
       <SectionBoundary
         headingId={sectionHeadingId("avaliacoes")}
-        errorTitle="Não foi possível carregar as avaliações."
+        errorTitle={t.loadError}
         options={reviewsQueryOptions(hotelId, page)}
         loading={<ReviewsSkeleton />}
         focusRetryOnError={changed}

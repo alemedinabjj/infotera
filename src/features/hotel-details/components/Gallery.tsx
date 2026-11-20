@@ -1,7 +1,9 @@
 "use client";
 
+import { useLocale } from "@/shared/i18n/client";
 import { cn } from "@/shared/lib/cn";
 import { Button, RemoteImage } from "@/shared/ui";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import { useLightbox } from "../hooks/useLightbox";
 import { galleryPreview, mainPhotoSpan, photoOpenLabel, thumbPlacement } from "../model/gallery";
 import { Lightbox } from "./Lightbox";
@@ -55,6 +57,8 @@ const THUMB_SIZES = "(min-width: 1152px) 280px, 25vw";
  * o lightbox nela; as miniaturas carregam sob demanda e não baixam no celular (`hidden`).
  */
 export const Gallery = ({ name, images }: GalleryProps) => {
+  const t = useHotelDetailsMessages().gallery;
+  const locale = useLocale();
   const total = images.length;
   const lightbox = useLightbox(total);
   const preview = galleryPreview(total);
@@ -66,7 +70,7 @@ export const Gallery = ({ name, images }: GalleryProps) => {
       <div className="grid gap-2 sm:h-72 sm:grid-cols-4 sm:grid-rows-2 lg:h-96">
         <PhotoButton
           src={main}
-          label={photoOpenLabel(0, total)}
+          label={photoOpenLabel(0, total, locale)}
           sizes={MAIN_SIZES}
           priority
           className={cn("aspect-video sm:aspect-auto", mainPhotoSpan(preview.thumbs.length))}
@@ -76,11 +80,11 @@ export const Gallery = ({ name, images }: GalleryProps) => {
           <PhotoButton
             key={photoIndex}
             src={images[photoIndex] ?? main}
-            label={photoOpenLabel(photoIndex, total)}
+            label={photoOpenLabel(photoIndex, total, locale)}
             sizes={THUMB_SIZES}
             extra={
               position === preview.thumbs.length - 1 && preview.hiddenCount > 0
-                ? `+${preview.hiddenCount} ${preview.hiddenCount === 1 ? "foto" : "fotos"}`
+                ? t.extra({ count: preview.hiddenCount })
                 : undefined
             }
             className={cn("hidden sm:block", thumbPlacement(preview.thumbs.length, position))}
@@ -95,7 +99,7 @@ export const Gallery = ({ name, images }: GalleryProps) => {
           className="absolute right-3 bottom-3"
           onClick={() => lightbox.openAt(0)}
         >
-          Ver todas as fotos ({total})
+          {t.seeAll({ count: total })}
         </Button>
       ) : null}
       <Lightbox

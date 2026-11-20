@@ -4,7 +4,7 @@ import { roomAmenityLabel, roomCapacityLabel, roomSizeLabel, roomTypesLabel } fr
 
 describe("roomAmenityLabel", () => {
   it("toda comodidade de quarto tem rótulo pt-BR único", () => {
-    const labels = roomAmenitySchema.options.map(roomAmenityLabel);
+    const labels = roomAmenitySchema.options.map((amenity) => roomAmenityLabel(amenity));
     expect(labels.every((label) => label.length > 0)).toBe(true);
     expect(new Set(labels).size).toBe(labels.length);
     expect(roomAmenityLabel("ocean_view")).toBe("Vista para o mar");

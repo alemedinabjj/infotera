@@ -1,34 +1,24 @@
 import type { RoomAmenity } from "@/shared/api/schemas";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
+import { hotelDetailsMessages } from "../i18n/messages";
 
-const ROOM_AMENITY_LABELS: Record<RoomAmenity, string> = {
-  ocean_view: "Vista para o mar",
-  city_view: "Vista para a cidade",
-  garden_view: "Vista para o jardim",
-  balcony: "Varanda",
-  terrace: "Terraço",
-  bathtub: "Banheira",
-  minibar: "Frigobar",
-  safe: "Cofre",
-  aircon: "Ar-condicionado",
-  desk: "Mesa de trabalho",
-  kitchen: "Cozinha",
-  living_room: "Sala de estar",
-  sound_system: "Sistema de som",
-  butler: "Mordomo",
-  pool_access: "Acesso à piscina",
-  garden: "Jardim privativo",
-  lounge_access: "Acesso ao lounge",
+export const roomAmenityLabel = (amenity: RoomAmenity, locale: Locale = DEFAULT_LOCALE): string =>
+  hotelDetailsMessages.get(locale).rooms.amenities[amenity];
+
+/** `Até 3 hóspedes` / `1 hóspede` · `Up to 3 guests` / `1 guest`. */
+export const roomCapacityLabel = (maxGuests: number, locale: Locale = DEFAULT_LOCALE): string => {
+  const t = hotelDetailsMessages.get(locale).rooms;
+  return maxGuests === 1 ? t.capacityOne : t.capacityUpTo({ count: maxGuests });
 };
 
-export const roomAmenityLabel = (amenity: RoomAmenity): string => ROOM_AMENITY_LABELS[amenity];
+/** `45 m²` (o tamanho pode ter decimais: `32,5 m²` em pt-BR, `32.5 m²` em en-US). */
+export const roomSizeLabel = (size: number, locale: Locale = DEFAULT_LOCALE): string =>
+  hotelDetailsMessages.get(locale).rooms.size({ size: size.toLocaleString(locale) });
 
-/** `Até 3 hóspedes` / `1 hóspede`. */
-export const roomCapacityLabel = (maxGuests: number): string =>
-  maxGuests === 1 ? "1 hóspede" : `Até ${maxGuests} hóspedes`;
+/** Tamanho por extenso para leitor de tela: `45 metros quadrados`. */
+export const roomSizeSpoken = (size: number, locale: Locale = DEFAULT_LOCALE): string =>
+  hotelDetailsMessages.get(locale).rooms.squareMeters({ size: size.toLocaleString(locale) });
 
-/** `45 m²` (o tamanho pode ter decimais: `32,5 m²`). */
-export const roomSizeLabel = (size: number): string => `${size.toLocaleString("pt-BR")} m²`;
-
-/** `1 tipo de quarto` / `2 tipos de quarto`. */
-export const roomTypesLabel = (count: number): string =>
-  `${count} ${count === 1 ? "tipo" : "tipos"} de quarto`;
+/** `1 tipo de quarto` / `2 tipos de quarto` · `1 room type` / `2 room types`. */
+export const roomTypesLabel = (count: number, locale: Locale = DEFAULT_LOCALE): string =>
+  hotelDetailsMessages.get(locale).rooms.types({ count });

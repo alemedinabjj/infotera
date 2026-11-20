@@ -1,7 +1,10 @@
 "use client";
 
 import type { Room } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
+import { commonMessages } from "@/shared/i18n/common/messages";
 import { Button, CalendarIcon } from "@/shared/ui";
+import { useHotelDetailsMessages } from "../hooks/useHotelDetailsMessages";
 import type { RoomSelectability } from "../model/room-selectability";
 
 type SelectRoomButtonProps = {
@@ -28,6 +31,8 @@ export const SelectRoomButton = ({
   onSelect,
   onPickDates,
 }: SelectRoomButtonProps) => {
+  const t = useHotelDetailsMessages().rooms;
+  const soldOut = commonMessages.get(useLocale()).availability.soldOut;
   // Nome acessível "Ação: quarto" num texto só (um `<span class="sr-only">` separado ganharia um
   // espaço antes do ":" na leitura). O texto visível é o início do nome (WCAG 2.5.3).
   const label = (action: string) => `${action}: ${room.name}`;
@@ -36,13 +41,13 @@ export const SelectRoomButton = ({
       return (
         <Button
           fullWidth
-          aria-label={loading ? undefined : label("Selecionar quarto")}
+          aria-label={loading ? undefined : label(t.select)}
           className={WIDTH}
           loading={loading}
-          loadingText="Selecionando…"
+          loadingText={t.selecting}
           onClick={onSelect}
         >
-          Selecionar quarto
+          {t.select}
         </Button>
       );
     case "needs-dates":
@@ -51,12 +56,12 @@ export const SelectRoomButton = ({
         <Button
           variant="secondary"
           fullWidth
-          aria-label={label("Escolher datas")}
+          aria-label={label(t.pickDates)}
           className={WIDTH}
           leftIcon={<CalendarIcon className="size-5" />}
           onClick={onPickDates}
         >
-          Escolher datas
+          {t.pickDates}
         </Button>
       );
     case "sold-out":
@@ -65,13 +70,13 @@ export const SelectRoomButton = ({
       return (
         <Button
           fullWidth
-          aria-label={label(selectability.kind === "sold-out" ? "Esgotado" : "Selecionar quarto")}
+          aria-label={label(selectability.kind === "sold-out" ? soldOut : t.select)}
           className={WIDTH}
           aria-disabled="true"
           aria-describedby={reasonId ?? undefined}
           onClick={(event) => event.preventDefault()}
         >
-          {selectability.kind === "sold-out" ? "Esgotado" : "Selecionar quarto"}
+          {selectability.kind === "sold-out" ? soldOut : t.select}
         </Button>
       );
     default: {

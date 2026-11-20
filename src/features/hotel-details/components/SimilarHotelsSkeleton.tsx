@@ -1,12 +1,14 @@
+import type { Locale } from "@/shared/i18n/config";
 import { Skeleton } from "@/shared/ui";
+import { hotelDetailsMessages } from "../i18n/messages";
 
 const KEYS = ["a", "b", "c", "d"] as const;
 
 /** Esqueleto dos similares (4 cards): horizontal no celular, vertical a partir de `sm`. */
-export const SimilarHotelsSkeleton = () => (
+export const SimilarHotelsSkeleton = ({ locale }: { locale: Locale }) => (
   <div aria-busy="true">
     <p className="sr-only" aria-live="polite">
-      Carregando hotéis similares…
+      {hotelDetailsMessages.get(locale).loading.similar}
     </p>
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
       {KEYS.map((key) => (

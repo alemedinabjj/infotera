@@ -1,4 +1,6 @@
 import type { CancellationPolicy, Room } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
+import { contentLang } from "@/shared/i18n/config";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { cardClassName, RemoteImage } from "@/shared/ui";
 import { roomSelectability } from "../model/room-selectability";
@@ -34,6 +36,7 @@ export const RoomCard = ({
   onSelect,
   onPickDates,
 }: RoomCardProps) => {
+  const lang = contentLang(useLocale());
   const selectability = roomSelectability(room, criteria, pastDates);
   const [photo] = room.images;
   return (
@@ -54,8 +57,12 @@ export const RoomCard = ({
           />
         ) : null}
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
-          <h3 className="text-lg font-semibold text-fg">{room.name}</h3>
-          <p className="text-sm text-fg-muted">{room.description}</p>
+          <h3 lang={lang} className="text-lg font-semibold text-fg">
+            {room.name}
+          </h3>
+          <p lang={lang} className="text-sm text-fg-muted">
+            {room.description}
+          </p>
           <RoomFacts room={room} />
           <RoomAmenities room={room} />
           <RoomCancellation policy={cancellationPolicy} />

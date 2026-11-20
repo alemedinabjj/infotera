@@ -1,4 +1,5 @@
 import type { Room } from "@/shared/api/schemas";
+import { useLocale } from "@/shared/i18n/client";
 import type { SearchCriteria } from "@/shared/lib/search-params";
 import { Badge, InfoIcon } from "@/shared/ui";
 import {
@@ -32,8 +33,9 @@ export const RoomCardFooter = ({
   onSelect,
   onPickDates,
 }: RoomCardFooterProps) => {
-  const badge = selectabilityBadge(selectability);
-  const reason = selectabilityMessage(selectability, criteria !== null, otherRooms);
+  const locale = useLocale();
+  const badge = selectabilityBadge(selectability, locale);
+  const reason = selectabilityMessage(selectability, criteria !== null, otherRooms, locale);
   const reasonId = reason ? `room-${room.id}-reason` : null;
   return (
     <div className="mt-auto flex flex-col gap-3 border-t border-border pt-3">

@@ -73,4 +73,17 @@ exclusivo do worker (`controlledHotel`, ids 31-40) para não afetar testes em pa
 - `LocationMap` (RSC) envolve o mapa estático (`StaticMap`) em `InteractiveLocationMap` (ilha cliente): a moldura `aspect-[2/1]` é a mesma, o
   Leaflet carrega por cima quando a moldura chega a 200 px da viewport **e** há rede (`useNearViewport` + `useOnline` + `useInteractiveMap`), e o estático
   só sai depois do primeiro lote de tiles (`onTilesLoad`). Chunk ou tiles com erro (`onTilesError`): o estático fica, sem mensagem.
-- `osmLink`/`tileUrl` vieram de `shared/lib/geo` e `shared/lib/map-tiles`. `i18n/` começa só com `location.mapRegion` (resto na parte 2).
+- `osmLink`/`tileUrl` vieram de `shared/lib/geo` e `shared/lib/map-tiles`.
+
+## F7b (i18n pt-BR + en-US)
+- Todo texto vive em `i18n/` (`hotelDetailsMessages`, `Record<Locale, M>`). Client: `useHotelDetailsMessages()`. Server Components
+  (`HotelHeader`, `HotelOverview`, `HotelPolicies`, `LocationMap`, `SectionNav`, `SoldOutAlert`, `SimilarHotels`) recebem `locale` por prop
+  (vem dos `params` da página, via `HotelDetailsView`); `HotelDetailsSkeleton` e `HotelNotFound` são client folha (usam o provider).
+- Funções de `model/` aceitam `locale` (padrão pt-BR): rótulos de quarto, `selectabilityMessage/Badge`, comparação
+  (`roomComparisonMessages(locale)` no lugar da constante), breadcrumb (já devolve `href` localizado e `navLabel`), `hotelPageTitle`, galeria, avaliações.
+  `HOTEL_SECTIONS` guarda só `id` + `key`; o rótulo sai de `sectionLabel(key, locale)`.
+- Links por `localizePath(locale, ...)`; `useSelectRoom` e o `HotelDatesForm` (app/) enviam para `/en/...` em inglês. Os textos do botão do formulário de datas
+  vêm de `datesFormLabels(locale)` (exportado no `index.ts`, puro) e descem por prop até o client em `app/`.
+- Conteúdo da API (descrição, comentários, nome e descrição do quarto, endereço, destino) é português: `lang={contentLang(locale)}`.
+- `CompactHotelCard` (shared) virou client folha para ler o locale (link, tipo e selo de disponibilidade).
+- E2E: `e2e/i18n.hotel.spec.ts` (sem português em `/en/hotel/:id`, links em `/en`, axe pt e en, 320 px).

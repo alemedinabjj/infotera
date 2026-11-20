@@ -1,23 +1,27 @@
 import { type Room, type RoomAmenity, roomAmenitySchema } from "@/shared/api/schemas";
+import { commonMessages } from "@/shared/i18n/common/messages";
+import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/config";
 import { type ComparisonRow, makeRow, NO, YES } from "@/shared/lib/comparison";
 import { formatBRL } from "@/shared/lib/currency";
 import { bedsLabel } from "@/shared/lib/room-labels";
 import type { ComparisonTableMessages } from "@/shared/ui";
+import { hotelDetailsMessages } from "../i18n/messages";
 import { roomAmenityLabel, roomSizeLabel } from "./room-labels";
 
 export type RoomComparison = { rooms: readonly Room[]; rows: ComparisonRow[] };
 
-const availabilityText = (available: number): string => {
-  if (available <= 0) return "Esgotado";
-  return available === 1 ? "1 disponível" : `${available} disponíveis`;
+const availabilityText = (available: number, locale: Locale): string => {
+  if (available <= 0) return commonMessages.get(locale).availability.soldOut;
+  return hotelDetailsMessages.get(locale).comparison.available({ count: available });
 };
 
-const priceText = (price: number): string => formatBRL(price, { cents: !Number.isInteger(price) });
+const priceText = (price: number, locale: Locale): string =>
+  formatBRL(price, { cents: !Number.isInteger(price), locale });
 
-const amenityRow = (amenity: RoomAmenity, rooms: readonly Room[]): ComparisonRow =>
+const amenityRow = (amenity: RoomAmenity, rooms: readonly Room[], locale: Locale): ComparisonRow =>
   makeRow(
     amenity,
-    roomAmenityLabel(amenity),
+    roomAmenityLabel(amenity, locale),
     "boolean",
     rooms.map((room) => (room.amenities.includes(amenity) ? YES : NO)),
   );
@@ -26,7 +30,11 @@ const amenityRow = (amenity: RoomAmenity, rooms: readonly Room[]): ComparisonRow
  * Tabela de comparação de todos os quartos do hotel. Linhas fixas (preço, tamanho, hóspedes,
  * camas, disponibilidade) e uma por comodidade que **algum** quarto tem (ordem do enum).
  */
-export const buildRoomComparison = (rooms: readonly Room[]): RoomComparison => {
+export const buildRoomComparison = (
+  rooms: readonly Room[],
+  locale: Locale = DEFAULT_LOCALE,
+): RoomComparison => {
+  const t = hotelDetailsMessages.get(locale).comparison;
   const present = roomAmenitySchema.options.filter((amenity) =>
     rooms.some((room) => room.amenities.includes(amenity)),
   );
@@ -35,35 +43,35 @@ export const buildRoomComparison = (rooms: readonly Room[]): RoomComparison => {
     rows: [
       makeRow(
         "price",
-        "Preço por noite",
+        t.price,
         "text",
-        rooms.map((room) => priceText(room.pricePerNight)),
+        rooms.map((room) => priceText(room.pricePerNight, locale)),
       ),
       makeRow(
         "size",
-        "Tamanho",
+        t.size,
         "text",
-        rooms.map((room) => roomSizeLabel(room.size)),
+        rooms.map((room) => roomSizeLabel(room.size, locale)),
       ),
       makeRow(
         "guests",
-        "Hóspedes",
+        t.guests,
         "text",
-        rooms.map((room) => `Até ${room.maxGuests}`),
+        rooms.map((room) => t.guestsUpTo({ count: room.maxGuests })),
       ),
       makeRow(
         "beds",
-        "Camas",
+        t.beds,
         "text",
-        rooms.map((room) => bedsLabel(room.beds)),
+        rooms.map((room) => bedsLabel(room.beds, locale)),
       ),
       makeRow(
         "availability",
-        "Disponibilidade",
+        t.availability,
         "text",
-        rooms.map((room) => availabilityText(room.available)),
+        rooms.map((room) => availabilityText(room.available, locale)),
       ),
-      ...present.map((amenity) => amenityRow(amenity, rooms)),
+      ...present.map((amenity) => amenityRow(amenity, rooms, locale)),
     ],
   };
 };
@@ -74,19 +82,28 @@ export { onlyDifferences } from "@/shared/lib/comparison";
 export const canCompare = (rooms: readonly Room[]): boolean => rooms.length >= 2;
 
 /** Anúncio (`aria-live`) do filtro: `Mostrando 6 de 12 características` / `…todas as 12…`. */
-export const comparisonAnnouncement = (visible: number, total: number): string =>
-  visible === total
-    ? `Mostrando todas as ${total} características`
-    : `Mostrando ${visible} de ${total} características`;
+export const comparisonAnnouncement = (
+  visible: number,
+  total: number,
+  locale: Locale = DEFAULT_LOCALE,
+): string => {
+  const t = hotelDetailsMessages.get(locale).comparison;
+  return visible === total ? t.announceAll({ total }) : t.announceSome({ visible, total });
+};
 
 /** Textos da tabela de comparação de quartos (a molécula de `shared` não tem microcopy). */
-export const ROOM_COMPARISON_MESSAGES: ComparisonTableMessages = {
-  caption: "Comparar quartos",
-  cornerLabel: "Característica",
-  onlyDifferences: "Mostrar só diferenças",
-  legend: "Linhas marcadas mudam entre os quartos.",
-  scrollHint: "Arraste para o lado para ver todos.",
-  differs: ", diferente entre os quartos",
-  empty: "Os quartos têm as mesmas características.",
-  announce: comparisonAnnouncement,
+export const roomComparisonMessages = (
+  locale: Locale = DEFAULT_LOCALE,
+): ComparisonTableMessages => {
+  const t = hotelDetailsMessages.get(locale).comparison;
+  return {
+    caption: t.caption,
+    cornerLabel: t.corner,
+    onlyDifferences: t.onlyDifferences,
+    legend: t.legend,
+    scrollHint: t.scrollHint,
+    differs: t.differs,
+    empty: t.empty,
+    announce: (visible, total) => comparisonAnnouncement(visible, total, locale),
+  };
 };

@@ -61,6 +61,7 @@ describe("HotelDetailsView: fetch paralelo (critério 5)", () => {
   it("hotel, quartos e a 1ª página de avaliações saem juntos, antes de o hotel resolver", async () => {
     const { fetchMock, hotel } = stubApi();
     const rendering = HotelDetailsView({
+      locale: "pt-BR",
       hotelId: 1,
       criteria: null,
       renderDatesForm: () => <p>form</p>,
@@ -89,7 +90,12 @@ describe("HotelDetailsView: fetch paralelo (critério 5)", () => {
       ),
     );
     await expect(
-      HotelDetailsView({ hotelId: 999, criteria: null, renderDatesForm: () => null }),
+      HotelDetailsView({
+        locale: "pt-BR",
+        hotelId: 999,
+        criteria: null,
+        renderDatesForm: () => null,
+      }),
     ).rejects.toMatchObject({ digest: expect.stringContaining("404") });
   });
 
@@ -99,7 +105,12 @@ describe("HotelDetailsView: fetch paralelo (critério 5)", () => {
       vi.fn(async () => new Response("{}", { status: 500 })),
     );
     await expect(
-      HotelDetailsView({ hotelId: 1, criteria: null, renderDatesForm: () => null }),
+      HotelDetailsView({
+        locale: "pt-BR",
+        hotelId: 1,
+        criteria: null,
+        renderDatesForm: () => null,
+      }),
     ).rejects.toMatchObject({ status: 500 });
   });
 });
@@ -111,6 +122,7 @@ describe("HotelDetailsView: composição", () => {
   ) => {
     const { hotel } = stubApi();
     const rendering = HotelDetailsView({
+      locale: "pt-BR",
       hotelId: 1,
       criteria,
       renderDatesForm: () => <p>formulário de datas</p>,
