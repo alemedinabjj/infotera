@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import {
   type KeyboardEvent,
   useCallback,
@@ -29,6 +30,7 @@ type PhotoViewerOptions = {
 export const usePhotoViewer = ({ hotelId, total, initialIndex, locale }: PhotoViewerOptions) => {
   const [index, setIndex] = useState(initialIndex);
   const written = useRef(initialIndex);
+  const pathname = usePathname();
   const revealed = useRef(false);
 
   useEffect(() => {
@@ -37,19 +39,21 @@ export const usePhotoViewer = ({ hotelId, total, initialIndex, locale }: PhotoVi
     window.history.replaceState(null, "", photoHref(hotelId, index, locale));
   }, [index, hotelId, locale]);
 
-  // Activity (cacheComponents) esconde a rota em vez de desmontar e a reexibe no Voltar/Avançar, com o
-  // estado de antes. Os efeitos rodam de novo ao reexibir: a foto passa a ser a da URL do histórico
-  // (que `replaceState` manteve em dia), não o índice guardado nem o das props da rota.
+  // Activity (cacheComponents) esconde a rota em vez de desmontar e a reexibe com o estado de antes. Ao
+  // reexibir, a foto passa a ser a do caminho que o Next já confirmou (`usePathname`, que `replaceState`
+  // mantém em dia), não o índice guardado. Ler `window.location` aqui corria com o `pushState` do Next:
+  // às vezes ainda era o caminho do hotel e a foto 3 da visita anterior reaparecia no lugar da 1.
   useLayoutEffect(() => {
+    // Na primeira montagem valem as props da rota; daí em diante (reexibição ou troca de caminho), o caminho.
     if (!revealed.current) {
       revealed.current = true;
       return;
     }
-    const fromUrl = photoIndexFromPath(window.location.pathname, total);
-    if (fromUrl === null) return;
+    const fromUrl = photoIndexFromPath(pathname, total);
+    if (fromUrl === null || fromUrl === written.current) return;
     written.current = fromUrl;
     setIndex(fromUrl);
-  }, [total]);
+  }, [pathname, total]);
 
   const go = useCallback(
     (action: GalleryAction) => setIndex((current) => galleryNavigation(current, total, action)),
